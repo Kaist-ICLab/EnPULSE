@@ -3,7 +3,6 @@ package kaist.iclab.tracker.storage.couchbase
 import android.util.Log
 import com.couchbase.lite.DataSource
 import com.couchbase.lite.Expression
-import com.couchbase.lite.Function
 import com.couchbase.lite.Meta
 import com.couchbase.lite.MutableDocument
 import com.couchbase.lite.Ordering
@@ -27,40 +26,47 @@ class CouchbaseSurveyScheduleStorage(
 
     private val collection = couchbase.getCollection(collectionName)
 
-    override fun isTodayScheduleExist(): Boolean {
-        val zoneId = ZoneId.systemDefault()
-        val todayStart = LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant().toEpochMilli()
-        val todayEnd = todayStart + TimeUnit.DAYS.toMillis(1)
-
-        val query = QueryBuilder.select(SelectResult.expression(Function.count(Expression.string("*"))).`as`("totalCount"))
-            .from(DataSource.collection(collection))
-            .where(
-                Expression.property("triggerTime")
-                    .between(
-                Expression.longValue(todayStart),
-                Expression.longValue(todayEnd)
-                    )
-                    .and(Expression.property("actualTriggerTime")
-                        .isNotValued()
-                    )
-            )
-
-        return try {
-            query.execute().first().getLong("totalCount") > 0
-        } catch(_: NoSuchElementException) {
-            false
-        }
-    }
-
     override fun getNextSchedule(): SurveySchedule? {
-        Log.d(TAG, "Today schedule exist? ${isTodayScheduleExist()}")
         val now = System.currentTimeMillis()
         val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
             .from(DataSource.collection(collection))
             .where(
-                Expression.property("actualTriggerTime").isNotValued()
+                Expression.property("actualTriggerTime").isNotValued().and(
+                    Expression.property("triggerTime").greaterThan(Expression.value(now - TimeUnit.MINUTES.toMillis(5)))
+                )
             )
             .orderBy(Ordering.property("triggerTime").ascending())
+            .limit(Expression.intValue(1))
+
+        try {
+            val result = query.execute().use {
+                val result = it.first()
+                val docUuid = result.getString("uuid")!!
+
+                val resultDict = result.getDictionary(collection.name)
+                if(resultDict == null) null else SurveySchedule(
+                    scheduleId = docUuid,
+                    surveyId = resultDict.getString("surveyId") ?: "",
+                    triggerTime = resultDict.getLong("triggerTime"),
+                )
+            }
+
+            if(result != null) Log.d(TAG, "Next Schedule: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
+            else Log.d(TAG, "No next schedule today")
+
+            return result
+
+        } catch(e: Exception) {
+            if(e is NoSuchElementException) Log.d(TAG, "No next schedule today")
+            else e.printStackTrace()
+            return null
+        }
+    }
+
+    override fun getLastSchedule(): SurveySchedule? {
+        val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
+            .from(DataSource.collection(collection))
+            .orderBy(Ordering.property("triggerTime").descending())
             .limit(Expression.intValue(1))
 
         try {
@@ -109,9 +115,6 @@ class CouchbaseSurveyScheduleStorage(
                 )
             }
 
-            if(result != null) Log.d(TAG, "Schedule Found: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}")
-            else Log.d(TAG, "No corresponding schedule to scheduleId=$scheduleId")
-
             return result
 
         } catch(e: NoSuchElementException) {
@@ -124,7 +127,6 @@ class CouchbaseSurveyScheduleStorage(
     }
 
     override fun addSchedule(schedule: SurveySchedule): String {
-        Log.d(TAG, "Schedule added: ${schedule.triggerTime?.formatLocalDateTime()}")
         val uuid = UUID.randomUUID().toString()
 
         val mutableDoc = MutableDocument(uuid)
@@ -166,6 +168,24 @@ class CouchbaseSurveyScheduleStorage(
 
                 if(docToDelete != null) collection.delete(docToDelete)
             }
+        }
+    }
+
+    fun getAllScheduledTimes(): List<Long> {
+        val query = QueryBuilder.select(SelectResult.property("triggerTime"))
+            .from(DataSource.collection(collection))
+            .orderBy(Ordering.property("triggerTime").ascending())
+
+        return try {
+            query.execute().use { resultSet ->
+                resultSet.mapNotNull { result ->
+                    val triggerTime = result.getValue("triggerTime")
+                    triggerTime as? Long
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error retrieving all scheduled times", e)
+            emptyList()
         }
     }
 }

@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.tracker.TrackerUtil.formatLapsedTime
+import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.BroadcastListener
 import kaist.iclab.tracker.listener.SingleAlarmListener
@@ -27,7 +28,6 @@ import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import java.time.LocalDate
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import kotlin.math.pow
@@ -38,7 +38,6 @@ class SurveySensor(
     private val configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
     private val scheduleStorage: SurveyScheduleStorage,
-    val survey: Map<String, Survey>,
 ): BaseSensor<SurveySensor.Config, SurveySensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
 ) {
@@ -86,7 +85,8 @@ class SurveySensor(
         val startTimeOfDay: Long,
         val endTimeOfDay: Long,
         val scheduleMethod: Map<String, SurveyScheduleMethod>,
-        val notificationConfig: Map<String, SurveyNotificationConfig>
+        val notificationConfig: Map<String, SurveyNotificationConfig>,
+        val survey: Map<String, Survey>,
     ): SensorConfig
 
     @Serializable
@@ -115,14 +115,16 @@ class SurveySensor(
         notificationManager.createNotificationChannel(channel)
 
         SurveyActivity.initSurvey = { id: String, scheduleId: String? ->
-            val requestedSurvey = survey[id]!!
+            val requestedSurvey = configStorage.get().survey[id]!!
             if(scheduleId != null) scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
             requestedSurvey.initSurveyResponse()
             requestedSurvey
         }
     }
 
-    private fun getESMSchedule(startTime: Long, endTime: Long, config: SurveyScheduleMethod.ESM): List<Long> {
+    private fun getESMSchedule(baseDate: Long, config: SurveyScheduleMethod.ESM): List<Long> {
+        val startTime = baseDate + configStorage.get().startTimeOfDay
+        val endTime = baseDate + configStorage.get().endTimeOfDay
         val lengthOfDay = endTime - startTime
 
         val intervals = mutableListOf<Long>(0)
@@ -153,6 +155,25 @@ class SurveySensor(
         return accumulatedTimeList
     }
 
+    private fun getBaseDate(timestamp: Long): Long {
+        val endOfDay = configStorage.get().endTimeOfDay
+
+        val zoneId = ZoneId.systemDefault()
+        val dateTime = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId)
+
+        val todayStart = dateTime.toLocalDate().atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val endOfYesterday = todayStart + endOfDay - TimeUnit.DAYS.toMillis(1)
+
+        return if (timestamp < endOfYesterday) {
+            // If current time is earlier than yesterday's window end,
+            // the logical "base date" is yesterday.
+            todayStart - TimeUnit.DAYS.toMillis(1)
+        } else {
+            // Otherwise, the logical base date is today.
+            todayStart
+        }
+    }
+
     fun openSurvey(id: String) {
         val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = id))
         val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
@@ -164,22 +185,18 @@ class SurveySensor(
         context.startActivity(intent)
     }
 
-    private fun scheduleTomorrowSurvey(): SurveySchedule? {
+    private fun scheduleSurveyForDate(baseDate: Long): SurveySchedule? {
+        Log.d(TAG, "BaseDate: ${baseDate.formatLocalDateTime()}")
+        val now = System.currentTimeMillis()
         val config = configStorage.get()
-
-        val zoneId = ZoneId.systemDefault()
-        val baseDate = LocalDate.now(zoneId).atStartOfDay(zoneId).toInstant().toEpochMilli() + 86_400_000
-
-        val startTime = baseDate + config.startTimeOfDay
-        val endTime = baseDate + config.endTimeOfDay
 
         config.scheduleMethod.forEach { id, scheduleMethod ->
             val schedule = when(scheduleMethod) {
-                is SurveyScheduleMethod.ESM -> getESMSchedule(startTime, endTime, scheduleMethod)
+                is SurveyScheduleMethod.ESM -> getESMSchedule(baseDate, scheduleMethod)
                 is SurveyScheduleMethod.Fixed -> scheduleMethod.timeOfDay.map { it + baseDate }
             }
 
-            schedule.forEach {
+            schedule.filter { it >= now }.forEach {
                 scheduleStorage.addSchedule(SurveySchedule(
                     surveyId = id,
                     triggerTime = it
@@ -192,10 +209,17 @@ class SurveySensor(
 
     private fun setupNextSurveySchedule() {
         val currentTime = System.currentTimeMillis()
-        val nextSchedule = scheduleStorage.getNextSchedule() ?: (if(!scheduleStorage.isTodayScheduleExist()) scheduleTomorrowSurvey() else null)
+        var nextSchedule = scheduleStorage.getNextSchedule()
 
         if(nextSchedule == null) {
-            return
+            val lastSchedule = scheduleStorage.getLastSchedule()
+            val nextBaseDate = if(lastSchedule == null) getBaseDate(currentTime) else getBaseDate(lastSchedule.triggerTime!!) + TimeUnit.DAYS.toMillis(1)
+            Log.d(TAG, nextBaseDate.toString())
+            nextSchedule = scheduleSurveyForDate(nextBaseDate)
+        }
+
+        if(nextSchedule == null) {
+            throw ExceptionInInitializerError("Unable to schedule next survey")
         }
 
         val timeUntilNextSurvey = nextSchedule.triggerTime!! - currentTime
@@ -279,6 +303,7 @@ class SurveySensor(
         surveyAlarmListener.addListener(surveyCallback)
         surveyResultListener.addListener(surveyResultCallback)
 
+        scheduleSurveyForDate(getBaseDate(System.currentTimeMillis()))
         scheduleCheckCallback(null)
     }
 

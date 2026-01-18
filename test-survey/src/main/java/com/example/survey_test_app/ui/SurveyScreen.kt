@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +42,7 @@ fun SensorScreen(
 ) {
     val context = LocalContext.current
     val isCollecting = mainViewModel.controllerState.collectAsState().value.flag == ControllerState.FLAG.RUNNING
+    val schedules = mainViewModel.scheduledTimes.collectAsState().value
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -106,6 +108,29 @@ fun SensorScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+
+        Button(
+            onClick = {
+                mainViewModel.updateScheduledTime()
+            },
+            modifier = Modifier.fillMaxWidth().padding(5.dp)
+        ) {
+            Text(
+                text = "View survey schedule",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        LazyColumn {
+            items(schedules) {
+                Text(
+                    text = it.formatLocalDateTime(),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

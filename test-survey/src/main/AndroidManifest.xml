@@ -22,5 +22,10 @@
             android:name="com.example.survey_test_app.SurveyDataReceiver$SurveyDataReceiverService"
             android:foregroundServiceType="specialUse"
         />
+        <service
+            android:name="MyBackgroundController$ControllerService"
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice"
+            android:exported="false">
+        </service>
     </application>
 </manifest>

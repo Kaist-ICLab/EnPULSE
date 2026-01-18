@@ -1,10 +1,12 @@
-package kaist.iclab.tracker.sensor.controller
+package com.example.survey_test_app
 
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.app.Service.START_STICKY
+import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -13,12 +15,20 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
+import kaist.iclab.tracker.sensor.controller.BackgroundControllerServiceLocator
+import kaist.iclab.tracker.sensor.controller.Controller
+import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
+import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kotlinx.coroutines.flow.StateFlow
+import org.koin.android.ext.android.inject
+import org.koin.core.qualifier.named
+import kotlin.collections.forEach
 
-class BackgroundController(
+class MyBackgroundController(
     private val context: Context,
     private val controllerStateStorage: StateStorage<ControllerState>,
     override val sensors: List<Sensor<*, *>>,
@@ -26,7 +36,7 @@ class BackgroundController(
     private val allowPartialSensing: Boolean = false,
 ) : Controller {
     companion object {
-        private val TAG = BackgroundController::class.simpleName
+        private val TAG = MyBackgroundController::class.simpleName
     }
 
     data class ServiceNotification(
@@ -49,11 +59,6 @@ class BackgroundController(
         notificationManager.createNotificationChannel(serviceChannel)
 
         sensors.forEach { it.init() }
-
-        BackgroundControllerServiceLocator.controllerStateStorage = controllerStateStorage
-        BackgroundControllerServiceLocator.sensors = sensors
-        BackgroundControllerServiceLocator.serviceNotification = serviceNotification
-        BackgroundControllerServiceLocator.allowPartialSensing = allowPartialSensing
     }
 
     override val controllerStateFlow: StateFlow<ControllerState> = controllerStateStorage.stateFlow
@@ -82,10 +87,12 @@ class BackgroundController(
             var isServiceRunning = false
         }
 
-        private val stateStorage = BackgroundControllerServiceLocator.controllerStateStorage
-        private val sensors = BackgroundControllerServiceLocator.sensors
-        private val serviceNotification = BackgroundControllerServiceLocator.serviceNotification
-        private val partialSensingAllowed = BackgroundControllerServiceLocator.allowPartialSensing
+        private val stateStorage by inject<StateStorage<ControllerState>>(named("controllerState"))
+
+        private val surveySensor by inject<SurveySensor>()
+        private val sensors = listOf(surveySensor)
+        private val serviceNotification by inject<ServiceNotification>()
+        private val partialSensingAllowed = true
 
         override fun onBind(intent: Intent?): Binder? = null
         override fun onDestroy() {

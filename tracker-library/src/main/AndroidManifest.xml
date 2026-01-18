@@ -84,7 +84,7 @@
 
         <service
             android:name=".sensor.controller.BackgroundController$ControllerService"
-            android:foregroundServiceType="health|specialUse|location|connectedDevice"
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice"
             android:exported="false">
         </service>
 

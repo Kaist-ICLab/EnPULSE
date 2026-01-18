@@ -27,7 +27,7 @@ class SurveyDataReceiver(
 
         private val sensor by inject<SurveySensor>()
         private val sensors = listOf(sensor)
-        private val serviceNotification by inject<BackgroundController.ServiceNotification>()
+        private val serviceNotification by inject<MyBackgroundController.ServiceNotification>()
         private val listener = sensors.associate {
             it.name to { e: SensorEntity -> Log.d(it.name, e.toString()); Unit }
         }

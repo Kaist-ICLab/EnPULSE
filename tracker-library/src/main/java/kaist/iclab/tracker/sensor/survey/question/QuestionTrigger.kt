@@ -1,6 +1,6 @@
 package kaist.iclab.tracker.sensor.survey.question
 
 data class QuestionTrigger<T>(
-    val predicate: (T) -> Boolean,
+    val predicate: Expression<T>,
     val children: List<Question<*>>
 )
