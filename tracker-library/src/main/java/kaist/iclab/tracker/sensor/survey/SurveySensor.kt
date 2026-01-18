@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.tracker.TrackerUtil.formatLapsedTime
+import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.BroadcastListener
 import kaist.iclab.tracker.listener.SingleAlarmListener
@@ -155,20 +156,16 @@ class SurveySensor(
     }
 
     private fun getBaseDate(timestamp: Long): Long {
-        val startOfDay = configStorage.get().startTimeOfDay
+        val endOfDay = configStorage.get().endTimeOfDay
 
         val zoneId = ZoneId.systemDefault()
         val dateTime = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId)
 
-        // 1. Get the start of the current calendar day
         val todayStart = dateTime.toLocalDate().atStartOfDay(zoneId).toInstant().toEpochMilli()
+        val endOfYesterday = todayStart + endOfDay - TimeUnit.DAYS.toMillis(1)
 
-        // 2. Check if the current time is BEFORE the start hour of today
-        // If so, we might actually be in the "extended" window of yesterday.
-        val startOfToday = todayStart + startOfDay
-
-        return if (timestamp < startOfToday) {
-            // If current time is earlier than today's window start,
+        return if (timestamp < endOfYesterday) {
+            // If current time is earlier than yesterday's window end,
             // the logical "base date" is yesterday.
             todayStart - TimeUnit.DAYS.toMillis(1)
         } else {
@@ -189,6 +186,7 @@ class SurveySensor(
     }
 
     private fun scheduleSurveyForDate(baseDate: Long): SurveySchedule? {
+        Log.d(TAG, "BaseDate: ${baseDate.formatLocalDateTime()}")
         val now = System.currentTimeMillis()
         val config = configStorage.get()
 
