@@ -60,7 +60,7 @@ class SkinTemperatureSensor(
         samsungHealthSensorInitializer.getTracker(HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS)
     }
 
-    private val listener = SamsungHealthSensorInitializer.DataListener { dataPoints ->
+    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
         val timestamp = System.currentTimeMillis()
         val entity = Entity(
             dataPoints.map {
@@ -80,10 +80,18 @@ class SkinTemperatureSensor(
     }
 
     override fun onStart() {
-        tracker.setEventListener(listener)
+        try {
+            tracker.setEventListener(listener)
+        } catch (e: UnsupportedOperationException) {
+            // Skin Temperature not supported on this device, ignore
+        }
     }
 
     override fun onStop() {
-        tracker.unsetEventListener()
+        try {
+            tracker.unsetEventListener()
+        } catch (e: UnsupportedOperationException) {
+            // Skin Temperature not supported on this device, ignore
+        }
     }
 }

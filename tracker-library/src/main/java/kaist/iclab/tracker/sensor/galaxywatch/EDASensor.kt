@@ -63,7 +63,7 @@ class EDASensor(
         samsungHealthSensorInitializer.getTracker(HealthTrackerType.EDA_CONTINUOUS)
     }
 
-    private val listener = SamsungHealthSensorInitializer.DataListener { dataPoints ->
+    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
         val timestamp = System.currentTimeMillis()
         val entity = Entity(
             dataPoints.map {
@@ -105,10 +105,18 @@ class EDASensor(
     }
 
     override fun onStart() {
-        tracker.setEventListener(listener)
+        try {
+            tracker.setEventListener(listener)
+        } catch (e: UnsupportedOperationException) {
+            // EDA not supported on this device, ignore
+        }
     }
 
     override fun onStop() {
-        tracker.unsetEventListener()
+        try {
+            tracker.unsetEventListener()
+        } catch (e: UnsupportedOperationException) {
+            // EDA not supported on this device, ignore
+        }
     }
 }

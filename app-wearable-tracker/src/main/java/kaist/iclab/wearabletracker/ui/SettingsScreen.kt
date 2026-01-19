@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -115,6 +114,9 @@ fun SettingsScreen(
 
     // Samsung Health connection state
     val isSamsungHealthConnected by settingsViewModel.isSamsungHealthConnected.collectAsState()
+    
+    // SDK Policy Error state (dev mode not enabled on Health Platform)
+    val hasSdkPolicyError by settingsViewModel.sdkPolicyError.collectAsState()
 
     // Connection timeout state (30 seconds timeout)
     var connectionTimedOut by remember { mutableStateOf(false) }
@@ -150,6 +152,12 @@ fun SettingsScreen(
 
     //UI
     when {
+        hasSdkPolicyError -> {
+            // Show error screen when SDK Policy Error (dev mode not enabled)
+            SdkPolicyErrorScreen(
+                onDismiss = { settingsViewModel.clearSdkPolicyError() }
+            )
+        }
         isSamsungHealthConnected -> {
             // Show main settings UI when Samsung Health is connected
             Scaffold(
@@ -383,6 +391,59 @@ fun SamsungHealthConnectionErrorScreen(
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = stringResource(R.string.samsung_health_retry),
+                    modifier = Modifier.size(AppSizes.iconMedium)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Error screen displayed when SDK Policy Error occurs.
+ * This happens when developer mode is not enabled on Health Platform.
+ */
+@Composable
+fun SdkPolicyErrorScreen(
+    onDismiss: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colors.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.sdk_policy_error_title),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.sdk_policy_error_message),
+                style = MaterialTheme.typography.caption2,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.primaryButtonColors(),
+                modifier = Modifier.size(AppSizes.iconButtonMedium)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = stringResource(R.string.confirm),
                     modifier = Modifier.size(AppSizes.iconMedium)
                 )
             }

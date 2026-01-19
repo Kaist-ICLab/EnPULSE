@@ -63,7 +63,7 @@ class PPGSensor(
         )
     }
 
-    private val listener = SamsungHealthSensorInitializer.DataListener { dataPoints ->
+    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
         val timestamp = System.currentTimeMillis()
         val entity = Entity(
 

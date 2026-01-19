@@ -50,4 +50,8 @@
     <string name="samsung_health_connection_failed">Connection Failed</string>
     <string name="samsung_health_check_app">Please check if Samsung Health is installed and try again</string>
     <string name="samsung_health_retry">Retry</string>
+    
+    <!-- SDK Policy Error -->
+    <string name="sdk_policy_error_title">Developer Mode Required</string>
+    <string name="sdk_policy_error_message">Please enable developer mode in Health Platform app settings</string>
 </resources>
