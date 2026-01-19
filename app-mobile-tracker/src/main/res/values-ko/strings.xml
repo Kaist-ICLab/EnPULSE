@@ -62,7 +62,7 @@
     <string name="campaign_dialog_cancel">취소</string>
     <string name="menu_phone_sensor">폰 센서 설정</string>
     <string name="menu_permission">권한</string>
-    <string name="menu_server_sync">데이터 및 동기화</string>
+    <string name="menu_server_sync">자동 동기화</string>
     <string name="menu_survey">설문</string>
     <string name="menu_about">정보</string>
     
