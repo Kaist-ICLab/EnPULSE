@@ -29,12 +29,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.Styles
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.viewmodels.settings.SurveySettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
+/**
+ * Survey Settings screen where users can see and trigger surveys
+ */
 @Composable
 fun SurveySettingsScreen(
     modifier: Modifier = Modifier,
@@ -51,6 +56,7 @@ fun SurveySettingsScreen(
             .background(AppColors.Background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
+            // Header with back button and title
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -65,38 +71,71 @@ fun SurveySettingsScreen(
                     )
                 }
                 Text(
-                    text = "Survey Configuration",
+                    text = context.getString(R.string.menu_survey),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
             }
 
+            // Description text
+            Text(
+                text = context.getString(R.string.survey_screen_description),
+                color = AppColors.TextSecondary,
+                fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = Styles.SCREEN_DESCRIPTION_HORIZONTAL_PADDING,
+                        end = Styles.SCREEN_DESCRIPTION_HORIZONTAL_PADDING,
+                        bottom = Styles.SCREEN_DESCRIPTION_BOTTOM_PADDING
+                    )
+            )
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(
+                    horizontal = Styles.CARD_CONTAINER_HORIZONTAL_PADDING,
+                    vertical = Styles.CARD_VERTICAL_PADDING
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(surveyList) { surveyId ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = AppColors.White),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Survey ID: $surveyId",
-                                fontWeight = FontWeight.Bold,
-                                color = AppColors.TextPrimary
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = { viewModel.triggerSurvey(surveyId) },
-                                colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryColor)
-                            ) {
-                                Text("Trigger Now")
-                            }
-                        }
-                    }
+                    SurveyCard(
+                        surveyId = surveyId,
+                        onTrigger = { viewModel.triggerSurvey(surveyId) }
+                    )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SurveyCard(
+    surveyId: String,
+    onTrigger: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AppColors.White),
+        shape = Styles.CARD_SHAPE,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Survey ID: $surveyId",
+                fontWeight = FontWeight.Bold,
+                color = AppColors.TextPrimary,
+                fontSize = 16.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onTrigger,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryColor),
+                shape = Styles.CARD_SHAPE
+            ) {
+                Text(text = "Trigger Now")
             }
         }
     }

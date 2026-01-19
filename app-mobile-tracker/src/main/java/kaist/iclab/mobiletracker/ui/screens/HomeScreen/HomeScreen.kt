@@ -81,8 +81,7 @@ fun HomeScreen(
 
         // 2. Tracking Status Card (upper card)
         TrackingStatusCard(
-            isActive = uiState.isTrackingActive,
-            lastSyncedTime = uiState.lastSyncedTime
+            isActive = uiState.isTrackingActive
         )
 
         // 3. Galaxy Watch Card (lower card)

@@ -13,15 +13,12 @@
     <string name="home_tracking_status">Tracking Status</string>
     <string name="home_status_running">Running</string>
     <string name="home_status_stopped">Stopped</string>
-    <string name="home_last_synced">Last synced: %1$s</string>
-    <string name="home_never_synced">Never synced</string>
     <string name="home_daily_highlights">Today\'s Data Snapshot</string>
     <string name="home_logs_unit">%1$d logs</string>
     <string name="home_watch_status_label">Galaxy Watch Device</string>
     <string name="home_watch_connected">Connected</string>
     <string name="home_watch_disconnected">Disconnected</string>
     <string name="home_watch_not_installed">App Not Found</string>
-    <string name="home_last_sync_label">Last Sync</string>
     <string name="home_watch_name_label">Device Name</string>
     <string name="unknown">Unknown</string>
     <string name="email_label">Email</string>
@@ -72,6 +69,8 @@
     <string name="language_screen_description">Select your preferred language for the app interface. The app will display all text and menus in the selected language.</string>
     <string name="phone_sensor_screen_description">Enable or disable individual phone sensors for data collection. Toggle each sensor on or off to control what data is being tracked.</string>
     <string name="permission_screen_description">View and manage app permissions. Toggle permissions on or off to control what data the app can access.</string>
+    <string name="auto_sync_screen_description">Configure automatic data synchronization to the server. Set the sync interval and network preferences.</string>
+    <string name="survey_screen_description">View and manage survey configurations. Tap on a survey to edit trigger conditions and question settings.</string>
     
     <!-- Permission Names -->
     <string name="permission_name_notifications">Notifications</string>
