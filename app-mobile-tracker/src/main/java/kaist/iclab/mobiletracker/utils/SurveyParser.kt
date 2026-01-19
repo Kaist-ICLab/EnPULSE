@@ -235,10 +235,6 @@ object SurveyParser {
 
     private fun parseOptions(jsonArray: JSONArray?): List<Option> {
         val options = mutableListOf<Option>()
-        if (jsonArray == null || jsonArray.length() == 0) return options
-
-    private fun parseOptions(jsonArray: JSONArray?): List<Option> {
-        val options = mutableListOf<Option>()
         val seenValues = mutableSetOf<String>()
         if (jsonArray == null || jsonArray.length() == 0) return options
 

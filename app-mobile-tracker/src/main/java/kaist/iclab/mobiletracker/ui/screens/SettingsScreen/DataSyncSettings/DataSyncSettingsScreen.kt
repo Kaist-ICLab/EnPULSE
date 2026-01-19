@@ -195,62 +195,6 @@ fun ServerSyncSettingsScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(Styles.BUTTON_SPACING))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Styles.BUTTON_ROW_SPACING)
-                ) {
-                    // Upload all data button
-                    Button(
-                        onClick = {
-                            viewModel.uploadAllSensorData()
-                        },
-                        modifier = Modifier
-                            .weight(3f)
-                            .height(Styles.BUTTON_HEIGHT),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.PrimaryColor
-                        ),
-                        shape = RoundedCornerShape(Styles.BUTTON_CORNER_RADIUS)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Upload,
-                                contentDescription = null,
-                                tint = AppColors.White,
-                                modifier = Modifier.size(Styles.BUTTON_ICON_SIZE)
-                            )
-                            Spacer(modifier = Modifier.width(Styles.BUTTON_ICON_SPACING))
-                            Text(
-                                text = context.getString(R.string.sync_start_data_upload),
-                                color = AppColors.White,
-                                fontSize = Styles.BUTTON_TEXT_SIZE
-                            )
-                        }
-                    }
-
-                    // Delete Data button
-                    androidx.compose.material3.Button(
-                        onClick = { showFlushDialog = true },
-                        modifier = Modifier
-                            .weight(2f)
-                            .height(Styles.BUTTON_HEIGHT),
-                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                            containerColor = AppColors.ErrorColor
-                        ),
-                        shape = RoundedCornerShape(Styles.BUTTON_CORNER_RADIUS),
-                        enabled = !isFlushing
-                    ) {
-                        Text(
-                            text = context.getString(R.string.sync_delete_data),
-                            color = AppColors.White,
-                            fontSize = Styles.BUTTON_TEXT_SIZE
-                        )
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(Styles.SECTION_TITLE_SPACING))
 
@@ -271,31 +215,5 @@ fun ServerSyncSettingsScreen(
         }
     }
 
-    // Flush confirmation dialog
-    if (showFlushDialog) {
-        PopupDialog(
-            title = context.getString(R.string.sync_clear_data_title),
-            content = {
-                Text(
-                    text = context.getString(R.string.sync_clear_data_message),
-                    fontSize = 14.sp,
-                    color = AppColors.TextPrimary
-                )
-            },
-            primaryButton = DialogButtonConfig(
-                text = context.getString(R.string.sync_clear_data_confirm),
-                onClick = {
-                    viewModel.flushAllData()
-                    showFlushDialog = false
-                },
-                enabled = !isFlushing
-            ),
-            secondaryButton = DialogButtonConfig(
-                text = context.getString(R.string.sync_clear_data_cancel),
-                onClick = { showFlushDialog = false },
-                isPrimary = false
-            ),
-            onDismiss = { showFlushDialog = false }
-        )
-    }
+
 }
