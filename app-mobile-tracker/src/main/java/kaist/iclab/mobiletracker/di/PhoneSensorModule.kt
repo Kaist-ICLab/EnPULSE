@@ -8,27 +8,28 @@ import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepositoryImpl
 import kaist.iclab.mobiletracker.services.SensorServiceRegistry
 import kaist.iclab.mobiletracker.services.SensorServiceRegistryImpl
+import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.supabase.AmbientLightSensorService
 import kaist.iclab.mobiletracker.services.supabase.AppListChangeSensorService
 import kaist.iclab.mobiletracker.services.supabase.AppUsageLogSensorService
 import kaist.iclab.mobiletracker.services.supabase.BatterySensorService
 import kaist.iclab.mobiletracker.services.supabase.BluetoothScanSensorService
-import kaist.iclab.mobiletracker.services.supabase.ConnectivitySensorService
-import kaist.iclab.mobiletracker.services.supabase.MediaSensorService
-import kaist.iclab.mobiletracker.services.supabase.MessageLogSensorService
-import kaist.iclab.mobiletracker.services.supabase.NotificationSensorService
-import kaist.iclab.mobiletracker.services.supabase.UserInteractionSensorService
 import kaist.iclab.mobiletracker.services.supabase.CallLogSensorService
+import kaist.iclab.mobiletracker.services.supabase.ConnectivitySensorService
 import kaist.iclab.mobiletracker.services.supabase.DataTrafficSensorService
 import kaist.iclab.mobiletracker.services.supabase.DeviceModeSensorService
 import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
-import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
+import kaist.iclab.mobiletracker.services.supabase.MediaSensorService
+import kaist.iclab.mobiletracker.services.supabase.MessageLogSensorService
+import kaist.iclab.mobiletracker.services.supabase.NotificationSensorService
 import kaist.iclab.mobiletracker.services.supabase.ScreenSensorService
 import kaist.iclab.mobiletracker.services.supabase.StepSensorService
-import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.services.supabase.UserInteractionSensorService
 import kaist.iclab.mobiletracker.services.supabase.WifiSensorService
+import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.storage.CouchbaseSensorStateStorage
 import kaist.iclab.mobiletracker.storage.SimpleStateStorage
+import kaist.iclab.mobiletracker.utils.SurveyParser
 import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.common.LocationSensor
@@ -40,17 +41,19 @@ import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
 import kaist.iclab.tracker.sensor.phone.BatterySensor
 import kaist.iclab.tracker.sensor.phone.BluetoothScanSensor
 import kaist.iclab.tracker.sensor.phone.CallLogSensor
+import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DataTrafficSensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
 import kaist.iclab.tracker.sensor.phone.MessageLogSensor
-import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.NotificationSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
+import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
+import kaist.iclab.tracker.storage.couchbase.CouchbaseSurveyScheduleStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.core.qualifier.qualifier
@@ -310,6 +313,41 @@ val phoneSensorModule = module {
         )
     }
 
+    single {
+        CouchbaseSurveyScheduleStorage(
+            couchbase = get(),
+            collectionName = "SurveyScheduleStorage"
+        )
+    }
+
+    single {
+        val context = androidContext()
+        val assetManager = context.assets
+        // TODO: Implement this with the actual JSON from API response
+        val jsonString =
+            assetManager.open("survey_config.json").bufferedReader().use { it.readText() }
+        val parsed = SurveyParser.parse(jsonString)
+
+        SurveySensor(
+            context = context,
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = SimpleStateStorage(
+                SurveySensor.Config(
+                    startTimeOfDay = parsed.startTimeOfDay,
+                    endTimeOfDay = parsed.endTimeOfDay,
+                    scheduleMethod = mapOf(parsed.id to parsed.scheduleMethod),
+                    survey = mapOf(parsed.id to parsed.survey),
+                    notificationConfig = mapOf(parsed.id to parsed.notificationConfig),
+                )
+            ),
+            stateStorage = CouchbaseSensorStateStorage(
+                couchbase = get(),
+                collectionName = SurveySensor::class.simpleName ?: ""
+            ),
+            scheduleStorage = get<CouchbaseSurveyScheduleStorage>(),
+        )
+    }
+
     // Sensors list
     single(named("phoneSensors")) {
         listOf(
@@ -330,6 +368,7 @@ val phoneSensorModule = module {
             get<StepSensor>(),
             get<UserInteractionSensor>(),
             get<WifiScanSensor>(),
+            get<SurveySensor>(),
         )
     }
 
@@ -496,7 +535,7 @@ val phoneSensorModule = module {
         val locationService = get<LocationSensorService>()
         val screenService = get<ScreenSensorService>()
         val wifiService = get<WifiSensorService>()
-        
+
         SensorServiceRegistryImpl(
             mapOf(
                 get<AmbientLightSensor>().id to ambientLightService,

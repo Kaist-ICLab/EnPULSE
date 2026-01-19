@@ -22,7 +22,6 @@ import java.util.Calendar
 
 data class HomeUiState(
     val isTrackingActive: Boolean = false,
-    val lastSyncedTime: String? = null,
     // Phone sensors
     val locationCount: Int = 0,
     val appUsageCount: Int = 0,
@@ -90,7 +89,6 @@ class HomeViewModel(
         homeRepository.getDailySensorCounts(startOfDay).map { counts ->
             HomeUiState(
                 isTrackingActive = state.flag == ControllerState.FLAG.RUNNING,
-                lastSyncedTime = syncTimestampService.getLastSuccessfulUpload(),
                 watchStatus = watchInfo.status,
                 connectedDevices = watchInfo.connectedDevices,
                 // Phone sensors
@@ -126,9 +124,6 @@ class HomeViewModel(
         initialValue = HomeUiState()
     )
 
-    fun triggerSync() {
-        // Handled by existing sync logic
-    }
 
     private data class DataSnapshot(
         val state: ControllerState,

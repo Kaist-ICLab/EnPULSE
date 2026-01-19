@@ -29,8 +29,7 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 
 @Composable
 fun TrackingStatusCard(
-    isActive: Boolean,
-    lastSyncedTime: String?
+    isActive: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -57,26 +56,6 @@ fun TrackingStatusCard(
                 StatusIndicator(isActive = isActive)
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = Styles.STATUS_SUBTITLE_TOP_PADDING),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.home_last_sync_label),
-                    fontSize = Styles.STATUS_SUBTITLE_FONT_SIZE,
-                    color = AppColors.TextSecondary,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = lastSyncedTime ?: stringResource(R.string.home_never_synced),
-                    fontSize = Styles.STATUS_SUBTITLE_FONT_SIZE,
-                    color = AppColors.TextSecondary,
-                    fontWeight = FontWeight.Normal
-                )
-            }
         }
     }
 }

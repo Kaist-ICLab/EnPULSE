@@ -68,10 +68,10 @@ sealed class Question<T>(
         return when(expr) {
             is ValueComparator<T> -> when(expr) {
                 is ValueComparator.Equal<T> -> expr.value == value
-//                is ValueComparator.GreaterThan<T> -> expr.value > value
-//                is ValueComparator.GreaterThanOrEqual<T> -> expr.value >= value
-//                is ValueComparator.LessThan<T> -> expr.value < value
-//                is ValueComparator.LessThanOrEqual<T> -> expr.value <= value
+                is ValueComparator.GreaterThan<T> -> compareValuesAny(value, expr.value)?.let { it > 0 } ?: false
+                is ValueComparator.GreaterThanOrEqual<T> -> compareValuesAny(value, expr.value)?.let { it >= 0 } ?: false
+                is ValueComparator.LessThan<T> -> compareValuesAny(value, expr.value)?.let { it < 0 } ?: false
+                is ValueComparator.LessThanOrEqual<T> -> compareValuesAny(value, expr.value)?.let { it <= 0 } ?: false
                 is ValueComparator.NotEqual<T> -> expr.value != value
             }
 
@@ -82,4 +82,17 @@ sealed class Question<T>(
             }
         }
     }
+}
+
+private fun compareValuesAny(a: Any?, b: Any?): Int? {
+    if (a is Comparable<*> && b is Comparable<*>) {
+        try {
+            @Suppress("UNCHECKED_CAST")
+            val aComp = a as Comparable<Any?>
+            return aComp.compareTo(b)
+        } catch (e: Exception) {
+            return null
+        }
+    }
+    return null
 }

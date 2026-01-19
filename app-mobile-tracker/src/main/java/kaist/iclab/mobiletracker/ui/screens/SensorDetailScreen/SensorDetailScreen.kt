@@ -353,10 +353,6 @@ private fun SummaryCard(
                 label = stringResource(R.string.sensor_detail_last_recorded),
                 value = formatDateTime(uiState.sensorInfo?.lastRecordedTime)
             )
-            SummaryRow(
-                label = stringResource(R.string.sensor_last_sync_server),
-                value = formatDateTime(uiState.sensorInfo?.lastSyncTimestamp)
-            )
 
             if ((uiState.sensorInfo?.totalRecords ?: 0) > 0) {
                 Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
@@ -750,7 +746,7 @@ private fun formatNumber(count: Int): String {
 
 private fun formatDateTime(timestamp: Long?): String {
     if (timestamp == null) return "-"
-    val dateFormat = SimpleDateFormat("HH:mm:ss · MMM d, yyyy", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     return dateFormat.format(Date(timestamp))
 }
 

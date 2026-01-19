@@ -2,6 +2,11 @@ package kaist.iclab.mobiletracker.navigation
 
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -10,29 +15,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.utils.AppToast
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.screens.DataScreen.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.HomeScreen.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.LoginScreen.LoginScreen
+import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AboutSettings.AboutSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.AccountSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.CampaignSettings.CampaignSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.AutomaticSyncSettings.AutomaticSyncSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.LanguageSettings.LanguageScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.PermissionSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PhoneSensorConfigSettings.PhoneSensorConfigSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScreen
+import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SurveySettings.SurveySettingsScreen
+import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
 import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
@@ -50,11 +50,11 @@ fun NavGraph(
     val userState by authViewModel.userState.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
-    
+
     // Track previous login state to show toast on successful login
     var previousLoginState by remember { mutableStateOf(userState.isLoggedIn) }
     var previousErrorMessage by remember { mutableStateOf<String?>(userState.message) }
-    
+
     // Show toast when user successfully logs in
     LaunchedEffect(userState.isLoggedIn) {
         if (userState.isLoggedIn && !previousLoginState) {
@@ -62,19 +62,20 @@ fun NavGraph(
         }
         previousLoginState = userState.isLoggedIn
     }
-    
+
     // Show toast when authentication error occurs
     LaunchedEffect(userState.message) {
         val currentMessage = userState.message
         // Only show toast if there's a new error message and user is not logged in
-        if (currentMessage != null && 
-            currentMessage != previousErrorMessage && 
-            !userState.isLoggedIn) {
+        if (currentMessage != null &&
+            currentMessage != previousErrorMessage &&
+            !userState.isLoggedIn
+        ) {
             AppToast.show(context, currentMessage, AppToast.Duration.LONG)
         }
         previousErrorMessage = currentMessage
     }
-    
+
     // Get system animation duration (respects user's animation speed settings)
     // Fallback to 300ms if system value is unavailable or invalid
     val animationDuration = try {
@@ -95,7 +96,7 @@ fun NavGraph(
     LaunchedEffect(userState.isLoggedIn) {
         val mainTabs = listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
         val currentRoute = navController.currentDestination?.route
-        
+
         if (userState.isLoggedIn) {
             // Navigate to Home screen (main tab) when user logs in
             // Only navigate if we are currently on the Login screen, preventing
@@ -187,6 +188,10 @@ fun NavGraph(
             PhoneSensorConfigSettingsScreen(navController = navController)
         }
 
+        composable(route = Screen.Survey.route) {
+            SurveySettingsScreen(navController = navController)
+        }
+
         composable(route = Screen.Language.route) {
             LanguageScreen(
                 navController = navController,
@@ -217,10 +222,6 @@ fun NavGraph(
         }
 
 
-        composable(route = Screen.AutomaticSync.route) {
-            AutomaticSyncSettingsScreen(navController = navController)
-        }
-
         composable(route = Screen.About.route) {
             AboutSettingsScreen(navController = navController)
         }
@@ -228,8 +229,8 @@ fun NavGraph(
         composable(
             route = Screen.SensorDetail.route,
             arguments = listOf(
-                androidx.navigation.navArgument("sensorId") { 
-                    type = androidx.navigation.NavType.StringType 
+                androidx.navigation.navArgument("sensorId") {
+                    type = androidx.navigation.NavType.StringType
                 }
             )
         ) { backStackEntry ->

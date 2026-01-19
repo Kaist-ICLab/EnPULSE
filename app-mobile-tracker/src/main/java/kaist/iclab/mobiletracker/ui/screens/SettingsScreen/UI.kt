@@ -33,7 +33,6 @@ fun SettingsMenuItem(
     title: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    description: String? = null,
     iconTint: Color = AppColors.PrimaryColor
 ) {
     Row(
@@ -53,23 +52,12 @@ fun SettingsMenuItem(
             modifier = Modifier.size(Styles.ICON_SIZE)
         )
         Spacer(Modifier.width(Styles.ICON_SPACER_WIDTH))
-        Column(
+        Text(
+            text = title,
+            color = AppColors.TextPrimary,
+            fontSize = Styles.TEXT_FONT_SIZE,
             modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = title,
-                color = AppColors.TextPrimary,
-                fontSize = Styles.TEXT_FONT_SIZE,
-            )
-            if (description != null) {
-                Text(
-                    text = description,
-                    color = AppColors.PrimaryColor,
-                    fontSize = Styles.DESCRIPTION_FONT_SIZE,
-                    modifier = Modifier.padding(top = Styles.DESCRIPTION_TOP_PADDING)
-                )
-            }
-        }
+        )
         Icon(
             imageVector = Icons.Filled.ChevronRight,
             contentDescription = null,
@@ -99,7 +87,6 @@ fun SettingsMenuItemWithDivider(
     title: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    description: String? = null,
     showDivider: Boolean = true,
     iconTint: Color = AppColors.PrimaryColor
 ) {
@@ -107,7 +94,6 @@ fun SettingsMenuItemWithDivider(
         title = title,
         icon = icon,
         onClick = onClick,
-        description = description,
         iconTint = iconTint
     )
     if (showDivider) {
