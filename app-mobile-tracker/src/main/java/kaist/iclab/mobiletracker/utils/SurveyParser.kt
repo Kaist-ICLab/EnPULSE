@@ -43,10 +43,15 @@ object SurveyParser {
             val scheduleMethod = when (type) {
                 "INTERVAL" -> {
                     val validIntervalSec = scheduleJson.optLong("intervalSec", 7200)
+                    if (validIntervalSec <= 0) throw IllegalArgumentException("intervalSec must be positive")
                     val intervalMillis = TimeUnit.SECONDS.toMillis(validIntervalSec)
 
                     val startTimeHour = scheduleJson.optInt("dailyStartTimeHour", 9)
                     val endTimeHour = scheduleJson.optInt("dailyEndTimeHour", 22)
+                    
+                    if (startTimeHour !in 0..23 || endTimeHour !in 0..23) {
+                         throw IllegalArgumentException("Daily hours must be between 0 and 23")
+                    }
 
                     // Calculate fixed times based on interval
                     val times = mutableListOf<Long>()
@@ -164,7 +169,7 @@ object SurveyParser {
 
     @Suppress("UNCHECKED_CAST")
     private fun parseQuestion(json: JSONObject): Question<*>? {
-        val type = json.getString("type")
+        val type = json.getString("type").uppercase()
         val text = json.getString("text")
         val isMandatory = json.optBoolean("shouldAnswer", true)
 
@@ -232,13 +237,20 @@ object SurveyParser {
         val options = mutableListOf<Option>()
         if (jsonArray == null || jsonArray.length() == 0) return options
 
+    private fun parseOptions(jsonArray: JSONArray?): List<Option> {
+        val options = mutableListOf<Option>()
+        val seenValues = mutableSetOf<String>()
+        if (jsonArray == null || jsonArray.length() == 0) return options
+
         for (i in 0 until jsonArray.length()) {
             val item = jsonArray.opt(i) // Use opt to be safe
             if (item is String) {
+                if (!seenValues.add(item)) throw IllegalArgumentException("Duplicate option value: $item")
                 options.add(Option(item))
             } else if (item is JSONObject) {
                 val value = item.optString("value")
                 if (value.isNotEmpty()) {
+                    if (!seenValues.add(value)) throw IllegalArgumentException("Duplicate option value: $value")
                     options.add(
                         Option(
                             value = value,
@@ -258,20 +270,9 @@ object SurveyParser {
         if (json == null) return null
 
         val predicateJson = json.getJSONObject("predicate")
-        val predicateType = predicateJson.getString("type")
-        val predicateValue = predicateJson.getString("value")
-
-        // Helper to infer type for predicate
-        // This is tricky because we don't know the parent question's type here easily without passing it down.
-        // But the previous implementation logic implies we construct generic triggers.
-        // For simple string equality (Radio/Text), we treat value as String.
-        // For Number, we might need to parse.
-        // For Checkbox, we might need "contains" logic (not implemented here yet).
-
-        // Strategy: Create the specific typed predicate based on try-parse logic or assumption.
-        // Since we are casting at the call site (e.g. `as? List<QuestionTrigger<String>>`), 
-        // we need to make sure the runtime object matches.
-
+        val predicateType = predicateJson.getString("type").uppercase()
+        // Removed strict getString("value") here to allow flexible parsing below
+        
         val predicate: ValueComparator<*> = when (predicateType) {
             "EQUAL" -> {
                 if (isNumeric) {
@@ -279,88 +280,58 @@ object SurveyParser {
                     if (!doubleVal.isNaN()) {
                         ValueComparator.Equal(doubleVal)
                     } else {
-                        val stringVal = predicateJson.optString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: return null
+                        val stringVal = predicateJson.getString("value")
+                        val parsed = stringVal.toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value for EQUAL: $stringVal")
                         ValueComparator.Equal(parsed)
                     }
                 } else {
-                    ValueComparator.Equal(predicateValue)
+                    ValueComparator.Equal(predicateJson.getString("value"))
                 }
             }
 
             "NOT_EQUAL" -> {
                 if (isNumeric) {
-                    val doubleVal = predicateJson.optDouble("value", Double.NaN)
+                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
                     if (!doubleVal.isNaN()) {
                         ValueComparator.NotEqual(doubleVal)
                     } else {
-                        val stringVal = predicateJson.optString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: return null
+                        val stringVal = predicateJson.getString("value")
+                        val parsed = stringVal.toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value for NOT_EQUAL: $stringVal")
                         ValueComparator.NotEqual(parsed)
                     }
                 } else {
-                    ValueComparator.NotEqual(predicateValue)
+                    ValueComparator.NotEqual(predicateJson.getString("value"))
                 }
             }
-
+            
+            // ... (Rest of inequality logic handled same way, but access value directly)
             "GREATER_THAN" -> {
-                if (isNumeric) {
+                 if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    if (!doubleVal.isNaN()) {
-                        ValueComparator.GreaterThan(doubleVal)
-                    } else {
-                        val stringVal = predicateJson.optString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: return null
-                        ValueComparator.GreaterThan(parsed)
-                    }
-                } else {
-                    return null // String inequality not typically supported or useful here
-                }
+                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    ValueComparator.GreaterThan(value)
+                 } else null
             }
-
             "GREATER_THAN_OR_EQUAL" -> {
-                if (isNumeric) {
+                 if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    if (!doubleVal.isNaN()) {
-                        ValueComparator.GreaterThanOrEqual(doubleVal)
-                    } else {
-                        val stringVal = predicateJson.optString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: return null
-                        ValueComparator.GreaterThanOrEqual(parsed)
-                    }
-                } else {
-                    return null
-                }
+                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    ValueComparator.GreaterThanOrEqual(value)
+                 } else null
             }
-
             "LESS_THAN" -> {
-                if (isNumeric) {
+                 if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    if (!doubleVal.isNaN()) {
-                        ValueComparator.LessThan(doubleVal)
-                    } else {
-                        val stringVal = predicateJson.optString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: return null
-                        ValueComparator.LessThan(parsed)
-                    }
-                } else {
-                    return null
-                }
+                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    ValueComparator.LessThan(value)
+                 } else null
             }
-
             "LESS_THAN_OR_EQUAL" -> {
-                if (isNumeric) {
+                 if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    if (!doubleVal.isNaN()) {
-                        ValueComparator.LessThanOrEqual(doubleVal)
-                    } else {
-                        val stringVal = predicateJson.optString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: return null
-                        ValueComparator.LessThanOrEqual(parsed)
-                    }
-                } else {
-                    return null
-                }
+                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    ValueComparator.LessThanOrEqual(value)
+                 } else null
             }
 
             else -> null
