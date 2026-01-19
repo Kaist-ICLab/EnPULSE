@@ -750,7 +750,7 @@ private fun formatNumber(count: Int): String {
 
 private fun formatDateTime(timestamp: Long?): String {
     if (timestamp == null) return "-"
-    val dateFormat = SimpleDateFormat("HH:mm:ss · MMM d, yyyy", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     return dateFormat.format(Date(timestamp))
 }
 

@@ -25,7 +25,10 @@ data class DataUiState(
     val error: String? = null,
     val isUploading: Boolean = false,
     val isDeleting: Boolean = false,
-    val isExporting: Boolean = false
+    val isExporting: Boolean = false,
+    val currentTime: String = "--",
+    val lastWatchData: String? = null,
+    val lastSuccessfulUpload: String? = null
 )
 
 /**
@@ -39,9 +42,34 @@ class DataViewModel(
 
     private val _uiState = MutableStateFlow(DataUiState())
     val uiState: StateFlow<DataUiState> = _uiState.asStateFlow()
+    
+    private val prefs = context.getSharedPreferences("sync_timestamps", Context.MODE_PRIVATE)
+    private val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
 
     init {
         loadSensorInfo()
+        startTimestampUpdates()
+    }
+    
+    private fun startTimestampUpdates() {
+        viewModelScope.launch {
+            while (true) {
+                val currentTime = dateFormat.format(java.util.Date())
+                val lastWatch = prefs.getLong("last_watch_data", 0L).let { 
+                    if (it > 0) dateFormat.format(java.util.Date(it)) else null 
+                }
+                val lastUpload = prefs.getLong("last_successful_upload", 0L).let { 
+                    if (it > 0) dateFormat.format(java.util.Date(it)) else null 
+                }
+                
+                _uiState.value = _uiState.value.copy(
+                    currentTime = currentTime,
+                    lastWatchData = lastWatch,
+                    lastSuccessfulUpload = lastUpload
+                )
+                kotlinx.coroutines.delay(1000L)
+            }
+        }
     }
 
     /**

@@ -168,7 +168,11 @@ fun DataScreen(
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = Dimens.ScreenVerticalPadding)
                         ) {
                             item {
-                                BulkActionButtons(
+                                SummaryCard(
+                                    currentTime = uiState.currentTime,
+                                    lastWatchData = uiState.lastWatchData,
+                                    lastSuccessfulUpload = uiState.lastSuccessfulUpload,
+                                    totalRecords = uiState.totalRecords,
                                     isUploading = uiState.isUploading,
                                     isDeleting = uiState.isDeleting,
                                     isExporting = uiState.isExporting,
@@ -248,7 +252,11 @@ fun DataScreen(
 }
 
 @Composable
-private fun BulkActionButtons(
+private fun SummaryCard(
+    currentTime: String,
+    lastWatchData: String?,
+    lastSuccessfulUpload: String?,
+    totalRecords: Int,
     isUploading: Boolean,
     isDeleting: Boolean,
     isExporting: Boolean,
@@ -257,96 +265,124 @@ private fun BulkActionButtons(
     onExportClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = AppColors.White),
         elevation = CardDefaults.cardElevation(defaultElevation = Styles.CARD_ELEVATION),
         shape = Styles.CARD_SHAPE
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Export Button
-            Button(
-                onClick = onExportClick,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = AppColors.SecondaryColor),
-                enabled = !isUploading && !isDeleting && !isExporting,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                if (isExporting) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = AppColors.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = stringResource(R.string.sensor_export_csv), fontSize = Dimens.FontSizeBody)
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.sensor_detail_summary),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AppColors.TextPrimary
+            )
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            // Summary rows following SensorDetail style
+            SummaryRow(
+                label = stringResource(R.string.sync_current_time),
+                value = currentTime
+            )
+            SummaryRow(
+                label = stringResource(R.string.sync_last_watch_data),
+                value = lastWatchData ?: "--"
+            )
+            SummaryRow(
+                label = stringResource(R.string.sync_last_successful_upload),
+                value = lastSuccessfulUpload ?: "--"
+            )
 
+            if (totalRecords > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Export Button (Full width)
                 Button(
-                    onClick = onUploadClick,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryColor),
+                    onClick = onExportClick,
+                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.SecondaryColor),
                     enabled = !isUploading && !isDeleting && !isExporting,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    if (isUploading) {
+                    if (isExporting) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(18.dp),
                             color = AppColors.White,
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = stringResource(R.string.sync_start_data_upload), fontSize = Dimens.FontSizeBody)
-                        }
+                        Text(text = stringResource(R.string.sensor_export_csv), fontSize = 12.sp)
                     }
                 }
 
-                Button(
-                    onClick = onDeleteClick,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = AppColors.ErrorColor.copy(alpha = 0.1f)),
-                    enabled = !isUploading && !isDeleting,
-                    shape = RoundedCornerShape(8.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (isDeleting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = AppColors.ErrorColor,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Delete, 
-                                contentDescription = null, 
+                    // Upload button
+                    Button(
+                        onClick = onUploadClick,
+                        modifier = Modifier.weight(1f).height(36.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryColor),
+                        enabled = !isUploading && !isDeleting && !isExporting,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(
                                 modifier = Modifier.size(18.dp),
-                                tint = AppColors.ErrorColor
+                                color = AppColors.White,
+                                strokeWidth = 2.dp
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.sync_delete_data), 
-                                color = AppColors.ErrorColor,
-                                fontSize = Dimens.FontSizeBody
+                        } else {
+                            Text(text = stringResource(R.string.sync_start_data_upload), fontSize = 12.sp)
+                        }
+                    }
+
+                    // Delete button
+                    Button(
+                        onClick = onDeleteClick,
+                        modifier = Modifier.weight(1f).height(36.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.ErrorColor),
+                        enabled = !isUploading && !isDeleting,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        if (isDeleting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = AppColors.White,
+                                strokeWidth = 2.dp
                             )
+                        } else {
+                            Text(text = stringResource(R.string.sync_delete_data), fontSize = 12.sp)
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = AppColors.TextSecondary
+        )
+        Text(
+            text = value,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = AppColors.TextPrimary
+        )
     }
 }
 
@@ -485,5 +521,4 @@ private fun formatLastRecorded(timestamp: Long?): String {
 private fun formatRecordCount(count: Int): String {
     return count.toString()
 }
-
 
