@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface WatchHeartRateDao : BaseDao<WatchHeartRateEntity, WatchHeartRateEntity> {
     @Insert
     suspend fun insert(entities: List<WatchHeartRateEntity>)
-    
+
     override suspend fun insert(sensorEntity: WatchHeartRateEntity, userUuid: String?) {
         insert(listOf(sensorEntity))
     }
@@ -39,7 +39,12 @@ interface WatchHeartRateDao : BaseDao<WatchHeartRateEntity, WatchHeartRateEntity
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM watch_heart_rate WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<WatchHeartRateEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<WatchHeartRateEntity>
 
     @Query("DELETE FROM watch_heart_rate WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

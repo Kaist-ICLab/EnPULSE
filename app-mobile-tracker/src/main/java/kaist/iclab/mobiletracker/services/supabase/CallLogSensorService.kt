@@ -15,16 +15,16 @@ class CallLogSensorService(
     tableName = AppConfig.SupabaseTables.CALL_LOG_SENSOR,
     sensorName = "Call Log"
 ) {
-    
+
     override fun prepareData(data: CallLogSensorData): CallLogSensorData {
         // Don't override UUID - it should already be set to user UUID
         return data
     }
-    
+
     suspend fun insertCallLogSensorData(data: CallLogSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertCallLogSensorDataBatch(dataList: List<CallLogSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

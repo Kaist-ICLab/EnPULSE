@@ -32,8 +32,10 @@ fun Header(title: String, canNavigateBack: Boolean, navigateBack: () -> Unit) {
         navigationIcon = {
             if (canNavigateBack) {
                 IconButton(onClick = navigateBack) {
-                    Icon(Icons.Filled.ChevronLeft,
-                        contentDescription = "Back")
+                    Icon(
+                        Icons.Filled.ChevronLeft,
+                        contentDescription = "Back"
+                    )
                 }
             }
         },

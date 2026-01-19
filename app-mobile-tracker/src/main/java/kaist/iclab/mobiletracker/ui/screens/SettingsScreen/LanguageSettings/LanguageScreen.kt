@@ -69,7 +69,7 @@ fun LanguageScreen(
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
             }
-            
+
             // Description text
             Text(
                 text = context.getString(R.string.language_screen_description),

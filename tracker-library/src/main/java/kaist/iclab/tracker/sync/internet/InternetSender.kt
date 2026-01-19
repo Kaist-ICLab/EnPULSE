@@ -10,7 +10,7 @@ import okhttp3.Response
 /**
  * Internet data sender for sending data through HTTP.
  * Supports various HTTP methods for different use cases.
- * 
+ *
  * Internal class - only accessible through InternetDataChannel.
  */
 enum class InternetMethod {

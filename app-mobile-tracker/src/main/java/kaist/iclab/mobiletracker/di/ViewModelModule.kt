@@ -44,7 +44,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // AccountSettingsViewModel
     viewModel {
         AccountSettingsViewModel(
@@ -55,7 +55,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // ServerSyncSettingsViewModel
     viewModel {
         DataSyncSettingsViewModel(
@@ -65,7 +65,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // DataViewModel for Data screen
     viewModel {
         DataViewModel(
@@ -73,7 +73,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // SensorDetailViewModel for Sensor Detail screen
     viewModel { (sensorId: String) ->
         SensorDetailViewModel(

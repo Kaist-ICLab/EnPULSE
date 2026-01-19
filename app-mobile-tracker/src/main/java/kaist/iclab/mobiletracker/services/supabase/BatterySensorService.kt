@@ -15,16 +15,16 @@ class BatterySensorService(
     tableName = AppConfig.SupabaseTables.BATTERY_SENSOR,
     sensorName = "Battery"
 ) {
-    
+
     override fun prepareData(data: BatterySensorData): BatterySensorData {
         // Don't override UUID - it should already be set to user UUID
         return data
     }
-    
+
     suspend fun insertBatterySensorData(data: BatterySensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertBatterySensorDataBatch(dataList: List<BatterySensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

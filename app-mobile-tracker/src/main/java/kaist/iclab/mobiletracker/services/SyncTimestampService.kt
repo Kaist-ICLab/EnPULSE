@@ -24,7 +24,7 @@ class SyncTimestampService(context: Context) {
         // Automatic sync preferences
         private const val KEY_AUTO_SYNC_INTERVAL = "auto_sync_interval"
         private const val KEY_AUTO_SYNC_NETWORK = "auto_sync_network"
-        
+
         // Cached user UUID for background operations
         private const val KEY_CACHED_USER_UUID = "cached_user_uuid"
 
@@ -207,7 +207,6 @@ class SyncTimestampService(context: Context) {
             null
         }
     }
-
 
 
     /**

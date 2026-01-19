@@ -5,9 +5,9 @@ sealed class SurveyScheduleMethod {
         val minInterval: Long,
         val maxInterval: Long,
         val numSurvey: Int,
-    ): SurveyScheduleMethod()
+    ) : SurveyScheduleMethod()
 
     data class Fixed(
         val timeOfDay: List<Long>
-    ): SurveyScheduleMethod()
+    ) : SurveyScheduleMethod()
 }

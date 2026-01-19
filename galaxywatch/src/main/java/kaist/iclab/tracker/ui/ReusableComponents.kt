@@ -123,13 +123,14 @@ fun BasicChip(
 }
 
 @Composable
-fun BasicToggleChip(modifier: Modifier = Modifier,
-                    checked: Boolean = false,
-                    enabled: Boolean = true,
-                    onEnable : () -> Unit = {},
-                    onDisable: () -> Unit = {},
-                    text: String = "TEXT",
-                    ) {
+fun BasicToggleChip(
+    modifier: Modifier = Modifier,
+    checked: Boolean = false,
+    enabled: Boolean = true,
+    onEnable: () -> Unit = {},
+    onDisable: () -> Unit = {},
+    text: String = "TEXT",
+) {
     ToggleChip(
         modifier = modifier,
         checked = checked,
@@ -143,7 +144,7 @@ fun BasicToggleChip(modifier: Modifier = Modifier,
             )
         },
         onCheckedChange = {
-            if(it) onEnable() else onDisable()
+            if (it) onEnable() else onDisable()
         },
         label = {
             Text(
@@ -154,7 +155,6 @@ fun BasicToggleChip(modifier: Modifier = Modifier,
         },
     )
 }
-
 
 
 // Button Preview
@@ -210,7 +210,7 @@ fun BasicChipPreview() {
 @Composable
 fun BasicToggleChipPreview() {
     WearAppTheme {
-         BasicToggleChip(
+        BasicToggleChip(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),

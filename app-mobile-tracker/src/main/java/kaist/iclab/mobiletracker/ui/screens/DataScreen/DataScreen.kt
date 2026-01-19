@@ -75,12 +75,12 @@ fun DataScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    
+
     var showUploadConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val pullRefreshState = rememberPullToRefreshState()
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -158,6 +158,7 @@ fun DataScreen(
                             )
                         }
                     }
+
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -182,8 +183,12 @@ fun DataScreen(
                             items(uiState.sensors) { sensor ->
                                 SensorListItem(
                                     sensor = sensor,
-                                    onClick = { 
-                                        navController.navigate(Screen.SensorDetail.createRoute(sensor.sensorId))
+                                    onClick = {
+                                        navController.navigate(
+                                            Screen.SensorDetail.createRoute(
+                                                sensor.sensorId
+                                            )
+                                        )
                                     }
                                 )
                             }
@@ -200,7 +205,10 @@ fun DataScreen(
             title = stringResource(R.string.sensor_upload_data_confirm),
             content = {
                 Text(
-                    text = stringResource(R.string.sensor_upload_data_message).replace("this sensor", "all sensors"),
+                    text = stringResource(R.string.sensor_upload_data_message).replace(
+                        "this sensor",
+                        "all sensors"
+                    ),
                     fontSize = Dimens.FontSizeBody,
                     color = AppColors.TextPrimary
                 )
@@ -296,7 +304,9 @@ private fun SummaryCard(
                 // Export Button (Full width)
                 Button(
                     onClick = onExportClick,
-                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(36.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AppColors.SecondaryColor),
                     enabled = !isUploading && !isDeleting && !isExporting,
                     shape = RoundedCornerShape(8.dp)
@@ -321,7 +331,9 @@ private fun SummaryCard(
                     // Upload button
                     Button(
                         onClick = onUploadClick,
-                        modifier = Modifier.weight(1f).height(36.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(36.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryColor),
                         enabled = !isUploading && !isDeleting && !isExporting,
                         shape = RoundedCornerShape(8.dp)
@@ -333,14 +345,19 @@ private fun SummaryCard(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text(text = stringResource(R.string.sync_start_data_upload), fontSize = 12.sp)
+                            Text(
+                                text = stringResource(R.string.sync_start_data_upload),
+                                fontSize = 12.sp
+                            )
                         }
                     }
 
                     // Delete button
                     Button(
                         onClick = onDeleteClick,
-                        modifier = Modifier.weight(1f).height(36.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(36.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.ErrorColor),
                         enabled = !isUploading && !isDeleting,
                         shape = RoundedCornerShape(8.dp)
@@ -487,24 +504,27 @@ private fun SensorListItem(
 @Composable
 private fun formatLastRecorded(timestamp: Long?): String {
     if (timestamp == null) return stringResource(R.string.data_screen_last_recorded_none)
-    
+
     val now = System.currentTimeMillis()
     val diff = now - timestamp
-    
+
     return when {
         diff < TimeUnit.MINUTES.toMillis(1) -> "Just now"
         diff < TimeUnit.HOURS.toMillis(1) -> {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
             "$minutes min ago"
         }
+
         diff < TimeUnit.DAYS.toMillis(1) -> {
             val hours = TimeUnit.MILLISECONDS.toHours(diff)
             "$hours hour${if (hours > 1) "s" else ""} ago"
         }
+
         diff < TimeUnit.DAYS.toMillis(7) -> {
             val days = TimeUnit.MILLISECONDS.toDays(diff)
             "$days day${if (days > 1) "s" else ""} ago"
         }
+
         else -> {
             val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
             dateFormat.format(Date(timestamp))

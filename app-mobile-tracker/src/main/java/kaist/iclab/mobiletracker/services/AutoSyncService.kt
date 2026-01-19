@@ -37,13 +37,14 @@ import org.koin.core.qualifier.named
 class AutoSyncService : Service(), KoinComponent {
     companion object {
         private const val TAG = "AutoSyncService"
-        private const val CHECK_INTERVAL_MS = 10_000L // Check every 10 seconds to catch short intervals
-        
+        private const val CHECK_INTERVAL_MS =
+            10_000L // Check every 10 seconds to catch short intervals
+
         private const val NOTIFICATION_CHANNEL_ID = "auto_sync_channel"
         private const val NOTIFICATION_CHANNEL_NAME = "Auto Sync Notifications"
         private const val NOTIFICATION_ID_SUCCESS = 1001
         private const val NOTIFICATION_ID_FAILURE = 1002
-        
+
         /**
          * Helper function to start the service from a Context
          */
@@ -51,7 +52,7 @@ class AutoSyncService : Service(), KoinComponent {
             val intent = Intent(context, AutoSyncService::class.java)
             context.startService(intent)
         }
-        
+
         /**
          * Helper function to stop the service from a Context
          */
@@ -144,7 +145,7 @@ class AutoSyncService : Service(), KoinComponent {
      */
     private suspend fun checkAndSyncIfNeeded() {
         val currentTime = System.currentTimeMillis()
-        
+
         // Check if data collection is running
         val dataCollectionStarted = syncTimestampService.getDataCollectionStarted()
         if (dataCollectionStarted == null) {
@@ -188,13 +189,14 @@ class AutoSyncService : Service(), KoinComponent {
      */
     private fun isNetworkConditionMet(): Boolean {
         val networkMode = syncTimestampService.getAutoSyncNetworkMode()
-        
+
         // If mode is WIFI_MOBILE, any connection is fine
         if (networkMode == SyncTimestampService.AUTO_SYNC_NETWORK_WIFI_MOBILE) {
             return isConnected()
         }
 
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
 
@@ -212,7 +214,8 @@ class AutoSyncService : Service(), KoinComponent {
      * Checks if device has any network connection
      */
     private fun isConnected(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
@@ -227,7 +230,7 @@ class AutoSyncService : Service(), KoinComponent {
         var failureCount = 0
         var skippedCount = 0
         val failedSensors = mutableListOf<String>()
-        
+
         try {
             sensors.forEach { sensor ->
                 if (phoneSensorUploadService.hasDataToUpload(sensor.id)) {
@@ -235,17 +238,22 @@ class AutoSyncService : Service(), KoinComponent {
                         is Result.Success -> {
                             successCount++
                         }
+
                         is Result.Error -> {
                             failureCount++
                             failedSensors.add(sensor.name)
-                            Log.e(TAG, "Error uploading data for ${sensor.name}: ${result.message}", result.exception)
+                            Log.e(
+                                TAG,
+                                "Error uploading data for ${sensor.name}: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 } else {
                     skippedCount++
                 }
             }
-            
+
             // Upload all watch sensors
             SensorTypeHelper.watchSensorIds.forEach { sensorId ->
                 if (watchSensorUploadService.hasDataToUpload(sensorId)) {
@@ -253,24 +261,29 @@ class AutoSyncService : Service(), KoinComponent {
                         is Result.Success -> {
                             successCount++
                         }
+
                         is Result.Error -> {
                             failureCount++
                             failedSensors.add(sensorId)
-                            Log.e(TAG, "Error uploading watch data for $sensorId: ${result.message}", result.exception)
+                            Log.e(
+                                TAG,
+                                "Error uploading watch data for $sensorId: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 } else {
                     skippedCount++
                 }
             }
-            
+
             // Show notification based on results (show success OR failure, not both)
             if (successCount > 0) {
                 showSuccessNotification(successCount)
             } else if (failureCount > 0) {
                 showFailureNotification(failureCount, failedSensors)
             }
-            
+
         } catch (e: Exception) {
             Log.e(TAG, "Fatal error in auto-sync upload: ${e.message}", e)
             showFailureNotification(0, listOf("Fatal error: ${e.message}"))
@@ -281,7 +294,8 @@ class AutoSyncService : Service(), KoinComponent {
      * Shows a success notification when auto-sync completes successfully
      */
     private fun showSuccessNotification(successCount: Int) {
-        val pendingIntent = NotificationHelper.createMainActivityPendingIntent(this, NOTIFICATION_ID_SUCCESS)
+        val pendingIntent =
+            NotificationHelper.createMainActivityPendingIntent(this, NOTIFICATION_ID_SUCCESS)
         val localizedContext = LanguageHelper(this).applyLanguage(this)
         val notification = NotificationHelper.buildNotification(
             context = this,
@@ -290,7 +304,7 @@ class AutoSyncService : Service(), KoinComponent {
             text = localizedContext.getString(R.string.auto_sync_success_message, successCount),
             pendingIntent = pendingIntent
         ).build()
-        
+
         NotificationHelper.showNotification(this, NOTIFICATION_ID_SUCCESS, notification)
     }
 
@@ -303,17 +317,22 @@ class AutoSyncService : Service(), KoinComponent {
         } else {
             ""
         }
-        
-        val pendingIntent = NotificationHelper.createMainActivityPendingIntent(this, NOTIFICATION_ID_FAILURE)
+
+        val pendingIntent =
+            NotificationHelper.createMainActivityPendingIntent(this, NOTIFICATION_ID_FAILURE)
         val localizedContext = LanguageHelper(this).applyLanguage(this)
         val notification = NotificationHelper.buildNotification(
             context = this,
             channelId = NOTIFICATION_CHANNEL_ID,
             title = localizedContext.getString(R.string.auto_sync_failure_title),
-            text = localizedContext.getString(R.string.auto_sync_failure_message, failureCount, failedSensorsText),
+            text = localizedContext.getString(
+                R.string.auto_sync_failure_message,
+                failureCount,
+                failedSensorsText
+            ),
             pendingIntent = pendingIntent
         ).build()
-        
+
         NotificationHelper.showNotification(this, NOTIFICATION_ID_FAILURE, notification)
         Log.w(TAG, "Failure notification shown: $failureCount sensors failed")
     }

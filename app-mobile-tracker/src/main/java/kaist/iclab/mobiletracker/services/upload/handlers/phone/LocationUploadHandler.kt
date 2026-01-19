@@ -17,13 +17,15 @@ class LocationUploadHandler(
     override val sensorId = "Location"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        val entities = dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
+        val entities =
+            dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
         return entities.isNotEmpty()
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return try {
-            val entities = dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
+            val entities =
+                dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
             if (entities.isEmpty()) {
                 return Result.Error(IllegalStateException("No new data available to upload"))
             }

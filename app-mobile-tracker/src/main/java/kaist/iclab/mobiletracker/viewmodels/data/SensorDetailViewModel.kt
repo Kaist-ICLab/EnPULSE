@@ -71,27 +71,27 @@ class SensorDetailViewModel(
             try {
                 val dateFilter = _uiState.value.dateFilter
                 val pageSize = _uiState.value.pageSize.value
-                
+
                 // Load info and count if needed (or if not loaded yet)
                 var info = _uiState.value.sensorInfo
                 var filteredCount = _uiState.value.filteredCount
-                
+
                 if (loadInfo || info == null) {
                     info = dataRepository.getSensorDetailInfo(sensorId)
                     filteredCount = dataRepository.getSensorRecordCount(sensorId, dateFilter)
                 }
-                
+
                 // Calculate total pages
                 val totalPages = if (filteredCount > 0) {
                     (filteredCount + pageSize - 1) / pageSize
                 } else {
                     1
                 }
-                
+
                 // Validate page
                 val safePage = page.coerceIn(1, totalPages)
                 val offset = (safePage - 1) * pageSize
-                
+
                 val records = dataRepository.getSensorRecords(
                     sensorId = sensorId,
                     dateFilter = dateFilter,
@@ -99,7 +99,7 @@ class SensorDetailViewModel(
                     limit = pageSize,
                     offset = offset
                 )
-                
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     sensorInfo = info,
@@ -134,7 +134,7 @@ class SensorDetailViewModel(
         }
         loadSensorDetail()
     }
-    
+
     /**
      * Set custom date range for CUSTOM filter.
      */
@@ -146,7 +146,7 @@ class SensorDetailViewModel(
         )
         loadSensorDetail()
     }
-    
+
     /**
      * Change page size.
      */
@@ -209,7 +209,7 @@ class SensorDetailViewModel(
      */
     fun uploadSensorData() {
         if (_uiState.value.isUploading) return
-        
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUploading = true)
             try {
@@ -220,9 +220,11 @@ class SensorDetailViewModel(
                         // Refresh to update sync timestamp
                         loadSensorDetail()
                     }
+
                     result == 0 -> {
                         AppToast.show(context, R.string.toast_no_data_to_upload)
                     }
+
                     else -> {
                         AppToast.show(context, R.string.toast_sensor_data_upload_error)
                     }
@@ -241,7 +243,7 @@ class SensorDetailViewModel(
      */
     fun deleteAllSensorData() {
         if (_uiState.value.isDeleting) return
-        
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isDeleting = true)
             try {
@@ -257,13 +259,13 @@ class SensorDetailViewModel(
             }
         }
     }
-    
+
     /**
      * Export sensor data to CSV and share.
      */
     fun exportToCsv() {
         if (_uiState.value.isExporting) return
-        
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isExporting = true)
             try {
@@ -271,13 +273,13 @@ class SensorDetailViewModel(
                     sensorId = sensorId,
                     dateFilter = _uiState.value.dateFilter
                 )
-                
+
                 if (records.isEmpty()) {
                     AppToast.show(context, R.string.toast_no_data_to_export)
                 } else {
                     val sensorName = _uiState.value.sensorInfo?.displayName ?: sensorId
                     val uri = CsvExportHelper.exportToCsv(context, sensorName, records)
-                    
+
                     if (uri != null) {
                         CsvExportHelper.shareCsv(context, uri, sensorName)
                     } else {

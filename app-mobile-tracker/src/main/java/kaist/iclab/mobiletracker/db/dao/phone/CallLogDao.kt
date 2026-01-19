@@ -8,7 +8,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.CallLogEntity
 import kaist.iclab.tracker.sensor.phone.CallLogSensor
 
 @Dao
-interface CallLogDao: BaseDao<CallLogSensor.Entity, CallLogEntity> {
+interface CallLogDao : BaseDao<CallLogSensor.Entity, CallLogEntity> {
     override suspend fun insert(sensorEntity: CallLogSensor.Entity, userUuid: String?) {
         val entity = CallLogEntity(
             uuid = userUuid ?: "",
@@ -57,7 +57,12 @@ interface CallLogDao: BaseDao<CallLogSensor.Entity, CallLogEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM CallLogEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<CallLogEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<CallLogEntity>
 
     @Query("DELETE FROM CallLogEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

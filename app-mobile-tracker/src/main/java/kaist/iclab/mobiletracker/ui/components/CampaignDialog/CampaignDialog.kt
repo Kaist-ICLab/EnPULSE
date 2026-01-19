@@ -42,7 +42,7 @@ fun CampaignDialog(
 ) {
     val context = LocalContext.current
     var selected by remember { mutableStateOf(selectedCampaignId) }
-    
+
     PopupDialog(
         title = context.getString(R.string.campaign_dialog_title),
         content = {
@@ -60,6 +60,7 @@ fun CampaignDialog(
                         )
                     }
                 }
+
                 error != null -> {
                     Text(
                         text = error,
@@ -71,6 +72,7 @@ fun CampaignDialog(
                             .padding(vertical = 16.dp)
                     )
                 }
+
                 campaigns.isEmpty() -> {
                     Text(
                         text = context.getString(R.string.campaign_no_campaign_joined),
@@ -82,6 +84,7 @@ fun CampaignDialog(
                             .padding(vertical = 16.dp)
                     )
                 }
+
                 else -> {
                     Column(
                         modifier = Modifier.fillMaxWidth()

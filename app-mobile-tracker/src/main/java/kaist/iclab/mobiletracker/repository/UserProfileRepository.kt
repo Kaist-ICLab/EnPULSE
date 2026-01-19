@@ -13,13 +13,13 @@ interface UserProfileRepository {
      * @return StateFlow of the cached profile
      */
     val profileFlow: StateFlow<ProfileData?>
-    
+
     /**
      * Save user profile to cache
      * @param profile The profile to cache
      */
     fun saveProfile(profile: ProfileData)
-    
+
     /**
      * Clear cached user profile
      */

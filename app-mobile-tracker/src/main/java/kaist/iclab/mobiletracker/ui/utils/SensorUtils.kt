@@ -109,7 +109,7 @@ fun getLocalizedSensorDescription(sensorId: String): String {
 fun getSensorIcon(sensorId: String): ImageVector {
     // Normalize logic matching AppColors
     val normalizedId = sensorId.replace(" ", "")
-    
+
     return when (normalizedId) {
         "AmbientLight" -> Icons.Default.LightMode
         "AppListChange" -> Icons.Default.AppRegistration

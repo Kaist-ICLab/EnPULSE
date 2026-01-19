@@ -57,7 +57,7 @@ private fun PermissionRow(
     val permissionDescription = getPermissionDescription(context, permission.ids.first())
     // Get icon from first permission ID
     val permissionIcon = getPermissionIcon(permission.ids.first())
-    
+
     // Status text and color
     val statusText = getPermissionStatusText(context, permissionState)
     val statusColor = when (permissionState) {
@@ -67,7 +67,7 @@ private fun PermissionRow(
         PermissionState.GRANTED -> AppColors.PrimaryColor
         PermissionState.RATIONALE_REQUIRED -> AppColors.ErrorColor
     }
-    
+
     // Card is clickable and shows arrow only if not unsupported
     val isSupported = permissionState != PermissionState.UNSUPPORTED
 

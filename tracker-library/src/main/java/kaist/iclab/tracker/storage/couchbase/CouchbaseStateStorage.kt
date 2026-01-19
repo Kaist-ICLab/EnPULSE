@@ -13,9 +13,10 @@ open class CouchbaseStateStorage<T>(
     private val defaultVal: T,
     private val clazz: Class<T>,
     private val collectionName: String
-): StateStorage<T> {
+) : StateStorage<T> {
     private val _stateFlow = MutableStateFlow(defaultVal)
-    override val stateFlow: StateFlow<T> get()
+    override val stateFlow: StateFlow<T>
+        get()
         = _stateFlow
 
     private val collection = couchbase.getCollection(collectionName)
@@ -51,7 +52,7 @@ open class CouchbaseStateStorage<T>(
 
     override fun get(): T {
         val document = collection.getDocument(collectionName)
-        if(document == null) {
+        if (document == null) {
             set(defaultVal)
             return defaultVal
         }

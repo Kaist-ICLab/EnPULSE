@@ -52,6 +52,7 @@ object Constants {
         const val FLUSH_DATA_FAILURE = 1004
         const val ERROR = 2000 // Base ID for errors, will be incremented for multiple errors
     }
+
     /**
      * Device Info Constants
      */

@@ -35,80 +35,114 @@ private data class PermissionConfig(
 private val permissionConfigs = buildList {
     // Add conditional permissions
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        add(PermissionConfig(
-            permissionId = Manifest.permission.POST_NOTIFICATIONS,
-            icon = Icons.Filled.Notifications
-        ))
+        add(
+            PermissionConfig(
+                permissionId = Manifest.permission.POST_NOTIFICATIONS,
+                icon = Icons.Filled.Notifications
+            )
+        )
     }
-    add(PermissionConfig(
-        permissionId = Manifest.permission.ACCESS_FINE_LOCATION,
-        icon = Icons.Filled.Place
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-        icon = Icons.Filled.Place
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.ACTIVITY_RECOGNITION,
-        icon = Icons.AutoMirrored.Filled.DirectionsWalk
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.READ_CONTACTS,
-        icon = Icons.Filled.Contacts
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.CAMERA,
-        icon = Icons.Filled.Camera
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.RECORD_AUDIO,
-        icon = Icons.Filled.Mic
-    ))
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.ACCESS_FINE_LOCATION,
+            icon = Icons.Filled.Place
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+            icon = Icons.Filled.Place
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.ACTIVITY_RECOGNITION,
+            icon = Icons.AutoMirrored.Filled.DirectionsWalk
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.READ_CONTACTS,
+            icon = Icons.Filled.Contacts
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.CAMERA,
+            icon = Icons.Filled.Camera
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.RECORD_AUDIO,
+            icon = Icons.Filled.Mic
+        )
+    )
     // Android 13+ uses granular media permissions, Android 12 and below uses READ_EXTERNAL_STORAGE
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        add(PermissionConfig(
-            permissionId = Manifest.permission.READ_MEDIA_IMAGES,
-            icon = Icons.Filled.Storage
-        ))
-        add(PermissionConfig(
-            permissionId = Manifest.permission.READ_MEDIA_VIDEO,
-            icon = Icons.Filled.Storage
-        ))
-        add(PermissionConfig(
-            permissionId = Manifest.permission.READ_MEDIA_AUDIO,
-            icon = Icons.Filled.Storage
-        ))
+        add(
+            PermissionConfig(
+                permissionId = Manifest.permission.READ_MEDIA_IMAGES,
+                icon = Icons.Filled.Storage
+            )
+        )
+        add(
+            PermissionConfig(
+                permissionId = Manifest.permission.READ_MEDIA_VIDEO,
+                icon = Icons.Filled.Storage
+            )
+        )
+        add(
+            PermissionConfig(
+                permissionId = Manifest.permission.READ_MEDIA_AUDIO,
+                icon = Icons.Filled.Storage
+            )
+        )
     } else {
-        add(PermissionConfig(
-            permissionId = Manifest.permission.READ_EXTERNAL_STORAGE,
-            icon = Icons.Filled.Storage
-        ))
+        add(
+            PermissionConfig(
+                permissionId = Manifest.permission.READ_EXTERNAL_STORAGE,
+                icon = Icons.Filled.Storage
+            )
+        )
     }
-    add(PermissionConfig(
-        permissionId = Manifest.permission.READ_CALENDAR,
-        icon = Icons.Filled.CalendarMonth
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.BODY_SENSORS,
-        icon = Icons.Filled.FitnessCenter
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.BIND_ACCESSIBILITY_SERVICE,
-        icon = Icons.Filled.Accessibility
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
-        icon = Icons.Filled.Notifications
-    ))
-    add(PermissionConfig(
-        permissionId = Manifest.permission.PACKAGE_USAGE_STATS,
-        icon = Icons.Filled.GridView
-    ))
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.READ_CALENDAR,
+            icon = Icons.Filled.CalendarMonth
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.BODY_SENSORS,
+            icon = Icons.Filled.FitnessCenter
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.BIND_ACCESSIBILITY_SERVICE,
+            icon = Icons.Filled.Accessibility
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
+            icon = Icons.Filled.Notifications
+        )
+    )
+    add(
+        PermissionConfig(
+            permissionId = Manifest.permission.PACKAGE_USAGE_STATS,
+            icon = Icons.Filled.GridView
+        )
+    )
     // Samsung Health Steps
-    add(PermissionConfig(
-        permissionId = DataTypes.STEPS.name,
-        icon = Icons.AutoMirrored.Filled.DirectionsWalk
-    ))
+    add(
+        PermissionConfig(
+            permissionId = DataTypes.STEPS.name,
+            icon = Icons.AutoMirrored.Filled.DirectionsWalk
+        )
+    )
 }
 
 /**
@@ -156,7 +190,7 @@ fun getPermissionDescription(context: Context, permissionId: String): String {
         DataTypes.STEPS.name -> R.string.permission_desc_steps
         else -> null
     }
-    
+
     return stringResId?.let { context.getString(it) } ?: ""
 }
 
@@ -184,7 +218,7 @@ fun getPermissionName(context: Context, permissionId: String): String {
         DataTypes.STEPS.name -> R.string.permission_name_steps
         else -> null
     }
-    
+
     return stringResId?.let { context.getString(it) } ?: ""
 }
 

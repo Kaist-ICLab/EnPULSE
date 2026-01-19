@@ -24,7 +24,10 @@ abstract class DataChannelReceiver : DataReceiver {
     /**
      * Remove a listener for specific keys
      */
-    override fun removeOnReceivedListener(keys: Set<String>, callback: (String, JsonElement) -> Unit) {
+    override fun removeOnReceivedListener(
+        keys: Set<String>,
+        callback: (String, JsonElement) -> Unit
+    ) {
         for (key in keys) {
             callbackList[key]?.remove(callback)
         }

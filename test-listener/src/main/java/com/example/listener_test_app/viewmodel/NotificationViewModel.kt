@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import kaist.iclab.tracker.listener.NotificationListener
 import kaist.iclab.tracker.listener.core.NotificationEventInfo
 
-class NotificationViewModel: ViewModel() {
+class NotificationViewModel : ViewModel() {
     private val notificationListener by mutableStateOf(NotificationListener())
 
     private val tag = "NotificationListenerApp"
@@ -16,8 +16,12 @@ class NotificationViewModel: ViewModel() {
     fun addCallback() {
         val count = list.size
         val callback = { event: NotificationEventInfo ->
-            when(event){
-                is NotificationEventInfo.Posted -> Log.v(tag, "Callback $count: Notification posted")
+            when (event) {
+                is NotificationEventInfo.Posted -> Log.v(
+                    tag,
+                    "Callback $count: Notification posted"
+                )
+
                 else -> Log.v(tag, "Callback $count: Notification removed")
             }
             Unit
@@ -28,7 +32,7 @@ class NotificationViewModel: ViewModel() {
     }
 
     fun removeCallback() {
-        if(list.size > 0) {
+        if (list.size > 0) {
             val lastCallback = list.last()
             list.remove(lastCallback)
             notificationListener.removeListener(lastCallback)

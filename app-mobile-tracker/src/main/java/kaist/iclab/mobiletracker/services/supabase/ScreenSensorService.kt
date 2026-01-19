@@ -15,16 +15,16 @@ class ScreenSensorService(
     tableName = AppConfig.SupabaseTables.SCREEN_SENSOR,
     sensorName = "Screen"
 ) {
-    
+
     override fun prepareData(data: ScreenSensorData): ScreenSensorData {
         // Don't override UUID - it should already be set to user UUID
         return data
     }
-    
+
     suspend fun insertScreenSensorData(data: ScreenSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertScreenSensorDataBatch(dataList: List<ScreenSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

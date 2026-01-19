@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 class UserProfileRepositoryImpl : UserProfileRepository {
     private val _profile = MutableStateFlow<ProfileData?>(null)
     override val profileFlow: StateFlow<ProfileData?> = _profile.asStateFlow()
-    
+
     override fun saveProfile(profile: ProfileData) {
         _profile.value = profile
     }
-    
+
     override fun clearProfile() {
         _profile.value = null
     }

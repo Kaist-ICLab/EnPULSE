@@ -64,7 +64,8 @@ class MainActivity : ComponentActivity() {
                         controller.start()
                     },
                     onStop = {
-                        controller.stop() }
+                        controller.stop()
+                    }
                 )
             }
         }
@@ -72,8 +73,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        if((!BackgroundController.ControllerService.isServiceRunning)
-            && stateStorage.get().flag == ControllerState.FLAG.RUNNING) {
+        if ((!BackgroundController.ControllerService.isServiceRunning)
+            && stateStorage.get().flag == ControllerState.FLAG.RUNNING
+        ) {
             stateStorage.set(ControllerState(ControllerState.FLAG.READY, "service was termintated"))
         }
     }

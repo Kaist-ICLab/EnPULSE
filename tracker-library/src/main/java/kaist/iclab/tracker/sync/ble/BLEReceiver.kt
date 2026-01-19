@@ -15,7 +15,7 @@ import kotlinx.serialization.json.JsonPrimitive
 /**
  * BLE data receiver for receiving data through Bluetooth Low Energy.
  * Uses Google Wearable DataLayer API for communication.
- * 
+ *
  * Internal class - only accessible through BLEDataChannel.
  */
 internal class BLEReceiver : DataChannelReceiver() {
@@ -108,7 +108,7 @@ internal class BLEReceiver : DataChannelReceiver() {
             assetFd.inputStream.use { inputStream ->
                 val jsonString = String(inputStream.readBytes())
                 Log.d(TAG, "Received data for key '$key': $jsonString")
-                
+
                 // Try to parse as JSON, if it fails, wrap it as a JSON string
                 val jsonElement = try {
                     Json.parseToJsonElement(jsonString)
@@ -126,7 +126,7 @@ internal class BLEReceiver : DataChannelReceiver() {
             // This fixes the race condition where service starts before listeners are registered
             val currentCallbackList = getSharedCallbackList()
             val currentNodeId = BLEReceiver.localNodeId
-            
+
             dataEvents.forEach { dataEvent ->
                 // Skip if this is a message from the same device
                 if (currentNodeId != null && dataEvent.dataItem.uri.host == currentNodeId) {
@@ -144,7 +144,7 @@ internal class BLEReceiver : DataChannelReceiver() {
                 val callbacks = synchronized(currentCallbackList) {
                     currentCallbackList[key]?.toList() ?: listOf()
                 }
-                
+
                 if (callbacks.isEmpty()) {
                     Log.w(TAG, "No callbacks registered for key: $key")
                     return@forEach

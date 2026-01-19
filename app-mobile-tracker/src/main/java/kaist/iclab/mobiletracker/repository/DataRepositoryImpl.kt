@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Implementation of DataRepository that uses SensorDataHandlerRegistry
  * to delegate per-sensor operations to individual handlers.
- * 
+ *
  * This refactored version eliminates repetitive when-expressions by using
  * the registry pattern for sensor-specific operations.
  */
@@ -24,7 +24,7 @@ class DataRepositoryImpl(
     private val watchSensorUploadService: WatchSensorUploadService,
     private val supabaseHelper: SupabaseHelper
 ) : DataRepository {
-    
+
     private val syncingSensors = ConcurrentHashMap<String, Boolean>()
 
     override suspend fun getAllSensorInfo(): List<SensorInfo> =
@@ -45,7 +45,7 @@ class DataRepositoryImpl(
     override suspend fun getSensorDetailInfo(sensorId: String): SensorDetailInfo? {
         val handler = handlerRegistry.getHandler(sensorId) ?: return null
         val startOfToday = getStartOfToday()
-        
+
         return SensorDetailInfo(
             sensorId = handler.sensorId,
             displayName = handler.displayName,
@@ -87,12 +87,12 @@ class DataRepositoryImpl(
         if (syncingSensors.putIfAbsent(sensorId, true) != null) {
             return -2 // Already syncing
         }
-        
+
         try {
             // Special handling for Location: upload both phone and watch data
             if (sensorId == "Location") {
                 var result = 0
-                
+
                 // 1. Upload Phone Location
                 if (phoneSensorUploadService.hasDataToUpload("Location")) {
                     when (phoneSensorUploadService.uploadSensorData("Location")) {
@@ -100,7 +100,7 @@ class DataRepositoryImpl(
                         is Result.Error -> return -1 // Immediate failure on error
                     }
                 }
-                
+
                 // 2. Upload Watch Location (stored with ID "WatchLocation")
                 if (watchSensorUploadService.hasDataToUpload("WatchLocation")) {
                     when (watchSensorUploadService.uploadSensorData("WatchLocation")) {
@@ -108,7 +108,7 @@ class DataRepositoryImpl(
                         is Result.Error -> return -1 // Immediate failure on error
                     }
                 }
-                
+
                 return result
             }
 
@@ -121,7 +121,7 @@ class DataRepositoryImpl(
                     is Result.Error -> -1
                 }
             }
-            
+
             if (!phoneSensorUploadService.hasDataToUpload(sensorId)) {
                 return 0
             }
@@ -166,13 +166,13 @@ class DataRepositoryImpl(
 
     override suspend fun deleteRecord(sensorId: String, recordId: Long) {
         val handler = handlerRegistry.getHandler(sensorId) ?: return
-        
+
         // Get eventId before deleting locally (needed for Supabase deletion)
         val eventId = handler.getEventIdById(recordId)
-        
+
         // Delete from local database first
         handler.deleteById(recordId)
-        
+
         // Try to delete from Supabase if eventId exists
         if (eventId != null) {
             try {
@@ -208,23 +208,29 @@ class DataRepositoryImpl(
                 calendar.set(java.util.Calendar.MILLISECOND, 0)
                 calendar.timeInMillis
             }
+
             DateFilter.LAST_7_DAYS -> {
                 calendar.add(java.util.Calendar.DAY_OF_YEAR, -7)
                 calendar.timeInMillis
             }
+
             DateFilter.LAST_30_DAYS -> {
                 calendar.add(java.util.Calendar.DAY_OF_YEAR, -30)
                 calendar.timeInMillis
             }
+
             DateFilter.ALL_TIME -> 0L
             DateFilter.CUSTOM -> 0L // Custom range handled separately
         }
     }
-    
-    override suspend fun getAllSensorRecordsForExport(sensorId: String, dateFilter: DateFilter): List<SensorRecord> {
+
+    override suspend fun getAllSensorRecordsForExport(
+        sensorId: String,
+        dateFilter: DateFilter
+    ): List<SensorRecord> {
         val handler = handlerRegistry.getHandler(sensorId) ?: return emptyList()
         val afterTimestamp = getTimestampForFilter(dateFilter)
-        
+
         // Get all records without pagination (use a very large limit)
         return handler.getRecordsPaginated(
             afterTimestamp = afterTimestamp,

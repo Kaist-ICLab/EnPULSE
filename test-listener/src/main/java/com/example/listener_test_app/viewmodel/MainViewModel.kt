@@ -13,7 +13,7 @@ import kaist.iclab.tracker.listener.NotificationListener
 import kaist.iclab.tracker.listener.core.AccessibilityEventInfo
 import kaist.iclab.tracker.listener.core.NotificationEventInfo
 
-class MainViewModel: ViewModel() {
+class MainViewModel : ViewModel() {
     companion object {
         const val TAG = "ListenerTest"
     }
@@ -22,7 +22,7 @@ class MainViewModel: ViewModel() {
     private val accessibilityListener = AccessibilityListener()
 
     private val broadcastAlarmCallbackList = mutableListOf<(Intent?) -> Unit>()
-    private val notificationCallbackList = mutableListOf<(NotificationEventInfo)-> Unit>()
+    private val notificationCallbackList = mutableListOf<(NotificationEventInfo) -> Unit>()
     private val accessibilityCallbackList = mutableListOf<(AccessibilityEventInfo) -> Unit>()
 
     var count by mutableIntStateOf(0)
@@ -34,10 +34,10 @@ class MainViewModel: ViewModel() {
     ): (Intent?) -> Unit {
         val currentCount = count
         return { intent: Intent? ->
-            if (listOf(broadcastActionName,  alarmActionName).contains(intent?.action)) {
-                if(intent?.action == broadcastActionName)
+            if (listOf(broadcastActionName, alarmActionName).contains(intent?.action)) {
+                if (intent?.action == broadcastActionName)
                     Log.v(TAG, "Callback $currentCount: Broadcast received!")
-                else if(intent?.action == alarmActionName)
+                else if (intent?.action == alarmActionName)
                     Log.v(TAG, "Callback $currentCount: Alarm received!")
             }
         }
@@ -46,8 +46,12 @@ class MainViewModel: ViewModel() {
     private fun getNewNotificationCallback(): (NotificationEventInfo) -> Unit {
         val currentCount = count
         return { event: NotificationEventInfo ->
-            when(event){
-                is NotificationEventInfo.Posted -> Log.v(TAG, "Callback $currentCount: Notification posted")
+            when (event) {
+                is NotificationEventInfo.Posted -> Log.v(
+                    TAG,
+                    "Callback $currentCount: Notification posted"
+                )
+
                 else -> Log.v(TAG, "Callback $currentCount: Notification removed")
             }
             Unit
@@ -57,8 +61,12 @@ class MainViewModel: ViewModel() {
     private fun getNewAccessibilityCallback(): (AccessibilityEventInfo) -> Unit {
         val currentCount = count
         return { event: AccessibilityEventInfo ->
-            when(event){
-                is AccessibilityEventInfo.Event -> Log.v(TAG, "Callback $currentCount: Event type ${event.event?.eventType} occurred")
+            when (event) {
+                is AccessibilityEventInfo.Event -> Log.v(
+                    TAG,
+                    "Callback $currentCount: Event type ${event.event?.eventType} occurred"
+                )
+
                 else -> Log.v(TAG, "Callback $currentCount: Interrupt detected")
             }
             Unit
@@ -71,7 +79,8 @@ class MainViewModel: ViewModel() {
         broadcastListener: BroadcastListener,
         alarmListener: AlarmListener,
     ) {
-        val broadcastAlarmCallback = getNewBroadcastAlarmCallback(broadcastActionName, alarmActionName)
+        val broadcastAlarmCallback =
+            getNewBroadcastAlarmCallback(broadcastActionName, alarmActionName)
         val notificationCallback = getNewNotificationCallback()
         val accessibilityCallback = getNewAccessibilityCallback()
 
@@ -92,7 +101,7 @@ class MainViewModel: ViewModel() {
         broadcastListener: BroadcastListener,
         alarmListener: AlarmListener,
     ) {
-        if(count == 0) return
+        if (count == 0) return
 
         val broadcastAlarmCallback = broadcastAlarmCallbackList.last()
         val notificationCallback = notificationCallbackList.last()

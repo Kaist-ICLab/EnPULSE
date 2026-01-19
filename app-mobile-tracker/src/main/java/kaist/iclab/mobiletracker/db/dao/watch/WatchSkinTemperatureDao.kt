@@ -8,15 +8,19 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface WatchSkinTemperatureDao : BaseDao<WatchSkinTemperatureEntity, WatchSkinTemperatureEntity> {
+interface WatchSkinTemperatureDao :
+    BaseDao<WatchSkinTemperatureEntity, WatchSkinTemperatureEntity> {
     @Insert
     suspend fun insert(entities: List<WatchSkinTemperatureEntity>)
-    
+
     override suspend fun insert(sensorEntity: WatchSkinTemperatureEntity, userUuid: String?) {
         insert(listOf(sensorEntity))
     }
 
-    override suspend fun insertBatch(entities: List<WatchSkinTemperatureEntity>, userUuid: String?) {
+    override suspend fun insertBatch(
+        entities: List<WatchSkinTemperatureEntity>,
+        userUuid: String?
+    ) {
         insert(entities)
     }
 
@@ -39,7 +43,12 @@ interface WatchSkinTemperatureDao : BaseDao<WatchSkinTemperatureEntity, WatchSki
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM watch_skin_temperature WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<WatchSkinTemperatureEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<WatchSkinTemperatureEntity>
 
     @Query("DELETE FROM watch_skin_temperature WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

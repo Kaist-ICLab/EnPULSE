@@ -8,7 +8,7 @@ import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.entity.HeartRateEntity
 
 @Dao
-interface HeartRateDao: BaseDao<HeartRateSensor.Entity> {
+interface HeartRateDao : BaseDao<HeartRateSensor.Entity> {
     override suspend fun insert(sensorEntity: HeartRateSensor.Entity) {
         val entity = sensorEntity.dataPoint.map {
             HeartRateEntity(
@@ -34,7 +34,8 @@ interface HeartRateDao: BaseDao<HeartRateSensor.Entity> {
     @Query("SELECT * FROM HeartRateEntity WHERE timestamp > :since ORDER BY timestamp ASC")
     suspend fun getHeartRateDataSince(since: Long): List<HeartRateEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> = getHeartRateDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
+        getHeartRateDataSince(timestamp)
 
     @Query("DELETE FROM HeartRateEntity WHERE timestamp <= :until")
     suspend fun deleteHeartRateDataBefore(until: Long)

@@ -16,11 +16,11 @@ class CampaignService(
 ) {
     private val supabaseClient = supabaseHelper.supabaseClient
     private val tableName = "campaigns"
-    
+
     companion object {
         private const val TAG = "CampaignService"
     }
-    
+
     /**
      * Fetch all campaigns from Supabase
      * @return Result containing list of campaigns or error
@@ -39,7 +39,7 @@ class CampaignService(
             }
         }
     }
-    
+
     /**
      * Fetch a single campaign by ID
      * @param campaignId The ID of the campaign to fetch (as String)
@@ -50,7 +50,7 @@ class CampaignService(
             try {
                 val campaignIdInt = campaignId.toIntOrNull()
                     ?: throw IllegalArgumentException("Invalid campaign ID format: $campaignId")
-                
+
                 val allCampaignsResult = getAllCampaigns()
                 val allCampaigns = when (allCampaignsResult) {
                     is Result.Success -> allCampaignsResult.data

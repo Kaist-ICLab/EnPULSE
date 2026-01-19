@@ -8,7 +8,7 @@ import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
 
 @Dao
-interface SkinTemperatureDao: BaseDao<SkinTemperatureSensor.Entity> {
+interface SkinTemperatureDao : BaseDao<SkinTemperatureSensor.Entity> {
     override suspend fun insert(sensorEntity: SkinTemperatureSensor.Entity) {
         val entity = sensorEntity.dataPoint.map {
             SkinTemperatureEntity(
@@ -33,12 +33,14 @@ interface SkinTemperatureDao: BaseDao<SkinTemperatureSensor.Entity> {
     @Query("SELECT * FROM SkinTemperatureEntity WHERE timestamp > :since ORDER BY timestamp ASC")
     suspend fun getSkinTemperatureDataSince(since: Long): List<SkinTemperatureEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> = getSkinTemperatureDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
+        getSkinTemperatureDataSince(timestamp)
 
     @Query("DELETE FROM SkinTemperatureEntity WHERE timestamp <= :until")
     suspend fun deleteSkinTemperatureDataBefore(until: Long)
 
-    override suspend fun deleteDataBefore(timestamp: Long) = deleteSkinTemperatureDataBefore(timestamp)
+    override suspend fun deleteDataBefore(timestamp: Long) =
+        deleteSkinTemperatureDataBefore(timestamp)
 
     @Query("DELETE FROM SkinTemperatureEntity")
     suspend fun deleteAllSkinTemperatureData()

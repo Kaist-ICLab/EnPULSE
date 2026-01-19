@@ -10,7 +10,7 @@ import java.util.Locale
 import java.util.TimeZone
 import kotlin.reflect.KClass
 
-fun Sensor<*,*>.toSensorUIModel(): SensorUIModel {
+fun Sensor<*, *>.toSensorUIModel(): SensorUIModel {
     return SensorUIModel(
         id = this.ID,
         name = this.NAME,

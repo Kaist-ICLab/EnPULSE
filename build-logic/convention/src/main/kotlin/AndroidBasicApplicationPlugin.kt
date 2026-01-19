@@ -16,7 +16,7 @@ internal class AndroidBasicApplicationPlugin : Plugin<Project> {
         with(target) {
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-            with(pluginManager){
+            with(pluginManager) {
                 apply(libs.findPlugin("androidApplication").get().get().pluginId)
                 apply(libs.findPlugin("jetbrainsKotlinAndroid").get().get().pluginId)
             }

@@ -181,7 +181,8 @@ class BackgroundController(
 
         private fun ensureNotificationChannel(channelId: String) {
             try {
-                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val notificationManager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel(channelId) == null) {
                     val channelName = try {
                         serviceNotification.channelName
@@ -203,9 +204,11 @@ class BackgroundController(
         private fun buildNotification(props: NotificationProperties): android.app.Notification {
             // Create intent to open the app's main launcher activity
             val packageName = this.applicationContext.packageName
-            val launchIntent = this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
+            val launchIntent =
+                this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
             val pendingIntent = if (launchIntent != null) {
-                launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                launchIntent.flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 PendingIntent.getActivity(
                     this.applicationContext,
                     0,
@@ -233,11 +236,12 @@ class BackgroundController(
         }
 
         private fun getServiceType(): Int {
-            val defaultServiceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            } else {
-                0
-            }
+            val defaultServiceType =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                } else {
+                    0
+                }
 
             return try {
                 requiredForegroundServiceType()
@@ -248,7 +252,8 @@ class BackgroundController(
 
         private fun postEmergencyNotification() {
             try {
-                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val notificationManager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel("default_channel") == null) {
                     val channel = NotificationChannel(
                         "default_channel",
@@ -260,9 +265,11 @@ class BackgroundController(
 
                 // Create intent to open the app's main launcher activity
                 val packageName = this.applicationContext.packageName
-                val launchIntent = this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
+                val launchIntent =
+                    this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
                 val pendingIntent = if (launchIntent != null) {
-                    launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    launchIntent.flags =
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     PendingIntent.getActivity(
                         this.applicationContext,
                         0,
@@ -288,11 +295,12 @@ class BackgroundController(
 
                 val notification = builder.build()
 
-                val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                } else {
-                    0
-                }
+                val serviceType =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                    } else {
+                        0
+                    }
                 this.startForeground(1, notification, serviceType)
             } catch (e: Exception) {
                 // Failed to post emergency notification

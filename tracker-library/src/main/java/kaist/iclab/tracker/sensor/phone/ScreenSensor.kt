@@ -23,7 +23,7 @@ class ScreenSensor(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
 ) {
     /*No attribute required... can not be data class*/
-    class Config: SensorConfig
+    class Config : SensorConfig
 
     @Serializable
     data class Entity(
@@ -33,11 +33,11 @@ class ScreenSensor(
     ) : SensorEntity()
 
     override val permissions = listOfNotNull(
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE else null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE else null
     ).toTypedArray()
 
     override val foregroundServiceTypes: Array<Int> = listOfNotNull(
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else null
     ).toTypedArray()
 
     private val broadcastListener = BroadcastListener(

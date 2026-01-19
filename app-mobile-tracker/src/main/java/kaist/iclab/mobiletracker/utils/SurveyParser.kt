@@ -48,9 +48,9 @@ object SurveyParser {
 
                     val startTimeHour = scheduleJson.optInt("dailyStartTimeHour", 9)
                     val endTimeHour = scheduleJson.optInt("dailyEndTimeHour", 22)
-                    
+
                     if (startTimeHour !in 0..23 || endTimeHour !in 0..23) {
-                         throw IllegalArgumentException("Daily hours must be between 0 and 23")
+                        throw IllegalArgumentException("Daily hours must be between 0 and 23")
                     }
 
                     // Calculate fixed times based on interval
@@ -122,7 +122,7 @@ object SurveyParser {
             // Parse Notification
             val notificationJson = root.optJSONObject("notification")
                 ?: throw IllegalArgumentException("Missing 'notification' configuration object")
-            
+
             val notificationConfig = SurveyNotificationConfig(
                 title = notificationJson.optString("title", "Survey"),
                 description = notificationJson.optString("message", "Please answer the survey"),
@@ -146,9 +146,18 @@ object SurveyParser {
             // Return a safe fallback to prevent crash
             return ParsedSurvey(
                 id = "error_survey",
-                survey = Survey(TextQuestion("Error loading survey configuration. Please check the logs.", false)),
+                survey = Survey(
+                    TextQuestion(
+                        "Error loading survey configuration. Please check the logs.",
+                        false
+                    )
+                ),
                 scheduleMethod = SurveyScheduleMethod.Fixed(listOf()),
-                notificationConfig = SurveyNotificationConfig("Error", "Configuration Error", R.drawable.ic_launcher_foreground),
+                notificationConfig = SurveyNotificationConfig(
+                    "Error",
+                    "Configuration Error",
+                    R.drawable.ic_launcher_foreground
+                ),
                 startTimeOfDay = 0L,
                 endTimeOfDay = 0L
             )
@@ -268,7 +277,7 @@ object SurveyParser {
         val predicateJson = json.getJSONObject("predicate")
         val predicateType = predicateJson.getString("type").uppercase()
         // Removed strict getString("value") here to allow flexible parsing below
-        
+
         val predicate: ValueComparator<*> = when (predicateType) {
             "EQUAL" -> {
                 if (isNumeric) {
@@ -277,7 +286,8 @@ object SurveyParser {
                         ValueComparator.Equal(doubleVal)
                     } else {
                         val stringVal = predicateJson.getString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value for EQUAL: $stringVal")
+                        val parsed = stringVal.toDoubleOrNull()
+                            ?: throw IllegalArgumentException("Invalid numeric value for EQUAL: $stringVal")
                         ValueComparator.Equal(parsed)
                     }
                 } else {
@@ -287,47 +297,63 @@ object SurveyParser {
 
             "NOT_EQUAL" -> {
                 if (isNumeric) {
-                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
+                    val doubleVal = predicateJson.optDouble("value", Double.NaN)
                     if (!doubleVal.isNaN()) {
                         ValueComparator.NotEqual(doubleVal)
                     } else {
                         val stringVal = predicateJson.getString("value")
-                        val parsed = stringVal.toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value for NOT_EQUAL: $stringVal")
+                        val parsed = stringVal.toDoubleOrNull()
+                            ?: throw IllegalArgumentException("Invalid numeric value for NOT_EQUAL: $stringVal")
                         ValueComparator.NotEqual(parsed)
                     }
                 } else {
                     ValueComparator.NotEqual(predicateJson.getString("value"))
                 }
             }
-            
+
             // ... (Rest of inequality logic handled same way, but access value directly)
             "GREATER_THAN" -> {
-                 if (isNumeric) {
+                if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    val value =
+                        if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value")
+                            .toDoubleOrNull()
+                            ?: throw IllegalArgumentException("Invalid numeric value")
                     ValueComparator.GreaterThan(value)
-                 } else null
+                } else null
             }
+
             "GREATER_THAN_OR_EQUAL" -> {
-                 if (isNumeric) {
+                if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    val value =
+                        if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value")
+                            .toDoubleOrNull()
+                            ?: throw IllegalArgumentException("Invalid numeric value")
                     ValueComparator.GreaterThanOrEqual(value)
-                 } else null
+                } else null
             }
+
             "LESS_THAN" -> {
-                 if (isNumeric) {
+                if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    val value =
+                        if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value")
+                            .toDoubleOrNull()
+                            ?: throw IllegalArgumentException("Invalid numeric value")
                     ValueComparator.LessThan(value)
-                 } else null
+                } else null
             }
+
             "LESS_THAN_OR_EQUAL" -> {
-                 if (isNumeric) {
+                if (isNumeric) {
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
-                    val value = if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value").toDoubleOrNull() ?: throw IllegalArgumentException("Invalid numeric value")
+                    val value =
+                        if (!doubleVal.isNaN()) doubleVal else predicateJson.getString("value")
+                            .toDoubleOrNull()
+                            ?: throw IllegalArgumentException("Invalid numeric value")
                     ValueComparator.LessThanOrEqual(value)
-                 } else null
+                } else null
             }
 
             else -> null

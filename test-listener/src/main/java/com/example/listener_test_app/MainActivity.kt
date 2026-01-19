@@ -49,10 +49,14 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this, Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED) {
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 ActivityCompat.requestPermissions(
                     this,
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS),
+                    arrayOf(
+                        Manifest.permission.POST_NOTIFICATIONS,
+                        Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS
+                    ),
                     1
                 )
             }
@@ -94,7 +98,8 @@ fun ListenerTestApp(
     val mainViewModel: MainViewModel = viewModel()
 
     val postNotification = {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "test_channel"
 
         val channel = NotificationChannel(
@@ -122,20 +127,28 @@ fun ListenerTestApp(
         // Manually trigger an alarm (for testing purposes)
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val triggerTime = SystemClock.elapsedRealtime() + 500  // 0.5 seconds delay
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerTime, alarmListener.getPendingIntent())
+        alarmManager.set(
+            AlarmManager.ELAPSED_REALTIME_WAKEUP,
+            triggerTime,
+            alarmListener.getPendingIntent()
+        )
     }
 
     ListenerTestScreen(
-        addCallback = { mainViewModel.addListener(
-            alarmListener = alarmListener,
-            broadcastListener = broadcastListener,
-            alarmActionName = ACTION_NAME_ALARM,
-            broadcastActionName = ACTION_NAME_BROADCAST
-        ) },
-        removeCallback = { mainViewModel.removeListener(
-            alarmListener = alarmListener,
-            broadcastListener = broadcastListener
-        ) },
+        addCallback = {
+            mainViewModel.addListener(
+                alarmListener = alarmListener,
+                broadcastListener = broadcastListener,
+                alarmActionName = ACTION_NAME_ALARM,
+                broadcastActionName = ACTION_NAME_BROADCAST
+            )
+        },
+        removeCallback = {
+            mainViewModel.removeListener(
+                alarmListener = alarmListener,
+                broadcastListener = broadcastListener
+            )
+        },
         postNotification = postNotification,
         sendBroadcast = sendBroadcast,
         sendAlarm = sendAlarm,

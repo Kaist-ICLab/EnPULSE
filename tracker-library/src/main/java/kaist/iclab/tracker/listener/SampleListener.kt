@@ -10,17 +10,17 @@ import kotlinx.coroutines.launch
 
 class SampleListener(
     val duration: Long
-): Listener<Long> {
+) : Listener<Long> {
     private val listeners = mutableListOf<(Long) -> Unit>()
     private var job: Job? = null
     override fun init() {}
 
     override fun addListener(listener: (Long) -> Unit) {
         listeners.add(listener)
-        if(listeners.size == 1) {
+        if (listeners.size == 1) {
             assert(job == null)
             job = CoroutineScope(Dispatchers.IO).launch {
-                while(isActive) {
+                while (isActive) {
                     listeners.forEach { it(System.currentTimeMillis()) }
                     delay(duration)
                 }
@@ -29,7 +29,7 @@ class SampleListener(
     }
 
     override fun removeListener(listener: (Long) -> Unit): Boolean {
-        if(listeners.isEmpty()) {
+        if (listeners.isEmpty()) {
             job?.cancel()
             job = null
         }

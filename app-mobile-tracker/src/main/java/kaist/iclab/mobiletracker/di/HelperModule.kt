@@ -16,14 +16,14 @@ val helperModule = module {
             timestampService = get()
         )
     }
-    
+
     // CampaignService - injects SupabaseHelper
     single {
         CampaignService(
             supabaseHelper = get()
         )
     }
-    
+
     // ProfileService - injects SupabaseHelper
     single {
         ProfileService(

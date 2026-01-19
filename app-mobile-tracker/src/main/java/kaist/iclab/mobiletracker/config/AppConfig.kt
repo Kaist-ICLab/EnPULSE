@@ -4,7 +4,7 @@ package kaist.iclab.mobiletracker.config
  * TODO: Change approach using environment variables
  * Configuration file for test-sync app.
  * Contains all implemented configuration variables.
- * 
+ *
  * ⚠️ IMPORTANT: Replace placeholder values with your actual configuration!
  */
 object AppConfig {
@@ -14,13 +14,14 @@ object AppConfig {
      * Example: https://your-project-id.supabase.co
      */
     const val SUPABASE_URL = "http://143.248.57.5:8000/"
-    
+
     /**
      * Supabase anonymous/public key
      * Get this from your Supabase project settings > API > Project API keys
      * This is safe to use in client applications
      */
-    const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzYyODczMjAwLCJleHAiOjE5MjA2Mzk2MDB9.D-Hqc9yhQJo6NHkBSllMzu-P435ay6-L_JYhEfO58TQ"
+    const val SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzYyODczMjAwLCJleHAiOjE5MjA2Mzk2MDB9.D-Hqc9yhQJo6NHkBSllMzu-P435ay6-L_JYhEfO58TQ"
 
     /**
      * Supabase table names for sensor data

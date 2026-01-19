@@ -29,7 +29,7 @@ import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
     exportSchema = false
 )
 @TypeConverters(Converter::class)
-abstract class TrackerRoomDB: RoomDatabase() {
+abstract class TrackerRoomDB : RoomDatabase() {
     abstract fun accelerometerDao(): AccelerometerDao
     abstract fun ppgDao(): PPGDao
     abstract fun heatRateDao(): HeartRateDao

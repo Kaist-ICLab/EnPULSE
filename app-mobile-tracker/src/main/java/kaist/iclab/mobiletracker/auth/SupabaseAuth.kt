@@ -81,10 +81,10 @@ class SupabaseAuth(
             try {
                 // Small delay to ensure Supabase client is fully initialized and has loaded persisted session
                 delay(200)
-                
+
                 // Get current session (Supabase automatically loads from persisted storage)
                 val session = supabaseClient.auth.currentSessionOrNull()
-                
+
                 if (session != null) {
                     // Store UUID in SharedPreferences for background operations
                     val uuid = SupabaseSessionHelper.getUuidOrNull(supabaseClient)
@@ -106,7 +106,8 @@ class SupabaseAuth(
         SupabaseLoadingInterceptor.withLoading {
             try {
                 supabaseClient.auth.currentSessionOrNull()?.let { session ->
-                    val token = SupabaseSessionHelper.getPropertyValue(session, "accessToken") as? String
+                    val token =
+                        SupabaseSessionHelper.getPropertyValue(session, "accessToken") as? String
                     _userStateFlow.value = _userStateFlow.value.copy(token = token)
                 }
             } catch (e: Exception) {
@@ -114,7 +115,7 @@ class SupabaseAuth(
             }
         }
     }
-    
+
     /**
      * Get the user UUID from the current session
      * @return The user UUID
@@ -134,25 +135,27 @@ class SupabaseAuth(
             handleCredential(result.credential)
         } catch (e: GetCredentialException) {
             Log.e(TAG, "Authentication failed: ${e.message}", e)
-            
+
             // Handle specific error cases
             val errorMessage = when {
                 // Check for reauth error in both errorMessage and exception message
                 e is GetCredentialCancellationException && (
-                    e.errorMessage?.contains("reauth", ignoreCase = true) == true ||
-                    e.message?.contains("reauth", ignoreCase = true) == true ||
-                    e.message?.contains("[16]", ignoreCase = false) == true
-                ) -> {
+                        e.errorMessage?.contains("reauth", ignoreCase = true) == true ||
+                                e.message?.contains("reauth", ignoreCase = true) == true ||
+                                e.message?.contains("[16]", ignoreCase = false) == true
+                        ) -> {
                     "Your Google account needs to be re-authenticated. Please check your Google account settings and try again."
                 }
+
                 e is GetCredentialCancellationException -> {
                     "Authentication was cancelled. Please try again."
                 }
+
                 else -> {
                     "Authentication failed: ${e.message}"
                 }
             }
-            
+
             _userStateFlow.value = createErrorState(errorMessage)
         }
     }
@@ -212,7 +215,7 @@ class SupabaseAuth(
     private fun createUserStateFromSession(session: Any): UserState {
         val supabaseUser = SupabaseSessionHelper.getPropertyValue(session, "user")
             ?: return createErrorState("Session has no user")
-        
+
         val accessToken = SupabaseSessionHelper.getPropertyValue(session, "accessToken") as? String
         val email = SupabaseSessionHelper.getPropertyValue(supabaseUser, "email") as? String
 
@@ -255,7 +258,8 @@ class SupabaseAuth(
             authenticateWithSupabase(googleCredential.idToken)
         } catch (e: Exception) {
             Log.e(TAG, "Error processing Google credential: ${e.message}", e)
-            _userStateFlow.value = createErrorState("Failed to process Google credential: ${e.message}")
+            _userStateFlow.value =
+                createErrorState("Failed to process Google credential: ${e.message}")
         }
     }
 
@@ -272,17 +276,18 @@ class SupabaseAuth(
 
                 val session = supabaseClient.auth.currentSessionOrNull()
                     ?: throw Exception("Session not available after sign-in")
-                
+
                 // Store UUID in SharedPreferences for background operations
                 val uuid = SupabaseSessionHelper.getUuidOrNull(supabaseClient)
                 if (uuid != null) {
                     syncTimestampService.storeUserUuid(uuid)
                 }
-                
+
                 _userStateFlow.value = createUserStateFromSession(session)
             } catch (e: Exception) {
                 Log.e(TAG, "Error authenticating with Supabase: ${e.message}", e)
-                _userStateFlow.value = createErrorState("Supabase authentication failed: ${e.message}")
+                _userStateFlow.value =
+                    createErrorState("Supabase authentication failed: ${e.message}")
             }
         }
     }

@@ -99,7 +99,8 @@ object MessageLogMapper : EntityToSupabaseMapper<MessageLogEntity, MessageLogSen
     }
 }
 
-object UserInteractionMapper : EntityToSupabaseMapper<UserInteractionEntity, UserInteractionSensorData> {
+object UserInteractionMapper :
+    EntityToSupabaseMapper<UserInteractionEntity, UserInteractionSensorData> {
     override fun map(entity: UserInteractionEntity, userUuid: String?): UserInteractionSensorData {
         return UserInteractionSensorData(
             eventId = entity.eventId,
@@ -266,7 +267,7 @@ object ConnectivityMapper : EntityToSupabaseMapper<ConnectivityEntity, Connectiv
 
 object AppListChangeMapper : EntityToSupabaseMapper<AppListChangeEntity, AppListChangeSensorData> {
     private val json = Json { ignoreUnknownKeys = true }
-    
+
     override fun map(entity: AppListChangeEntity, userUuid: String?): AppListChangeSensorData {
         // Parse JSON strings to JsonElement so Supabase stores them as native JSON (not stringified)
         val changedApp: JsonElement? = entity.changedAppJson?.let { jsonString ->
@@ -276,7 +277,7 @@ object AppListChangeMapper : EntityToSupabaseMapper<AppListChangeEntity, AppList
                 null
             }
         }
-        
+
         val appList: JsonElement? = entity.appListJson?.let { jsonString ->
             try {
                 json.parseToJsonElement(jsonString)
@@ -284,7 +285,7 @@ object AppListChangeMapper : EntityToSupabaseMapper<AppListChangeEntity, AppList
                 null
             }
         }
-        
+
         return AppListChangeSensorData(
             eventId = entity.eventId,
             uuid = userUuid,

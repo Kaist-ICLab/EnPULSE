@@ -8,8 +8,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class AccessibilityListener: Listener<AccessibilityEventInfo> {
-    class AccessibilityServiceAdaptor: AccessibilityService() {
+class AccessibilityListener : Listener<AccessibilityEventInfo> {
+    class AccessibilityServiceAdaptor : AccessibilityService() {
         companion object {
             val receivers = mutableListOf<(AccessibilityEventInfo) -> Unit>()
         }
@@ -28,7 +28,7 @@ class AccessibilityListener: Listener<AccessibilityEventInfo> {
 //            Log.d(javaClass.simpleName, "onAccessibilityEvent: $event")
 
             // Use coroutine to prevent listeners from blocking each other
-            for(callback in receivers) {
+            for (callback in receivers) {
                 CoroutineScope(Dispatchers.IO).launch {
                     callback(AccessibilityEventInfo.Event(event))
                 }
@@ -36,7 +36,7 @@ class AccessibilityListener: Listener<AccessibilityEventInfo> {
         }
 
         override fun onInterrupt() {
-            for(callback in receivers) {
+            for (callback in receivers) {
                 CoroutineScope(Dispatchers.IO).launch {
                     callback(AccessibilityEventInfo.Interrupt)
                 }

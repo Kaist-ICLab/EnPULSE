@@ -31,7 +31,8 @@ object HeartRateMapper : EntityToSupabaseMapper<WatchHeartRateEntity, HeartRateS
     }
 }
 
-object AccelerometerMapper : EntityToSupabaseMapper<WatchAccelerometerEntity, AccelerometerSensorData> {
+object AccelerometerMapper :
+    EntityToSupabaseMapper<WatchAccelerometerEntity, AccelerometerSensorData> {
     override fun map(entity: WatchAccelerometerEntity, userUuid: String?): AccelerometerSensorData {
         return AccelerometerSensorData(
             eventId = entity.eventId,
@@ -78,8 +79,12 @@ object PPGMapper : EntityToSupabaseMapper<WatchPPGEntity, PPGSensorData> {
     }
 }
 
-object SkinTemperatureMapper : EntityToSupabaseMapper<WatchSkinTemperatureEntity, SkinTemperatureSensorData> {
-    override fun map(entity: WatchSkinTemperatureEntity, userUuid: String?): SkinTemperatureSensorData {
+object SkinTemperatureMapper :
+    EntityToSupabaseMapper<WatchSkinTemperatureEntity, SkinTemperatureSensorData> {
+    override fun map(
+        entity: WatchSkinTemperatureEntity,
+        userUuid: String?
+    ): SkinTemperatureSensorData {
         return SkinTemperatureSensorData(
             eventId = entity.eventId,
             uuid = userUuid,

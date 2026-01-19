@@ -228,7 +228,12 @@ class WatchSensorRepositoryImpl(
                             .await()
 
                     if (allNodes.nodes.isEmpty()) {
-                        trySend(WatchConnectionInfo(WatchConnectionStatus.NOT_INSTALLED, emptyList()))
+                        trySend(
+                            WatchConnectionInfo(
+                                WatchConnectionStatus.NOT_INSTALLED,
+                                emptyList()
+                            )
+                        )
                     } else {
                         // 2. Check if any node is currently REACHABLE
                         val reachableNodes = capabilityClient.getCapability(
@@ -238,11 +243,21 @@ class WatchSensorRepositoryImpl(
                         if (reachableNodes.nodes.isEmpty()) {
                             // Get device names from all nodes (installed but not reachable)
                             val deviceNames = allNodes.nodes.map { it.displayName }
-                            trySend(WatchConnectionInfo(WatchConnectionStatus.DISCONNECTED, deviceNames))
+                            trySend(
+                                WatchConnectionInfo(
+                                    WatchConnectionStatus.DISCONNECTED,
+                                    deviceNames
+                                )
+                            )
                         } else {
                             // Get device names from reachable nodes
                             val deviceNames = reachableNodes.nodes.map { it.displayName }
-                            trySend(WatchConnectionInfo(WatchConnectionStatus.CONNECTED, deviceNames))
+                            trySend(
+                                WatchConnectionInfo(
+                                    WatchConnectionStatus.CONNECTED,
+                                    deviceNames
+                                )
+                            )
                         }
                     }
                 } catch (e: Exception) {

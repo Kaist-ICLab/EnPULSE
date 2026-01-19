@@ -66,7 +66,8 @@ fun DataConfigScreen(
             ListCard(
                 rows = listOf({ SensorSwitchRow(sensor = sensor) })
             )
-            ListCard(title = "Permissions",
+            ListCard(
+                title = "Permissions",
                 rows = if (permissionMap.size == 0) listOf(
                     {
                         Text(

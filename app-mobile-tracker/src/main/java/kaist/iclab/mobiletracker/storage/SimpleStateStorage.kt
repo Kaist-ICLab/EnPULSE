@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.update
 
 class SimpleStateStorage<T>(
     initialState: T
-): StateStorage<T> {
+) : StateStorage<T> {
     private val _state = MutableStateFlow(initialState)
     override val stateFlow: StateFlow<T> = _state.asStateFlow()
 

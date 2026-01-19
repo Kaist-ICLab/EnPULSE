@@ -16,12 +16,13 @@ object PermissionHelper {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return PermissionCheckResult.Granted
         }
-        
+
         permissionManager.registerPermission(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
-        val permissionFlow = permissionManager.getPermissionFlow(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+        val permissionFlow =
+            permissionManager.getPermissionFlow(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
         val permissionState = permissionFlow.value[Manifest.permission.POST_NOTIFICATIONS]
             ?: PermissionState.NOT_REQUESTED
-        
+
         return when (permissionState) {
             PermissionState.GRANTED, PermissionState.UNSUPPORTED -> PermissionCheckResult.Granted
             PermissionState.PERMANENTLY_DENIED -> PermissionCheckResult.PermanentlyDenied

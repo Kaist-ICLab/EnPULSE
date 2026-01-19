@@ -71,9 +71,19 @@ object AppToast {
 
         // Set gravity if specified
         when (gravity) {
-            Gravity.TOP -> toast.setGravity(android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL, 0, 100)
+            Gravity.TOP -> toast.setGravity(
+                android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL,
+                0,
+                100
+            )
+
             Gravity.CENTER -> toast.setGravity(android.view.Gravity.CENTER, 0, 0)
-            Gravity.BOTTOM -> toast.setGravity(android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL, 0, 100)
+            Gravity.BOTTOM -> toast.setGravity(
+                android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL,
+                0,
+                100
+            )
+
             Gravity.DEFAULT -> {
                 // Use default gravity (bottom)
             }
@@ -125,12 +135,14 @@ object AppToast {
                 xOffset,
                 yOffset
             )
+
             Gravity.CENTER -> toast.setGravity(android.view.Gravity.CENTER, xOffset, yOffset)
             Gravity.BOTTOM -> toast.setGravity(
                 android.view.Gravity.BOTTOM or android.view.Gravity.CENTER_HORIZONTAL,
                 xOffset,
                 yOffset
             )
+
             Gravity.DEFAULT -> {
                 // Use default gravity (bottom)
             }

@@ -54,7 +54,10 @@ class PhoneCommunicationManager(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (!isPhoneAvailable()) {
-                    Log.e(TAG, "Error sending data to phone: Phone is not available or not connected")
+                    Log.e(
+                        TAG,
+                        "Error sending data to phone: Phone is not available or not connected"
+                    )
                     withContext(Dispatchers.Main) {
                         NotificationHelper.showPhoneCommunicationFailure(
                             androidContext,
@@ -77,16 +80,16 @@ class PhoneCommunicationManager(
                 }
 
                 val (batch, csvData) = result
-                
+
                 // Save pending batch BEFORE sending (for recovery if interrupted)
                 syncPreferencesHelper.savePendingBatch(batch)
 
                 try {
                     bleChannel.send(Constants.BLE.KEY_SENSOR_DATA, csvData)
-                    
+
                     // Immediate confirmation (fallback). Reliable cleanup is handled by SyncAckListener.
                     onSyncConfirmed(batch)
-                    
+
                     withContext(Dispatchers.Main) {
                         NotificationHelper.showPhoneCommunicationSuccess(androidContext)
                     }
@@ -123,10 +126,10 @@ class PhoneCommunicationManager(
         daos.values.forEach { dao ->
             dao.deleteDataBefore(batch.endTimestamp)
         }
-        
+
         // Update last sync timestamp
         syncPreferencesHelper.saveLastSyncTimestamp(batch.endTimestamp)
-        
+
         // Clear pending batch
         syncPreferencesHelper.clearPendingBatch()
     }

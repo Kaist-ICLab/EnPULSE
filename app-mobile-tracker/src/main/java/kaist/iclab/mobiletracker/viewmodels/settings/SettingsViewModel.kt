@@ -139,7 +139,11 @@ class SettingsViewModel(
                         try {
                             onGranted()
                         } catch (e: Exception) {
-                            Log.e(TAG, "Error in onGranted callback for $errorContext: ${e.message}", e)
+                            Log.e(
+                                TAG,
+                                "Error in onGranted callback for $errorContext: ${e.message}",
+                                e
+                            )
                         }
                         job?.cancel()
                     }

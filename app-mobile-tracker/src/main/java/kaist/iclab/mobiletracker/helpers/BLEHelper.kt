@@ -32,7 +32,7 @@ class BLEHelper(
     private val timestampService: SyncTimestampService
 ) {
     private lateinit var bleChannel: BLEDataChannel
-    
+
     // Create a managed coroutine scope that can be cancelled
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -40,7 +40,7 @@ class BLEHelper(
         bleChannel = BLEDataChannel(context)
         setupListeners()
     }
-    
+
     /**
      * Cleanup method to cancel all coroutines when BLEHelper is no longer needed.
      * Should be called when the helper is being destroyed.
@@ -82,9 +82,16 @@ class BLEHelper(
         try {
             val ackData = "$batchId:${if (success) "OK" else "FAIL"}"
             bleChannel.send(AppConfig.BLEKeys.SYNC_ACK, ackData)
-            Log.d(AppConfig.LogTags.PHONE_BLE, "Sent ACK for batch $batchId: ${if (success) "OK" else "FAIL"}")
+            Log.d(
+                AppConfig.LogTags.PHONE_BLE,
+                "Sent ACK for batch $batchId: ${if (success) "OK" else "FAIL"}"
+            )
         } catch (e: Exception) {
-            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to send ACK for batch $batchId: ${e.message}", e)
+            Log.e(
+                AppConfig.LogTags.PHONE_BLE,
+                "Failed to send ACK for batch $batchId: ${e.message}",
+                e
+            )
         }
     }
 
@@ -96,9 +103,9 @@ class BLEHelper(
         ioScope.launch {
             // Extract batch ID for ACK (if present in new format)
             val batchId = parseBatchId(csvData)
-            
+
             try {
-                
+
                 // Parse all sensor types from CSV
                 val locationDataList = SensorDataCsvParser.parseLocationCsv(csvData)
                 val accelerometerDataList = SensorDataCsvParser.parseAccelerometerCsv(csvData)
@@ -106,11 +113,11 @@ class BLEHelper(
                 val heartRateDataList = SensorDataCsvParser.parseHeartRateCsv(csvData)
                 val ppgDataList = SensorDataCsvParser.parsePPGCsv(csvData)
                 val skinTemperatureDataList = SensorDataCsvParser.parseSkinTemperatureCsv(csvData)
-                
+
                 // Convert Supabase data classes to Room entities and store locally
                 var totalStored = 0
                 var hasAnyData = false
-                
+
                 if (locationDataList.isNotEmpty()) {
                     hasAnyData = true
                     val entities = locationDataList.map { data ->
@@ -131,14 +138,22 @@ class BLEHelper(
                     when (val result = watchSensorRepository.insertLocationData(entities)) {
                         is Result.Success -> {
                             totalStored += entities.size
-                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} location entries locally")
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} location entries locally"
+                            )
                         }
+
                         is Result.Error -> {
-                            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store location data: ${result.message}", result.exception)
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store location data: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 }
-                
+
                 if (accelerometerDataList.isNotEmpty()) {
                     hasAnyData = true
                     val entities = accelerometerDataList.map { data ->
@@ -154,14 +169,22 @@ class BLEHelper(
                     when (val result = watchSensorRepository.insertAccelerometerData(entities)) {
                         is Result.Success -> {
                             totalStored += entities.size
-                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} accelerometer entries locally")
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} accelerometer entries locally"
+                            )
                         }
+
                         is Result.Error -> {
-                            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store accelerometer data: ${result.message}", result.exception)
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store accelerometer data: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 }
-                
+
                 if (edaDataList.isNotEmpty()) {
                     hasAnyData = true
                     val entities = edaDataList.map { data ->
@@ -176,14 +199,22 @@ class BLEHelper(
                     when (val result = watchSensorRepository.insertEDAData(entities)) {
                         is Result.Success -> {
                             totalStored += entities.size
-                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} EDA entries locally")
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} EDA entries locally"
+                            )
                         }
+
                         is Result.Error -> {
-                            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store EDA data: ${result.message}", result.exception)
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store EDA data: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 }
-                
+
                 if (heartRateDataList.isNotEmpty()) {
                     hasAnyData = true
                     val entities = heartRateDataList.map { data ->
@@ -200,14 +231,22 @@ class BLEHelper(
                     when (val result = watchSensorRepository.insertHeartRateData(entities)) {
                         is Result.Success -> {
                             totalStored += entities.size
-                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} HeartRate entries locally")
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} HeartRate entries locally"
+                            )
                         }
+
                         is Result.Error -> {
-                            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store HeartRate data: ${result.message}", result.exception)
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store HeartRate data: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 }
-                
+
                 if (ppgDataList.isNotEmpty()) {
                     hasAnyData = true
                     val entities = ppgDataList.map { data ->
@@ -226,14 +265,22 @@ class BLEHelper(
                     when (val result = watchSensorRepository.insertPPGData(entities)) {
                         is Result.Success -> {
                             totalStored += entities.size
-                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} PPG entries locally")
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} PPG entries locally"
+                            )
                         }
+
                         is Result.Error -> {
-                            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store PPG data: ${result.message}", result.exception)
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store PPG data: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 }
-                
+
                 if (skinTemperatureDataList.isNotEmpty()) {
                     hasAnyData = true
                     val entities = skinTemperatureDataList.map { data ->
@@ -249,19 +296,30 @@ class BLEHelper(
                     when (val result = watchSensorRepository.insertSkinTemperatureData(entities)) {
                         is Result.Success -> {
                             totalStored += entities.size
-                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} SkinTemperature entries locally")
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} SkinTemperature entries locally"
+                            )
                         }
+
                         is Result.Error -> {
-                            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store SkinTemperature data: ${result.message}", result.exception)
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store SkinTemperature data: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 }
-                
+
                 if (hasAnyData && totalStored > 0) {
                     // Track when watch data is received
                     timestampService.updateLastWatchDataReceived()
-                    Log.d(AppConfig.LogTags.PHONE_BLE, "Total stored: $totalStored sensor data entries locally")
-                    
+                    Log.d(
+                        AppConfig.LogTags.PHONE_BLE,
+                        "Total stored: $totalStored sensor data entries locally"
+                    )
+
                     // Send success ACK back to watch if batch ID is present
                     if (batchId != null) {
                         sendAck(batchId, success = true)
@@ -274,7 +332,11 @@ class BLEHelper(
                     }
                 }
             } catch (e: Exception) {
-                Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing or storing sensor data: ${e.message}", e)
+                Log.e(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "Error parsing or storing sensor data: ${e.message}",
+                    e
+                )
                 // Send failure ACK if we have a batch ID
                 if (batchId != null) {
                     sendAck(batchId, success = false)

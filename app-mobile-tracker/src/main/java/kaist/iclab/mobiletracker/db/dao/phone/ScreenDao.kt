@@ -9,7 +9,7 @@ import kaist.iclab.tracker.sensor.phone.ScreenSensor
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ScreenDao: BaseDao<ScreenSensor.Entity, ScreenEntity> {
+interface ScreenDao : BaseDao<ScreenSensor.Entity, ScreenEntity> {
     override suspend fun insert(sensorEntity: ScreenSensor.Entity, userUuid: String?) {
         val entity = ScreenEntity(
             uuid = userUuid ?: "",
@@ -57,7 +57,12 @@ interface ScreenDao: BaseDao<ScreenSensor.Entity, ScreenEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM ScreenEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<ScreenEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<ScreenEntity>
 
     @Query("DELETE FROM ScreenEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

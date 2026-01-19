@@ -10,7 +10,7 @@ import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 /**
  * Service for uploading phone sensor data from Room database to Supabase.
  * Uses registry pattern to delegate upload operations to per-sensor handlers.
- * 
+ *
  * Refactored from 432 lines to ~80 lines using SensorUploadHandlerRegistry.
  */
 class PhoneSensorUploadService(
@@ -34,8 +34,9 @@ class PhoneSensorUploadService(
             return Result.Error(UnsupportedOperationException("Upload not implemented for sensor: $sensorId"))
         }
 
-        val lastUploadTimestamp = syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
-        
+        val lastUploadTimestamp =
+            syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
+
         val userUuid = getUserUuid()
         if (userUuid == null) {
             Log.e(TAG, "Cannot upload data: No user UUID available")
@@ -48,6 +49,7 @@ class PhoneSensorUploadService(
                     syncTimestampService.updateLastSuccessfulUpload(sensorId, result.data)
                     Result.Success(Unit)
                 }
+
                 is Result.Error -> result
             }
         } catch (e: Exception) {
@@ -62,7 +64,8 @@ class PhoneSensorUploadService(
     suspend fun hasDataToUpload(sensorId: String): Boolean {
         return try {
             val handler = handlerRegistry.getHandler(sensorId) ?: return false
-            val lastUploadTimestamp = syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
+            val lastUploadTimestamp =
+                syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
             handler.hasDataToUpload(lastUploadTimestamp)
         } catch (e: Exception) {
             Log.e(TAG, "Error checking data availability for sensor $sensorId: ${e.message}", e)
@@ -76,12 +79,12 @@ class PhoneSensorUploadService(
     private fun getUserUuid(): String? {
         // Try to get UUID from current session first (most reliable)
         var userUuid = SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient)
-        
+
         // If session not available (e.g., app in background), use cached UUID
         if (userUuid.isNullOrEmpty()) {
             userUuid = syncTimestampService.getCachedUserUuid()
         }
-        
+
         return userUuid?.takeIf { it.isNotEmpty() }
     }
 }

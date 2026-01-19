@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface WatchPPGDao : BaseDao<WatchPPGEntity, WatchPPGEntity> {
     @Insert
     suspend fun insert(entities: List<WatchPPGEntity>)
-    
+
     override suspend fun insert(sensorEntity: WatchPPGEntity, userUuid: String?) {
         insert(listOf(sensorEntity))
     }
@@ -39,7 +39,12 @@ interface WatchPPGDao : BaseDao<WatchPPGEntity, WatchPPGEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM watch_ppg WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<WatchPPGEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<WatchPPGEntity>
 
     @Query("DELETE FROM watch_ppg WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

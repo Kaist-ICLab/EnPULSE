@@ -2,10 +2,11 @@ package kaist.iclab.tracker.ui
 
 import android.util.Log
 
-class FakeMainViewModelImpl(): AbstractMainViewModel() {
-    companion object{
+class FakeMainViewModelImpl() : AbstractMainViewModel() {
+    companion object {
         const val TAG = "FakeMainViewModel"
     }
+
     override fun tag() {
         Log.d(TAG, "tag")
     }

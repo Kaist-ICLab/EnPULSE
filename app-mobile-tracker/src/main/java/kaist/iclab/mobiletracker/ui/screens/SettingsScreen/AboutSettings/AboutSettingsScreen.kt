@@ -89,7 +89,7 @@ fun AboutSettingsScreen(
                     contentDescription = context.getString(R.string.mobile_tracker_logo),
                     modifier = Modifier.size(Styles.LOGO_SIZE)
                 )
-                
+
                 Spacer(modifier = Modifier.height(Styles.LOGO_BOTTOM_PADDING))
 
                 // App name

@@ -32,7 +32,7 @@ fun EnableTrackerCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
+
     Card(
         modifier = modifier
             .fillMaxWidth()

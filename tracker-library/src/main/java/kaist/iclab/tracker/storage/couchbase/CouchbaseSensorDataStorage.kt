@@ -66,6 +66,7 @@ class CouchbaseSensorDataStorage(
                         val listJson = gson.toJson(value)
                         document.setString("${propertyName}_json", listJson)
                     }
+
                     else -> {
                         // For other types, convert to JSON as fallback
                         val jsonValue = gson.toJson(value)
@@ -73,7 +74,10 @@ class CouchbaseSensorDataStorage(
                     }
                 }
             } catch (e: Exception) {
-                Log.w("CouchbaseSensorDataStorage", "Failed to access property ${property.name}: ${e.message}")
+                Log.w(
+                    "CouchbaseSensorDataStorage",
+                    "Failed to access property ${property.name}: ${e.message}"
+                )
             }
         }
 
@@ -165,10 +169,12 @@ class CouchbaseSensorDataStorage(
     fun getDataByTimeRange(startTime: Long, endTime: Long): List<String> {
         val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("id"))
             .from(DataSource.collection(collection))
-            .where(Expression.property("received").between(
-                Expression.longValue(startTime),
-                Expression.longValue(endTime)
-            ))
+            .where(
+                Expression.property("received").between(
+                    Expression.longValue(startTime),
+                    Expression.longValue(endTime)
+                )
+            )
             .orderBy(Ordering.property("received").ascending())
 
         val results = mutableListOf<String>()
@@ -212,9 +218,11 @@ class CouchbaseSensorDataStorage(
                         }
                     }
                 }
+
                 key == "entityType" -> {
                     // Skip entityType as it's metadata
                 }
+
                 else -> {
                     // Handle direct properties
                     val value = document.getValue(key)

@@ -26,7 +26,7 @@ class SurveyViewModel(
     private val permissionManager: AndroidPermissionManager,
     private val surveyDataReceiver: SurveyDataReceiver,
     private val surveyScheduleStorage: CouchbaseSurveyScheduleStorage
-): ViewModel() {
+) : ViewModel() {
     private val surveySensor by inject<SurveySensor>(SurveySensor::class.java)
     val sensorState = surveySensor.sensorStateFlow
     val controllerState = backgroundController.controllerStateFlow
@@ -38,7 +38,7 @@ class SurveyViewModel(
         CoroutineScope(Dispatchers.IO).launch {
             backgroundController.controllerStateFlow.collect {
                 Log.v(SurveyDataReceiver::class.simpleName, it.toString())
-                if(it.flag == ControllerState.FLAG.RUNNING) surveyDataReceiver.startBackgroundCollection()
+                if (it.flag == ControllerState.FLAG.RUNNING) surveyDataReceiver.startBackgroundCollection()
                 else surveyDataReceiver.stopBackgroundCollection()
             }
         }
@@ -46,17 +46,18 @@ class SurveyViewModel(
 
     fun toggleSensor() {
         val status = sensorState.value.flag
-        when(status) {
+        when (status) {
             SensorState.FLAG.DISABLED -> {
                 permissionManager.request(surveySensor.permissions)
                 CoroutineScope(Dispatchers.IO).launch {
-                    permissionManager.getPermissionFlow(surveySensor.permissions).collect { permissionMap ->
-                        Log.d("SensorViewModel", "$permissionMap")
-                        if(permissionMap.values.all { it == PermissionState.GRANTED }) {
-                            surveySensor.enable()
-                            this.cancel()
+                    permissionManager.getPermissionFlow(surveySensor.permissions)
+                        .collect { permissionMap ->
+                            Log.d("SensorViewModel", "$permissionMap")
+                            if (permissionMap.values.all { it == PermissionState.GRANTED }) {
+                                surveySensor.enable()
+                                this.cancel()
+                            }
                         }
-                    }
                 }
             }
 
@@ -66,7 +67,7 @@ class SurveyViewModel(
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    fun startLogging(){
+    fun startLogging() {
         backgroundController.start()
     }
 

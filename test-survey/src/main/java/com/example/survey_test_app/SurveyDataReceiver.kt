@@ -16,10 +16,15 @@ class SurveyDataReceiver(
     private val context: Context,
 ) {
     private val serviceIntent = Intent(context, SurveyDataReceiverService::class.java)
-    fun startBackgroundCollection() { context.startForegroundService(serviceIntent) }
-    fun stopBackgroundCollection() { context.stopService(serviceIntent) }
+    fun startBackgroundCollection() {
+        context.startForegroundService(serviceIntent)
+    }
 
-    class SurveyDataReceiverService: Service() {
+    fun stopBackgroundCollection() {
+        context.stopService(serviceIntent)
+    }
+
+    class SurveyDataReceiverService : Service() {
         companion object {
             private val TAG = SurveyDataReceiverService::class.simpleName
         }
@@ -44,7 +49,8 @@ class SurveyDataReceiver(
                 .setOngoing(true)
                 .build()
 
-            val serviceType = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
+            val serviceType =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
             this.startForeground(
                 serviceNotification.notificationId,
                 postNotification,

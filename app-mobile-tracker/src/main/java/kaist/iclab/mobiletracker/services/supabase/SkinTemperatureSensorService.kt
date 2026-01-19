@@ -15,16 +15,16 @@ class SkinTemperatureSensorService(
     tableName = AppConfig.SupabaseTables.SKIN_TEMPERATURE_SENSOR,
     sensorName = "skin temperature"
 ) {
-    
+
     override fun prepareData(data: SkinTemperatureSensorData): SkinTemperatureSensorData {
         // Don't override UUID - it should already be set to user UUID from mapper
         return data
     }
-    
+
     suspend fun insertSkinTemperatureSensorData(data: SkinTemperatureSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertSkinTemperatureSensorDataBatch(dataList: List<SkinTemperatureSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

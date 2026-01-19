@@ -152,7 +152,11 @@ object NotificationHelper {
     /**
      * Show phone communication failure notification
      */
-    fun showPhoneCommunicationFailure(context: Context, exception: Throwable, contextInfo: String? = null) {
+    fun showPhoneCommunicationFailure(
+        context: Context,
+        exception: Throwable,
+        contextInfo: String? = null
+    ) {
         showFailureWithException(
             context = context,
             exception = exception,
@@ -224,7 +228,8 @@ object NotificationHelper {
      */
     fun showError(context: Context, title: String, message: String) {
         // Use a unique notification ID based on current time to allow multiple error notifications
-        val notificationId = Constants.NotificationId.ERROR + (System.currentTimeMillis() % 1000).toInt()
+        val notificationId =
+            Constants.NotificationId.ERROR + (System.currentTimeMillis() % 1000).toInt()
         showFailureNotification(
             context = context,
             channelConfig = NotificationChannelConfig.ERROR,

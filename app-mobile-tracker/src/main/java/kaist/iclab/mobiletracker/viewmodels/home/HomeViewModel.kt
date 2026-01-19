@@ -115,7 +115,8 @@ class HomeViewModel(
                 watchEDACount = counts.watchEDACount,
                 watchPPGCount = counts.watchPPGCount,
                 watchSkinTemperatureCount = counts.watchSkinTemperatureCount,
-                userName = profile?.email?.split("@")?.firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "User"
+                userName = profile?.email?.split("@")?.firstOrNull()
+                    ?.replaceFirstChar { it.uppercase() } ?: "User"
             )
         }
     }.stateIn(

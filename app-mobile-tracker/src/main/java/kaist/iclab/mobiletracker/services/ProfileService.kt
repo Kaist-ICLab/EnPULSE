@@ -16,11 +16,11 @@ class ProfileService(
 ) {
     private val supabaseClient = supabaseHelper.supabaseClient
     private val tableName = "profiles"
-    
+
     companion object {
         private const val TAG = "ProfileService"
     }
-    
+
     /**
      * Check if a profile exists for the given UUID
      * @param uuid The UUID to check
@@ -46,7 +46,7 @@ class ProfileService(
             }
         }
     }
-    
+
     /**
      * Create or update a profile in Supabase
      * If profile exists, it will be updated (upsert behavior)
@@ -61,13 +61,17 @@ class ProfileService(
                     supabaseClient.from(tableName).upsert(profile)
                     Unit // Explicitly return Unit
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error saving profile (UUID: ${profile.uuid}, Email: ${profile.email}): ${e.message}", e)
+                    Log.e(
+                        TAG,
+                        "Error saving profile (UUID: ${profile.uuid}, Email: ${profile.email}): ${e.message}",
+                        e
+                    )
                     throw e
                 }
             }
         }
     }
-    
+
     /**
      * Create a profile if it doesn't exist
      * @param uuid The user UUID
@@ -89,7 +93,7 @@ class ProfileService(
                         is Result.Success -> existsResult.data
                         is Result.Error -> throw existsResult.exception
                     }
-                    
+
                     if (!exists) {
                         // Create new profile
                         val profile = ProfileData(
@@ -102,17 +106,22 @@ class ProfileService(
                             is Result.Success -> {
                                 // Profile saved successfully, do nothing here
                             }
+
                             is Result.Error -> throw saveResult.exception
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error creating profile if not exists (UUID: $uuid, Email: $email): ${e.message}", e)
+                    Log.e(
+                        TAG,
+                        "Error creating profile if not exists (UUID: $uuid, Email: $email): ${e.message}",
+                        e
+                    )
                     throw e
                 }
             }
         }
     }
-    
+
     /**
      * Get profile by UUID
      * @param uuid The user UUID
@@ -142,7 +151,7 @@ class ProfileService(
             }
         }
     }
-    
+
     /**
      * Update campaign ID for an existing profile
      * @param uuid The user UUID
@@ -159,7 +168,7 @@ class ProfileService(
                         is Result.Success -> profileResult.data
                         is Result.Error -> throw profileResult.exception
                     }
-                    
+
                     // Update profile with new campaign_id
                     val updatedProfile = existingProfile.copy(campaign_id = campaignId)
                     val saveResult = saveProfile(updatedProfile)
@@ -167,10 +176,15 @@ class ProfileService(
                         is Result.Success -> {
                             // Profile updated successfully
                         }
+
                         is Result.Error -> throw saveResult.exception
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error updating campaign ID (UUID: $uuid, Campaign ID: $campaignId): ${e.message}", e)
+                    Log.e(
+                        TAG,
+                        "Error updating campaign ID (UUID: $uuid, Campaign ID: $campaignId): ${e.message}",
+                        e
+                    )
                     throw e
                 }
             }

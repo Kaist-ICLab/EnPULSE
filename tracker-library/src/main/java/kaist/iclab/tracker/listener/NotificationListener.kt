@@ -9,11 +9,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class NotificationListener: Listener<NotificationEventInfo> {
-    class NotificationListenerServiceAdaptor: NotificationListenerService() {
-       companion object {
-           val receivers = mutableListOf<(NotificationEventInfo) -> Unit>()
-       }
+class NotificationListener : Listener<NotificationEventInfo> {
+    class NotificationListenerServiceAdaptor : NotificationListenerService() {
+        companion object {
+            val receivers = mutableListOf<(NotificationEventInfo) -> Unit>()
+        }
 
         fun addListener(listener: (NotificationEventInfo) -> Unit) {
             assert(!receivers.contains(listener))
@@ -30,12 +30,14 @@ class NotificationListener: Listener<NotificationEventInfo> {
             super.onNotificationPosted(sbn, rankingMap)
 
             // Use coroutine to prevent listeners from blocking each other
-            for(callback in receivers) {
+            for (callback in receivers) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    callback(NotificationEventInfo.Posted(
-                        sbn = sbn,
-                        rankingMap = rankingMap
-                    ))
+                    callback(
+                        NotificationEventInfo.Posted(
+                            sbn = sbn,
+                            rankingMap = rankingMap
+                        )
+                    )
                 }
             }
         }
@@ -49,13 +51,15 @@ class NotificationListener: Listener<NotificationEventInfo> {
             Log.v(TAG, "receiver: onNotificationRemoved")
 
             // Use coroutine to prevent listeners from blocking each other
-            for(callback in receivers) {
+            for (callback in receivers) {
                 CoroutineScope(Dispatchers.IO).launch {
-                    callback(NotificationEventInfo.Removed(
-                        sbn = sbn,
-                        rankingMap = rankingMap,
-                        reason = reason
-                    ))
+                    callback(
+                        NotificationEventInfo.Removed(
+                            sbn = sbn,
+                            rankingMap = rankingMap,
+                            reason = reason
+                        )
+                    )
                 }
             }
         }

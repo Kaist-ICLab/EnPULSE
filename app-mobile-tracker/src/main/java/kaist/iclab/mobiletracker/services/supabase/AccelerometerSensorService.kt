@@ -15,16 +15,16 @@ class AccelerometerSensorService(
     tableName = AppConfig.SupabaseTables.ACCELEROMETER_SENSOR,
     sensorName = "accelerometer"
 ) {
-    
+
     override fun prepareData(data: AccelerometerSensorData): AccelerometerSensorData {
         // Don't override UUID - it should already be set to user UUID from mapper
         return data
     }
-    
+
     suspend fun insertAccelerometerSensorData(data: AccelerometerSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertAccelerometerSensorDataBatch(dataList: List<AccelerometerSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

@@ -137,7 +137,7 @@ fun SelectOptionModalRow(
     currOption: String,
     options: List<String>,
     onOptionSelected: (String) -> Unit,
-    enabled : Boolean = true
+    enabled: Boolean = true
 ) {
     var changedOption by remember { mutableStateOf(currOption) }
     BaseActionableModalRow(

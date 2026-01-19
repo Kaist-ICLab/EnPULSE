@@ -6,7 +6,7 @@ import kotlinx.serialization.json.Json
 /**
  * Abstract base class for data senders.
  * Provides common functionality for sending data through various channels.
- * 
+ *
  * @param R The return type of the send operation
  */
 abstract class DataChannelSender<R> : DataSender<R> {

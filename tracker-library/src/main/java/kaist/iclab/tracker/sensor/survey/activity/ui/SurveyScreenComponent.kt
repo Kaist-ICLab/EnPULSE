@@ -50,7 +50,7 @@ fun QuestionText(
     Text(
         fontWeight = FontWeight.Bold,
         style = MaterialTheme.typography.titleLarge,
-        text = question + (if(isMandatory) "*" else ""),
+        text = question + (if (isMandatory) "*" else ""),
         modifier = modifier.fillMaxWidth()
     )
 }
@@ -74,10 +74,10 @@ fun InputButtonRow(
             indication = null,
             onClick = onClick
         ).apply {
-            if(allowFreeResponse) this.fillMaxWidth()
+            if (allowFreeResponse) this.fillMaxWidth()
         }
     ) {
-        if(isRadioButton) {
+        if (isRadioButton) {
             RadioButton(
                 selected = selected,
                 onClick = null,
@@ -97,7 +97,7 @@ fun InputButtonRow(
             text = optionDisplayText ?: option
         )
 
-        if(allowFreeResponse) {
+        if (allowFreeResponse) {
             Spacer(
                 modifier = Modifier.width(8.dp)
             )
@@ -117,7 +117,7 @@ fun TextQuestionInput(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    allowNumberOnly : Boolean = false
+    allowNumberOnly: Boolean = false
 ) {
     val initialValue = remember(value) { value }
     val interactionSource = remember { MutableInteractionSource() }
@@ -138,11 +138,11 @@ fun TextQuestionInput(
             .clearFocusOnKeyboardDismiss(),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
         inputTransformation = Transform@{
-            if(!allowNumberOnly) return@Transform
+            if (!allowNumberOnly) return@Transform
 
             val input = asCharSequence().toString()
-            if(input.toDoubleOrNull() != null) return@Transform
-            if(input in listOf("", ".", "-")) return@Transform
+            if (input.toDoubleOrNull() != null) return@Transform
+            if (input in listOf("", ".", "-")) return@Transform
 
             revertAllChanges()
         },
@@ -160,7 +160,7 @@ fun TextQuestionInput(
                 )
             )
         },
-        keyboardOptions = if(allowNumberOnly) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default
+        keyboardOptions = if (allowNumberOnly) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default
     )
 }
 

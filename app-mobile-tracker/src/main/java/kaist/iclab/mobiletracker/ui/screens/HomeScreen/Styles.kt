@@ -14,12 +14,12 @@ object Styles {
     val SCREEN_VERTICAL_SPACING = 8.dp
     val TOP_SPACER_HEIGHT = 4.dp
     val BOTTOM_SPACER_HEIGHT = 8.dp
-    
+
     // Greeting Section
     val GREETING_TITLE_FONT_SIZE = 22.sp
     val GREETING_SUBTITLE_FONT_SIZE = 14.sp
     val GREETING_SUBTITLE_TOP_PADDING = 4.dp
-    
+
     // Grid Spacing
     val GRID_SECTION_TITLE_FONT_SIZE = 16.sp
     val GRID_SECTION_TITLE_TOP_PADDING = 2.dp
@@ -32,7 +32,7 @@ object Styles {
     val STATUS_TITLE_FONT_SIZE = 15.sp
     val STATUS_SUBTITLE_FONT_SIZE = 13.sp
     val STATUS_SUBTITLE_TOP_PADDING = 2.dp
-    
+
     // Status Indicator (Tag)
     val INDICATOR_CORNER_RADIUS = 12.dp
     val INDICATOR_SHAPE = RoundedCornerShape(INDICATOR_CORNER_RADIUS)
@@ -72,18 +72,18 @@ object Styles {
         val MESSAGE_LOG = Color(0xFFCDDC39)
         val USER_INTERACTION = Color(0xFF673AB7)
         val WIFI_SCAN = Color(0xFF00BCD4)
-        
+
         // Watch Sensor Colors
         val WATCH_HEART_RATE = Color(0xFFE91E63)
         val WATCH_ACCELEROMETER = Color(0xFF3F51B5)
         val WATCH_EDA = Color(0xFF00BCD4)
         val WATCH_PPG = Color(0xFFFF5722)
         val WATCH_SKIN_TEMP = Color(0xFFFF9800)
-        
+
         // Status Indicator
         val RUNNING_BG = Color(0xFFE6F4EA)
         val RUNNING_TEXT = Color(0xFF137333)
-        
+
         val STOPPED_BG = Color(0xFFFCE8E8)
         val STOPPED_TEXT = Color(0xFFC5221F)
 

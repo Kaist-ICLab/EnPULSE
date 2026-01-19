@@ -48,7 +48,7 @@ val watchSensorModule = module {
     single {
         SkinTemperatureSensorService(supabaseHelper = get())
     }
-    
+
     // Map of sensor IDs to DAOs for storing watch sensor data in Room database
     single<Map<String, BaseDao<*, *>>>(named("watchSensorDaos")) {
         val db = get<TrackerRoomDB>()
@@ -61,7 +61,7 @@ val watchSensorModule = module {
             "WatchLocation" to db.locationDao(),
         )
     }
-    
+
     // WatchSensorRepository - bind interface to implementation
     single<WatchSensorRepository> {
         WatchSensorRepositoryImpl(
@@ -71,7 +71,7 @@ val watchSensorModule = module {
             supabaseHelper = get()
         )
     }
-    
+
     // Watch sensor upload handler registry
     single<SensorUploadHandlerRegistry>(named("watchUploadHandlerRegistry")) {
         val db = get<TrackerRoomDB>()
@@ -103,7 +103,7 @@ val watchSensorModule = module {
         )
         SensorUploadHandlerRegistry(handlers)
     }
-    
+
     // WatchSensorUploadService - injects handler registry
     single {
         WatchSensorUploadService(

@@ -10,7 +10,7 @@ import io.github.jan.supabase.auth.auth
  */
 object SupabaseSessionHelper {
     private const val TAG = "SupabaseSessionHelper"
-    
+
     /**
      * Get UUID from Supabase session (nullable version)
      * Returns null if UUID cannot be retrieved
@@ -20,21 +20,21 @@ object SupabaseSessionHelper {
     fun getUuidOrNull(supabaseClient: SupabaseClient): String? {
         return try {
             val session = supabaseClient.auth.currentSessionOrNull() ?: return null
-            
+
             val user = getPropertyValue(session, "user") ?: return null
-            
+
             val uuid = getPropertyValue(user, "id") as? String
             if (uuid == null || uuid.isEmpty()) {
                 return null
             }
-            
+
             uuid
         } catch (e: Exception) {
             Log.e(TAG, "Error getting UUID from session: ${e.message}", e)
             null
         }
     }
-    
+
     /**
      * Get UUID from Supabase session (throws exception version)
      * Throws IllegalStateException if UUID cannot be retrieved
@@ -49,19 +49,19 @@ object SupabaseSessionHelper {
                 Log.e(TAG, "Cannot get UUID: No active session")
                 throw IllegalStateException("No active Supabase session")
             }
-            
+
             val user = getPropertyValue(session, "user")
             if (user == null) {
                 Log.e(TAG, "Cannot get UUID: Session has no user")
                 throw IllegalStateException("Session has no user")
             }
-            
+
             val uuid = getPropertyValue(user, "id") as? String
             if (uuid == null || uuid.isEmpty()) {
                 Log.e(TAG, "Cannot get UUID: User ID is null or empty")
                 throw IllegalStateException("User ID is null or empty")
             }
-            
+
             uuid
         } catch (e: IllegalStateException) {
             throw e
@@ -70,7 +70,7 @@ object SupabaseSessionHelper {
             throw IllegalStateException("Failed to get user UUID: ${e.message}", e)
         }
     }
-    
+
     /**
      * Helper function to safely get a property value using reflection.
      * Tries getter method first (e.g., getEmail), then direct property access (e.g., email).

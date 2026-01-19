@@ -112,8 +112,9 @@ fun PermissionSettingsScreen(
                         key = { _, permission -> permission.name }
                     ) { index, permission ->
                         val isLast = index == permissions.size - 1
-                        val permissionAggregatedState = permission.getPermissionState(permissionStateMap)
-                        
+                        val permissionAggregatedState =
+                            permission.getPermissionState(permissionStateMap)
+
                         PermissionCard(
                             permission = permission,
                             permissionState = permissionAggregatedState,
@@ -128,10 +129,12 @@ fun PermissionSettingsScreen(
                                             // Open settings to allow user to revoke/change permission
                                             permissionManager.openPermissionSettings(permission.ids.first())
                                         }
+
                                         PermissionState.PERMANENTLY_DENIED -> {
                                             // Open settings for permanently denied permissions
                                             permissionManager.openPermissionSettings(permission.ids.first())
                                         }
+
                                         else -> {
                                             // Request permission
                                             permissionManager.request(permission.ids)

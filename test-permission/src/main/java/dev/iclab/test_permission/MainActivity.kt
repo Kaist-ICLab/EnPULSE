@@ -50,7 +50,9 @@ fun PermissionScreen(permissionManager: PermissionManager) {
     // Permissions are automatically registered when getPermissionFlow() is called
     val permissionStateMap = permissionManager.getPermissionFlow(permissions).collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)) {
         Text("Permissions", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -59,7 +61,8 @@ fun PermissionScreen(permissionManager: PermissionManager) {
                 val permission = Permission.supportedPermissions[idx]
                 PermissionItem(
                     permission = permission,
-                    state = permissionStateMap.value[permission.ids.first()] ?: PermissionState.NOT_REQUESTED,
+                    state = permissionStateMap.value[permission.ids.first()]
+                        ?: PermissionState.NOT_REQUESTED,
                     onRequest = { permissionManager.request(permission.ids) }
                 )
             }
@@ -74,7 +77,9 @@ fun PermissionItem(
     onRequest: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

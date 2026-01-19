@@ -67,7 +67,12 @@ interface NotificationDao : BaseDao<NotificationSensor.Entity, NotificationEntit
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM NotificationEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<NotificationEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<NotificationEntity>
 
     @Query("DELETE FROM NotificationEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

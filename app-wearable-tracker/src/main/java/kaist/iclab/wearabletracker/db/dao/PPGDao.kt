@@ -8,7 +8,7 @@ import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.entity.PPGEntity
 
 @Dao
-interface PPGDao: BaseDao<PPGSensor.Entity> {
+interface PPGDao : BaseDao<PPGSensor.Entity> {
     override suspend fun insert(sensorEntity: PPGSensor.Entity) {
         val entity = sensorEntity.dataPoint.map {
             PPGEntity(
@@ -37,7 +37,8 @@ interface PPGDao: BaseDao<PPGSensor.Entity> {
     @Query("SELECT * FROM PPGEntity WHERE timestamp > :since ORDER BY timestamp ASC")
     suspend fun getPPGDataSince(since: Long): List<PPGEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> = getPPGDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
+        getPPGDataSince(timestamp)
 
     @Query("DELETE FROM PPGEntity WHERE timestamp <= :until")
     suspend fun deletePPGDataBefore(until: Long)

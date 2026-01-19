@@ -9,7 +9,7 @@ import kaist.iclab.tracker.sensor.phone.BatterySensor
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface BatteryDao: BaseDao<BatterySensor.Entity, BatteryEntity> {
+interface BatteryDao : BaseDao<BatterySensor.Entity, BatteryEntity> {
     override suspend fun insert(sensorEntity: BatterySensor.Entity, userUuid: String?) {
         val entity = BatteryEntity(
             uuid = userUuid ?: "",
@@ -63,7 +63,12 @@ interface BatteryDao: BaseDao<BatterySensor.Entity, BatteryEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM BatteryEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<BatteryEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<BatteryEntity>
 
     @Query("DELETE FROM BatteryEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

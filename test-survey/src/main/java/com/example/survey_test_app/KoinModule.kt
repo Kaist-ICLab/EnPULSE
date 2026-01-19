@@ -52,90 +52,96 @@ val koinModule = module {
         SurveySensor(
             context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
-            configStorage = SimpleStateStorage(SurveySensor.Config(
-                startTimeOfDay = TimeUnit.HOURS.toMillis(9),
-                endTimeOfDay = TimeUnit.HOURS.toMillis(25),
-                scheduleMethod = mapOf(
+            configStorage = SimpleStateStorage(
+                SurveySensor.Config(
+                    startTimeOfDay = TimeUnit.HOURS.toMillis(9),
+                    endTimeOfDay = TimeUnit.HOURS.toMillis(25),
+                    scheduleMethod = mapOf(
 //                    "test" to SurveyScheduleMethod.Fixed(
 //                        timeOfDay = listOf(
 //                            (System.currentTimeMillis() + 30_000 + TimeUnit.HOURS.toMillis(9)) % 86_400_000
 //                        )
 //                    ),
-                    "test" to SurveyScheduleMethod.ESM(
-                        minInterval = TimeUnit.MINUTES.toMillis(30),
-                        maxInterval = TimeUnit.MINUTES.toMillis(45),
-                        numSurvey = 30,
+                        "test" to SurveyScheduleMethod.ESM(
+                            minInterval = TimeUnit.MINUTES.toMillis(30),
+                            maxInterval = TimeUnit.MINUTES.toMillis(45),
+                            numSurvey = 30,
+                        ),
+                        "fixedTime" to SurveyScheduleMethod.Fixed(
+                            timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
+                        ),
                     ),
-                    "fixedTime" to SurveyScheduleMethod.Fixed(
-                        timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
-                    ),
-                ),
-                survey = mapOf(
-                    "test" to Survey(
-                        TextQuestion(
-                            question = "Your name?",
-                            isMandatory = true,
-                        ),
-                        NumberQuestion(
-                            question = "Your age?",
-                            isMandatory = false,
-                        ),
-                        RadioQuestion(
-                            question = "How are you?",
-                            isMandatory = true,
-                            option = listOf(
-                                Option("Good"),
-                                Option("Bad"),
-                                Option("Okay"),
-                                Option("Other", displayText = "Other:", allowFreeResponse = true)
-                            )
-                        ),
-                        RadioQuestion(
-                            question = "Choose even number",
-                            isMandatory = false,
-                            option = listOf(
-                                Option("1"),
-                                Option("2"),
-                                Option("3"),
-                                Option("5")
+                    survey = mapOf(
+                        "test" to Survey(
+                            TextQuestion(
+                                question = "Your name?",
+                                isMandatory = true,
                             ),
-                            questionTrigger = listOf(
-                                QuestionTrigger(
-                                    predicate = ValueComparator.Equal("2"),
-                                    children = listOf(
-                                        RadioQuestion(
-                                            question = "Is P = NP?",
-                                            isMandatory = true,
-                                            option = listOf(
-                                                Option("Yes", displayText = "Hell yeah"),
-                                                Option("No", displayText = "Nah")
-                                            ),
+                            NumberQuestion(
+                                question = "Your age?",
+                                isMandatory = false,
+                            ),
+                            RadioQuestion(
+                                question = "How are you?",
+                                isMandatory = true,
+                                option = listOf(
+                                    Option("Good"),
+                                    Option("Bad"),
+                                    Option("Okay"),
+                                    Option(
+                                        "Other",
+                                        displayText = "Other:",
+                                        allowFreeResponse = true
+                                    )
+                                )
+                            ),
+                            RadioQuestion(
+                                question = "Choose even number",
+                                isMandatory = false,
+                                option = listOf(
+                                    Option("1"),
+                                    Option("2"),
+                                    Option("3"),
+                                    Option("5")
+                                ),
+                                questionTrigger = listOf(
+                                    QuestionTrigger(
+                                        predicate = ValueComparator.Equal("2"),
+                                        children = listOf(
+                                            RadioQuestion(
+                                                question = "Is P = NP?",
+                                                isMandatory = true,
+                                                option = listOf(
+                                                    Option("Yes", displayText = "Hell yeah"),
+                                                    Option("No", displayText = "Nah")
+                                                ),
+                                            )
                                         )
                                     )
                                 )
                             )
+                        ),
+                        "fixedTime" to Survey(
+                            TextQuestion(
+                                question = "Testing",
+                                isMandatory = true,
+                            ),
                         )
                     ),
-                    "fixedTime" to Survey(
-                        TextQuestion(
-                            question = "Testing",
-                            isMandatory = true,
+                    notificationConfig = mapOf(
+                        "test" to SurveyNotificationConfig(
+                            title = "Survey Test",
+                            description = "This is a survey test",
+                            icon = R.drawable.ic_launcher_foreground
                         ),
-                    )
-                ),
-                notificationConfig = mapOf(
-                    "test" to SurveyNotificationConfig(
-                        title = "Survey Test",
-                        description = "This is a survey test",
-                        icon = R.drawable.ic_launcher_foreground
+                        "fixedTime" to SurveyNotificationConfig(
+                            title = "Survey Test",
+                            description = "This is a fixed time survey at 3PM",
+                            icon = R.drawable.ic_launcher_foreground
+                        )
                     ),
-                    "fixedTime" to SurveyNotificationConfig(
-                        title = "Survey Test",
-                        description = "This is a fixed time survey at 3PM",
-                        icon = R.drawable.ic_launcher_foreground
-                    )
-                ),
-            )),
+                )
+            ),
             stateStorage = CouchbaseSensorStateStorage(
                 couchbase = get(),
                 collectionName = SurveySensor::class.simpleName ?: ""

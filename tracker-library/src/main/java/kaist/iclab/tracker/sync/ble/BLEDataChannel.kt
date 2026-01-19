@@ -10,13 +10,13 @@ import kaist.iclab.tracker.sync.core.DataSender
  * Suitable for communication between nearby devices, such as a mobile phone and a smartwatch.
  *
  * BLEDataChannel runs on top of DataLayer API, so the namespace and application ID of sending/receiving app **must be the same**.
- * 
+ *
  * This class now uses the separated sender/receiver pattern.
  */
 class BLEDataChannel(
     private val context: Context
-): DataChannel<Unit>() {
-    
+) : DataChannel<Unit>() {
+
     override val sender: DataSender<Unit> = BLESender(context)
     override val receiver: DataReceiver = BLEReceiver().apply {
         initializeLocalNodeId(context)

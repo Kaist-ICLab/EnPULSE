@@ -73,9 +73,11 @@ fun LoginScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp,
+                        .border(
+                            1.dp,
                             MaterialTheme.colorScheme.outline,
-                            MaterialTheme.shapes.medium),
+                            MaterialTheme.shapes.medium
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -89,8 +91,10 @@ fun LoginScreen(
                             modifier = Modifier.size(32.dp),
                             tint = Color.Unspecified // Do not apply any tint
                         )
-                        Text("Sign in with Google",
-                            style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Sign in with Google",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
                     }
                 }
                 Text(

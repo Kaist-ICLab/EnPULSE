@@ -17,7 +17,7 @@ class AlarmListener(
     private val actionName: String,
     private val actionCode: Int,
     private val actionIntervalInMilliseconds: Long,
-): Listener<Intent?> {
+) : Listener<Intent?> {
     companion object {
         private val TAG = AlarmListener::class.simpleName
     }
@@ -44,14 +44,14 @@ class AlarmListener(
         val hash = listener.hashCode()
         assert(!receivers.contains(hash))
 
-        val receiver = object: BroadcastReceiver() {
+        val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 Log.d(TAG, "receiver:onReceive")
                 listener(intent)
             }
         }
         receivers[hash] = receiver
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             /*
             * From Tiramisu, we need to specify the receiver exported or not
             * One of RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED should be specified when a receiver isn't being registered exclusively for system broadcasts
@@ -75,12 +75,12 @@ class AlarmListener(
     override fun removeListener(listener: (Intent?) -> Unit): Boolean {
         val hash = listener.hashCode()
 
-        if(!receivers.contains(hash)) return false
+        if (!receivers.contains(hash)) return false
 
         val receiver = receivers.remove(hash)
         context.unregisterReceiver(receiver)
 
-        if(receivers.isEmpty()) alarmManager.cancel(pendingIntent)
+        if (receivers.isEmpty()) alarmManager.cancel(pendingIntent)
         return true
     }
 }

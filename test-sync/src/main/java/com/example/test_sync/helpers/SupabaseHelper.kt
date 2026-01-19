@@ -30,7 +30,7 @@ class SupabaseHelper {
         install(Postgrest)  // Database operations
         install(Realtime)  // Real-time subscriptions
     }
-    
+
     // Polling state
     private var isPollingActive = false
     private var lastSeenDataId: Int? = null  // Track last seen data to detect new changes
@@ -75,7 +75,7 @@ class SupabaseHelper {
             }
         }
     }
-    
+
     /**
      * Start real-time polling for database changes
      * Uses polling to check for database changes every 5 seconds
@@ -92,7 +92,7 @@ class SupabaseHelper {
             }
         }
     }
-    
+
     /**
      * Stop real-time polling
      * Stops the polling process that checks for database changes
@@ -107,7 +107,7 @@ class SupabaseHelper {
             }
         }
     }
-    
+
     /**
      * Start database polling to check for changes
      * This polls the Supabase database every 5 seconds for new data
@@ -120,22 +120,28 @@ class SupabaseHelper {
                     if (isPollingActive) {
                         try {
                             val dataList = response.decodeList<SupabaseData>()
-                            
+
                             if (dataList.isNotEmpty()) {
                                 val latestData = dataList.last()
-                                
+
                                 if (latestData.id != lastSeenDataId) {
-                                    Log.d(AppConfig.LogTags.PHONE_SUPABASE, "Received data: ID=${latestData.id}, Message='${latestData.message}', Value=${latestData.value}")
+                                    Log.d(
+                                        AppConfig.LogTags.PHONE_SUPABASE,
+                                        "Received data: ID=${latestData.id}, Message='${latestData.message}', Value=${latestData.value}"
+                                    )
                                     lastSeenDataId = latestData.id
                                 }
                             }
                         } catch (parseError: Exception) {
-                            Log.e(AppConfig.LogTags.PHONE_SUPABASE, "Error parsing data: ${parseError.message}")
+                            Log.e(
+                                AppConfig.LogTags.PHONE_SUPABASE,
+                                "Error parsing data: ${parseError.message}"
+                            )
                         }
                     }
-                    
+
                     kotlinx.coroutines.delay(AppConfig.Polling.INTERVAL_MS)
-                    
+
                 } catch (e: Exception) {
                     Log.e(AppConfig.LogTags.PHONE_SUPABASE, "Error in polling: ${e.message}")
                     kotlinx.coroutines.delay(AppConfig.Polling.RETRY_DELAY_MS)
@@ -143,8 +149,8 @@ class SupabaseHelper {
             }
         }
     }
-    
-    
+
+
     /**
      * Get current polling status
      */

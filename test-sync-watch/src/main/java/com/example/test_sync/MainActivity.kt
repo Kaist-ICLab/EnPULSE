@@ -91,7 +91,10 @@ class MainActivity : ComponentActivity() {
                 json is kotlinx.serialization.json.JsonPrimitive -> json.content
                 else -> json.toString()
             }
-            Log.d("WATCH_BLE_CHANNEL", "⌚ Received message from phone - Key: '$key', Data: $message")
+            Log.d(
+                "WATCH_BLE_CHANNEL",
+                "⌚ Received message from phone - Key: '$key', Data: $message"
+            )
         }
 
         // Listen for structured data

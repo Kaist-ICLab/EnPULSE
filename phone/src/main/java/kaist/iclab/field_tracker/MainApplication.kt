@@ -25,9 +25,10 @@ class MainApplication : Application() {
     fun init() {
         val sensors: List<Sensor<*, *>> = get(named("collectors"))
         val storages: List<SensorDataStorage> = get(named("storages"))
-        sensors.forEach { sensor->
+        sensors.forEach { sensor ->
             sensor.addListener { entity ->
-                val storage = storages.find { it.ID == sensor.ID } ?: error("Storage not found for ${sensor.ID}")
+                val storage = storages.find { it.ID == sensor.ID }
+                    ?: error("Storage not found for ${sensor.ID}")
                 storage.insert(entity)
             }
         }

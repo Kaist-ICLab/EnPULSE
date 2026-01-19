@@ -8,7 +8,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.AmbientLightEntity
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 
 @Dao
-interface AmbientLightDao: BaseDao<AmbientLightSensor.Entity, AmbientLightEntity> {
+interface AmbientLightDao : BaseDao<AmbientLightSensor.Entity, AmbientLightEntity> {
     override suspend fun insert(sensorEntity: AmbientLightSensor.Entity, userUuid: String?) {
         val entity = AmbientLightEntity(
             uuid = userUuid ?: "",
@@ -55,7 +55,12 @@ interface AmbientLightDao: BaseDao<AmbientLightSensor.Entity, AmbientLightEntity
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM AmbientLightEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<AmbientLightEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<AmbientLightEntity>
 
     @Query("DELETE FROM AmbientLightEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

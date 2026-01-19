@@ -28,7 +28,7 @@ data class LocationSensorData(
     val altitude: Double,
     val latitude: Double,
     val longitude: Double,
-    val speed: Float,   
+    val speed: Float,
     @SerialName("device_type")
     val deviceType: Int,
 )

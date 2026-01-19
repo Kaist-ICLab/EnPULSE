@@ -43,10 +43,10 @@ class AppUsageLogSensor(
 
     override val permissions = listOfNotNull(Manifest.permission.PACKAGE_USAGE_STATS).toTypedArray()
     override val foregroundServiceTypes: Array<Int> = listOfNotNull(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            } else null
-        ).toTypedArray()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        } else null
+    ).toTypedArray()
 
     private val actionName = "kaist.iclab.tracker.${name}_REQUEST"
     private val actionCode = 0x11
@@ -56,34 +56,35 @@ class AppUsageLogSensor(
         actionCode = actionCode,
         initialConfig.interval
     )
-    
+
     // Track last queried timestamp to avoid duplicate events
     private var lastQueriedTimestamp: Long = 0L
 
     private val mainCallback = { _: Intent? ->
-        val usageStatManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val usageStatManager =
+            context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val currentTimestamp = System.currentTimeMillis()
-        
+
         // Query from last queried timestamp (or just the interval for first query)
         val queryStartTime = if (lastQueriedTimestamp > 0) {
             lastQueriedTimestamp + 1  // +1ms to exclude already-queried events
         } else {
             currentTimestamp - configStateFlow.value.interval
         }
-        
+
         val events = usageStatManager.queryEvents(queryStartTime, currentTimestamp)
         val event = UsageEvents.Event()
-        
+
         var maxEventTimestamp = lastQueriedTimestamp
-        
+
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
-            
+
             // Track the latest event timestamp we've seen
             if (event.timeStamp > maxEventTimestamp) {
                 maxEventTimestamp = event.timeStamp
             }
-            
+
             listeners.forEach { listener ->
                 listener.invoke(
                     Entity(
@@ -97,7 +98,7 @@ class AppUsageLogSensor(
                 )
             }
         }
-        
+
         // Update last queried timestamp to the latest event we processed
         if (maxEventTimestamp > lastQueriedTimestamp) {
             lastQueriedTimestamp = maxEventTimestamp
@@ -116,11 +117,11 @@ class AppUsageLogSensor(
 
     private fun isPreinstalledApp(packageName: String): String {
         val packageManager = context.packageManager
-        try{
+        try {
             packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA).let {
-                return if(it.flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0){
+                return if (it.flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) {
                     "SYSTEM"
-                } else{
+                } else {
                     "USER"
                 }
             }

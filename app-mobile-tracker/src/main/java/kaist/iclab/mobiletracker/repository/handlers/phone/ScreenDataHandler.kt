@@ -15,7 +15,7 @@ class ScreenDataHandler(private val dao: ScreenDao) : SensorDataHandler {
 
     override suspend fun getRecordCount() = dao.getRecordCount()
     override suspend fun getLatestTimestamp() = dao.getLatestTimestamp()
-    override suspend fun getRecordCountAfterTimestamp(timestamp: Long) = 
+    override suspend fun getRecordCountAfterTimestamp(timestamp: Long) =
         dao.getRecordCountAfterTimestamp(timestamp)
 
     override suspend fun getRecordsPaginated(

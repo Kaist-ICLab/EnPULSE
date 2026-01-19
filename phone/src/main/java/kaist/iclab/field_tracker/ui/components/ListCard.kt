@@ -47,7 +47,7 @@ fun ListCard(
                 }
             }
         }
-        if(disabled){
+        if (disabled) {
             Box(
                 modifier = Modifier
                     .matchParentSize()

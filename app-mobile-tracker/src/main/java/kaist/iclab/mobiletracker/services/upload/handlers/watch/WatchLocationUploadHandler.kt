@@ -17,13 +17,15 @@ class WatchLocationUploadHandler(
     override val sensorId = "WatchLocation"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        val entities = dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.WATCH.value)
+        val entities =
+            dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.WATCH.value)
         return entities.isNotEmpty()
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return try {
-            val entities = dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.WATCH.value)
+            val entities =
+                dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.WATCH.value)
             if (entities.isEmpty()) {
                 return Result.Error(IllegalStateException("No new data available to upload"))
             }

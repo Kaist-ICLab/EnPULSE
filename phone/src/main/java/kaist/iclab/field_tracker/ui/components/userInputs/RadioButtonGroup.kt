@@ -17,7 +17,11 @@ import androidx.compose.ui.unit.dp
 import kaist.iclab.field_tracker.ui.theme.MainTheme
 
 @Composable
-fun RadioButtonGroup(options: List<String>, selectedOption: String, onOptionSelected: (String) -> Unit) {
+fun RadioButtonGroup(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
+) {
     Column {
         options.forEach { option ->
             Row(
@@ -42,8 +46,8 @@ fun RadioButtonGroup(options: List<String>, selectedOption: String, onOptionSele
 
 @Preview
 @Composable
-fun RadioButtonGroupPreview(){
-    MainTheme{
+fun RadioButtonGroupPreview() {
+    MainTheme {
         RadioButtonGroup(
             options = listOf("Option 1", "Option 2", "Option 3"),
             selectedOption = "Option 1",

@@ -81,7 +81,7 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
     exportSchema = false
 )
 @TypeConverters(Converter::class)
-abstract class TrackerRoomDB: RoomDatabase() {
+abstract class TrackerRoomDB : RoomDatabase() {
 
     // Phone sensor data
     abstract fun ambientLightDao(): AmbientLightDao

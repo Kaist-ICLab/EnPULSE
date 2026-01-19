@@ -17,7 +17,7 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 /**
  * Loading overlay component
  * Displays a semi-transparent overlay with a white box containing a blue spinner
- * 
+ *
  * @param isLoading Whether the loading state is active
  * @param showOverlay Whether to show the overlay (default: true)
  * @param blockNavigation Whether to block navigation by covering the entire screen including navbar (default: true)
@@ -64,7 +64,7 @@ fun LoadingOverlay(
 
 /**
  * Loading overlay component using LoadingState
- * 
+ *
  * @param loadingState The loading state containing isLoading, showOverlay, and blockNavigation
  * @param modifier Modifier for the overlay
  */

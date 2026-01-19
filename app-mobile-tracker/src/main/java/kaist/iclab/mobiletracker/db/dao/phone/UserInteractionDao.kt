@@ -30,7 +30,10 @@ interface UserInteractionDao : BaseDao<UserInteractionSensor.Entity, UserInterac
     @Insert
     suspend fun insertBatchUsingRoomEntity(entities: List<UserInteractionEntity>)
 
-    override suspend fun insertBatch(entities: List<UserInteractionSensor.Entity>, userUuid: String?) {
+    override suspend fun insertBatch(
+        entities: List<UserInteractionSensor.Entity>,
+        userUuid: String?
+    ) {
         val uuid = userUuid ?: ""
         val roomEntities = entities.map { e ->
             UserInteractionEntity(
@@ -66,7 +69,12 @@ interface UserInteractionDao : BaseDao<UserInteractionSensor.Entity, UserInterac
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM UserInteractionEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<UserInteractionEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<UserInteractionEntity>
 
     @Query("DELETE FROM UserInteractionEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

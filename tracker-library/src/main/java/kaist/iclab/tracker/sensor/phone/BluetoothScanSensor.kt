@@ -72,11 +72,12 @@ class BluetoothScanSensor(
     ) {
         try {
             val deviceName = device.name
-            val deviceAlias = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) device.alias else null
-            
+            val deviceAlias =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) device.alias else null
+
             // Only include devices that have both name and alias
             if (deviceName == null || deviceAlias == null) return
-            
+
             listeners.forEach { item ->
                 item.invoke(
                     Entity(

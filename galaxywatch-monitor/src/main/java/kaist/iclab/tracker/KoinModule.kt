@@ -25,7 +25,7 @@ val koinModule = module {
     singleOf(::WearableDataCollector)
 
     viewModelOf(::MainViewModelImpl)
-    viewModel<AbstractMainViewModel>{
+    viewModel<AbstractMainViewModel> {
         get<MainViewModelImpl>()
     }
 }

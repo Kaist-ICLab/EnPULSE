@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import kaist.iclab.tracker.sensor.survey.activity.ui.SurveyScreen
 import kaist.iclab.tracker.sensor.survey.activity.ui.theme.DefaultSurveyTheme
 
-class DefaultSurveyActivity: SurveyActivity() {
+class DefaultSurveyActivity : SurveyActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

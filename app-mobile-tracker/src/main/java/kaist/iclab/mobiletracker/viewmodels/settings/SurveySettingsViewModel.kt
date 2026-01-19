@@ -9,7 +9,7 @@ class SurveySettingsViewModel(
 ) : ViewModel() {
 
     val config = surveySensor.configStateFlow
-    
+
     val surveyList = config.map { configObj ->
         configObj.survey.keys.toList()
     }

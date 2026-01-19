@@ -7,16 +7,16 @@ package kaist.iclab.wearabletracker.data
 data class SyncBatch(
     /** Unique identifier for this sync batch (UUID) */
     val batchId: String,
-    
+
     /** Timestamp of earliest data point in this batch */
     val startTimestamp: Long,
-    
+
     /** Timestamp of latest data point in this batch */
     val endTimestamp: Long,
-    
+
     /** Total number of records in this batch (across all sensors) */
     val recordCount: Int,
-    
+
     /** When this batch was created (system time) */
     val createdAt: Long
 )

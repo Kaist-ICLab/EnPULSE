@@ -15,16 +15,16 @@ class BluetoothScanSensorService(
     tableName = AppConfig.SupabaseTables.BLUETOOTH_SCAN_SENSOR,
     sensorName = "Bluetooth Scan"
 ) {
-    
+
     override fun prepareData(data: BluetoothScanSensorData): BluetoothScanSensorData {
         // Don't override UUID - it should already be set to user UUID
         return data
     }
-    
+
     suspend fun insertBluetoothScanSensorData(data: BluetoothScanSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertBluetoothScanSensorDataBatch(dataList: List<BluetoothScanSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

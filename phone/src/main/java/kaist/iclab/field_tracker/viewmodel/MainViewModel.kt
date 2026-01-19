@@ -9,7 +9,7 @@ import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.storage.core.SensorDataStorage
 import kotlinx.coroutines.flow.StateFlow
 
-abstract class MainViewModel: ViewModel() {
+abstract class MainViewModel : ViewModel() {
     abstract val controllerStateFlow: StateFlow<ControllerState>
     abstract fun start()
     abstract fun stop()

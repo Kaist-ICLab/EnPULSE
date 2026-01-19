@@ -13,11 +13,11 @@ import okhttp3.Response
  *
  * One distinct characteristics of InternetDataChannel is that send() can be used in 2 ways: for transferring data and for making a request.
  * In both cases, you can retrieve the response.
- * 
+ *
  * This class now uses only the sender pattern for HTTP requests.
  */
-class InternetDataChannel(): DataChannel<Response>() {
-    
+class InternetDataChannel() : DataChannel<Response>() {
+
     override val sender: DataSender<Response> = InternetSender()
     override val receiver: DataReceiver = object : DataChannelReceiver() {
         // No-op receiver - InternetDataChannel is send-only for now

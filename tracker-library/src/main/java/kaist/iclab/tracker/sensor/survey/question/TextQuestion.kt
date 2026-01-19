@@ -8,7 +8,7 @@ class TextQuestion(
     override val question: String,
     override val isMandatory: Boolean,
     questionTrigger: List<QuestionTrigger<String>>? = null
-): Question<String>(
+) : Question<String>(
     question, isMandatory, "", questionTrigger
 ) {
     override fun isAllowedResponse(response: String): Boolean {

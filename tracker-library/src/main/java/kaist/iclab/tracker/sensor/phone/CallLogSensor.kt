@@ -26,7 +26,7 @@ class CallLogSensor(
 ) {
     data class Config(
         val interval: Long
-    ): SensorConfig
+    ) : SensorConfig
 
     @Serializable
     data class Entity(
@@ -35,18 +35,18 @@ class CallLogSensor(
         val duration: Long,
         val number: String,
         val type: Int
-    ): SensorEntity()
+    ) : SensorEntity()
 
     override val permissions: Array<String> = listOfNotNull(
         Manifest.permission.READ_CONTACTS,
         Manifest.permission.READ_CALL_LOG,
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE
         } else null,
     ).toTypedArray()
 
     override val foregroundServiceTypes: Array<Int> = listOfNotNull(
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         } else null
     ).toTypedArray()

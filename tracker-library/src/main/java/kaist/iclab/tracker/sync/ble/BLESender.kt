@@ -12,7 +12,7 @@ import kotlinx.coroutines.tasks.await
 /**
  * BLE data sender for sending data through Bluetooth Low Energy.
  * Uses Google Wearable DataLayer API for communication.
- * 
+ *
  * Internal class - only accessible through BLEDataChannel.
  */
 internal class BLESender(

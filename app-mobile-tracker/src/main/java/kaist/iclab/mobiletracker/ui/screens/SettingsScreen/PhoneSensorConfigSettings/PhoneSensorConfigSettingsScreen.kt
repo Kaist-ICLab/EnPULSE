@@ -72,7 +72,7 @@ fun PhoneSensorConfigSettingsScreen(
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
             }
-            
+
             // Description text
             Text(
                 text = context.getString(R.string.phone_sensor_screen_description),

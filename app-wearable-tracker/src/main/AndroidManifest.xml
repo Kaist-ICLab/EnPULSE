@@ -7,11 +7,11 @@
     <uses-feature android:name="android.hardware.type.watch" />
 
     <application
+        android:name=".WearableApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:name=".WearableApplication"
         android:theme="@android:style/Theme.DeviceDefault">
         <uses-library
             android:name="com.google.android.wearable"
@@ -25,9 +25,9 @@
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
 
-        <service android:name=".storage.SensorDataReceiver$SensorDataReceiverService"
-            android:foregroundServiceType="specialUse"
-        />
+        <service
+            android:name=".storage.SensorDataReceiver$SensorDataReceiverService"
+            android:foregroundServiceType="specialUse" />
 
         <activity
             android:name=".MainActivity"

@@ -9,12 +9,12 @@ import kaist.iclab.mobiletracker.services.supabase.BaseSupabaseService
 interface SensorServiceRegistry {
     /**
      * Get a Supabase service for a given sensor ID.
-     * 
+     *
      * @param sensorId The sensor ID
      * @return The Supabase service, or null if not found
      */
     fun getService(sensorId: String): BaseSupabaseService<*>?
-    
+
     /**
      * Check if a service exists for the given sensor ID.
      */
@@ -27,11 +27,11 @@ interface SensorServiceRegistry {
 class SensorServiceRegistryImpl(
     private val services: Map<String, BaseSupabaseService<*>>
 ) : SensorServiceRegistry {
-    
+
     override fun getService(sensorId: String): BaseSupabaseService<*>? {
         return services[sensorId]
     }
-    
+
     override fun hasService(sensorId: String): Boolean {
         return services.containsKey(sensorId)
     }

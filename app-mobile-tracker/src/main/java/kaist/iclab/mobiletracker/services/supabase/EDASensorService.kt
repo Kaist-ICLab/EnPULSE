@@ -15,16 +15,16 @@ class EDASensorService(
     tableName = AppConfig.SupabaseTables.EDA_SENSOR,
     sensorName = "EDA"
 ) {
-    
+
     override fun prepareData(data: EDASensorData): EDASensorData {
         // Don't override UUID - it should already be set to user UUID from mapper
         return data
     }
-    
+
     suspend fun insertEDASensorData(data: EDASensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertEDASensorDataBatch(dataList: List<EDASensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

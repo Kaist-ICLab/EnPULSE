@@ -15,16 +15,16 @@ class HeartRateSensorService(
     tableName = AppConfig.SupabaseTables.HEART_RATE_SENSOR,
     sensorName = "heart rate"
 ) {
-    
+
     override fun prepareData(data: HeartRateSensorData): HeartRateSensorData {
         // Don't override UUID - it should already be set to user UUID from mapper
         return data
     }
-    
+
     suspend fun insertHeartRateSensorData(data: HeartRateSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertHeartRateSensorDataBatch(dataList: List<HeartRateSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

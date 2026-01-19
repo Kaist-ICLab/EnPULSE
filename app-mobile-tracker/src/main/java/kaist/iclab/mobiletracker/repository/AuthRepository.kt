@@ -9,18 +9,18 @@ interface AuthRepository {
      * Save authentication token
      */
     fun saveToken(token: String)
-    
+
     /**
      * Get authentication token
      * @return The saved token, or null if not found
      */
     fun getToken(): String?
-    
+
     /**
      * Clear authentication token
      */
     fun clearToken()
-    
+
     /**
      * Check if a token exists
      */

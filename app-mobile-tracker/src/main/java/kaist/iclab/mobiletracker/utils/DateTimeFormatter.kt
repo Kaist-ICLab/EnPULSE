@@ -11,7 +11,7 @@ import java.util.TimeZone
 object DateTimeFormatter {
     /**
      * Format Unix timestamp (milliseconds) to "YYYY-MM-DD HH:mm:ss" format
-     * 
+     *
      * @param timestampMillis Unix timestamp in milliseconds
      * @return Formatted timestamp string in "YYYY-MM-DD HH:mm:ss" format (UTC timezone)
      */
@@ -20,10 +20,10 @@ object DateTimeFormatter {
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
         return dateFormat.format(Date(timestampMillis))
     }
-    
+
     /**
      * Format Unix timestamp (milliseconds) to "MM-DD HH:mm:ss" format
-     * 
+     *
      * @param timestampMillis Unix timestamp in milliseconds
      * @return Formatted timestamp string in "MM-DD HH:mm:ss" format (local timezone)
      */
@@ -31,19 +31,19 @@ object DateTimeFormatter {
         val dateFormat = SimpleDateFormat("MM-dd HH:mm:ss", Locale.US)
         return dateFormat.format(Date(timestampMillis))
     }
-    
+
     /**
      * Get current time formatted as "MM-DD HH:mm:ss"
-     * 
+     *
      * @return Formatted current time string in "MM-DD HH:mm:ss" format (local timezone)
      */
     fun getCurrentTimeFormatted(): String {
         return formatTimestampShort(System.currentTimeMillis())
     }
-    
+
     /**
      * Parse timestamp string from "YYYY-MM-DD HH:mm:ss" format back to Unix timestamp (milliseconds)
-     * 
+     *
      * @param timestampString Timestamp string in "YYYY-MM-DD HH:mm:ss" format (UTC timezone)
      * @return Unix timestamp in milliseconds, or null if parsing fails
      */

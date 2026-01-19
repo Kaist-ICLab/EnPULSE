@@ -26,16 +26,16 @@ import org.koin.core.qualifier.named
 
 /**
  * Foreground service for receiving and storing phone sensor data locally in Room database.
- * 
+ *
  * This service runs in the foreground and listens to sensor data from the tracker library,
  * then stores it using PhoneSensorRepository. It handles local storage only.
- * 
+ *
  * For remote storage (Supabase upload), see the watch sensor services in this package.
  */
 class PhoneSensorDataService : Service(), KoinComponent {
     companion object {
         private const val TAG = "PhoneSensorDataService"
-        
+
         /**
          * Helper function to start the service from a Context
          */
@@ -43,7 +43,7 @@ class PhoneSensorDataService : Service(), KoinComponent {
             val intent = Intent(context, PhoneSensorDataService::class.java)
             context.startForegroundService(intent)
         }
-        
+
         /**
          * Helper function to stop the service from a Context
          */
@@ -52,7 +52,7 @@ class PhoneSensorDataService : Service(), KoinComponent {
             context.stopService(intent)
         }
     }
-    
+
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
     private val phoneSensorRepository by inject<PhoneSensorRepository>()
     private val serviceNotification by inject<BackgroundController.ServiceNotification>()
@@ -61,37 +61,43 @@ class PhoneSensorDataService : Service(), KoinComponent {
     // Coroutine scope tied to service lifecycle
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate { it.id to
-        { e: SensorEntity ->
-            // NOTE: Uncomment this if you want to verify the data is received
-            Log.v(TAG, "[PHONE] - Data received from ${it.name}: $e")
+    private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate {
+        it.id to
+                { e: SensorEntity ->
+                    // NOTE: Uncomment this if you want to verify the data is received
+                    Log.v(TAG, "[PHONE] - Data received from ${it.name}: $e")
 
-            if (phoneSensorRepository.hasStorageForSensor(it.id)) {
-                serviceScope.launch {
-                    when (val result = phoneSensorRepository.insertSensorData(it.id, e)) {
-                        is Result.Success -> {
-                            // Track when phone sensor data is collected
-                            timestampService.updateLastPhoneSensorData()
+                    if (phoneSensorRepository.hasStorageForSensor(it.id)) {
+                        serviceScope.launch {
+                            when (val result = phoneSensorRepository.insertSensorData(it.id, e)) {
+                                is Result.Success -> {
+                                    // Track when phone sensor data is collected
+                                    timestampService.updateLastPhoneSensorData()
+                                }
+
+                                is Result.Error -> {
+                                    Log.e(
+                                        TAG,
+                                        "[PHONE] - Failed to store data from ${it.name}: ${result.message}",
+                                        result.exception
+                                    )
+                                }
+                            }
                         }
-                        is Result.Error -> {
-                            Log.e(TAG, "[PHONE] - Failed to store data from ${it.name}: ${result.message}", result.exception)
-                        }
+                    } else {
+                        Log.w(TAG, "[PHONE] - No storage found for sensor ${it.name} (${it.id})")
                     }
                 }
-            } else {
-                Log.w(TAG, "[PHONE] - No storage found for sensor ${it.name} (${it.id})")
-            }
-        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val pendingIntent = NotificationHelper.createMainActivityPendingIntent(this, 0)
-        
+
         // Get localized strings for notification
         val localizedContext = LanguageHelper(this).applyLanguage(this)
-        
+
         val postNotification = NotificationHelper.buildNotification(
             context = this,
             channelId = serviceNotification.channelId,
@@ -135,7 +141,7 @@ class PhoneSensorDataService : Service(), KoinComponent {
         for (sensor in sensors) {
             sensor.removeListener(listener[sensor.id]!!)
         }
-        
+
         super.onDestroy()
     }
 }

@@ -39,18 +39,33 @@ fun BottomNavigationBar(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
+
     // Define destinations with localized strings
     val destinations = listOf(
-        Destination(Screen.Data.route, context.getString(R.string.nav_data), Icons.Outlined.Info, Icons.Filled.Info),
-        Destination(Screen.Home.route, context.getString(R.string.nav_home), Icons.Outlined.Home, Icons.Filled.Home),
-        Destination(Screen.Setting.route, context.getString(R.string.nav_settings), Icons.Outlined.Settings, Icons.Filled.Settings)
+        Destination(
+            Screen.Data.route,
+            context.getString(R.string.nav_data),
+            Icons.Outlined.Info,
+            Icons.Filled.Info
+        ),
+        Destination(
+            Screen.Home.route,
+            context.getString(R.string.nav_home),
+            Icons.Outlined.Home,
+            Icons.Filled.Home
+        ),
+        Destination(
+            Screen.Setting.route,
+            context.getString(R.string.nav_settings),
+            Icons.Outlined.Settings,
+            Icons.Filled.Settings
+        )
     )
-    
+
     // Observe current route changes using currentBackStackEntryAsState
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    
+
     // Map sub-routes to their parent tabs
     val subRouteToTabMap = mapOf(
         Screen.Account.route to Screen.Setting.route,
@@ -60,7 +75,7 @@ fun BottomNavigationBar(
         Screen.ServerSync.route to Screen.Setting.route,
         Screen.About.route to Screen.Setting.route
     )
-    
+
     // Determine which tab should be highlighted
     // First check if current route is a root tab, otherwise check if it's a sub-route
     val activeTabRoute = when {
@@ -68,18 +83,18 @@ fun BottomNavigationBar(
         currentRoute in subRouteToTabMap -> subRouteToTabMap[currentRoute]
         else -> null
     }
-    
+
     // Find current destination index
     val currentIndex = activeTabRoute?.let { route ->
         destinations.indexOfFirst { it.route == route }
     } ?: -1
-    
+
     // Manage selected destination state using rememberSaveable
     // Initialize with current route index if found, otherwise default to 0
     var selectedDestination by rememberSaveable {
         mutableIntStateOf(if (currentIndex >= 0) currentIndex else 0)
     }
-    
+
     // Sync selectedDestination with current route when route changes
     LaunchedEffect(currentRoute) {
         if (currentIndex >= 0) {
