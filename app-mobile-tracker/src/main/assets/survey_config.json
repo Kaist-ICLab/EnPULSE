@@ -1,11 +1,15 @@
 {
     "id": "full_feature_demo",
-    "type": "INTERVAL",
-    "title": "Full Feature Demo",
-    "message": "This survey showcases all supported question types and configurations.",
-    "intervalSec": 60,
-    "dailyStartTimeHour": 0,
-    "dailyEndTimeHour": 23,
+    "notification": {
+        "title": "Full Feature Demo",
+        "message": "This survey showcases all supported question types and configurations."
+    },
+    "schedule": {
+        "type": "INTERVAL",
+        "intervalSec": 60,
+        "dailyStartTimeHour": 0,
+        "dailyEndTimeHour": 23
+    },
     "questions": [
         {
             "type": "TEXT",
@@ -20,17 +24,35 @@
         {
             "type": "NUMBER",
             "shouldAnswer": true,
-            "text": "3. [NUMBER] Enter '5' to trigger the next question.",
+            "text": "3. [NUMBER] How many hours did you sleep? (Try < 4)",
             "trigger": {
                 "predicate": {
-                    "type": "EQUAL",
-                    "value": 5
+                    "type": "LESS_THAN",
+                    "value": 4
                 },
                 "questions": [
                     {
                         "type": "TEXT",
                         "shouldAnswer": true,
-                        "text": "   -> [TRIGGERED] You entered 5! Why?"
+                        "text": "   -> [TRIGGERED] Only < 4 hours? Why so little?"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "NUMBER",
+            "shouldAnswer": true,
+            "text": "4. [NUMBER] Rate your stress (0-10) - (Try >= 8)",
+            "trigger": {
+                "predicate": {
+                    "type": "GREATER_THAN_OR_EQUAL",
+                    "value": 8
+                },
+                "questions": [
+                    {
+                        "type": "TEXT",
+                        "shouldAnswer": true,
+                        "text": "   -> [TRIGGERED] High stress detected! Do you want to take a break?"
                     }
                 ]
             }
@@ -38,29 +60,34 @@
         {
             "type": "RADIO",
             "shouldAnswer": true,
-            "text": "4. [RADIO] Simple String Options",
+            "text": "5. [RADIO] Simple String Options",
             "options": [
-                "Option A",
-                "Option B",
-                "Option C"
+                {
+                    "value": "opt_a",
+                    "displayText": "Option A"
+                },
+                {
+                    "value": "opt_b",
+                    "displayText": "Option B"
+                }
             ]
         },
         {
             "type": "RADIO",
             "shouldAnswer": true,
-            "text": "5. [RADIO] Complex Options (with Free Response)",
+            "text": "6. [RADIO] Complex Options (with Free Response)",
             "options": [
                 {
-                    "value": "std_1",
-                    "displayText": "Standard Option 1"
+                    "value": "yes",
+                    "displayText": "Yes"
                 },
                 {
-                    "value": "std_2",
-                    "displayText": "Standard Option 2"
+                    "value": "no",
+                    "displayText": "No"
                 },
                 {
                     "value": "other",
-                    "displayText": "Other (Type your answer)",
+                    "displayText": "Other (Please specify)",
                     "allowFreeResponse": true
                 }
             ]
@@ -68,19 +95,19 @@
         {
             "type": "CHECKBOX",
             "shouldAnswer": true,
-            "text": "6. [CHECKBOX] Select Multiple",
+            "text": "7. [CHECKBOX] Select Multiple",
             "options": [
                 {
-                    "value": "mon",
-                    "displayText": "Monday"
+                    "value": "red",
+                    "displayText": "Red"
                 },
                 {
-                    "value": "tue",
-                    "displayText": "Tuesday"
+                    "value": "green",
+                    "displayText": "Green"
                 },
                 {
-                    "value": "wed",
-                    "displayText": "Wednesday"
+                    "value": "blue",
+                    "displayText": "Blue"
                 }
             ]
         }

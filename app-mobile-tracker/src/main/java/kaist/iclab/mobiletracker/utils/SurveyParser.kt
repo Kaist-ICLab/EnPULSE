@@ -36,14 +36,17 @@ object SurveyParser {
             val surveyId = root.optString("id", defaultSurveyId)
 
             // Parse Schedule
-            val type = root.optString("type", "INTERVAL")
+            val scheduleJson = root.optJSONObject("schedule")
+                ?: throw IllegalArgumentException("Missing 'schedule' configuration object")
+
+            val type = scheduleJson.optString("type", "INTERVAL")
             val scheduleMethod = when (type) {
                 "INTERVAL" -> {
-                    val validIntervalSec = root.optLong("intervalSec", 7200)
+                    val validIntervalSec = scheduleJson.optLong("intervalSec", 7200)
                     val intervalMillis = TimeUnit.SECONDS.toMillis(validIntervalSec)
 
-                    val startTimeHour = root.optInt("dailyStartTimeHour", 9)
-                    val endTimeHour = root.optInt("dailyEndTimeHour", 22)
+                    val startTimeHour = scheduleJson.optInt("dailyStartTimeHour", 9)
+                    val endTimeHour = scheduleJson.optInt("dailyEndTimeHour", 22)
 
                     // Calculate fixed times based on interval
                     val times = mutableListOf<Long>()
@@ -70,7 +73,7 @@ object SurveyParser {
                 }
 
                 "FIXED" -> {
-                    val timesJson = root.optJSONArray("times")
+                    val timesJson = scheduleJson.optJSONArray("times")
                     val times = mutableListOf<Long>()
                     if (timesJson != null) {
                         for (i in 0 until timesJson.length()) {
@@ -107,14 +110,17 @@ object SurveyParser {
             }
 
             val startTimeOfDay =
-                TimeUnit.HOURS.toMillis(root.optInt("dailyStartTimeHour", 9).toLong())
+                TimeUnit.HOURS.toMillis(scheduleJson.optInt("dailyStartTimeHour", 9).toLong())
             val endTimeOfDay =
-                TimeUnit.HOURS.toMillis(root.optInt("dailyEndTimeHour", 22).toLong())
+                TimeUnit.HOURS.toMillis(scheduleJson.optInt("dailyEndTimeHour", 22).toLong())
 
             // Parse Notification
+            val notificationJson = root.optJSONObject("notification")
+                ?: throw IllegalArgumentException("Missing 'notification' configuration object")
+            
             val notificationConfig = SurveyNotificationConfig(
-                title = root.optString("title", "Survey"),
-                description = root.optString("message", "Please answer the survey"),
+                title = notificationJson.optString("title", "Survey"),
+                description = notificationJson.optString("message", "Please answer the survey"),
                 icon = R.drawable.ic_launcher_foreground
             )
 
@@ -269,12 +275,10 @@ object SurveyParser {
         val predicate: ValueComparator<*> = when (predicateType) {
             "EQUAL" -> {
                 if (isNumeric) {
-                    // Try getting as double first (handles 5 and 5.0 in JSON)
                     val doubleVal = predicateJson.optDouble("value", Double.NaN)
                     if (!doubleVal.isNaN()) {
                         ValueComparator.Equal(doubleVal)
                     } else {
-                        // Fallback to string parsing if needed
                         val stringVal = predicateJson.optString("value")
                         val parsed = stringVal.toDoubleOrNull() ?: return null
                         ValueComparator.Equal(parsed)
@@ -296,6 +300,66 @@ object SurveyParser {
                     }
                 } else {
                     ValueComparator.NotEqual(predicateValue)
+                }
+            }
+
+            "GREATER_THAN" -> {
+                if (isNumeric) {
+                    val doubleVal = predicateJson.optDouble("value", Double.NaN)
+                    if (!doubleVal.isNaN()) {
+                        ValueComparator.GreaterThan(doubleVal)
+                    } else {
+                        val stringVal = predicateJson.optString("value")
+                        val parsed = stringVal.toDoubleOrNull() ?: return null
+                        ValueComparator.GreaterThan(parsed)
+                    }
+                } else {
+                    return null // String inequality not typically supported or useful here
+                }
+            }
+
+            "GREATER_THAN_OR_EQUAL" -> {
+                if (isNumeric) {
+                    val doubleVal = predicateJson.optDouble("value", Double.NaN)
+                    if (!doubleVal.isNaN()) {
+                        ValueComparator.GreaterThanOrEqual(doubleVal)
+                    } else {
+                        val stringVal = predicateJson.optString("value")
+                        val parsed = stringVal.toDoubleOrNull() ?: return null
+                        ValueComparator.GreaterThanOrEqual(parsed)
+                    }
+                } else {
+                    return null
+                }
+            }
+
+            "LESS_THAN" -> {
+                if (isNumeric) {
+                    val doubleVal = predicateJson.optDouble("value", Double.NaN)
+                    if (!doubleVal.isNaN()) {
+                        ValueComparator.LessThan(doubleVal)
+                    } else {
+                        val stringVal = predicateJson.optString("value")
+                        val parsed = stringVal.toDoubleOrNull() ?: return null
+                        ValueComparator.LessThan(parsed)
+                    }
+                } else {
+                    return null
+                }
+            }
+
+            "LESS_THAN_OR_EQUAL" -> {
+                if (isNumeric) {
+                    val doubleVal = predicateJson.optDouble("value", Double.NaN)
+                    if (!doubleVal.isNaN()) {
+                        ValueComparator.LessThanOrEqual(doubleVal)
+                    } else {
+                        val stringVal = predicateJson.optString("value")
+                        val parsed = stringVal.toDoubleOrNull() ?: return null
+                        ValueComparator.LessThanOrEqual(parsed)
+                    }
+                } else {
+                    return null
                 }
             }
 
