@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import kaist.iclab.mobiletracker.di.appModule
 import kaist.iclab.mobiletracker.di.authModule
 import kaist.iclab.mobiletracker.di.databaseModule
@@ -63,7 +64,7 @@ class MobileTrackerApplication : Application(), KoinComponent {
             backgroundController.controllerStateFlow
         } catch (e: Exception) {
             // Log error but don't crash - this is just eager initialization
-            android.util.Log.e(
+            Log.e(
                 "MobileTrackerApplication",
                 "Error initializing BackgroundController: ${e.message}",
                 e
