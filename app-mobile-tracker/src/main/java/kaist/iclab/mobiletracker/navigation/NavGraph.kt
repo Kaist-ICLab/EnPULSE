@@ -23,19 +23,18 @@ import androidx.compose.animation.slideOutHorizontally
 import kaist.iclab.mobiletracker.ui.screens.DataScreen.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.HomeScreen.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.LoginScreen.LoginScreen
-import kaist.iclab.mobiletracker.ui.screens.MessageScreen.MessageScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AboutSettings.AboutSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.AccountSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.CampaignSettings.CampaignSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.AutomaticSyncSettings.AutomaticSyncSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.PhoneCollectedDataSettings.PhoneCollectedDataSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.LanguageSettings.LanguageScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.PermissionSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PhoneSensorConfigSettings.PhoneSensorConfigSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.WatchCollectedDataSettings.WatchCollectedDataSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScreen
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
+import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 
 /**
@@ -94,12 +93,14 @@ fun NavGraph(
 
     // Navigate based on authentication state
     LaunchedEffect(userState.isLoggedIn) {
-        val mainTabs = listOf(Screen.Home.route, Screen.Data.route, Screen.Message.route, Screen.Setting.route)
+        val mainTabs = listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
         val currentRoute = navController.currentDestination?.route
         
         if (userState.isLoggedIn) {
             // Navigate to Home screen (main tab) when user logs in
-            if (currentRoute !in mainTabs) {
+            // Only navigate if we are currently on the Login screen, preventing
+            // forced navigation when restoring state on sub-screens (e.g. Language change)
+            if (currentRoute == Screen.Login.route) {
                 navController.navigate(Screen.Home.route) {
                     // Clear back stack to prevent going back to login
                     popUpTo(Screen.Login.route) { inclusive = true }
@@ -170,15 +171,9 @@ fun NavGraph(
             BackHandler {
                 activity?.finish()
             }
-            DataScreen()
+            DataScreen(navController = navController)
         }
 
-        composable(route = Screen.Message.route) {
-            BackHandler {
-                activity?.finish()
-            }
-            MessageScreen()
-        }
 
         composable(route = Screen.Setting.route) {
             BackHandler {
@@ -221,13 +216,6 @@ fun NavGraph(
             ServerSyncSettingsScreen(navController = navController)
         }
 
-        composable(route = Screen.PhoneSensors.route) {
-            PhoneCollectedDataSettingsScreen(navController = navController)
-        }
-
-        composable(route = Screen.WatchSensors.route) {
-            WatchCollectedDataSettingsScreen(navController = navController)
-        }
 
         composable(route = Screen.AutomaticSync.route) {
             AutomaticSyncSettingsScreen(navController = navController)
@@ -235,6 +223,24 @@ fun NavGraph(
 
         composable(route = Screen.About.route) {
             AboutSettingsScreen(navController = navController)
+        }
+
+        composable(
+            route = Screen.SensorDetail.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("sensorId") { 
+                    type = androidx.navigation.NavType.StringType 
+                }
+            )
+        ) { backStackEntry ->
+            val sensorId = backStackEntry.arguments?.getString("sensorId") ?: ""
+            val viewModel: SensorDetailViewModel = org.koin.androidx.compose.koinViewModel(
+                parameters = { org.koin.core.parameter.parametersOf(sensorId) }
+            )
+            SensorDetailScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

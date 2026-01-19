@@ -11,7 +11,6 @@ sealed class Screen(val route: String) {
     // Main tabs
     object Home : Screen("home")
     object Data : Screen("data")
-    object Message : Screen("message")
     object Setting : Screen("setting")
     
     // Settings sub-screens
@@ -22,9 +21,12 @@ sealed class Screen(val route: String) {
     object Permission : Screen("permission")
     object PhoneSensor : Screen("phone_sensor")
     object ServerSync : Screen("server_sync")
-    object PhoneSensors : Screen("phone_sensors")
-    object WatchSensors : Screen("watch_sensors")
     object AutomaticSync : Screen("automatic_sync")
     object About : Screen("about")
+    
+    // Data screen sub-screens
+    object SensorDetail : Screen("sensor_detail/{sensorId}") {
+        fun createRoute(sensorId: String) = "sensor_detail/$sensorId"
+    }
 }
 

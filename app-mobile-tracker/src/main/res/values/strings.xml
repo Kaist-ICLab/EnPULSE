@@ -1,11 +1,10 @@
 <resources>
-    <string name="app_name">Mobile Tracker</string>
+    <string name="app_name">EnPULSE</string>
     <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
     
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_data">Data</string>
-    <string name="nav_messages">Messages</string>
     <string name="nav_settings">Settings</string>
     
     <!-- Home Screen -->
@@ -17,29 +16,14 @@
     <string name="home_last_synced">Last synced: %1$s</string>
     <string name="home_never_synced">Never synced</string>
     <string name="home_daily_highlights">Today\'s Data Snapshot</string>
-    <string name="home_location_label">Location Status</string>
     <string name="home_logs_unit">%1$d logs</string>
-    <string name="home_app_usage_label">App Usage</string>
-    <string name="home_activity_label">Physical Activity</string>
-    <string name="home_samples_unit">%1$d samples</string>
-    <string name="home_device_status_label">Battery Data</string>
-    <string name="home_notifications_label">Notification</string>
-    <string name="home_notifications_unit">%1$d notifications</string>
-    <string name="home_screen_label">Screen Activity</string>
-    <string name="home_events_unit">%1$d events</string>
-    <string name="home_connectivity_label">Network Status</string>
-    <string name="home_updates_unit">%1$d updates</string>
-    <string name="home_bluetooth_label">Bluetooth Scan</string>
     <string name="home_watch_status_label">Galaxy Watch Device</string>
     <string name="home_watch_connected">Connected</string>
     <string name="home_watch_disconnected">Disconnected</string>
     <string name="home_watch_not_installed">App Not Found</string>
     <string name="home_last_sync_label">Last Sync</string>
     <string name="home_watch_name_label">Device Name</string>
-    <string name="home_scans_unit">%1$d scans</string>
     <string name="unknown">Unknown</string>
-    <string name="email">Email: %1$s</string>
-    <string name="name_label">Name</string>
     <string name="email_label">Email</string>
     <string name="no_email">No email</string>
     <string name="version_label">Version</string>
@@ -61,8 +45,8 @@
     <string name="logout_close">Close</string>
     
     <!-- Login Screen -->
-    <string name="mobile_tracker">Mobile Tracker</string>
-    <string name="mobile_tracker_logo">Mobile Tracker Logo</string>
+    <string name="mobile_tracker">EnPULSE</string>
+    <string name="mobile_tracker_logo">EnPULSE Logo</string>
     <string name="language_english">English</string>
     <string name="language_korean">한국어</string>
     
@@ -91,6 +75,7 @@
     <!-- Permission Names -->
     <string name="permission_name_notifications">Notifications</string>
     <string name="permission_name_location">Location</string>
+    <string name="permission_name_background_location">Background Location</string>
     <string name="permission_name_contacts">Contacts</string>
     <string name="permission_name_camera">Camera</string>
     <string name="permission_name_microphone">Microphone</string>
@@ -103,6 +88,8 @@
     <string name="permission_name_accessibility">Accessibility</string>
     <string name="permission_name_notification_listener">Notification Listener</string>
     <string name="permission_name_usage_stats">Usage Stats</string>
+    <string name="permission_name_activity_recognition">Activity Recognition</string>
+    <string name="permission_name_steps">Physical Activity (Steps)</string>
     
     <!-- Permission Descriptions -->
     <string name="permission_desc_notifications">Allow app to send notifications</string>
@@ -131,9 +118,42 @@
     <string name="permission_status_not_fully_granted">Not fully granted</string>
     
     <!-- Placeholder Screens -->
-    <string name="home_screen">Home Screen</string>
-    <string name="data_screen">Coming Soon</string>
-    <string name="message_screen">Coming Soon</string>
+    
+    <!-- Data Screen -->
+    <string name="data_screen_title">Collected Data</string>
+    <string name="data_screen_description">View and manage all sensor data collected from your mobile and wearable devices.</string>
+    <string name="data_screen_subtitle">Total %1$d Records</string>
+    <string name="data_screen_refresh">Refresh</string>
+    <string name="data_screen_no_data">No data collected yet</string>
+    
+    <!-- Sensor Detail Screen -->
+    <string name="sensor_detail_back">Back</string>
+    <string name="sensor_detail_summary">Summary</string>
+    <string name="sensor_detail_total_records">Total Records</string>
+    <string name="sensor_detail_today">Today</string>
+    <string name="sensor_detail_last_recorded">Last Recorded</string>
+    <string name="sensor_detail_raw_data">All Recorded Data</string>
+    <string name="sensor_detail_no_records">No records found</string>
+    <string name="data_screen_last_recorded_none">No data</string>
+    <string name="sensor_detail_filter_today">Today</string>
+    <string name="sensor_detail_filter_7_days">Last 7 Days</string>
+    <string name="sensor_detail_filter_30_days">Last 30 Days</string>
+    <string name="sensor_detail_filter_all">All Time</string>
+    <string name="sensor_detail_filter_custom">Custom</string>
+    <string name="sensor_detail_sort_newest">Newest</string>
+    <string name="sensor_detail_sort_oldest">Oldest</string>
+    <string name="sensor_detail_page_size">%d records</string>
+    <string name="sensor_detail_date_range_title">Select Date Range</string>
+    <string name="sensor_detail_start_date">Start Date</string>
+    <string name="sensor_detail_end_date">End Date</string>
+    <string name="sensor_detail_apply">Apply</string>
+    <string name="sensor_detail_delete">Delete</string>
+    <string name="sensor_detail_delete_title">Delete Record</string>
+    <string name="sensor_detail_delete_message">Are you sure you want to delete this record? This will also delete the record from the server.\n\nThis action cannot be undone.</string>
+    <string name="sensor_detail_delete_confirm">Delete</string>
+    <string name="sensor_detail_delete_cancel">Cancel</string>
+    <string name="record_deleted_success">Record deleted from device and server</string>
+    <string name="record_deleted_error">Failed to delete record</string>
     
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">Light sensor data</string>
@@ -156,7 +176,7 @@
     <string name="sensor_desc_default">Sensor data collection</string>
     
     <!-- Notification -->
-    <string name="notification_title">Mobile Tracker</string>
+    <string name="notification_title">EnPULSE</string>
     <string name="notification_description">Data collection is running in the background</string>
     
     <!-- Phone Sensor Screen -->
@@ -166,8 +186,8 @@
     <string name="sync_current_time">Current Time</string>
     <string name="sync_last_watch_data">Last Watch Data Received</string>
     <string name="sync_last_successful_upload">Last Successful Upload</string>
-    <string name="sync_start_data_upload">Upload All Data</string>
-    <string name="sync_delete_data">Delete Data</string>
+    <string name="sync_start_data_upload">Upload All</string>
+    <string name="sync_delete_data">Delete All</string>
     <string name="sync_automatic_sync">Automatic Sync</string>
     <string name="sync_automatic_sync_description">Configure automatic data synchronization settings. Set sync interval and network preferences for automatic uploads.</string>
     <string name="sync_interval_title">Sync Interval</string>
@@ -190,19 +210,15 @@
     <string name="auto_sync_failure_title">Auto Sync Failed</string>
     <string name="auto_sync_failure_message">Failed to upload %1$d sensor(s): %2$s</string>
     <string name="sync_clear_data_title">Clear Local Data</string>
-    <string name="sync_clear_data_message">All local sensor data will be deleted. This action cannot be undone and permanent. Do you want to continue?</string>
+    <string name="sync_clear_data_message">All local sensor data will be deleted. Data already uploaded to the server will not be affected.\n\nThis action cannot be undone.</string>
     <string name="sync_clear_data_confirm">Clear</string>
     <string name="sync_clear_data_cancel">Cancel</string>
     
     <!-- Sensor Sync Status -->
-    <string name="sensor_watch_sensors">Watch Collected Data</string>
-    <string name="sensor_watch_sensors_description">Here you can see the brief information of sensor data collected from the watch</string>
-    <string name="sensor_phone_sensors">Phone Collected Data</string>
-    <string name="sensor_phone_sensors_description">Here you can see the brief information of sensor data collected from the phone</string>
     <string name="sensor_upload_data">Upload Data</string>
-    <string name="sensor_delete_data">Delete Data</string>
-    <string name="sensor_delete_data_confirm">Delete sensor data</string>
-    <string name="sensor_delete_data_message">Are you sure you want to delete all data for this sensor? This action cannot be undone.</string>
+    <string name="sensor_delete_data">Delete Local Data</string>
+    <string name="sensor_delete_data_confirm">Delete local sensor data</string>
+    <string name="sensor_delete_data_message">Are you sure you want to delete all local data for this sensor? Data already uploaded to the server will not be affected.\n\nThis action cannot be undone.</string>
     <string name="sensor_heart_rate">Heart Rate</string>
     <string name="sensor_accelerometer">Accelerometer</string>
     <string name="sensor_eda">EDA</string>
@@ -238,9 +254,18 @@
     <string name="toast_sensor_data_upload_error">Failed to upload sensor data</string>
     <string name="toast_no_data_to_upload">No new data to upload. All data has already been uploaded.</string>
     <string name="toast_upload_all_summary">Successfully uploaded %1$d sensor(s)</string>
-    <string name="toast_upload_not_implemented">Upload not implemented for this sensor</string>
     <string name="sensor_upload_data_confirm">Upload Sensor Data</string>
     <string name="sensor_upload_data_message">Are you sure you want to upload all stored data for this sensor to the server?</string>
     <string name="toast_login_success">Login successful</string>
     <string name="toast_logout_success">Logout successful</string>
+    <string name="toast_error_generic">An error occurred</string>
+    <string name="toast_no_data_to_export">No data to export</string>
+    <string name="toast_export_failed">Failed to export data</string>
+    <string name="sensor_export_csv">Export CSV</string>
+    
+    <!-- Pagination -->
+    <string name="pagination_page_format">Page %1$d / %2$d</string>
+    <string name="pagination_previous">Previous Page</string>
+    <string name="pagination_next">Next Page</string>
+    <string name="sensor_watch_badge_desc">Watch sensor</string>
 </resources>

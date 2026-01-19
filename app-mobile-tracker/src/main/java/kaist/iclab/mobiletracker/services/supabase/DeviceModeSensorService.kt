@@ -22,12 +22,11 @@ class DeviceModeSensorService(
     }
 
     suspend fun insertDeviceModeSensorData(data: DeviceModeSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertDeviceModeSensorDataBatch(dataList: List<DeviceModeSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
-

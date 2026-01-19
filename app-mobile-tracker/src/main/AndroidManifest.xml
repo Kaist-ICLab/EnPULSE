@@ -170,6 +170,17 @@
                 android:name="com.google.android.gms.auth.api.signin.client_id"
                 android:value="@string/default_web_client_id"/>
         </activity>
+        
+        <!-- FileProvider for sharing exported CSV files -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

@@ -64,20 +64,22 @@ class SyncTimestampService(context: Context) {
 
     /**
      * Update timestamp when data is successfully uploaded to server (global)
+     * @param timestamp Optional timestamp to use, defaults to current time
      */
-    fun updateLastSuccessfulUpload() {
-        prefs.edit().putLong(KEY_LAST_SUCCESSFUL_UPLOAD, System.currentTimeMillis()).apply()
+    fun updateLastSuccessfulUpload(timestamp: Long = System.currentTimeMillis()) {
+        prefs.edit().putLong(KEY_LAST_SUCCESSFUL_UPLOAD, timestamp).apply()
     }
 
     /**
      * Update timestamp when a specific sensor's data is successfully uploaded to server
      * @param sensorId The ID of the sensor that was uploaded
+     * @param timestamp The timestamp of the last uploaded record (in milliseconds)
      */
-    fun updateLastSuccessfulUpload(sensorId: String) {
+    fun updateLastSuccessfulUpload(sensorId: String, timestamp: Long) {
         val key = "last_upload_$sensorId"
-        prefs.edit().putLong(key, System.currentTimeMillis()).apply()
+        prefs.edit().putLong(key, timestamp).apply()
         // Also update global timestamp
-        updateLastSuccessfulUpload()
+        updateLastSuccessfulUpload(timestamp)
     }
 
     /**

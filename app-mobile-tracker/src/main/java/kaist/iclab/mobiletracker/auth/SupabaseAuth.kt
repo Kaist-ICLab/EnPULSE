@@ -14,6 +14,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.IDToken
+import kaist.iclab.mobiletracker.BuildConfig
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
@@ -54,8 +55,20 @@ class SupabaseAuth(
     override val userStateFlow: StateFlow<UserState> = _userStateFlow.asStateFlow()
 
     init {
-        // Check for existing session asynchronously to allow Supabase to load persisted session
-        checkCurrentSessionAsync()
+        // Check if we should skip login (for development convenience)
+        if (BuildConfig.SKIP_LOGIN) {
+            _userStateFlow.value = UserState(
+                isLoggedIn = true,
+                user = User(
+                    email = "dev@localhost",
+                    name = "Development User"
+                ),
+                token = null
+            )
+        } else {
+            // Check for existing session asynchronously to allow Supabase to load persisted session
+            checkCurrentSessionAsync()
+        }
     }
 
     /**

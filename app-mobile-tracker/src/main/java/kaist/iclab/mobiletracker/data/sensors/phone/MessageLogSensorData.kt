@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Supabase data class representing message log sensor data from the phone device.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid User UUID.
  * @property timestamp Unix timestamp in milliseconds when the message was recorded.
  * @property received Timestamp when the data was received by the phone (Unix timestamp in milliseconds).
@@ -16,6 +17,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class MessageLogSensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
     val received: String,
@@ -27,4 +30,3 @@ data class MessageLogSensorData(
     @SerialName("contact_type")
     val contactType: Int
 )
-

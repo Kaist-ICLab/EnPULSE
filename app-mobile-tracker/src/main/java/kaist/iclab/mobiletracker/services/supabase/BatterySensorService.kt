@@ -22,12 +22,12 @@ class BatterySensorService(
     }
     
     suspend fun insertBatterySensorData(data: BatterySensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
     
     suspend fun insertBatterySensorDataBatch(dataList: List<BatterySensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
 

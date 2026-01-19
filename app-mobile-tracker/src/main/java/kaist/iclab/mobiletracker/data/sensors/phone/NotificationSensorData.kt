@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Supabase data class representing notification sensor data from the phone device.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid User UUID.
  * @property timestamp Unix timestamp in milliseconds when the notification event occurred.
  * @property received Timestamp when the data was received by the phone (Unix timestamp in milliseconds).
@@ -19,6 +20,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class NotificationSensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
     val received: String,

@@ -157,45 +157,13 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
+                // Google "G" logo
+                Icon(
+                    painter = androidx.compose.ui.res.painterResource(id = R.drawable.ic_google_logo),
+                    contentDescription = "Google Logo",
                     modifier = Modifier.size(Styles.BUTTON_ICON_SIZE),
-                    verticalArrangement = Arrangement.spacedBy(Styles.BUTTON_ICON_INTERNAL_SPACING)
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(Styles.BUTTON_ICON_INTERNAL_SPACING)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .background(AppColors.GoogleBlue)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .background(AppColors.GoogleRed)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(Styles.BUTTON_ICON_INTERNAL_SPACING)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .background(AppColors.GoogleYellow)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .background(AppColors.GoogleGreen)
-                        )
-                    }
-                }
+                    tint = Color.Unspecified
+                )
                 Spacer(modifier = Modifier.width(Styles.BUTTON_ICON_TITLE_SPACING))
                 Text(
                     text = context.getString(R.string.sign_in_with_google),

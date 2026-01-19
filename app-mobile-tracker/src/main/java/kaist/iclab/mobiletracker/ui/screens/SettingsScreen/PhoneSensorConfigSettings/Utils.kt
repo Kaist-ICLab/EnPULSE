@@ -1,97 +1,49 @@
 package kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PhoneSensorConfigSettings
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
-import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.BatteryFull
-import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.BrightnessMedium
-import androidx.compose.material.icons.filled.DataUsage
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.NetworkCheck
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.ui.utils.getSensorIcon
+import kaist.iclab.mobiletracker.ui.utils.getSensorDescriptionResId
+import kaist.iclab.mobiletracker.ui.utils.getSensorDisplayName
 
 /**
  * Data class representing sensor configuration
  */
 private data class SensorConfig(
     val patterns: List<String>,
-    val stringRes: Int,
-    val icon: ImageVector
+    val canonicalId: String
 )
 
 /**
- * Sensor configurations mapping patterns to string resources and icons
+ * Sensor configurations mapping patterns to canonical IDs
  */
 private val sensorConfigs = listOf(
-    SensorConfig(
-        listOf("Ambient Light"),
-        R.string.sensor_desc_ambient_light,
-        Icons.Filled.BrightnessMedium
-    ),
-    SensorConfig(
-        listOf("App List Change"),
-        R.string.sensor_desc_app_list_change,
-        Icons.Filled.List
-    ),
-    SensorConfig(listOf("App Usage"), R.string.sensor_desc_app_usage, Icons.Filled.Apps),
-    SensorConfig(listOf("Battery"), R.string.sensor_desc_battery, Icons.Filled.BatteryFull),
-    SensorConfig(listOf("Bluetooth"), R.string.sensor_desc_bluetooth, Icons.Filled.Bluetooth),
-    SensorConfig(listOf("Call Log"), R.string.sensor_desc_call_log, Icons.Filled.History),
-    SensorConfig(listOf("Data Traffic"), R.string.sensor_desc_data_traffic, Icons.Filled.DataUsage),
-    SensorConfig(
-        listOf("Device Mode"),
-        R.string.sensor_desc_device_mode,
-        Icons.Filled.PhoneAndroid
-    ),
-    SensorConfig(listOf("Location"), R.string.sensor_desc_location, Icons.Filled.LocationOn),
-    SensorConfig(listOf("Media"), R.string.sensor_desc_media, Icons.Filled.PlayArrow),
-    SensorConfig(
-        listOf("Message"),
-        R.string.sensor_desc_message,
-        Icons.AutoMirrored.Filled.Message
-    ),
-    SensorConfig(
-        listOf("Connectivity"),
-        R.string.sensor_desc_connectivity,
-        Icons.Filled.NetworkCheck
-    ),
-    SensorConfig(
-        listOf("Notification"),
-        R.string.sensor_desc_notification,
-        Icons.Filled.Notifications
-    ),
-    SensorConfig(listOf("Screen"), R.string.sensor_desc_screen, Icons.Filled.Phone),
-    SensorConfig(
-        listOf("Step"),
-        R.string.sensor_desc_step,
-        Icons.AutoMirrored.Filled.DirectionsWalk
-    ),
-    SensorConfig(
-        listOf("User Interaction"),
-        R.string.sensor_desc_user_interaction,
-        Icons.Filled.TouchApp
-    ),
-    SensorConfig(listOf("Wifi", "WiFi"), R.string.sensor_desc_wifi, Icons.Filled.Wifi)
+    SensorConfig(listOf("Ambient Light"), "AmbientLight"),
+    SensorConfig(listOf("App List Change"), "AppListChange"),
+    SensorConfig(listOf("App Usage"), "AppUsage"),
+    SensorConfig(listOf("Battery"), "Battery"),
+    SensorConfig(listOf("Bluetooth"), "Bluetooth"),
+    SensorConfig(listOf("Call Log"), "CallLog"),
+    SensorConfig(listOf("Data Traffic"), "DataTraffic"),
+    SensorConfig(listOf("Device Mode"), "DeviceMode"),
+    SensorConfig(listOf("Location"), "Location"),
+    SensorConfig(listOf("Media"), "Media"),
+    SensorConfig(listOf("Message"), "Message"),
+    SensorConfig(listOf("Connectivity"), "Connectivity"),
+    SensorConfig(listOf("Notification"), "Notification"),
+    SensorConfig(listOf("Screen"), "Screen"),
+    SensorConfig(listOf("Step"), "Step"),
+    SensorConfig(listOf("User Interaction"), "UserInteraction"),
+    SensorConfig(listOf("Wifi", "WiFi"), "Wifi")
 )
 
 private val defaultConfig = SensorConfig(
     patterns = emptyList(),
-    stringRes = R.string.sensor_desc_default,
-    icon = Icons.Filled.Settings
+    canonicalId = "Default"
 )
 
 /**
@@ -106,19 +58,31 @@ private fun findSensorConfig(sensorName: String): SensorConfig {
 }
 
 /**
+ * Maps sensor names to their localized titles
+ */
+@Composable
+fun getLocalizedSensorTitle(sensorName: String): String {
+    val config = findSensorConfig(sensorName)
+    if (config.canonicalId == "Default") return sensorName
+    return getSensorDisplayName(config.canonicalId)
+}
+
+/**
  * Maps sensor names to their localized descriptions (2-4 words)
  */
 @Composable
 fun getSensorDescription(sensorName: String): String {
-    val context = LocalContext.current
     val config = findSensorConfig(sensorName)
-    return context.getString(config.stringRes)
+    if (config.canonicalId == "Default") return stringResource(R.string.sensor_desc_default)
+    return stringResource(getSensorDescriptionResId(config.canonicalId))
 }
 
 /**
  * Maps sensor names to their corresponding Material Icons
  */
 fun getSensorIcon(sensorName: String): ImageVector {
-    return findSensorConfig(sensorName).icon
+    val config = findSensorConfig(sensorName)
+    if (config.canonicalId == "Default") return Icons.Default.Settings
+    return getSensorIcon(config.canonicalId)
 }
 

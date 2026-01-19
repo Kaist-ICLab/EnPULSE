@@ -22,12 +22,11 @@ class ConnectivitySensorService(
     }
 
     suspend fun insertConnectivitySensorData(data: ConnectivitySensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertConnectivitySensorDataBatch(dataList: List<ConnectivitySensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
-

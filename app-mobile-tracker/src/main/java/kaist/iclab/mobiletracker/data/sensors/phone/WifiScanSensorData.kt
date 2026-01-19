@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Supabase data class representing WiFi sensor data from the phone device.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid UUID of the current logged in user.
  * @property deviceType Type of device (0 = phone, 1 = watch).
  * @property timestamp Unix timestamp in milliseconds when the WiFi data was recorded.
@@ -17,6 +18,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class WifiScanSensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
     val bssid: String,
@@ -27,4 +30,3 @@ data class WifiScanSensorData(
     @SerialName("device_type")
     val deviceType: Int
 )
-

@@ -103,16 +103,39 @@ fun PopupDialog(
                     // Buttons
                     Spacer(modifier = Modifier.height(Styles.ContentButtonSpacing))
                     if (secondaryButton != null) {
-                        // Two buttons: show both in a Row, always centered
+                        // Two buttons: stretch equally across full width
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.spacedBy(Styles.ButtonSpacing)
                         ) {
+                            Button(
+                                onClick = primaryButton.onClick,
+                                enabled = primaryButton.enabled,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(primaryButton.height),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (primaryButton.isPrimary) AppColors.PrimaryColor else Color.Gray
+                                ),
+                                shape = Styles.ButtonCornerRadius
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = primaryButton.text,
+                                        color = Color.White,
+                                        fontSize = Styles.ButtonTextFontSize,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
                             OutlinedButton(
                                 onClick = secondaryButton.onClick,
                                 enabled = secondaryButton.enabled,
                                 modifier = Modifier
-                                    .width(secondaryButton.width)
+                                    .weight(1f)
                                     .height(secondaryButton.height),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = Color.Black
@@ -134,59 +157,30 @@ fun PopupDialog(
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.width(Styles.ButtonSpacing))
-                            Button(
-                                onClick = primaryButton.onClick,
-                                enabled = primaryButton.enabled,
-                                modifier = Modifier
-                                    .width(primaryButton.width)
-                                    .height(primaryButton.height),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (primaryButton.isPrimary) AppColors.PrimaryColor else Color.Gray
-                                ),
-                                shape = Styles.ButtonCornerRadius
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = primaryButton.text,
-                                        color = Color.White,
-                                        fontSize = Styles.ButtonTextFontSize,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
                         }
                     } else {
-                        // Single button: show only primary, always centered
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                        // Single button: stretch to full width
+                        Button(
+                            onClick = primaryButton.onClick,
+                            enabled = primaryButton.enabled,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(primaryButton.height),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (primaryButton.isPrimary) AppColors.PrimaryColor else Color.Gray
+                            ),
+                            shape = Styles.ButtonCornerRadius
                         ) {
-                            Button(
-                                onClick = primaryButton.onClick,
-                                enabled = primaryButton.enabled,
-                                modifier = Modifier
-                                    .width(primaryButton.width)
-                                    .height(primaryButton.height),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (primaryButton.isPrimary) AppColors.PrimaryColor else Color.Gray
-                                ),
-                                shape = Styles.ButtonCornerRadius
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = primaryButton.text,
-                                        color = Color.White,
-                                        fontSize = Styles.ButtonTextFontSize,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
+                                Text(
+                                    text = primaryButton.text,
+                                    color = Color.White,
+                                    fontSize = Styles.ButtonTextFontSize,
+                                    textAlign = TextAlign.Center
+                                )
                             }
                         }
                     }

@@ -40,16 +40,16 @@ abstract class BaseSupabaseService<T : @Serializable Any>(
      * Returns Result type for explicit error handling.
      * Each service should implement insert methods that call this with the concrete type.
      */
-    protected suspend inline fun <reified TSerializable : @Serializable Any> insertToSupabase(
+    protected suspend inline fun <reified TSerializable : @Serializable Any> upsertToSupabase(
         data: TSerializable
     ): Result<Unit> {
         return SupabaseLoadingInterceptor.withLoading {
             runCatchingSuspend {
                 try {
-                    supabaseClient.from(tableName).insert(data)
+                    supabaseClient.from(tableName).upsert(data)
                     Unit // Explicitly return Unit
                 } catch (e: Exception) {
-                    Log.e(AppConfig.LogTags.PHONE_SUPABASE, "Error inserting $sensorName sensor data: ${e.message}", e)
+                    Log.e(AppConfig.LogTags.PHONE_SUPABASE, "Error upserting $sensorName sensor data: ${e.message}", e)
                     throw e
                 }
             }
@@ -62,7 +62,7 @@ abstract class BaseSupabaseService<T : @Serializable Any>(
      * Returns Result type for explicit error handling.
      * Each service should implement insert batch methods that call this with the concrete type.
      */
-    protected suspend inline fun <reified TSerializable : @Serializable Any> insertBatchToSupabase(
+    protected suspend inline fun <reified TSerializable : @Serializable Any> upsertBatchToSupabase(
         dataList: List<TSerializable>
     ): Result<Unit> {
         return SupabaseLoadingInterceptor.withLoading {
@@ -72,10 +72,10 @@ abstract class BaseSupabaseService<T : @Serializable Any>(
                 }
 
                 try {
-                    supabaseClient.from(tableName).insert(dataList)
+                    supabaseClient.from(tableName).upsert(dataList)
                     Unit // Explicitly return Unit
                 } catch (e: Exception) {
-                    Log.e(AppConfig.LogTags.PHONE_SUPABASE, "Error inserting ${dataList.size} $sensorName sensor data entries: ${e.message}", e)
+                    Log.e(AppConfig.LogTags.PHONE_SUPABASE, "Error upserting ${dataList.size} $sensorName sensor data entries: ${e.message}", e)
                     throw e
                 }
             }

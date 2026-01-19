@@ -10,6 +10,7 @@ import com.google.android.gms.wearable.WearableListenerService
 import kaist.iclab.tracker.sync.core.DataChannelReceiver
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * BLE data receiver for receiving data through Bluetooth Low Energy.
@@ -112,9 +113,8 @@ internal class BLEReceiver : DataChannelReceiver() {
                 val jsonElement = try {
                     Json.parseToJsonElement(jsonString)
                 } catch (e: Exception) {
-                    Log.d(TAG, "Data is not valid JSON, wrapping as string: $jsonString")
-                    // If it's not valid JSON, wrap it as a JSON string
-                    Json.parseToJsonElement("\"$jsonString\"")
+                    // If it's not valid JSON, wrap it properly as a JsonPrimitive string
+                    JsonPrimitive(jsonString)
                 }
 
                 callbacks.forEach { it.invoke(key, jsonElement) }

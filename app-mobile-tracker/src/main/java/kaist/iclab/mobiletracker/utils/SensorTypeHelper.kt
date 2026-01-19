@@ -1,22 +1,20 @@
 package kaist.iclab.mobiletracker.utils
 
-import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
-
 /**
  * Utility class for identifying and working with phone and watch sensors.
  * Provides helper methods to determine sensor types and get sensor IDs.
  */
 object SensorTypeHelper {
     /**
-     * List of all watch sensor IDs
+     * List of all watch sensor IDs (matching handler sensorId values)
      */
     val watchSensorIds: List<String> = listOf(
-        WatchSensorUploadService.HEART_RATE_SENSOR_ID,
-        WatchSensorUploadService.ACCELEROMETER_SENSOR_ID,
-        WatchSensorUploadService.EDA_SENSOR_ID,
-        WatchSensorUploadService.PPG_SENSOR_ID,
-        WatchSensorUploadService.SKIN_TEMPERATURE_SENSOR_ID,
-        WatchSensorUploadService.LOCATION_SENSOR_ID
+        "WatchHeartRate",
+        "WatchAccelerometer",
+        "WatchEDA",
+        "WatchPPG",
+        "WatchSkinTemperature",
+        "WatchLocation"
     )
 
     /**
@@ -39,4 +37,3 @@ object SensorTypeHelper {
         return !isWatchSensor(sensorId)
     }
 }
-

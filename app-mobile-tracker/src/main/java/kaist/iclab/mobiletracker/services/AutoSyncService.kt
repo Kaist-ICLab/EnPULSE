@@ -11,9 +11,12 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
 import kaist.iclab.mobiletracker.utils.NotificationHelper
+import kaist.iclab.mobiletracker.helpers.LanguageHelper
+import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.tracker.sensor.core.Sensor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -227,13 +230,12 @@ class AutoSyncService : Service(), KoinComponent {
         
         try {
             sensors.forEach { sensor ->
-                if (phoneSensorUploadService.hasDataToUpload(sensor.id, sensor)) {
-                    when (val result = phoneSensorUploadService.uploadSensorData(sensor.id, sensor)) {
-                        is kaist.iclab.mobiletracker.repository.Result.Success -> {
+                if (phoneSensorUploadService.hasDataToUpload(sensor.id)) {
+                    when (val result = phoneSensorUploadService.uploadSensorData(sensor.id)) {
+                        is Result.Success -> {
                             successCount++
-                            syncTimestampService.updateLastSuccessfulUpload(sensor.id)
                         }
-                        is kaist.iclab.mobiletracker.repository.Result.Error -> {
+                        is Result.Error -> {
                             failureCount++
                             failedSensors.add(sensor.name)
                             Log.e(TAG, "Error uploading data for ${sensor.name}: ${result.message}", result.exception)
@@ -245,14 +247,13 @@ class AutoSyncService : Service(), KoinComponent {
             }
             
             // Upload all watch sensors
-            kaist.iclab.mobiletracker.utils.SensorTypeHelper.watchSensorIds.forEach { sensorId ->
+            SensorTypeHelper.watchSensorIds.forEach { sensorId ->
                 if (watchSensorUploadService.hasDataToUpload(sensorId)) {
                     when (val result = watchSensorUploadService.uploadSensorData(sensorId)) {
-                        is kaist.iclab.mobiletracker.repository.Result.Success -> {
+                        is Result.Success -> {
                             successCount++
-                            syncTimestampService.updateLastSuccessfulUpload(sensorId)
                         }
-                        is kaist.iclab.mobiletracker.repository.Result.Error -> {
+                        is Result.Error -> {
                             failureCount++
                             failedSensors.add(sensorId)
                             Log.e(TAG, "Error uploading watch data for $sensorId: ${result.message}", result.exception)
@@ -281,11 +282,12 @@ class AutoSyncService : Service(), KoinComponent {
      */
     private fun showSuccessNotification(successCount: Int) {
         val pendingIntent = NotificationHelper.createMainActivityPendingIntent(this, NOTIFICATION_ID_SUCCESS)
+        val localizedContext = LanguageHelper(this).applyLanguage(this)
         val notification = NotificationHelper.buildNotification(
             context = this,
             channelId = NOTIFICATION_CHANNEL_ID,
-            title = getString(R.string.auto_sync_success_title),
-            text = getString(R.string.auto_sync_success_message, successCount),
+            title = localizedContext.getString(R.string.auto_sync_success_title),
+            text = localizedContext.getString(R.string.auto_sync_success_message, successCount),
             pendingIntent = pendingIntent
         ).build()
         
@@ -303,11 +305,12 @@ class AutoSyncService : Service(), KoinComponent {
         }
         
         val pendingIntent = NotificationHelper.createMainActivityPendingIntent(this, NOTIFICATION_ID_FAILURE)
+        val localizedContext = LanguageHelper(this).applyLanguage(this)
         val notification = NotificationHelper.buildNotification(
             context = this,
             channelId = NOTIFICATION_CHANNEL_ID,
-            title = getString(R.string.auto_sync_failure_title),
-            text = getString(R.string.auto_sync_failure_message, failureCount, failedSensorsText),
+            title = localizedContext.getString(R.string.auto_sync_failure_title),
+            text = localizedContext.getString(R.string.auto_sync_failure_message, failureCount, failedSensorsText),
             pendingIntent = pendingIntent
         ).build()
         

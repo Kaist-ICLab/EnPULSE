@@ -174,5 +174,20 @@ object AppToast {
         val localizedText = localizedContext.getString(textResId)
         show(context, localizedText, duration, gravity)
     }
+
+    /**
+     * Show a toast message from a string resource ID with format arguments
+     *
+     * @param context The context to show the toast
+     * @param textResId The string resource ID
+     * @param formatArgs The format arguments for the string
+     */
+    fun show(context: Context, textResId: Int, vararg formatArgs: Any) {
+        // Apply language configuration to get localized string
+        val languageHelper = LanguageHelper(context)
+        val localizedContext = languageHelper.applyLanguage(context)
+        val localizedText = localizedContext.getString(textResId, *formatArgs)
+        show(context, localizedText, Duration.SHORT)
+    }
 }
 

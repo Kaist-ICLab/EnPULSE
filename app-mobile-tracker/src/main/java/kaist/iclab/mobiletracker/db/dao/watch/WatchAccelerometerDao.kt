@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import kaist.iclab.mobiletracker.db.dao.common.BaseDao
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WatchAccelerometerDao : BaseDao<WatchAccelerometerEntity, WatchAccelerometerEntity> {
@@ -31,7 +32,21 @@ interface WatchAccelerometerDao : BaseDao<WatchAccelerometerEntity, WatchAcceler
     @Query("SELECT COUNT(*) FROM watch_accelerometer")
     override suspend fun getRecordCount(): Int
 
+    @Query("SELECT COUNT(*) FROM watch_accelerometer WHERE timestamp >= :afterTimestamp")
+    fun getDailyAccelerometerCount(afterTimestamp: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM watch_accelerometer WHERE timestamp >= :afterTimestamp")
+    suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
+
+    @Query("SELECT * FROM watch_accelerometer WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
+    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<WatchAccelerometerEntity>
+
+    @Query("DELETE FROM watch_accelerometer WHERE id = :recordId")
+    suspend fun deleteById(recordId: Long)
+
+    @Query("SELECT eventId FROM watch_accelerometer WHERE id = :recordId")
+    suspend fun getEventIdById(recordId: Long): String?
+
     @Query("DELETE FROM watch_accelerometer")
     override suspend fun deleteAll()
 }
-

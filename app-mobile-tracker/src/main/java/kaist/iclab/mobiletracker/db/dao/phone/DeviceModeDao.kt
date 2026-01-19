@@ -51,6 +51,18 @@ interface DeviceModeDao: BaseDao<DeviceModeSensor.Entity, DeviceModeEntity> {
     @Query("SELECT COUNT(*) FROM DeviceModeEntity")
     override suspend fun getRecordCount(): Int
 
+    @Query("SELECT COUNT(*) FROM DeviceModeEntity WHERE timestamp >= :afterTimestamp")
+    suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
+
+    @Query("SELECT * FROM DeviceModeEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
+    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<DeviceModeEntity>
+
+    @Query("DELETE FROM DeviceModeEntity WHERE id = :recordId")
+    suspend fun deleteById(recordId: Long)
+
+    @Query("SELECT eventId FROM DeviceModeEntity WHERE id = :recordId")
+    suspend fun getEventIdById(recordId: Long): String?
+
     @Query("DELETE FROM DeviceModeEntity")
     suspend fun deleteAllDeviceModeData()
 

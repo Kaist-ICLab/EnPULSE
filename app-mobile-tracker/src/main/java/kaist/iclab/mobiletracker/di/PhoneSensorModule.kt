@@ -311,7 +311,7 @@ val phoneSensorModule = module {
     }
 
     // Sensors list
-    single(named("sensors")) {
+    single(named("phoneSensors")) {
         listOf(
             get<AmbientLightSensor>(),
             get<AppListChangeSensor>(),
@@ -355,7 +355,7 @@ val phoneSensorModule = module {
                 clazz = ControllerState::class.java,
                 collectionName = BackgroundController::class.simpleName ?: ""
             ),
-            sensors = get(qualifier("sensors")),
+            sensors = get(qualifier("phoneSensors")),
             serviceNotification = get<BackgroundController.ServiceNotification>(),
             allowPartialSensing = true,
         )
@@ -525,11 +525,86 @@ val phoneSensorModule = module {
         SyncTimestampService(context = androidContext())
     }
 
+    // SensorUploadHandlerRegistry for phone sensors
+    single<kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry> {
+        val db = get<TrackerRoomDB>()
+        val handlers = listOf(
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.LocationUploadHandler(
+                dao = db.locationDao(),
+                service = get<LocationSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.BatteryUploadHandler(
+                dao = db.batteryDao(),
+                service = get<BatterySensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.ScreenUploadHandler(
+                dao = db.screenDao(),
+                service = get<ScreenSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.WifiScanUploadHandler(
+                dao = db.wifiDao(),
+                service = get<WifiSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.StepUploadHandler(
+                dao = db.stepDao(),
+                service = get<StepSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.AmbientLightUploadHandler(
+                dao = db.ambientLightDao(),
+                service = get<AmbientLightSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.AppListChangeUploadHandler(
+                dao = db.appListChangeDao(),
+                service = get<AppListChangeSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.AppUsageLogUploadHandler(
+                dao = db.appUsageLogDao(),
+                service = get<AppUsageLogSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.BluetoothScanUploadHandler(
+                dao = db.bluetoothScanDao(),
+                service = get<BluetoothScanSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.CallLogUploadHandler(
+                dao = db.callLogDao(),
+                service = get<CallLogSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.ConnectivityUploadHandler(
+                dao = db.connectivityDao(),
+                service = get<ConnectivitySensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.DataTrafficUploadHandler(
+                dao = db.dataTrafficDao(),
+                service = get<DataTrafficSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.DeviceModeUploadHandler(
+                dao = db.deviceModeDao(),
+                service = get<DeviceModeSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.MediaUploadHandler(
+                dao = db.mediaDao(),
+                service = get<MediaSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.MessageLogUploadHandler(
+                dao = db.messageLogDao(),
+                service = get<MessageLogSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.NotificationUploadHandler(
+                dao = db.notificationDao(),
+                service = get<NotificationSensorService>()
+            ),
+            kaist.iclab.mobiletracker.services.upload.handlers.phone.UserInteractionUploadHandler(
+                dao = db.userInteractionDao(),
+                service = get<UserInteractionSensorService>()
+            )
+        )
+        kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry(handlers)
+    }
+
     // PhoneSensorUploadService for handling phone sensor data uploads
     single {
         PhoneSensorUploadService(
-            phoneSensorDaos = get<Map<String, BaseDao<*, *>>>(named("sensorDataStorages")),
-            serviceRegistry = get<SensorServiceRegistry>(named("phoneSensorServiceRegistry")),
+            handlerRegistry = get(),
             supabaseHelper = get(),
             syncTimestampService = get()
         )

@@ -22,11 +22,11 @@ class AppListChangeSensorService(
     }
     
     suspend fun insertAppListChangeSensorData(data: AppListChangeSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
     
     suspend fun insertAppListChangeSensorDataBatch(dataList: List<AppListChangeSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }

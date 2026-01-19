@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Supabase data class representing data traffic sensor data from the phone device.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid UUID of the current logged in user.
  * @property deviceType Type of device (0 = phone, 1 = watch).
  * @property timestamp Unix timestamp in milliseconds when the data traffic was recorded.
@@ -17,6 +18,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class DataTrafficSensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val received: String,
     val timestamp: String,
@@ -31,4 +34,3 @@ data class DataTrafficSensorData(
     @SerialName("mobile_tx")
     val mobileTx: Long
 )
-

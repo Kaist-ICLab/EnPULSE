@@ -51,8 +51,8 @@ private fun PermissionRow(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    // Use Permission's built-in name
-    val permissionName = permission.name
+    // Use localized name from first permission ID for UI
+    val localizedPermissionName = getPermissionName(context, permission.ids.first())
     // Get localized description from first permission ID
     val permissionDescription = getPermissionDescription(context, permission.ids.first())
     // Get icon from first permission ID
@@ -89,16 +89,16 @@ private fun PermissionRow(
     ) {
         Icon(
             imageVector = permissionIcon,
-            contentDescription = permissionName,
+            contentDescription = localizedPermissionName,
             modifier = Modifier.size(Styles.ICON_SIZE),
-            tint = AppColors.PrimaryColor
+            tint = AppColors.getPermissionColor(permission.name)
         )
         Spacer(Modifier.width(Styles.ICON_SPACER_WIDTH))
         Column(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = permissionName,
+                text = localizedPermissionName,
                 color = AppColors.TextPrimary,
                 fontSize = Styles.TEXT_FONT_SIZE,
                 lineHeight = Styles.TEXT_LINE_HEIGHT,

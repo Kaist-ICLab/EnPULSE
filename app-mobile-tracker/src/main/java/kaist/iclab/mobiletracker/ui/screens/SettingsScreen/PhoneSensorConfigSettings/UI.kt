@@ -70,14 +70,14 @@ private fun SensorRow(
             imageVector = getSensorIcon(sensorName),
             contentDescription = sensorName,
             modifier = Modifier.size(Styles.ICON_SIZE),
-            tint = AppColors.PrimaryColor
+            tint = AppColors.getSensorColor(sensorName)
         )
         Spacer(Modifier.width(Styles.ICON_SPACER_WIDTH))
         Column(
             modifier = Modifier.weight(1f),
         ) {
             Text(
-                text = sensorName,
+                text = getLocalizedSensorTitle(sensorName),
                 color = AppColors.TextPrimary,
                 fontSize = Styles.TEXT_FONT_SIZE,
                 lineHeight = Styles.TEXT_LINE_HEIGHT,

@@ -22,11 +22,11 @@ class NotificationSensorService(
     }
 
     suspend fun insertNotificationSensorData(data: NotificationSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertNotificationSensorDataBatch(dataList: List<NotificationSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }

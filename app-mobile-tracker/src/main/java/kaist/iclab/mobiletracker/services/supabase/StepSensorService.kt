@@ -22,12 +22,11 @@ class StepSensorService(
     }
 
     suspend fun insertStepSensorData(data: StepSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertStepSensorDataBatch(dataList: List<StepSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
-

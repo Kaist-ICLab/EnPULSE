@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
+import android.util.Log
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.dao.common.BaseDao
 import kaist.iclab.mobiletracker.db.dao.common.LocationDao
@@ -15,6 +16,10 @@ class PhoneSensorRepositoryImpl(
     private val sensorDataStorages: Map<String, BaseDao<*, *>>,
     private val supabaseHelper: SupabaseHelper
 ) : PhoneSensorRepository {
+
+    companion object {
+        private const val TAG = "PhoneSensorRepository"
+    }
 
     override suspend fun insertSensorData(sensorId: String, entity: SensorEntity): Result<Unit> {
         return runCatchingSuspend {

@@ -22,12 +22,12 @@ class BluetoothScanSensorService(
     }
     
     suspend fun insertBluetoothScanSensorData(data: BluetoothScanSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
     
     suspend fun insertBluetoothScanSensorDataBatch(dataList: List<BluetoothScanSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
 

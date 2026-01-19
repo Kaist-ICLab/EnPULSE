@@ -14,26 +14,26 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 object Styles {
     // Dialog container
     val ContainerColor = Color.White
-    val MaxWidth = 300.dp
-    val CardPadding = 24.dp
+    val MaxWidth = 280.dp
+    val CardPadding = 16.dp
     val CardCornerRadius = 8.dp
     
     // Title styles
-    val TitleFontSize = 18.sp
+    val TitleFontSize = 16.sp
     val TitleFontWeight = FontWeight.Bold
     val TitleColor = Color.Black
-    val TitleBottomPadding = 16.dp
+    val TitleBottomPadding = 12.dp
     
     // Button styles
-    val ButtonDefaultWidth = 120.dp
-    val ButtonDefaultHeight = 40.dp
-    val ButtonTextFontSize = 14.sp
-    val ButtonSpacing = 12.dp
+    val ButtonDefaultWidth = 100.dp
+    val ButtonDefaultHeight = 36.dp
+    val ButtonTextFontSize = 13.sp
+    val ButtonSpacing = 8.dp
     val ButtonCornerRadius = RoundedCornerShape(8.dp)
-    val OutlinedButtonCornerRadius = RoundedCornerShape(4.dp)
+    val OutlinedButtonCornerRadius = RoundedCornerShape(8.dp)
     val ButtonBorderWidth = 1.dp
     val ButtonBorderColor = AppColors.BorderLight
     
     // Spacing
-    val ContentButtonSpacing = 24.dp
+    val ContentButtonSpacing = 16.dp
 }

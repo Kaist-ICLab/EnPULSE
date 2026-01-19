@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Supabase data class representing heart rate sensor data from the wearable device.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid Unique identifier for the heart rate entry. Auto-generated when inserting into Supabase.
  * @property deviceType Type of device (0 = phone, 1 = watch).
  * @property timestamp Unix timestamp in milliseconds when the heart rate data was recorded.
@@ -17,6 +18,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class HeartRateSensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
     val received: String,
@@ -29,4 +32,3 @@ data class HeartRateSensorData(
     @SerialName("device_type")
     val deviceType: Int
 )
-

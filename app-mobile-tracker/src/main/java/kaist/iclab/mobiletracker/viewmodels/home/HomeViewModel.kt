@@ -23,6 +23,7 @@ import java.util.Calendar
 data class HomeUiState(
     val isTrackingActive: Boolean = false,
     val lastSyncedTime: String? = null,
+    // Phone sensors
     val locationCount: Int = 0,
     val appUsageCount: Int = 0,
     val activityCount: Int = 0,
@@ -40,6 +41,13 @@ data class HomeUiState(
     val messageLogCount: Int = 0,
     val userInteractionCount: Int = 0,
     val wifiScanCount: Int = 0,
+    // Watch sensors
+    val watchHeartRateCount: Int = 0,
+    val watchAccelerometerCount: Int = 0,
+    val watchEDACount: Int = 0,
+    val watchPPGCount: Int = 0,
+    val watchSkinTemperatureCount: Int = 0,
+    // Other
     val watchStatus: WatchConnectionStatus = WatchConnectionStatus.DISCONNECTED,
     val connectedDevices: List<String> = emptyList(),
     val userName: String? = null
@@ -85,6 +93,7 @@ class HomeViewModel(
                 lastSyncedTime = syncTimestampService.getLastSuccessfulUpload(),
                 watchStatus = watchInfo.status,
                 connectedDevices = watchInfo.connectedDevices,
+                // Phone sensors
                 locationCount = counts.locationCount,
                 appUsageCount = counts.appUsageCount,
                 activityCount = counts.activityCount,
@@ -102,6 +111,12 @@ class HomeViewModel(
                 messageLogCount = counts.messageLogCount,
                 userInteractionCount = counts.userInteractionCount,
                 wifiScanCount = counts.wifiScanCount,
+                // Watch sensors
+                watchHeartRateCount = counts.watchHeartRateCount,
+                watchAccelerometerCount = counts.watchAccelerometerCount,
+                watchEDACount = counts.watchEDACount,
+                watchPPGCount = counts.watchPPGCount,
+                watchSkinTemperatureCount = counts.watchSkinTemperatureCount,
                 userName = profile?.email?.split("@")?.firstOrNull()?.replaceFirstChar { it.uppercase() } ?: "User"
             )
         }

@@ -116,6 +116,7 @@ class BLEHelper(
                     val entities = locationDataList.map { data ->
                         // Parse timestamp from "YYYY-MM-DD HH:mm:ss" back to milliseconds
                         LocationEntity(
+                            eventId = data.eventId,
                             uuid = "", // Will be set by repository
                             deviceType = DeviceType.WATCH.value,
                             received = Instant.parse(data.received).toEpochMilli(),
@@ -142,6 +143,7 @@ class BLEHelper(
                     hasAnyData = true
                     val entities = accelerometerDataList.map { data ->
                         WatchAccelerometerEntity(
+                            eventId = data.eventId,
                             received = Instant.parse(data.received).toEpochMilli(),
                             timestamp = Instant.parse(data.timestamp).toEpochMilli(),
                             x = data.x,
@@ -164,6 +166,7 @@ class BLEHelper(
                     hasAnyData = true
                     val entities = edaDataList.map { data ->
                         WatchEDAEntity(
+                            eventId = data.eventId,
                             received = Instant.parse(data.received).toEpochMilli(),
                             timestamp = Instant.parse(data.timestamp).toEpochMilli(),
                             skinConductance = data.skinConductance,
@@ -185,6 +188,7 @@ class BLEHelper(
                     hasAnyData = true
                     val entities = heartRateDataList.map { data ->
                         WatchHeartRateEntity(
+                            eventId = data.eventId,
                             received = Instant.parse(data.received).toEpochMilli(),
                             timestamp = Instant.parse(data.timestamp).toEpochMilli(),
                             hr = data.hr,
@@ -208,6 +212,7 @@ class BLEHelper(
                     hasAnyData = true
                     val entities = ppgDataList.map { data ->
                         WatchPPGEntity(
+                            eventId = data.eventId,
                             received = Instant.parse(data.received).toEpochMilli(),
                             timestamp = Instant.parse(data.timestamp).toEpochMilli(),
                             green = data.green,
@@ -233,6 +238,7 @@ class BLEHelper(
                     hasAnyData = true
                     val entities = skinTemperatureDataList.map { data ->
                         WatchSkinTemperatureEntity(
+                            eventId = data.eventId,
                             received = Instant.parse(data.received).toEpochMilli(),
                             timestamp = Instant.parse(data.timestamp).toEpochMilli(),
                             ambientTemp = data.ambientTemp,

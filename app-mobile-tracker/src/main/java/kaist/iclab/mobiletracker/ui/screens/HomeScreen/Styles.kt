@@ -73,6 +73,13 @@ object Styles {
         val USER_INTERACTION = Color(0xFF673AB7)
         val WIFI_SCAN = Color(0xFF00BCD4)
         
+        // Watch Sensor Colors
+        val WATCH_HEART_RATE = Color(0xFFE91E63)
+        val WATCH_ACCELEROMETER = Color(0xFF3F51B5)
+        val WATCH_EDA = Color(0xFF00BCD4)
+        val WATCH_PPG = Color(0xFFFF5722)
+        val WATCH_SKIN_TEMP = Color(0xFFFF9800)
+        
         // Status Indicator
         val RUNNING_BG = Color(0xFFE6F4EA)
         val RUNNING_TEXT = Color(0xFF137333)

@@ -22,12 +22,11 @@ class DataTrafficSensorService(
     }
 
     suspend fun insertDataTrafficSensorData(data: DataTrafficSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertDataTrafficSensorDataBatch(dataList: List<DataTrafficSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
-

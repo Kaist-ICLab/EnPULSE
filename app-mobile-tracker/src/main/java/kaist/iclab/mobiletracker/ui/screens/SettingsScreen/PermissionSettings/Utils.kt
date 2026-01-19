@@ -9,10 +9,12 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Accessibility
@@ -42,7 +44,15 @@ private val permissionConfigs = buildList {
     }
     add(PermissionConfig(
         permissionId = Manifest.permission.ACCESS_FINE_LOCATION,
-        icon = Icons.Filled.LocationOn
+        icon = Icons.Filled.Place
+    ))
+    add(PermissionConfig(
+        permissionId = Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+        icon = Icons.Filled.Place
+    ))
+    add(PermissionConfig(
+        permissionId = Manifest.permission.ACTIVITY_RECOGNITION,
+        icon = Icons.AutoMirrored.Filled.DirectionsWalk
     ))
     add(PermissionConfig(
         permissionId = Manifest.permission.READ_CONTACTS,
@@ -90,11 +100,11 @@ private val permissionConfigs = buildList {
     ))
     add(PermissionConfig(
         permissionId = Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
-        icon = Icons.Filled.Phone
+        icon = Icons.Filled.Notifications
     ))
     add(PermissionConfig(
         permissionId = Manifest.permission.PACKAGE_USAGE_STATS,
-        icon = Icons.Filled.Settings
+        icon = Icons.Filled.GridView
     ))
     // Samsung Health Steps
     add(PermissionConfig(
@@ -146,6 +156,34 @@ fun getPermissionDescription(context: Context, permissionId: String): String {
         Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_desc_notification_listener
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_desc_usage_stats
         DataTypes.STEPS.name -> R.string.permission_desc_steps
+        else -> null
+    }
+    
+    return stringResId?.let { context.getString(it) } ?: ""
+}
+
+/**
+ * Gets localized permission name by permission ID
+ */
+fun getPermissionName(context: Context, permissionId: String): String {
+    val stringResId = when (permissionId) {
+        Manifest.permission.POST_NOTIFICATIONS -> R.string.permission_name_notifications
+        Manifest.permission.ACCESS_FINE_LOCATION -> R.string.permission_name_location
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION -> R.string.permission_name_background_location
+        Manifest.permission.READ_CONTACTS -> R.string.permission_name_contacts
+        Manifest.permission.CAMERA -> R.string.permission_name_camera
+        Manifest.permission.RECORD_AUDIO -> R.string.permission_name_microphone
+        Manifest.permission.READ_EXTERNAL_STORAGE -> R.string.permission_name_storage
+        Manifest.permission.READ_MEDIA_IMAGES -> R.string.permission_name_media_images
+        Manifest.permission.READ_MEDIA_VIDEO -> R.string.permission_name_media_video
+        Manifest.permission.READ_MEDIA_AUDIO -> R.string.permission_name_media_audio
+        Manifest.permission.READ_CALENDAR -> R.string.permission_name_calendar
+        Manifest.permission.ACTIVITY_RECOGNITION -> R.string.permission_name_activity_recognition
+        Manifest.permission.BODY_SENSORS -> R.string.permission_name_body_sensors
+        Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> R.string.permission_name_accessibility
+        Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_name_notification_listener
+        Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_name_usage_stats
+        DataTypes.STEPS.name -> R.string.permission_name_steps
         else -> null
     }
     

@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
@@ -52,7 +54,7 @@ class PhoneSensorDataService : Service(), KoinComponent {
         }
     }
     
-    private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("sensors"))
+    private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
     private val phoneSensorRepository by inject<PhoneSensorRepository>()
     private val serviceNotification by inject<BackgroundController.ServiceNotification>()
     private val timestampService: SyncTimestampService by lazy { SyncTimestampService(this) }
@@ -88,11 +90,14 @@ class PhoneSensorDataService : Service(), KoinComponent {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val pendingIntent = NotificationHelper.createMainActivityPendingIntent(this, 0)
         
+        // Get localized strings for notification
+        val localizedContext = LanguageHelper(this).applyLanguage(this)
+        
         val postNotification = NotificationHelper.buildNotification(
             context = this,
             channelId = serviceNotification.channelId,
-            title = serviceNotification.title,
-            text = serviceNotification.description,
+            title = localizedContext.getString(R.string.notification_title),
+            text = localizedContext.getString(R.string.notification_description),
             smallIcon = serviceNotification.icon,
             ongoing = true,
             pendingIntent = pendingIntent

@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
  * Data class holding aggregated daily sensor counts for the Home screen dashboard.
  */
 data class DailySensorCounts(
+    // Phone sensors
     val locationCount: Int = 0,
     val appUsageCount: Int = 0,
     val activityCount: Int = 0,
@@ -22,7 +23,13 @@ data class DailySensorCounts(
     val mediaCount: Int = 0,
     val messageLogCount: Int = 0,
     val userInteractionCount: Int = 0,
-    val wifiScanCount: Int = 0
+    val wifiScanCount: Int = 0,
+    // Watch sensors
+    val watchHeartRateCount: Int = 0,
+    val watchAccelerometerCount: Int = 0,
+    val watchEDACount: Int = 0,
+    val watchPPGCount: Int = 0,
+    val watchSkinTemperatureCount: Int = 0
 )
 
 /**

@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Supabase data class representing connectivity sensor data from the phone device.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid Unique identifier for the connectivity sensor entry. Auto-generated when inserting into Supabase.
  * @property deviceType Type of device (0 = phone, 1 = watch).
  * @property timestamp Unix timestamp in milliseconds when the connectivity status was recorded.
@@ -17,6 +18,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class ConnectivitySensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
     val received: String,
@@ -31,4 +34,3 @@ data class ConnectivitySensorData(
     @SerialName("transport_types")
     val transportTypes: List<String>
 )
-

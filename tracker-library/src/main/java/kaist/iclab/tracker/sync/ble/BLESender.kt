@@ -45,7 +45,5 @@ internal class BLESender(
 
         val dataItem = if (isUrgent) request.setUrgent() else request
         val result = dataClient.putDataItem(dataItem).await()
-
-        Log.d(TAG, "DataItem saved: $result")
     }
 }

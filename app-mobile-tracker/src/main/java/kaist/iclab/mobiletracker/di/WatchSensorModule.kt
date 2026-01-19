@@ -10,11 +10,11 @@ import kaist.iclab.mobiletracker.services.supabase.EDASensorService
 import kaist.iclab.mobiletracker.services.supabase.HeartRateSensorService
 import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
 import kaist.iclab.mobiletracker.services.supabase.PPGSensorService
-import kaist.iclab.mobiletracker.services.SensorServiceRegistry
-import kaist.iclab.mobiletracker.services.SensorServiceRegistryImpl
 import kaist.iclab.mobiletracker.services.supabase.SkinTemperatureSensorService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
+import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -49,12 +49,12 @@ val watchSensorModule = module {
     single<Map<String, BaseDao<*, *>>>(named("watchSensorDaos")) {
         val db = get<TrackerRoomDB>()
         mapOf(
-            WatchSensorUploadService.HEART_RATE_SENSOR_ID to db.watchHeartRateDao(),
-            WatchSensorUploadService.ACCELEROMETER_SENSOR_ID to db.watchAccelerometerDao(),
-            WatchSensorUploadService.EDA_SENSOR_ID to db.watchEDADao(),
-            WatchSensorUploadService.PPG_SENSOR_ID to db.watchPPGDao(),
-            WatchSensorUploadService.SKIN_TEMPERATURE_SENSOR_ID to db.watchSkinTemperatureDao(),
-            WatchSensorUploadService.LOCATION_SENSOR_ID to db.locationDao(),
+            "WatchHeartRate" to db.watchHeartRateDao(),
+            "WatchAccelerometer" to db.watchAccelerometerDao(),
+            "WatchEDA" to db.watchEDADao(),
+            "WatchPPG" to db.watchPPGDao(),
+            "WatchSkinTemperature" to db.watchSkinTemperatureDao(),
+            "WatchLocation" to db.locationDao(),
         )
     }
     
@@ -68,35 +68,44 @@ val watchSensorModule = module {
         )
     }
     
-    // Watch sensor service registry
-    single<SensorServiceRegistry>(named("watchSensorServiceRegistry")) {
-        val accelerometerService = get<AccelerometerSensorService>()
-        val edaService = get<EDASensorService>()
-        val heartRateService = get<HeartRateSensorService>()
-        val locationService = get<LocationSensorService>()
-        val ppgService = get<PPGSensorService>()
-        val skinTemperatureService = get<SkinTemperatureSensorService>()
-        
-        SensorServiceRegistryImpl(
-            mapOf(
-                WatchSensorUploadService.HEART_RATE_SENSOR_ID to heartRateService,
-                WatchSensorUploadService.ACCELEROMETER_SENSOR_ID to accelerometerService,
-                WatchSensorUploadService.EDA_SENSOR_ID to edaService,
-                WatchSensorUploadService.PPG_SENSOR_ID to ppgService,
-                WatchSensorUploadService.SKIN_TEMPERATURE_SENSOR_ID to skinTemperatureService,
-                WatchSensorUploadService.LOCATION_SENSOR_ID to locationService,
+    // Watch sensor upload handler registry
+    single<SensorUploadHandlerRegistry>(named("watchUploadHandlerRegistry")) {
+        val db = get<TrackerRoomDB>()
+        val handlers = listOf(
+            WatchHeartRateUploadHandler(
+                dao = db.watchHeartRateDao(),
+                service = get<HeartRateSensorService>()
+            ),
+            WatchAccelerometerUploadHandler(
+                dao = db.watchAccelerometerDao(),
+                service = get<AccelerometerSensorService>()
+            ),
+            WatchEDAUploadHandler(
+                dao = db.watchEDADao(),
+                service = get<EDASensorService>()
+            ),
+            WatchPPGUploadHandler(
+                dao = db.watchPPGDao(),
+                service = get<PPGSensorService>()
+            ),
+            WatchSkinTemperatureUploadHandler(
+                dao = db.watchSkinTemperatureDao(),
+                service = get<SkinTemperatureSensorService>()
+            ),
+            WatchLocationUploadHandler(
+                dao = db.locationDao(),
+                service = get<LocationSensorService>()
             )
         )
+        SensorUploadHandlerRegistry(handlers)
     }
     
-    // WatchSensorUploadService - injects all watch sensor services and dependencies
+    // WatchSensorUploadService - injects handler registry
     single {
         WatchSensorUploadService(
-            watchSensorDaos = get<Map<String, BaseDao<*, *>>>(named("watchSensorDaos")),
-            serviceRegistry = get<SensorServiceRegistry>(named("watchSensorServiceRegistry")),
+            handlerRegistry = get(named("watchUploadHandlerRegistry")),
             supabaseHelper = get(),
             syncTimestampService = SyncTimestampService(androidContext())
         )
     }
 }
-

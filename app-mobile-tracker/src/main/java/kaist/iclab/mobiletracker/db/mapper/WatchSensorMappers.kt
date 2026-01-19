@@ -18,6 +18,7 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 object HeartRateMapper : EntityToSupabaseMapper<WatchHeartRateEntity, HeartRateSensorData> {
     override fun map(entity: WatchHeartRateEntity, userUuid: String?): HeartRateSensorData {
         return HeartRateSensorData(
+            eventId = entity.eventId,
             uuid = userUuid,
             deviceType = DeviceType.WATCH.value,
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
@@ -33,6 +34,7 @@ object HeartRateMapper : EntityToSupabaseMapper<WatchHeartRateEntity, HeartRateS
 object AccelerometerMapper : EntityToSupabaseMapper<WatchAccelerometerEntity, AccelerometerSensorData> {
     override fun map(entity: WatchAccelerometerEntity, userUuid: String?): AccelerometerSensorData {
         return AccelerometerSensorData(
+            eventId = entity.eventId,
             uuid = userUuid,
             deviceType = DeviceType.WATCH.value,
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
@@ -47,6 +49,7 @@ object AccelerometerMapper : EntityToSupabaseMapper<WatchAccelerometerEntity, Ac
 object EDAMapper : EntityToSupabaseMapper<WatchEDAEntity, EDASensorData> {
     override fun map(entity: WatchEDAEntity, userUuid: String?): EDASensorData {
         return EDASensorData(
+            eventId = entity.eventId,
             uuid = userUuid,
             deviceType = DeviceType.WATCH.value,
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
@@ -60,6 +63,7 @@ object EDAMapper : EntityToSupabaseMapper<WatchEDAEntity, EDASensorData> {
 object PPGMapper : EntityToSupabaseMapper<WatchPPGEntity, PPGSensorData> {
     override fun map(entity: WatchPPGEntity, userUuid: String?): PPGSensorData {
         return PPGSensorData(
+            eventId = entity.eventId,
             uuid = userUuid,
             deviceType = DeviceType.WATCH.value,
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
@@ -77,6 +81,7 @@ object PPGMapper : EntityToSupabaseMapper<WatchPPGEntity, PPGSensorData> {
 object SkinTemperatureMapper : EntityToSupabaseMapper<WatchSkinTemperatureEntity, SkinTemperatureSensorData> {
     override fun map(entity: WatchSkinTemperatureEntity, userUuid: String?): SkinTemperatureSensorData {
         return SkinTemperatureSensorData(
+            eventId = entity.eventId,
             uuid = userUuid,
             deviceType = DeviceType.WATCH.value,
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
@@ -91,6 +96,7 @@ object SkinTemperatureMapper : EntityToSupabaseMapper<WatchSkinTemperatureEntity
 object LocationMapper : EntityToSupabaseMapper<LocationEntity, LocationSensorData> {
     override fun map(entity: LocationEntity, userUuid: String?): LocationSensorData {
         return LocationSensorData(
+            eventId = entity.eventId,
             uuid = userUuid,
             deviceType = entity.deviceType,
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
@@ -103,4 +109,3 @@ object LocationMapper : EntityToSupabaseMapper<LocationEntity, LocationSensorDat
         )
     }
 }
-

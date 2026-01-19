@@ -22,12 +22,11 @@ class UserInteractionSensorService(
     }
 
     suspend fun insertUserInteractionSensorData(data: UserInteractionSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertUserInteractionSensorDataBatch(dataList: List<UserInteractionSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
-

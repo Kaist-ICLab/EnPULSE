@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,8 @@ fun SettingsMenuItem(
     title: String,
     icon: ImageVector,
     onClick: () -> Unit,
-    description: String? = null
+    description: String? = null,
+    iconTint: Color = AppColors.PrimaryColor
 ) {
     Row(
         modifier = Modifier
@@ -47,7 +49,7 @@ fun SettingsMenuItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = AppColors.PrimaryColor,
+            tint = iconTint,
             modifier = Modifier.size(Styles.ICON_SIZE)
         )
         Spacer(Modifier.width(Styles.ICON_SPACER_WIDTH))
@@ -98,13 +100,15 @@ fun SettingsMenuItemWithDivider(
     icon: ImageVector,
     onClick: () -> Unit,
     description: String? = null,
-    showDivider: Boolean = true
+    showDivider: Boolean = true,
+    iconTint: Color = AppColors.PrimaryColor
 ) {
     SettingsMenuItem(
         title = title,
         icon = icon,
         onClick = onClick,
-        description = description
+        description = description,
+        iconTint = iconTint
     )
     if (showDivider) {
         HorizontalDivider(

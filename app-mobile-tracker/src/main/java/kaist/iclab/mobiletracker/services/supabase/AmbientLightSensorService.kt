@@ -22,12 +22,12 @@ class AmbientLightSensorService(
     }
     
     suspend fun insertAmbientLightSensorData(data: AmbientLightSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
     
     suspend fun insertAmbientLightSensorDataBatch(dataList: List<AmbientLightSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
 

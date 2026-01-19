@@ -3,11 +3,9 @@ package kaist.iclab.mobiletracker.ui
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.ui.unit.dp
@@ -32,7 +30,7 @@ import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 
 /**
- * Bottom navigation bar with four tabs: Home, Data, Messages, and Settings
+ * Bottom navigation bar with three tabs: Home, Data, and Settings
  * Following Android official documentation: https://developer.android.com/develop/ui/compose/components/navigation-bar
  */
 @Composable
@@ -44,9 +42,8 @@ fun BottomNavigationBar(
     
     // Define destinations with localized strings
     val destinations = listOf(
-        Destination(Screen.Home.route, context.getString(R.string.nav_home), Icons.Outlined.Home, Icons.Filled.Home),
         Destination(Screen.Data.route, context.getString(R.string.nav_data), Icons.Outlined.Info, Icons.Filled.Info),
-        Destination(Screen.Message.route, context.getString(R.string.nav_messages), Icons.Outlined.Email, Icons.Filled.Email),
+        Destination(Screen.Home.route, context.getString(R.string.nav_home), Icons.Outlined.Home, Icons.Filled.Home),
         Destination(Screen.Setting.route, context.getString(R.string.nav_settings), Icons.Outlined.Settings, Icons.Filled.Settings)
     )
     

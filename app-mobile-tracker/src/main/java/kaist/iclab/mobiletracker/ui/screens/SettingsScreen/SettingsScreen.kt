@@ -95,33 +95,39 @@ fun SettingsScreen(
                         SettingsMenuItemWithDivider(
                             title = context.getString(R.string.menu_account),
                             icon = Icons.Filled.AccountBox,
-                            onClick = { navController.navigate(Screen.Account.route) }
+                            onClick = { navController.navigate(Screen.Account.route) },
+                            iconTint = AppColors.IconAccount
                         )
                         SettingsMenuItemWithDivider(
                             title = context.getString(R.string.menu_server_sync),
                             icon = Icons.Filled.CloudSync,
-                            onClick = { navController.navigate(Screen.ServerSync.route) }
+                            onClick = { navController.navigate(Screen.ServerSync.route) },
+                            iconTint = AppColors.IconSync
                         )
                         SettingsMenuItemWithDivider(
                             title = context.getString(R.string.menu_language),
                             icon = Icons.Filled.Language,
-                            onClick = { navController.navigate(Screen.Language.route) }
+                            onClick = { navController.navigate(Screen.Language.route) },
+                            iconTint = AppColors.IconLanguage
                         )
                         SettingsMenuItemWithDivider(
                             title = context.getString(R.string.menu_permission),
                             icon = Icons.Filled.Security,
-                            onClick = { navController.navigate(Screen.Permission.route) }
+                            onClick = { navController.navigate(Screen.Permission.route) },
+                            iconTint = AppColors.IconSecurity
                         )
                         SettingsMenuItemWithDivider(
                             title = context.getString(R.string.menu_phone_sensor),
                             icon = Icons.Filled.PhoneAndroid,
-                            onClick = { navController.navigate(Screen.PhoneSensor.route) }
+                            onClick = { navController.navigate(Screen.PhoneSensor.route) },
+                            iconTint = AppColors.IconPhone
                         )
                         SettingsMenuItemWithDivider(
                             title = context.getString(R.string.menu_about),
                             icon = Icons.Filled.Info,
                             onClick = { navController.navigate(Screen.About.route) },
-                            showDivider = false
+                            showDivider = false,
+                            iconTint = AppColors.IconInfo
                         )
                     }
                 }

@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.wearable.Wearable
+import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.wearabletracker.data.DeviceInfo
@@ -26,7 +27,8 @@ class SettingsViewModel(
     private val sensorController: BackgroundController,
     private val sensorDataReceiver: SensorDataReceiver,
     private val phoneCommunicationManager: PhoneCommunicationManager,
-    private val repository: WatchSensorRepository
+    private val repository: WatchSensorRepository,
+    private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : ViewModel() {
     companion object {
         private val TAG = SettingsViewModel::class.simpleName
@@ -36,11 +38,35 @@ class SettingsViewModel(
     private val _lastSyncTimestamp = MutableStateFlow<Long?>(null)
     val lastSyncTimestamp: StateFlow<Long?> = _lastSyncTimestamp.asStateFlow()
 
+    // Samsung Health connection state - Start button should be disabled when false
+    val isSamsungHealthConnected: StateFlow<Boolean> = samsungHealthSensorInitializer.connectionStateFlow
+    
+    // SDK Policy Error state - true when dev mode is not enabled on Health Platform
+    val sdkPolicyError: StateFlow<Boolean> = samsungHealthSensorInitializer.sdkPolicyErrorStateFlow
+    
+    /**
+     * Clear the SDK Policy Error and stop logging (called when user dismisses the error screen).
+     */
+    fun clearSdkPolicyError() {
+        sensorController.stop()
+        samsungHealthSensorInitializer.clearSdkPolicyError()
+    }
+
     init {
         CoroutineScope(Dispatchers.IO).launch {
             sensorController.controllerStateFlow.collect {
                 if (it.flag == ControllerState.FLAG.RUNNING) sensorDataReceiver.startBackgroundCollection()
                 else sensorDataReceiver.stopBackgroundCollection()
+            }
+        }
+        
+        // Stop controller immediately when SDK Policy Error is detected
+        // This ensures the Start button doesn't show "recording" state while error popup is visible
+        CoroutineScope(Dispatchers.IO).launch {
+            sdkPolicyError.collect { hasError ->
+                if (hasError) {
+                    sensorController.stop()
+                }
             }
         }
     }

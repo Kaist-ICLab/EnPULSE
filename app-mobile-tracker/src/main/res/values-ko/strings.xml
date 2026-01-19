@@ -1,11 +1,10 @@
 <resources>
-    <string name="app_name">모바일 트래커</string>
+    <string name="app_name">EnPULSE</string>
     <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
     
     <!-- Navigation -->
     <string name="nav_home">홈</string>
     <string name="nav_data">데이터</string>
-    <string name="nav_messages">메시지</string>
     <string name="nav_settings">설정</string>
     
     <!-- Home Screen -->
@@ -17,29 +16,14 @@
     <string name="home_last_synced">마지막 동기화: %1$s</string>
     <string name="home_never_synced">동기화 기록 없음</string>
     <string name="home_daily_highlights">오늘의 데이터 현황</string>
-    <string name="home_location_label">위치 데이터</string>
     <string name="home_logs_unit">%1$d개 로그</string>
-    <string name="home_app_usage_label">앱 사용</string>
-    <string name="home_activity_label">신체 활동 샘플</string>
-    <string name="home_samples_unit">%1$d개 샘플</string>
-    <string name="home_device_status_label">배터리 데이터</string>
-    <string name="home_notifications_label">알림</string>
-    <string name="home_notifications_unit">%1$d개 알림</string>
-    <string name="home_screen_label">화면 활동</string>
-    <string name="home_events_unit">%1$d개 이벤트</string>
-    <string name="home_connectivity_label">네트워크 상태</string>
-    <string name="home_updates_unit">%1$d개 업데이트</string>
-    <string name="home_bluetooth_label">블루투스 스캔</string>
     <string name="home_watch_status_label">갤럭시 워치 기기</string>
     <string name="home_watch_connected">연결됨</string>
     <string name="home_watch_disconnected">연결 안 됨</string>
     <string name="home_watch_not_installed">앱 미설치</string>
     <string name="home_last_sync_label">마지막 동기화</string>
     <string name="home_watch_name_label">기기 이름</string>
-    <string name="home_scans_unit">%1$d개 스캔</string>
     <string name="unknown">알 수 없음</string>
-    <string name="email">이메일: %1$s</string>
-    <string name="name_label">이름</string>
     <string name="email_label">이메일</string>
     <string name="no_email">이메일 없음</string>
     <string name="version_label">버전</string>
@@ -61,8 +45,8 @@
     <string name="logout_close">닫기</string>
     
     <!-- Login Screen -->
-    <string name="mobile_tracker">모바일 트래커</string>
-    <string name="mobile_tracker_logo">모바일 트래커 로고</string>
+    <string name="mobile_tracker">EnPULSE</string>
+    <string name="mobile_tracker_logo">EnPULSE 로고</string>
     <string name="language_english">English</string>
     <string name="language_korean">한국어</string>
     
@@ -91,6 +75,7 @@
     <!-- Permission Names -->
     <string name="permission_name_notifications">알림</string>
     <string name="permission_name_location">위치</string>
+    <string name="permission_name_background_location">백그라운드 위치</string>
     <string name="permission_name_contacts">연락처</string>
     <string name="permission_name_camera">카메라</string>
     <string name="permission_name_microphone">마이크</string>
@@ -103,6 +88,8 @@
     <string name="permission_name_accessibility">접근성</string>
     <string name="permission_name_notification_listener">알림 리스너</string>
     <string name="permission_name_usage_stats">사용 통계</string>
+    <string name="permission_name_activity_recognition">신체 활동 인식</string>
+    <string name="permission_name_steps">신체 활동 (걸음 수)</string>
     
     <!-- Permission Descriptions -->
     <string name="permission_desc_notifications">앱이 알림을 보낼 수 있도록 허용</string>
@@ -131,9 +118,42 @@
     <string name="permission_status_not_fully_granted">완전히 허용되지 않음</string>
     
     <!-- Placeholder Screens -->
-    <string name="home_screen">홈 화면</string>
-    <string name="data_screen">준비 중</string>
-    <string name="message_screen">준비 중</string>
+    
+    <!-- Data Screen -->
+    <string name="data_screen_title">수집된 데이터</string>
+    <string name="data_screen_description">모바일 및 웨어러블 기기에서 수집된 모든 센서 데이터를 확인하고 관리할 수 있습니다.</string>
+    <string name="data_screen_subtitle">총 %1$d개 레코드</string>
+    <string name="data_screen_refresh">새로고침</string>
+    <string name="data_screen_no_data">수집된 데이터가 없습니다</string>
+    
+    <!-- Sensor Detail Screen -->
+    <string name="sensor_detail_back">뒤로</string>
+    <string name="sensor_detail_summary">요약</string>
+    <string name="sensor_detail_total_records">총 레코드</string>
+    <string name="sensor_detail_today">오늘</string>
+    <string name="sensor_detail_last_recorded">마지막 기록</string>
+    <string name="sensor_detail_raw_data">모든 기록된 데이터</string>
+    <string name="sensor_detail_no_records">레코드가 없습니다</string>
+    <string name="data_screen_last_recorded_none">데이터 없음</string>
+    <string name="sensor_detail_filter_today">오늘</string>
+    <string name="sensor_detail_filter_7_days">최근 7일</string>
+    <string name="sensor_detail_filter_30_days">최근 30일</string>
+    <string name="sensor_detail_filter_all">전체</string>
+    <string name="sensor_detail_filter_custom">사용자 지정</string>
+    <string name="sensor_detail_sort_newest">최신</string>
+    <string name="sensor_detail_sort_oldest">오래된</string>
+    <string name="sensor_detail_page_size">%d개 레코드</string>
+    <string name="sensor_detail_date_range_title">날짜 범위 선택</string>
+    <string name="sensor_detail_start_date">시작 날짜</string>
+    <string name="sensor_detail_end_date">종료 날짜</string>
+    <string name="sensor_detail_apply">적용</string>
+    <string name="sensor_detail_delete">삭제</string>
+    <string name="sensor_detail_delete_title">레코드 삭제</string>
+    <string name="sensor_detail_delete_message">이 레코드를 삭제하시겠습니까? 서버에서도 해당 레코드가 삭제됩니다.\n\n이 작업은 취소할 수 없습니다.</string>
+    <string name="sensor_detail_delete_confirm">삭제</string>
+    <string name="sensor_detail_delete_cancel">취소</string>
+    <string name="record_deleted_success">기기 및 서버에서 기록이 삭제되었습니다</string>
+    <string name="record_deleted_error">기록 삭제에 실패했습니다</string>
     
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">조도 센서 데이터</string>
@@ -156,7 +176,7 @@
     <string name="sensor_desc_default">센서 데이터 수집</string>
     
     <!-- Notification -->
-    <string name="notification_title">모바일 트래커</string>
+    <string name="notification_title">EnPULSE</string>
     <string name="notification_description">백그라운드 센서 컨트롤러가 실행 중입니다</string>
     
     <!-- Phone Sensor Screen -->
@@ -166,8 +186,8 @@
     <string name="sync_current_time">현재 시간</string>
     <string name="sync_last_watch_data">마지막 워치 데이터 수신</string>
     <string name="sync_last_successful_upload">마지막 성공한 업로드</string>
-    <string name="sync_start_data_upload">모든 데이터 업로드</string>
-    <string name="sync_delete_data">데이터 삭제</string>
+    <string name="sync_start_data_upload">모두 업로드</string>
+    <string name="sync_delete_data">모두 삭제</string>
     <string name="sync_automatic_sync">자동 동기화</string>
     <string name="sync_automatic_sync_description">자동 데이터 동기화 설정을 구성하세요. 자동 업로드를 위한 동기화 간격 및 네트워크 기본 설정을 설정합니다.</string>
     <string name="sync_interval_title">동기화 간격</string>
@@ -190,19 +210,15 @@
     <string name="auto_sync_failure_title">자동 동기화 실패</string>
     <string name="auto_sync_failure_message">%1$d개 센서 업로드 실패: %2$s</string>
     <string name="sync_clear_data_title">로컬 데이터 삭제</string>
-    <string name="sync_clear_data_message">모든 로컬 센서 데이터가 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다. 계속하시겠습니까?</string>
+    <string name="sync_clear_data_message">모든 로컬 센서 데이터가 삭제됩니다. 서버에 이미 업로드된 데이터는 영향을 받지 않습니다.\n\n이 작업은 취소할 수 없습니다.</string>
     <string name="sync_clear_data_confirm">삭제</string>
     <string name="sync_clear_data_cancel">취소</string>
     
     <!-- Sensor Sync Status -->
-    <string name="sensor_watch_sensors">워치 수집 데이터</string>
-    <string name="sensor_watch_sensors_description">블루투스를 통해 웨어러블 기기에서 수신한 센서 데이터</string>
-    <string name="sensor_phone_sensors">폰 수집 데이터</string>
-    <string name="sensor_phone_sensors_description">폰에서 직접 수집한 센서 데이터</string>
     <string name="sensor_upload_data">데이터 업로드</string>    
-    <string name="sensor_delete_data">데이터 삭제</string>
-    <string name="sensor_delete_data_confirm">센서 데이터 삭제</string>
-    <string name="sensor_delete_data_message">이 센서의 모든 데이터를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.</string>
+    <string name="sensor_delete_data">로컬 데이터 삭제</string>
+    <string name="sensor_delete_data_confirm">로컬 센서 데이터 삭제</string>
+    <string name="sensor_delete_data_message">이 센서의 모든 로컬 데이터를 삭제하시겠습니까? 서버에 이미 업로드된 데이터는 영향을 받지 않습니다.\n\n이 작업은 취소할 수 없습니다.</string>
     <string name="sensor_heart_rate">심박수</string>
     <string name="sensor_accelerometer">가속도</string>
     <string name="sensor_eda">EDA</string>
@@ -238,10 +254,19 @@
     <string name="toast_sensor_data_upload_error">센서 데이터 업로드에 실패했습니다</string>
     <string name="toast_no_data_to_upload">업로드할 새로운 데이터가 없습니다. 모든 데이터가 이미 업로드되었습니다.</string>
     <string name="toast_upload_all_summary">%1$d개 센서 업로드 성공</string>
-    <string name="toast_upload_not_implemented">이 센서에 대한 업로드가 구현되지 않았습니다</string>
     <string name="sensor_upload_data_confirm">센서 데이터 업로드</string>
     <string name="sensor_upload_data_message">이 센서의 모든 저장된 데이터를 서버에 업로드하시겠습니까?</string>
     <string name="toast_login_success">로그인 성공</string>
     <string name="toast_logout_success">로그아웃 성공</string>
+    <string name="toast_error_generic">오류가 발생했습니다</string>
+    <string name="toast_no_data_to_export">내보낼 데이터가 없습니다</string>
+    <string name="toast_export_failed">데이터 내보내기 실패</string>
+    <string name="sensor_export_csv">CSV 내보내기</string>
+    
+    <!-- Pagination -->
+    <string name="pagination_page_format">%1$d / %2$d 페이지</string>
+    <string name="pagination_previous">이전 페이지</string>
+    <string name="pagination_next">다음 페이지</string>
+    <string name="sensor_watch_badge_desc">워치 센서</string>
 </resources>
 

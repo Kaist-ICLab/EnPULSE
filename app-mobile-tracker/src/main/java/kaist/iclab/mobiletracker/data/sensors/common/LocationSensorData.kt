@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Supabase data class representing location sensor data from phone or watch devices.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid Unique identifier for the location entry. Auto-generated when inserting into Supabase.
  * @property deviceType Type of device (use DeviceType.PHONE.value for phone, DeviceType.WATCH.value for watch).
  * @property timestamp Unix timestamp in milliseconds when the location was recorded.
@@ -18,6 +19,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class LocationSensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
     val received: String,

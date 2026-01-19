@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Supabase data class representing app list change sensor data from the phone device.
  *
+ * @property eventId Unique identifier for this event (UUID v4).
  * @property uuid User UUID
  * @property timestamp Unix timestamp in milliseconds when the app change was detected.
  * @property received Timestamp when the data was received by the phone (Unix timestamp in milliseconds).
@@ -18,6 +19,8 @@ import kotlinx.serialization.json.JsonElement
  */
 @Serializable
 data class AppListChangeSensorData(
+    @SerialName("event_id")
+    val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
     val received: String,

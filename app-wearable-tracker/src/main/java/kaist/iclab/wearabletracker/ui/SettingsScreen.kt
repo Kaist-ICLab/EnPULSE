@@ -1,18 +1,22 @@
 package kaist.iclab.wearabletracker.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Stop
@@ -35,13 +39,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import kaist.iclab.wearabletracker.R
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Switch
 import androidx.wear.compose.material.Text
@@ -62,6 +63,7 @@ import kaist.iclab.wearabletracker.theme.AppTypography
 import kaist.iclab.wearabletracker.theme.DeviceNameText
 import kaist.iclab.wearabletracker.theme.SensorNameText
 import kaist.iclab.wearabletracker.theme.SyncStatusText
+import kaist.iclab.wearabletracker.ui.utils.getSensorDisplayName
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.koinViewModel
 
@@ -74,7 +76,6 @@ fun SettingsScreen(
     val sensorMap = settingsViewModel.sensorMap
     val isCollecting = settingsViewModel.controllerState.collectAsState().value
     val sensorState = settingsViewModel.sensorState
-    val listState = rememberScalingLazyListState()
 
     val sensorStates = sensorState.mapValues { it.value.collectAsState() }
     val availableSensors = sensorStates.filter { (_, state) ->
@@ -110,6 +111,15 @@ fun SettingsScreen(
         state.flag == SensorState.FLAG.ENABLED || state.flag == SensorState.FLAG.RUNNING
     }
 
+    // Samsung Health connection state
+    val isSamsungHealthConnected by settingsViewModel.isSamsungHealthConnected.collectAsState()
+    
+    // SDK Policy Error state (dev mode not enabled on Health Platform)
+    val hasSdkPolicyError by settingsViewModel.sdkPolicyError.collectAsState()
+    
+    // State for showing connection error when user tries to start without connection
+    var showConnectionError by remember { mutableStateOf(false) }
+
     // Device information state
     var deviceInfo by remember { mutableStateOf(DeviceInfo()) }
     LaunchedEffect(Unit) {
@@ -128,60 +138,78 @@ fun SettingsScreen(
     val lastSyncTimestamp by settingsViewModel.lastSyncTimestamp.collectAsState()
 
     //UI
-    Scaffold(
-        vignette = {
-            Vignette(vignettePosition = VignettePosition.TopAndBottom)
-        },
-        positionIndicator = {
-            PositionIndicator(
-                scalingLazyListState = listState
+    when {
+        hasSdkPolicyError -> {
+            // Show error screen when SDK Policy Error (dev mode not enabled)
+            SdkPolicyErrorScreen(
+                onDismiss = { settingsViewModel.clearSdkPolicyError() }
             )
         }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 10.dp),
-        ) {
-            SettingController(
-                upload = {
-                    handleNotificationPermissionCheck {
-                        settingsViewModel.upload()
-                    }
-                },
-                flush = {
-                    handleNotificationPermissionCheck {
-                        showFlushDialog = true
-                    }
-                },
-                startLogging = {
-                    handleNotificationPermissionCheck {
-                        settingsViewModel.startLogging()
-                    }
-                },
-                stopLogging = { settingsViewModel.stopLogging() },
-                isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING),
-                hasEnabledSensors = hasEnabledSensors
+        showConnectionError -> {
+            // Show error screen when user tries to start without Samsung Health connection
+            SamsungHealthConnectionErrorScreen(
+                onRetry = { showConnectionError = false }
             )
-            DeviceInfo(
-                deviceInfo = deviceInfo,
-                lastSyncTimestamp = lastSyncTimestamp,
-            )
-            ScalingLazyColumn(
-                state = listState
+        }
+        else -> {
+            // Always show main settings UI
+            Scaffold(
+                vignette = {
+                    Vignette(vignettePosition = VignettePosition.TopAndBottom)
+                }
             ) {
-                availableSensors.forEach { (name, _) ->
-                    item(key = name) {
-                        SensorToggleChip(
-                            sensorName = name,
-                            sensorStateFlow = sensorState[name]!!,
-                            updateStatus = { status ->
-                                if (status) {
-                                    androidPermissionManager.request(sensorMap[name]!!.permissions)
-                                }
-                                settingsViewModel.update(name, status)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 10.dp),
+                ) {
+                    SettingController(
+                        upload = {
+                            handleNotificationPermissionCheck {
+                                settingsViewModel.upload()
                             }
-                        )
+                        },
+                        flush = {
+                            handleNotificationPermissionCheck {
+                                showFlushDialog = true
+                            }
+                        },
+                        startLogging = {
+                            handleNotificationPermissionCheck {
+                                // Check Samsung Health connection first
+                                if (!isSamsungHealthConnected) {
+                                    showConnectionError = true
+                                } else {
+                                    settingsViewModel.startLogging()
+                                }
+                            }
+                        },
+                        stopLogging = { settingsViewModel.stopLogging() },
+                        isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING),
+                        hasEnabledSensors = hasEnabledSensors
+                    )
+                    DeviceInfo(
+                        deviceInfo = deviceInfo,
+                        lastSyncTimestamp = lastSyncTimestamp,
+                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(bottom = 24.dp)
+                    ) {
+                        availableSensors.forEach { (name, _) ->
+                            SensorToggleChip(
+                                sensorId = name,
+                                sensorStateFlow = sensorState[name]!!,
+                                updateStatus = { status ->
+                                    if (status) {
+                                        androidPermissionManager.request(sensorMap[name]!!.permissions)
+                                    }
+                                    settingsViewModel.update(name, status)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -218,6 +246,10 @@ fun SettingController(
     isCollecting: Boolean,
     hasEnabledSensors: Boolean
 ) {
+    // Start button requires at least one sensor enabled
+    // Connection check is done in startLogging callback
+    val canStartCollection = hasEnabledSensors
+
     Row(
         modifier = Modifier
             .fillMaxWidth(1f),
@@ -237,7 +269,7 @@ fun SettingController(
             onClick = {
                 if (isCollecting) {
                     stopLogging()
-                } else if (hasEnabledSensors) {
+                } else if (canStartCollection) {
                     startLogging()
                 }
                 // Do nothing when disabled
@@ -245,7 +277,7 @@ fun SettingController(
             contentDescription = stringResource(R.string.start_stop_collection),
             backgroundColor = when {
                 isCollecting -> MaterialTheme.colors.error
-                hasEnabledSensors -> MaterialTheme.colors.primary
+                canStartCollection -> MaterialTheme.colors.primary
                 else -> MaterialTheme.colors.onSurface.copy(alpha = 0.3f) // Greyed out
             },
             buttonSize = AppSizes.iconButtonMedium,
@@ -262,15 +294,122 @@ fun SettingController(
     }
 }
 
+/**
+ * Error screen displayed when Samsung Health connection times out.
+ * Provides a retry button to attempt connection again.
+ */
+@Composable
+fun SamsungHealthConnectionErrorScreen(
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colors.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.samsung_health_connection_failed),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.samsung_health_check_app),
+                style = MaterialTheme.typography.caption2,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.primaryButtonColors(),
+                modifier = Modifier.size(AppSizes.iconButtonMedium)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = stringResource(R.string.samsung_health_retry),
+                    modifier = Modifier.size(AppSizes.iconMedium)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Error screen displayed when SDK Policy Error occurs.
+ * This happens when developer mode is not enabled on Health Platform.
+ */
+@Composable
+fun SdkPolicyErrorScreen(
+    onDismiss: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colors.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.sdk_policy_error_title),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.sdk_policy_error_message),
+                style = MaterialTheme.typography.caption2,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.primaryButtonColors(),
+                modifier = Modifier.size(AppSizes.iconButtonMedium)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = stringResource(R.string.confirm),
+                    modifier = Modifier.size(AppSizes.iconMedium)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun SensorToggleChip(
-    sensorName: String,
+    sensorId: String,
     sensorStateFlow: StateFlow<SensorState>,
     updateStatus: (status: Boolean) -> Unit
 ) {
     val sensorState = sensorStateFlow.collectAsState().value
     val isEnabled =
         (sensorState.flag == SensorState.FLAG.ENABLED || sensorState.flag == SensorState.FLAG.RUNNING)
+    val displayName = getSensorDisplayName(sensorId)
 
     ToggleChip(
         modifier = Modifier
@@ -295,7 +434,7 @@ fun SensorToggleChip(
         onCheckedChange = updateStatus,
         label = {
             SensorNameText(
-                text = sensorName,
+                text = displayName,
                 maxLines = 1
             )
         }

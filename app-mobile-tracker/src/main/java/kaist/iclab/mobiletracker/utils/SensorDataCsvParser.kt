@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.utils
 
 import java.time.Instant
+import java.util.UUID
 import android.util.Log
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
@@ -15,12 +16,12 @@ import kaist.iclab.mobiletracker.data.sensors.watch.SkinTemperatureSensorData
  * Parser for sensor data in CSV format received from wearable devices.
  * 
  * Supports parsing multiple sensor types from a single CSV string:
- * - accelerometer: id,received,timestamp,x,y,z
- * - ppg: id,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus
- * - heartRate: id,received,timestamp,hr,hrStatus,ibi,ibiStatus (ibi and ibiStatus are semicolon-separated lists)
- * - skinTemperature: id,received,timestamp,ambientTemp,objectTemp,status
- * - eda: id,received,timestamp,skinConductance,status
- * - location: id,received,timestamp,latitude,longitude,altitude,speed,accuracy
+ * - accelerometer: eventId,received,timestamp,x,y,z
+ * - ppg: eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus
+ * - heartRate: eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus (ibi and ibiStatus are semicolon-separated lists)
+ * - skinTemperature: eventId,received,timestamp,ambientTemp,objectTemp,status
+ * - eda: eventId,received,timestamp,skinConductance,status
+ * - location: eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy
  */
 object SensorDataCsvParser {
     
@@ -34,19 +35,20 @@ object SensorDataCsvParser {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "Location",
-            headerPattern = "id,received,timestamp,latitude,longitude,altitude,speed,accuracy",
+            headerPattern = "eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy",
             rowParser = ::parseLocationRow
         )
     }
 
     /**
      * Parse a single location data row
-     * Format: id,received,timestamp,latitude,longitude,altitude,speed,accuracy
+     * Format: eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy
      */
     private fun parseLocationRow(row: String): LocationSensorData? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 8) {
+                val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val latitude = parts[3].toDoubleOrNull() ?: return null
@@ -56,6 +58,7 @@ object SensorDataCsvParser {
                 val accuracy = parts[7].toFloatOrNull() ?: return null
                 
                 LocationSensorData(
+                    eventId = eventId,
                     uuid = null,
                     deviceType = DeviceType.WATCH.value,
                     timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
@@ -75,66 +78,66 @@ object SensorDataCsvParser {
 
     /**
      * Parse CSV data to extract accelerometer sensor entries
-     * CSV format: accelerometer\nid,received,timestamp,x,y,z\n...
+     * CSV format: accelerometer\neventId,received,timestamp,x,y,z\n...
      */
     fun parseAccelerometerCsv(csvData: String): List<AccelerometerSensorData> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "Accelerometer",
-            headerPattern = "id,received,timestamp,x,y,z",
+            headerPattern = "eventId,received,timestamp,x,y,z",
             rowParser = ::parseAccelerometerRow
         )
     }
 
     /**
      * Parse CSV data to extract PPG sensor entries
-     * CSV format: ppg\nid,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus\n...
+     * CSV format: ppg\neventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus\n...
      */
     fun parsePPGCsv(csvData: String): List<PPGSensorData> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "PPG",
-            headerPattern = "id,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus",
+            headerPattern = "eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus",
             rowParser = ::parsePPGRow
         )
     }
 
     /**
      * Parse CSV data to extract heart rate sensor entries
-     * CSV format: heartRate\nid,received,timestamp,hr,hrStatus,ibi,ibiStatus\n...
+     * CSV format: heartRate\neventId,received,timestamp,hr,hrStatus,ibi,ibiStatus\n...
      * Note: ibi and ibiStatus are semicolon-separated lists
      */
     fun parseHeartRateCsv(csvData: String): List<HeartRateSensorData> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "HeartRate",
-            headerPattern = "id,received,timestamp,hr,hrStatus,ibi,ibiStatus",
+            headerPattern = "eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus",
             rowParser = ::parseHeartRateRow
         )
     }
 
     /**
      * Parse CSV data to extract skin temperature sensor entries
-     * CSV format: skinTemperature\nid,received,timestamp,ambientTemp,objectTemp,status\n...
+     * CSV format: skinTemperature\neventId,received,timestamp,ambientTemp,objectTemp,status\n...
      */
     fun parseSkinTemperatureCsv(csvData: String): List<SkinTemperatureSensorData> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "SkinTemperature",
-            headerPattern = "id,received,timestamp,ambientTemp,objectTemp,status",
+            headerPattern = "eventId,received,timestamp,ambientTemp,objectTemp,status",
             rowParser = ::parseSkinTemperatureRow
         )
     }
 
     /**
      * Parse CSV data to extract EDA sensor entries
-     * CSV format: eda\nid,received,timestamp,skinConductance,status\n...
+     * CSV format: eda\neventId,received,timestamp,skinConductance,status\n...
      */
     fun parseEDACsv(csvData: String): List<EDASensorData> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "EDA",
-            headerPattern = "id,received,timestamp,skinConductance,status",
+            headerPattern = "eventId,received,timestamp,skinConductance,status",
             rowParser = ::parseEDARow
         )
     }
@@ -178,6 +181,7 @@ object SensorDataCsvParser {
                     // Check if we've moved to a new section
                     if (trimmedLine.isNotEmpty() && 
                         !trimmedLine.first().isDigit() && 
+                        !trimmedLine.first().isLetter().not() &&
                         !trimmedLine.replace(" ", "").equals(sectionName, ignoreCase = true) &&
                         isKnownSectionHeader(trimmedLine)) {
                         break
@@ -214,12 +218,13 @@ object SensorDataCsvParser {
 
     /**
      * Parse a single accelerometer data row
-     * Format: id,received,timestamp,x,y,z
+     * Format: eventId,received,timestamp,x,y,z
      */
     private fun parseAccelerometerRow(row: String): AccelerometerSensorData? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 6) {
+                val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val x = parts[3].toFloatOrNull() ?: return null
@@ -227,6 +232,7 @@ object SensorDataCsvParser {
                 val z = parts[5].toFloatOrNull() ?: return null
                 
                 AccelerometerSensorData(
+                    eventId = eventId,
                     uuid = null,
                     deviceType = DeviceType.WATCH.value,
                     timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
@@ -244,12 +250,13 @@ object SensorDataCsvParser {
 
     /**
      * Parse a single PPG data row
-     * Format: id,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus
+     * Format: eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus
      */
     private fun parsePPGRow(row: String): PPGSensorData? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 9) {
+                val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val green = parts[3].toIntOrNull() ?: return null
@@ -260,6 +267,7 @@ object SensorDataCsvParser {
                 val irStatus = parts[8].toIntOrNull() ?: return null
                 
                 PPGSensorData(
+                    eventId = eventId,
                     uuid = null,
                     deviceType = DeviceType.WATCH.value,
                     timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
@@ -280,13 +288,14 @@ object SensorDataCsvParser {
 
     /**
      * Parse a single heart rate data row
-     * Format: id,received,timestamp,hr,hrStatus,ibi,ibiStatus
+     * Format: eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus
      * Note: ibi and ibiStatus are semicolon-separated lists
      */
     private fun parseHeartRateRow(row: String): HeartRateSensorData? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 7) {
+                val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val hr = parts[3].toIntOrNull() ?: return null
@@ -297,6 +306,7 @@ object SensorDataCsvParser {
                 val ibiStatus = parts[6].split(";").mapNotNull { it.trim().toIntOrNull() }
                 
                 HeartRateSensorData(
+                    eventId = eventId,
                     uuid = null,
                     deviceType = DeviceType.WATCH.value,
                     timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
@@ -315,12 +325,13 @@ object SensorDataCsvParser {
 
     /**
      * Parse a single skin temperature data row
-     * Format: id,received,timestamp,ambientTemp,objectTemp,status
+     * Format: eventId,received,timestamp,ambientTemp,objectTemp,status
      */
     private fun parseSkinTemperatureRow(row: String): SkinTemperatureSensorData? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 6) {
+                val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val ambientTemp = parts[3].toFloatOrNull() ?: return null
@@ -328,6 +339,7 @@ object SensorDataCsvParser {
                 val status = parts[5].toIntOrNull() ?: return null
                 
                 SkinTemperatureSensorData(
+                    eventId = eventId,
                     uuid = null,
                     deviceType = DeviceType.WATCH.value,
                     timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
@@ -345,18 +357,20 @@ object SensorDataCsvParser {
 
     /**
      * Parse a single EDA data row
-     * Format: id,received,timestamp,skinConductance,status
+     * Format: eventId,received,timestamp,skinConductance,status
      */
     private fun parseEDARow(row: String): EDASensorData? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 5) {
+                val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val skinConductance = parts[3].toFloatOrNull() ?: return null
                 val status = parts[4].toIntOrNull() ?: return null
                 
                 EDASensorData(
+                    eventId = eventId,
                     uuid = null,
                     deviceType = DeviceType.WATCH.value,
                     timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
@@ -371,4 +385,3 @@ object SensorDataCsvParser {
         }
     }
 }
-

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">웨어러블트래커</string>
+    <string name="app_name">EnPULSE</string>
 
     <!-- Settings Screen -->
     <string name="upload_data">데이터 업로드</string>
@@ -21,6 +21,10 @@
     <string name="permission_required_title">권한 필요</string>
     <string name="permission_required_message">이 기능을 사용하려면 알림을 활성화해 주세요.</string>
 
+    <!-- Background Service Notification -->
+    <string name="notification_title">EnPULSE</string>
+    <string name="notification_description">백그라운드에서 데이터 수집 중입니다</string>
+
     <!-- Notification Messages -->
     <string name="notification_upload_success_title">데이터 전송!</string>
     <string name="notification_upload_success_message">센서 데이터가 휴대폰으로 전송되었습니다</string>
@@ -31,4 +35,22 @@
     <string name="notification_phone_not_available">휴대폰을 사용할 수 없거나 연결되지 않았습니다</string>
     <string name="notification_no_data">전송할 데이터가 없습니다</string>
     <string name="notification_send_failed">데이터 전송에 실패했습니다</string>
+
+    <!-- Sensor Names -->
+    <string name="sensor_accelerometer">가속도계</string>
+    <string name="sensor_ppg">PPG</string>
+    <string name="sensor_heart_rate">심박수</string>
+    <string name="sensor_skin_temperature">피부 온도</string>
+    <string name="sensor_eda">EDA</string>
+    <string name="sensor_location">위치</string>
+    <string name="sensor_default">센서</string>
+
+    <!-- Samsung Health Connection -->
+    <string name="samsung_health_connection_failed">연결 실패</string>
+    <string name="samsung_health_check_app">Samsung Health가 설치되어 있는지 확인하고 다시 시도해 주세요</string>
+    <string name="samsung_health_retry">다시 시도</string>
+    
+    <!-- SDK Policy Error -->
+    <string name="sdk_policy_error_title">개발자 모드 필요</string>
+    <string name="sdk_policy_error_message">Health Platform 앱 설정에서 개발자 모드를 활성화해 주세요</string>
 </resources>

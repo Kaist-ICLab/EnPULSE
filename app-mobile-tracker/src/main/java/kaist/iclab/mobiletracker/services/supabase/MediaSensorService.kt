@@ -22,12 +22,11 @@ class MediaSensorService(
     }
 
     suspend fun insertMediaSensorData(data: MediaSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertMediaSensorDataBatch(dataList: List<MediaSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
-

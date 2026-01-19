@@ -59,6 +59,18 @@ interface ConnectivityDao : BaseDao<ConnectivitySensor.Entity, ConnectivityEntit
     @Query("SELECT COUNT(*) FROM ConnectivityEntity")
     override suspend fun getRecordCount(): Int
 
+    @Query("SELECT COUNT(*) FROM ConnectivityEntity WHERE timestamp >= :afterTimestamp")
+    suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
+
+    @Query("SELECT * FROM ConnectivityEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
+    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<ConnectivityEntity>
+
+    @Query("DELETE FROM ConnectivityEntity WHERE id = :recordId")
+    suspend fun deleteById(recordId: Long)
+
+    @Query("SELECT eventId FROM ConnectivityEntity WHERE id = :recordId")
+    suspend fun getEventIdById(recordId: Long): String?
+
     @Query("DELETE FROM ConnectivityEntity")
     suspend fun deleteAllConnectivityData()
 

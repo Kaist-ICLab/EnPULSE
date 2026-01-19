@@ -31,6 +31,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     signingConfigs {
@@ -45,15 +46,19 @@ android {
     buildTypes {
         getByName("debug") {
             signingConfig = signingConfigs.getByName("debug")
+            // Skip login is now disabled - require real authentication
+            buildConfigField("Boolean", "SKIP_LOGIN", "false")
         }
         release {
             isMinifyEnabled = false
+            buildConfigField("Boolean", "SKIP_LOGIN", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+    buildToolsVersion = "36.1.0"
 }
 
 dependencies {

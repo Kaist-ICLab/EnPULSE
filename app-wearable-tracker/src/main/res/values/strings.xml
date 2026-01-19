@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WearableTracker</string>
+    <string name="app_name">EnPULSE</string>
 
     <!-- Settings Screen -->
     <string name="upload_data">Upload data</string>
@@ -20,6 +20,10 @@
     <string name="permission_required_title">Permission Required</string>
     <string name="permission_required_message">Please enable notifications to enable this feature.</string>
 
+    <!-- Background Service Notification -->
+    <string name="notification_title">EnPULSE</string>
+    <string name="notification_description">Data collection is running in the background</string>
+
     <!-- Notification Messages -->
     <string name="notification_upload_success_title">Data Sent!</string>
     <string name="notification_upload_success_message">Sensor data has been sent to phone</string>
@@ -30,4 +34,22 @@
     <string name="notification_phone_not_available">Phone is not available or not connected</string>
     <string name="notification_no_data">No data to send</string>
     <string name="notification_send_failed">Failed to send data</string>
+
+    <!-- Sensor Names -->
+    <string name="sensor_accelerometer">Accelerometer</string>
+    <string name="sensor_ppg">PPG</string>
+    <string name="sensor_heart_rate">Heart Rate</string>
+    <string name="sensor_skin_temperature">Skin Temperature</string>
+    <string name="sensor_eda">EDA</string>
+    <string name="sensor_location">Location</string>
+    <string name="sensor_default">Sensor</string>
+
+    <!-- Samsung Health Connection -->
+    <string name="samsung_health_connection_failed">Connection Failed</string>
+    <string name="samsung_health_check_app">Please check if Samsung Health is installed and try again</string>
+    <string name="samsung_health_retry">Retry</string>
+    
+    <!-- SDK Policy Error -->
+    <string name="sdk_policy_error_title">Developer Mode Required</string>
+    <string name="sdk_policy_error_message">Please enable developer mode in Health Platform app settings</string>
 </resources>

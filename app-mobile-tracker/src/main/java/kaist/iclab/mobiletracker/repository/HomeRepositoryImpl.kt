@@ -1,87 +1,114 @@
 package kaist.iclab.mobiletracker.repository
 
+import kaist.iclab.mobiletracker.db.dao.common.BaseDao
 import kaist.iclab.mobiletracker.db.dao.common.LocationDao
-import kaist.iclab.mobiletracker.db.dao.phone.AmbientLightDao
-import kaist.iclab.mobiletracker.db.dao.phone.AppListChangeDao
-import kaist.iclab.mobiletracker.db.dao.phone.AppUsageLogDao
-import kaist.iclab.mobiletracker.db.dao.phone.BatteryDao
-import kaist.iclab.mobiletracker.db.dao.phone.BluetoothScanDao
-import kaist.iclab.mobiletracker.db.dao.phone.CallLogDao
-import kaist.iclab.mobiletracker.db.dao.phone.ConnectivityDao
-import kaist.iclab.mobiletracker.db.dao.phone.DataTrafficDao
-import kaist.iclab.mobiletracker.db.dao.phone.DeviceModeDao
-import kaist.iclab.mobiletracker.db.dao.phone.MediaDao
-import kaist.iclab.mobiletracker.db.dao.phone.MessageLogDao
-import kaist.iclab.mobiletracker.db.dao.phone.NotificationDao
-import kaist.iclab.mobiletracker.db.dao.phone.ScreenDao
-import kaist.iclab.mobiletracker.db.dao.phone.StepDao
-import kaist.iclab.mobiletracker.db.dao.phone.UserInteractionDao
-import kaist.iclab.mobiletracker.db.dao.phone.WifiScanDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
 /**
  * Implementation of HomeRepository that aggregates sensor count data from multiple DAOs.
+ * Uses DAO Maps for cleaner dependency injection.
  */
 class HomeRepositoryImpl(
-    private val locationDao: LocationDao,
-    private val appUsageLogDao: AppUsageLogDao,
-    private val stepDao: StepDao,
-    private val batteryDao: BatteryDao,
-    private val notificationDao: NotificationDao,
-    private val screenDao: ScreenDao,
-    private val connectivityDao: ConnectivityDao,
-    private val bluetoothScanDao: BluetoothScanDao,
-    private val ambientLightDao: AmbientLightDao,
-    private val appListChangeDao: AppListChangeDao,
-    private val callLogDao: CallLogDao,
-    private val dataTrafficDao: DataTrafficDao,
-    private val deviceModeDao: DeviceModeDao,
-    private val mediaDao: MediaDao,
-    private val messageLogDao: MessageLogDao,
-    private val userInteractionDao: UserInteractionDao,
-    private val wifiScanDao: WifiScanDao,
+    private val phoneSensorDaos: PhoneSensorDaoMap,
+    private val watchSensorDaos: WatchSensorDaoMap,
     private val watchSensorRepository: WatchSensorRepository
 ) : HomeRepository {
 
+    /**
+     * Data class holding all phone sensor DAOs with daily count functions
+     */
+    data class PhoneSensorDaoMap(
+        val locationDao: LocationDao,
+        val appUsageLogDao: kaist.iclab.mobiletracker.db.dao.phone.AppUsageLogDao,
+        val stepDao: kaist.iclab.mobiletracker.db.dao.phone.StepDao,
+        val batteryDao: kaist.iclab.mobiletracker.db.dao.phone.BatteryDao,
+        val notificationDao: kaist.iclab.mobiletracker.db.dao.phone.NotificationDao,
+        val screenDao: kaist.iclab.mobiletracker.db.dao.phone.ScreenDao,
+        val connectivityDao: kaist.iclab.mobiletracker.db.dao.phone.ConnectivityDao,
+        val bluetoothScanDao: kaist.iclab.mobiletracker.db.dao.phone.BluetoothScanDao,
+        val ambientLightDao: kaist.iclab.mobiletracker.db.dao.phone.AmbientLightDao,
+        val appListChangeDao: kaist.iclab.mobiletracker.db.dao.phone.AppListChangeDao,
+        val callLogDao: kaist.iclab.mobiletracker.db.dao.phone.CallLogDao,
+        val dataTrafficDao: kaist.iclab.mobiletracker.db.dao.phone.DataTrafficDao,
+        val deviceModeDao: kaist.iclab.mobiletracker.db.dao.phone.DeviceModeDao,
+        val mediaDao: kaist.iclab.mobiletracker.db.dao.phone.MediaDao,
+        val messageLogDao: kaist.iclab.mobiletracker.db.dao.phone.MessageLogDao,
+        val userInteractionDao: kaist.iclab.mobiletracker.db.dao.phone.UserInteractionDao,
+        val wifiScanDao: kaist.iclab.mobiletracker.db.dao.phone.WifiScanDao
+    )
+
+    /**
+     * Data class holding all watch sensor DAOs with daily count functions
+     */
+    data class WatchSensorDaoMap(
+        val heartRateDao: kaist.iclab.mobiletracker.db.dao.watch.WatchHeartRateDao,
+        val accelerometerDao: kaist.iclab.mobiletracker.db.dao.watch.WatchAccelerometerDao,
+        val edaDao: kaist.iclab.mobiletracker.db.dao.watch.WatchEDADao,
+        val ppgDao: kaist.iclab.mobiletracker.db.dao.watch.WatchPPGDao,
+        val skinTemperatureDao: kaist.iclab.mobiletracker.db.dao.watch.WatchSkinTemperatureDao
+    )
+
     override fun getDailySensorCounts(startOfDay: Long): Flow<DailySensorCounts> {
-        return combine(
-            locationDao.getDailyLocationCount(startOfDay),
-            appUsageLogDao.getDailyAppUsageCount(startOfDay),
-            stepDao.getDailyStepCount(startOfDay),
-            batteryDao.getDailyBatteryCount(startOfDay),
-            notificationDao.getDailyNotificationCount(startOfDay),
-            screenDao.getDailyScreenCount(startOfDay),
-            connectivityDao.getDailyConnectivityCount(startOfDay),
-            bluetoothScanDao.getDailyBluetoothCount(startOfDay),
-            ambientLightDao.getDailyAmbientLightCount(startOfDay),
-            appListChangeDao.getDailyAppListChangeCount(startOfDay),
-            callLogDao.getDailyCallLogCount(startOfDay),
-            dataTrafficDao.getDailyDataTrafficCount(startOfDay),
-            deviceModeDao.getDailyDeviceModeCount(startOfDay),
-            mediaDao.getDailyMediaCount(startOfDay),
-            messageLogDao.getDailyMessageLogCount(startOfDay),
-            userInteractionDao.getDailyUserInteractionCount(startOfDay),
-            wifiScanDao.getDailyWifiScanCount(startOfDay)
-        ) { args: Array<Int> ->
+        // Combine phone sensor flows
+        val phoneFlow = combine(
+            phoneSensorDaos.locationDao.getDailyLocationCount(startOfDay),
+            phoneSensorDaos.appUsageLogDao.getDailyAppUsageCount(startOfDay),
+            phoneSensorDaos.stepDao.getDailyStepCount(startOfDay),
+            phoneSensorDaos.batteryDao.getDailyBatteryCount(startOfDay),
+            phoneSensorDaos.notificationDao.getDailyNotificationCount(startOfDay),
+            phoneSensorDaos.screenDao.getDailyScreenCount(startOfDay),
+            phoneSensorDaos.connectivityDao.getDailyConnectivityCount(startOfDay),
+            phoneSensorDaos.bluetoothScanDao.getDailyBluetoothCount(startOfDay),
+            phoneSensorDaos.ambientLightDao.getDailyAmbientLightCount(startOfDay),
+            phoneSensorDaos.appListChangeDao.getDailyAppListChangeCount(startOfDay),
+            phoneSensorDaos.callLogDao.getDailyCallLogCount(startOfDay),
+            phoneSensorDaos.dataTrafficDao.getDailyDataTrafficCount(startOfDay),
+            phoneSensorDaos.deviceModeDao.getDailyDeviceModeCount(startOfDay),
+            phoneSensorDaos.mediaDao.getDailyMediaCount(startOfDay),
+            phoneSensorDaos.messageLogDao.getDailyMessageLogCount(startOfDay),
+            phoneSensorDaos.userInteractionDao.getDailyUserInteractionCount(startOfDay),
+            phoneSensorDaos.wifiScanDao.getDailyWifiScanCount(startOfDay)
+        ) { args: Array<Int> -> args.toList() }
+
+        // Combine watch sensor flows
+        val watchFlow = combine(
+            watchSensorDaos.heartRateDao.getDailyHeartRateCount(startOfDay),
+            watchSensorDaos.accelerometerDao.getDailyAccelerometerCount(startOfDay),
+            watchSensorDaos.edaDao.getDailyEDACount(startOfDay),
+            watchSensorDaos.ppgDao.getDailyPPGCount(startOfDay),
+            watchSensorDaos.skinTemperatureDao.getDailySkinTemperatureCount(startOfDay)
+        ) { heartRate, accelerometer, eda, ppg, skinTemp ->
+            listOf(heartRate, accelerometer, eda, ppg, skinTemp)
+        }
+
+        // Combine both flows into final result
+        return combine(phoneFlow, watchFlow) { phone, watch ->
             DailySensorCounts(
-                locationCount = args[0],
-                appUsageCount = args[1],
-                activityCount = args[2],
-                batteryCount = args[3],
-                notificationCount = args[4],
-                screenCount = args[5],
-                connectivityCount = args[6],
-                bluetoothCount = args[7],
-                ambientLightCount = args[8],
-                appListChangeCount = args[9],
-                callLogCount = args[10],
-                dataTrafficCount = args[11],
-                deviceModeCount = args[12],
-                mediaCount = args[13],
-                messageLogCount = args[14],
-                userInteractionCount = args[15],
-                wifiScanCount = args[16]
+                // Phone sensors
+                locationCount = phone[0],
+                appUsageCount = phone[1],
+                activityCount = phone[2],
+                batteryCount = phone[3],
+                notificationCount = phone[4],
+                screenCount = phone[5],
+                connectivityCount = phone[6],
+                bluetoothCount = phone[7],
+                ambientLightCount = phone[8],
+                appListChangeCount = phone[9],
+                callLogCount = phone[10],
+                dataTrafficCount = phone[11],
+                deviceModeCount = phone[12],
+                mediaCount = phone[13],
+                messageLogCount = phone[14],
+                userInteractionCount = phone[15],
+                wifiScanCount = phone[16],
+                // Watch sensors
+                watchHeartRateCount = watch[0],
+                watchAccelerometerCount = watch[1],
+                watchEDACount = watch[2],
+                watchPPGCount = watch[3],
+                watchSkinTemperatureCount = watch[4]
             )
         }
     }

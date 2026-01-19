@@ -22,11 +22,11 @@ class AppUsageLogSensorService(
     }
 
     suspend fun insertAppUsageLogSensorData(data: AppUsageLogSensorData): Result<Unit> {
-        return insertToSupabase(prepareData(data))
+        return upsertToSupabase(prepareData(data))
     }
 
     suspend fun insertAppUsageLogSensorDataBatch(dataList: List<AppUsageLogSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
-        return insertBatchToSupabase(preparedList)
+        return upsertBatchToSupabase(preparedList)
     }
 }
