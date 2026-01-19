@@ -63,6 +63,7 @@
     <string name="menu_phone_sensor">Phone Sensors Config</string>
     <string name="menu_permission">Permissions</string>
     <string name="menu_server_sync">Data and Sync</string>
+    <string name="menu_survey">Survey</string>
     <string name="menu_about">About</string>
     
     <!-- Language Screen -->

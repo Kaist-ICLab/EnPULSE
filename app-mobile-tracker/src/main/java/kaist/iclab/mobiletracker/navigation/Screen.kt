@@ -20,6 +20,7 @@ sealed class Screen(val route: String) {
     object Language : Screen("language")
     object Permission : Screen("permission")
     object PhoneSensor : Screen("phone_sensor")
+    object Survey : Screen("survey")
     object ServerSync : Screen("server_sync")
     object AutomaticSync : Screen("automatic_sync")
     object About : Screen("about")

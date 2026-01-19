@@ -30,6 +30,7 @@ import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.Auto
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.LanguageSettings.LanguageScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.PermissionSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PhoneSensorConfigSettings.PhoneSensorConfigSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SurveySettings.SurveySettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScreen
@@ -185,6 +186,10 @@ fun NavGraph(
         // Settings sub-screens
         composable(route = Screen.PhoneSensor.route) {
             PhoneSensorConfigSettingsScreen(navController = navController)
+        }
+
+        composable(route = Screen.Survey.route) {
+            SurveySettingsScreen(navController = navController)
         }
 
         composable(route = Screen.Language.route) {

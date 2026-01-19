@@ -1,0 +1,88 @@
+{
+    "id": "full_feature_demo",
+    "type": "INTERVAL",
+    "title": "Full Feature Demo",
+    "message": "This survey showcases all supported question types and configurations.",
+    "intervalSec": 60,
+    "dailyStartTimeHour": 0,
+    "dailyEndTimeHour": 23,
+    "questions": [
+        {
+            "type": "TEXT",
+            "shouldAnswer": true,
+            "text": "1. [TEXT] Mandatory Question. How are you?"
+        },
+        {
+            "type": "TEXT",
+            "shouldAnswer": false,
+            "text": "2. [TEXT] Optional Question. Skip if you want."
+        },
+        {
+            "type": "NUMBER",
+            "shouldAnswer": true,
+            "text": "3. [NUMBER] Enter '5' to trigger the next question.",
+            "trigger": {
+                "predicate": {
+                    "type": "EQUAL",
+                    "value": 5
+                },
+                "questions": [
+                    {
+                        "type": "TEXT",
+                        "shouldAnswer": true,
+                        "text": "   -> [TRIGGERED] You entered 5! Why?"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "RADIO",
+            "shouldAnswer": true,
+            "text": "4. [RADIO] Simple String Options",
+            "options": [
+                "Option A",
+                "Option B",
+                "Option C"
+            ]
+        },
+        {
+            "type": "RADIO",
+            "shouldAnswer": true,
+            "text": "5. [RADIO] Complex Options (with Free Response)",
+            "options": [
+                {
+                    "value": "std_1",
+                    "displayText": "Standard Option 1"
+                },
+                {
+                    "value": "std_2",
+                    "displayText": "Standard Option 2"
+                },
+                {
+                    "value": "other",
+                    "displayText": "Other (Type your answer)",
+                    "allowFreeResponse": true
+                }
+            ]
+        },
+        {
+            "type": "CHECKBOX",
+            "shouldAnswer": true,
+            "text": "6. [CHECKBOX] Select Multiple",
+            "options": [
+                {
+                    "value": "mon",
+                    "displayText": "Monday"
+                },
+                {
+                    "value": "tue",
+                    "displayText": "Tuesday"
+                },
+                {
+                    "value": "wed",
+                    "displayText": "Wednesday"
+                }
+            ]
+        }
+    ]
+}
