@@ -353,10 +353,6 @@ private fun SummaryCard(
                 label = stringResource(R.string.sensor_detail_last_recorded),
                 value = formatDateTime(uiState.sensorInfo?.lastRecordedTime)
             )
-            SummaryRow(
-                label = stringResource(R.string.sensor_last_sync_server),
-                value = formatDateTime(uiState.sensorInfo?.lastSyncTimestamp)
-            )
 
             if ((uiState.sensorInfo?.totalRecords ?: 0) > 0) {
                 Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
