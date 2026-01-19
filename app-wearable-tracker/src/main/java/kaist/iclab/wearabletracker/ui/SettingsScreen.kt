@@ -41,7 +41,6 @@ import kaist.iclab.wearabletracker.R
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
-import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Scaffold
@@ -117,21 +116,9 @@ fun SettingsScreen(
     
     // SDK Policy Error state (dev mode not enabled on Health Platform)
     val hasSdkPolicyError by settingsViewModel.sdkPolicyError.collectAsState()
-
-    // Connection timeout state (30 seconds timeout)
-    var connectionTimedOut by remember { mutableStateOf(false) }
-    val connectionTimeoutMs = 30_000L
-
-    // Start timeout timer when connection is not established
-    LaunchedEffect(isSamsungHealthConnected) {
-        if (!isSamsungHealthConnected) {
-            connectionTimedOut = false
-            kotlinx.coroutines.delay(connectionTimeoutMs)
-            if (!isSamsungHealthConnected) {
-                connectionTimedOut = true
-            }
-        }
-    }
+    
+    // State for showing connection error when user tries to start without connection
+    var showConnectionError by remember { mutableStateOf(false) }
 
     // Device information state
     var deviceInfo by remember { mutableStateOf(DeviceInfo()) }
@@ -158,8 +145,14 @@ fun SettingsScreen(
                 onDismiss = { settingsViewModel.clearSdkPolicyError() }
             )
         }
-        isSamsungHealthConnected -> {
-            // Show main settings UI when Samsung Health is connected
+        showConnectionError -> {
+            // Show error screen when user tries to start without Samsung Health connection
+            SamsungHealthConnectionErrorScreen(
+                onRetry = { showConnectionError = false }
+            )
+        }
+        else -> {
+            // Always show main settings UI
             Scaffold(
                 vignette = {
                     Vignette(vignettePosition = VignettePosition.TopAndBottom)
@@ -183,13 +176,17 @@ fun SettingsScreen(
                         },
                         startLogging = {
                             handleNotificationPermissionCheck {
-                                settingsViewModel.startLogging()
+                                // Check Samsung Health connection first
+                                if (!isSamsungHealthConnected) {
+                                    showConnectionError = true
+                                } else {
+                                    settingsViewModel.startLogging()
+                                }
                             }
                         },
                         stopLogging = { settingsViewModel.stopLogging() },
                         isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING),
-                        hasEnabledSensors = hasEnabledSensors,
-                        isSamsungHealthConnected = isSamsungHealthConnected
+                        hasEnabledSensors = hasEnabledSensors
                     )
                     DeviceInfo(
                         deviceInfo = deviceInfo,
@@ -216,16 +213,6 @@ fun SettingsScreen(
                     }
                 }
             }
-        }
-        connectionTimedOut -> {
-            // Show error screen when connection timeout
-            SamsungHealthConnectionErrorScreen(
-                onRetry = { connectionTimedOut = false }
-            )
-        }
-        else -> {
-            // Show loading screen while waiting for Samsung Health connection
-            SamsungHealthConnectionWaitingScreen()
         }
     }
 
@@ -257,11 +244,11 @@ fun SettingController(
     startLogging: () -> Unit,
     stopLogging: () -> Unit,
     isCollecting: Boolean,
-    hasEnabledSensors: Boolean,
-    isSamsungHealthConnected: Boolean
+    hasEnabledSensors: Boolean
 ) {
-    // Start button requires both: at least one sensor enabled AND Samsung Health connected
-    val canStartCollection = hasEnabledSensors && isSamsungHealthConnected
+    // Start button requires at least one sensor enabled
+    // Connection check is done in startLogging callback
+    val canStartCollection = hasEnabledSensors
 
     Row(
         modifier = Modifier
@@ -304,44 +291,6 @@ fun SettingController(
             buttonSize = AppSizes.iconButtonSmall,
             iconSize = AppSizes.iconSmall
         )
-    }
-}
-
-/**
- * Full screen displayed while waiting for Samsung Health service connection.
- * Automatically transitions to settings screen once connection is established.
- */
-@Composable
-fun SamsungHealthConnectionWaitingScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(32.dp),
-                strokeWidth = 3.dp,
-                indicatorColor = MaterialTheme.colors.primary
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.samsung_health_connecting),
-                style = MaterialTheme.typography.body1,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colors.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.samsung_health_please_wait),
-                style = MaterialTheme.typography.caption2,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-            )
-        }
     }
 }
 
