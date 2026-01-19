@@ -43,4 +43,11 @@
     <string name="sensor_eda">EDA</string>
     <string name="sensor_location">Location</string>
     <string name="sensor_default">Sensor</string>
+
+    <!-- Samsung Health Connection -->
+    <string name="samsung_health_connecting">Connecting to Samsung Health…</string>
+    <string name="samsung_health_please_wait">Please wait</string>
+    <string name="samsung_health_connection_failed">Connection Failed</string>
+    <string name="samsung_health_check_app">Please check if Samsung Health is installed and try again</string>
+    <string name="samsung_health_retry">Retry</string>
 </resources>

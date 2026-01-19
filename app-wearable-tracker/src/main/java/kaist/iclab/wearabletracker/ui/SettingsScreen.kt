@@ -1,8 +1,10 @@
 package kaist.iclab.wearabletracker.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Stop
@@ -39,6 +42,7 @@ import kaist.iclab.wearabletracker.R
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Scaffold
@@ -109,6 +113,24 @@ fun SettingsScreen(
         state.flag == SensorState.FLAG.ENABLED || state.flag == SensorState.FLAG.RUNNING
     }
 
+    // Samsung Health connection state
+    val isSamsungHealthConnected by settingsViewModel.isSamsungHealthConnected.collectAsState()
+
+    // Connection timeout state (30 seconds timeout)
+    var connectionTimedOut by remember { mutableStateOf(false) }
+    val connectionTimeoutMs = 30_000L
+
+    // Start timeout timer when connection is not established
+    LaunchedEffect(isSamsungHealthConnected) {
+        if (!isSamsungHealthConnected) {
+            connectionTimedOut = false
+            kotlinx.coroutines.delay(connectionTimeoutMs)
+            if (!isSamsungHealthConnected) {
+                connectionTimedOut = true
+            }
+        }
+    }
+
     // Device information state
     var deviceInfo by remember { mutableStateOf(DeviceInfo()) }
     LaunchedEffect(Unit) {
@@ -127,59 +149,75 @@ fun SettingsScreen(
     val lastSyncTimestamp by settingsViewModel.lastSyncTimestamp.collectAsState()
 
     //UI
-    Scaffold(
-        vignette = {
-            Vignette(vignettePosition = VignettePosition.TopAndBottom)
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 10.dp),
-        ) {
-            SettingController(
-                upload = {
-                    handleNotificationPermissionCheck {
-                        settingsViewModel.upload()
-                    }
-                },
-                flush = {
-                    handleNotificationPermissionCheck {
-                        showFlushDialog = true
-                    }
-                },
-                startLogging = {
-                    handleNotificationPermissionCheck {
-                        settingsViewModel.startLogging()
-                    }
-                },
-                stopLogging = { settingsViewModel.stopLogging() },
-                isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING),
-                hasEnabledSensors = hasEnabledSensors
-            )
-            DeviceInfo(
-                deviceInfo = deviceInfo,
-                lastSyncTimestamp = lastSyncTimestamp,
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 24.dp)
+    when {
+        isSamsungHealthConnected -> {
+            // Show main settings UI when Samsung Health is connected
+            Scaffold(
+                vignette = {
+                    Vignette(vignettePosition = VignettePosition.TopAndBottom)
+                }
             ) {
-                availableSensors.forEach { (name, _) ->
-                    SensorToggleChip(
-                        sensorId = name,
-                        sensorStateFlow = sensorState[name]!!,
-                        updateStatus = { status ->
-                            if (status) {
-                                androidPermissionManager.request(sensorMap[name]!!.permissions)
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 10.dp),
+                ) {
+                    SettingController(
+                        upload = {
+                            handleNotificationPermissionCheck {
+                                settingsViewModel.upload()
                             }
-                            settingsViewModel.update(name, status)
-                        }
+                        },
+                        flush = {
+                            handleNotificationPermissionCheck {
+                                showFlushDialog = true
+                            }
+                        },
+                        startLogging = {
+                            handleNotificationPermissionCheck {
+                                settingsViewModel.startLogging()
+                            }
+                        },
+                        stopLogging = { settingsViewModel.stopLogging() },
+                        isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING),
+                        hasEnabledSensors = hasEnabledSensors,
+                        isSamsungHealthConnected = isSamsungHealthConnected
                     )
+                    DeviceInfo(
+                        deviceInfo = deviceInfo,
+                        lastSyncTimestamp = lastSyncTimestamp,
+                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(bottom = 24.dp)
+                    ) {
+                        availableSensors.forEach { (name, _) ->
+                            SensorToggleChip(
+                                sensorId = name,
+                                sensorStateFlow = sensorState[name]!!,
+                                updateStatus = { status ->
+                                    if (status) {
+                                        androidPermissionManager.request(sensorMap[name]!!.permissions)
+                                    }
+                                    settingsViewModel.update(name, status)
+                                }
+                            )
+                        }
+                    }
                 }
             }
+        }
+        connectionTimedOut -> {
+            // Show error screen when connection timeout
+            SamsungHealthConnectionErrorScreen(
+                onRetry = { connectionTimedOut = false }
+            )
+        }
+        else -> {
+            // Show loading screen while waiting for Samsung Health connection
+            SamsungHealthConnectionWaitingScreen()
         }
     }
 
@@ -211,8 +249,12 @@ fun SettingController(
     startLogging: () -> Unit,
     stopLogging: () -> Unit,
     isCollecting: Boolean,
-    hasEnabledSensors: Boolean
+    hasEnabledSensors: Boolean,
+    isSamsungHealthConnected: Boolean
 ) {
+    // Start button requires both: at least one sensor enabled AND Samsung Health connected
+    val canStartCollection = hasEnabledSensors && isSamsungHealthConnected
+
     Row(
         modifier = Modifier
             .fillMaxWidth(1f),
@@ -232,7 +274,7 @@ fun SettingController(
             onClick = {
                 if (isCollecting) {
                     stopLogging()
-                } else if (hasEnabledSensors) {
+                } else if (canStartCollection) {
                     startLogging()
                 }
                 // Do nothing when disabled
@@ -240,7 +282,7 @@ fun SettingController(
             contentDescription = stringResource(R.string.start_stop_collection),
             backgroundColor = when {
                 isCollecting -> MaterialTheme.colors.error
-                hasEnabledSensors -> MaterialTheme.colors.primary
+                canStartCollection -> MaterialTheme.colors.primary
                 else -> MaterialTheme.colors.onSurface.copy(alpha = 0.3f) // Greyed out
             },
             buttonSize = AppSizes.iconButtonMedium,
@@ -254,6 +296,97 @@ fun SettingController(
             buttonSize = AppSizes.iconButtonSmall,
             iconSize = AppSizes.iconSmall
         )
+    }
+}
+
+/**
+ * Full screen displayed while waiting for Samsung Health service connection.
+ * Automatically transitions to settings screen once connection is established.
+ */
+@Composable
+fun SamsungHealthConnectionWaitingScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(32.dp),
+                strokeWidth = 3.dp,
+                indicatorColor = MaterialTheme.colors.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.samsung_health_connecting),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.samsung_health_please_wait),
+                style = MaterialTheme.typography.caption2,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
+
+/**
+ * Error screen displayed when Samsung Health connection times out.
+ * Provides a retry button to attempt connection again.
+ */
+@Composable
+fun SamsungHealthConnectionErrorScreen(
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colors.error
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.samsung_health_connection_failed),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.samsung_health_check_app),
+                style = MaterialTheme.typography.caption2,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = onRetry,
+                colors = ButtonDefaults.primaryButtonColors(),
+                modifier = Modifier.size(AppSizes.iconButtonMedium)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = stringResource(R.string.samsung_health_retry),
+                    modifier = Modifier.size(AppSizes.iconMedium)
+                )
+            }
+        }
     }
 }
 

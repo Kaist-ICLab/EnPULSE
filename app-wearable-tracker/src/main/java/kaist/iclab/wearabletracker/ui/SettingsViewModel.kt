@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.wearable.Wearable
+import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.wearabletracker.data.DeviceInfo
@@ -26,7 +27,8 @@ class SettingsViewModel(
     private val sensorController: BackgroundController,
     private val sensorDataReceiver: SensorDataReceiver,
     private val phoneCommunicationManager: PhoneCommunicationManager,
-    private val repository: WatchSensorRepository
+    private val repository: WatchSensorRepository,
+    private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : ViewModel() {
     companion object {
         private val TAG = SettingsViewModel::class.simpleName
@@ -35,6 +37,9 @@ class SettingsViewModel(
     // StateFlow for last sync timestamp
     private val _lastSyncTimestamp = MutableStateFlow<Long?>(null)
     val lastSyncTimestamp: StateFlow<Long?> = _lastSyncTimestamp.asStateFlow()
+
+    // Samsung Health connection state - Start button should be disabled when false
+    val isSamsungHealthConnected: StateFlow<Boolean> = samsungHealthSensorInitializer.connectionStateFlow
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
