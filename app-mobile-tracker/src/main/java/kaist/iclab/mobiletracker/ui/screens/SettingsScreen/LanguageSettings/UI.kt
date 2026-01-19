@@ -44,7 +44,7 @@ fun LanguageItem(
             modifier = Modifier.width(Styles.NUMBER_WIDTH)
         )
         Spacer(Modifier.width(Styles.ICON_SPACER_WIDTH))
-        
+
         // Language name
         Text(
             text = languageName,
@@ -52,7 +52,7 @@ fun LanguageItem(
             fontSize = Styles.TEXT_FONT_SIZE,
             modifier = Modifier.weight(1f)
         )
-        
+
         // Checkmark icon if selected
         if (isSelected) {
             Icon(

@@ -12,7 +12,7 @@ import java.io.IOException
 
 /**
  * Helper function to load an image from assets directory
- * 
+ *
  * Usage:
  * ```kotlin
  * ImageAsset(
@@ -32,7 +32,7 @@ fun ImageAsset(
     val bitmap = remember(assetPath) {
         loadBitmapFromAssets(context, assetPath)
     }
-    
+
     bitmap?.let {
         Image(
             bitmap = it.asImageBitmap(),

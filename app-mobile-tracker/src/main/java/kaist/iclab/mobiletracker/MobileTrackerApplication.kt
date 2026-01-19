@@ -23,15 +23,15 @@ import org.koin.core.logger.Level
  * Handles global initialization and setup that should happen when the app starts.
  */
 class MobileTrackerApplication : Application(), KoinComponent {
-    
+
     override fun attachBaseContext(base: Context) {
         val context = LanguageHelper(base).attachBaseContextWithLanguage(base)
         super.attachBaseContext(context)
     }
-    
+
     override fun onCreate() {
         super.onCreate()
-        
+
         // Initialize Koin Dependency Injection
         startKoin {
             androidLogger(level = Level.NONE)
@@ -47,11 +47,11 @@ class MobileTrackerApplication : Application(), KoinComponent {
                 viewModelModule
             )
         }
-        
+
         // Additional initialization
         initializeApp()
     }
-    
+
     private fun initializeApp() {
         // Eagerly initialize BackgroundController to ensure service locator is set up
         // This prevents crashes when Android creates the ControllerService before
@@ -63,9 +63,13 @@ class MobileTrackerApplication : Application(), KoinComponent {
             backgroundController.controllerStateFlow
         } catch (e: Exception) {
             // Log error but don't crash - this is just eager initialization
-            android.util.Log.e("MobileTrackerApplication", "Error initializing BackgroundController: ${e.message}", e)
+            android.util.Log.e(
+                "MobileTrackerApplication",
+                "Error initializing BackgroundController: ${e.message}",
+                e
+            )
         }
-        
+
         // Additional initialization can be added here:
         // - Crash reporting
         // - Analytics

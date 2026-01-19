@@ -13,7 +13,7 @@ internal class AndroidComposeApplicationPlugin : Plugin<Project> {
         with(target) {
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
-            with(pluginManager){
+            with(pluginManager) {
                 apply(libs.findPlugin("kotlinCompose").get().get().pluginId)
             }
             extensions.configure<ApplicationExtension> {

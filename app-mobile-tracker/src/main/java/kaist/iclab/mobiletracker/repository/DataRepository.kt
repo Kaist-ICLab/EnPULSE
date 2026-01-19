@@ -76,21 +76,21 @@ interface DataRepository {
      * @return List of SensorInfo for all phone and watch sensors
      */
     suspend fun getAllSensorInfo(): List<SensorInfo>
-    
+
     /**
      * Get summary information for a specific sensor.
      * @param sensorId The sensor ID
      * @return SensorInfo or null if not found
      */
     suspend fun getSensorInfo(sensorId: String): SensorInfo?
-    
+
     /**
      * Get detailed information for a specific sensor.
      * @param sensorId The sensor ID
      * @return SensorDetailInfo with counts and timestamps
      */
     suspend fun getSensorDetailInfo(sensorId: String): SensorDetailInfo?
-    
+
     /**
      * Get paginated sensor records.
      * @param sensorId The sensor ID
@@ -107,32 +107,32 @@ interface DataRepository {
         limit: Int,
         offset: Int
     ): List<SensorRecord>
-    
+
     /**
      * Get total count of records for a sensor with date filter.
      */
     suspend fun getSensorRecordCount(sensorId: String, dateFilter: DateFilter): Int
-    
+
     /**
      * Delete a specific record.
      * @param sensorId The sensor ID
      * @param recordId The record ID to delete
      */
     suspend fun deleteRecord(sensorId: String, recordId: Long)
-    
+
     /**
      * Delete all data for a specific sensor.
      * @param sensorId The sensor ID
      */
     suspend fun deleteAllSensorData(sensorId: String)
-    
+
     /**
      * Upload sensor data to server.
      * @param sensorId The sensor ID
      * @return Number of records uploaded, or -1 on failure
      */
     suspend fun uploadSensorData(sensorId: String): Int
-    
+
     /**
      * Get the last sync timestamp for a sensor.
      * @param sensorId The sensor ID
@@ -150,12 +150,15 @@ interface DataRepository {
      * Delete all data for all sensors.
      */
     suspend fun deleteAllAllData()
-    
+
     /**
      * Get all records for a sensor (for export, no pagination).
      * @param sensorId The sensor ID
      * @param dateFilter Date filter option
      * @return List of all SensorRecord matching the filter
      */
-    suspend fun getAllSensorRecordsForExport(sensorId: String, dateFilter: DateFilter): List<SensorRecord>
+    suspend fun getAllSensorRecordsForExport(
+        sensorId: String,
+        dateFilter: DateFilter
+    ): List<SensorRecord>
 }

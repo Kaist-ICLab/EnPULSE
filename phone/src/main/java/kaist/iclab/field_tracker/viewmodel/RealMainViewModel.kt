@@ -17,16 +17,27 @@ class RealMainViewModel(
 ) : MainViewModel() {
     override val sensors = controller.sensors
     override val controllerStateFlow = controller.controllerStateFlow
-    override fun start() { controller.start() }
-    override fun stop() { controller.stop() }
+    override fun start() {
+        controller.start()
+    }
+
+    override fun stop() {
+        controller.stop()
+    }
 
     override val userStateFlow = authentication.userStateFlow
-    override suspend fun login(activity: Activity) { authentication.login(activity) }
-    override suspend fun logout() { authentication.logout() }
+    override suspend fun login(activity: Activity) {
+        authentication.login(activity)
+    }
+
+    override suspend fun logout() {
+        authentication.logout()
+    }
 //    override fun selectExperimentGroup(name: String) { TODO() }
 
-    override val permissionStateFlow: StateFlow<Map<String, PermissionState>>
-        = permissionManager.permissionStateFlow
+    override val permissionStateFlow: StateFlow<Map<String, PermissionState>> =
+        permissionManager.permissionStateFlow
+
     override fun requestPermissions(names: Array<String>, onResult: ((Boolean) -> Unit)?) {
         permissionManager.request(names) {
             onResult?.invoke(it)

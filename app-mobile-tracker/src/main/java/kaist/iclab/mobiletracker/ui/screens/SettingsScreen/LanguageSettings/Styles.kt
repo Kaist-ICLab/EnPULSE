@@ -18,10 +18,10 @@ object Styles {
     val ITEM_HORIZONTAL_PADDING = 16.dp
     val ITEM_VERTICAL_PADDING = 16.dp
     val NUMBER_WIDTH = 24.dp
-    
+
     // Icon
     val CHECKMARK_SIZE = CommonStyles.ICON_SIZE
-    
+
     // Common styles (delegated to shared styles)
     val HEADER_HEIGHT = CommonStyles.HEADER_HEIGHT
     val HEADER_HORIZONTAL_PADDING = CommonStyles.HEADER_HORIZONTAL_PADDING

@@ -8,7 +8,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 
 @Dao
-interface WifiScanDao: BaseDao<WifiScanSensor.Entity, WifiScanEntity> {
+interface WifiScanDao : BaseDao<WifiScanSensor.Entity, WifiScanEntity> {
     override suspend fun insert(sensorEntity: WifiScanSensor.Entity, userUuid: String?) {
         val entity = WifiScanEntity(
             uuid = userUuid ?: "",
@@ -59,7 +59,12 @@ interface WifiScanDao: BaseDao<WifiScanSensor.Entity, WifiScanEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM WifiScanEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<WifiScanEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<WifiScanEntity>
 
     @Query("DELETE FROM WifiScanEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

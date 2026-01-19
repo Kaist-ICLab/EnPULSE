@@ -2,14 +2,14 @@ package com.example.test_sync.helpers
 
 import android.content.Context
 import android.util.Log
+import com.example.test_sync.TestData
+import com.example.test_sync.config.AppConfig
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
-import com.example.test_sync.TestData
-import com.example.test_sync.config.AppConfig
 
 class BLEHelper(private val context: Context) {
     private lateinit var bleChannel: BLEDataChannel
@@ -21,7 +21,10 @@ class BLEHelper(private val context: Context) {
 
     fun sendString(key: String, value: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            Log.d(AppConfig.LogTags.PHONE_BLE, "📱 Sending message to watch - Key: '$key', Data: $value")
+            Log.d(
+                AppConfig.LogTags.PHONE_BLE,
+                "📱 Sending message to watch - Key: '$key', Data: $value"
+            )
             bleChannel.send(key, value)
         }
     }
@@ -29,7 +32,10 @@ class BLEHelper(private val context: Context) {
     fun sendTestData(key: String, value: TestData) {
         CoroutineScope(Dispatchers.IO).launch {
             val jsonString = Json.encodeToString(value)
-            Log.d(AppConfig.LogTags.PHONE_BLE, "📱 Sending structured data to watch - Key: '$key', Data: $jsonString")
+            Log.d(
+                AppConfig.LogTags.PHONE_BLE,
+                "📱 Sending structured data to watch - Key: '$key', Data: $jsonString"
+            )
             bleChannel.send(key, jsonString)
         }
     }
@@ -42,13 +48,19 @@ class BLEHelper(private val context: Context) {
                 json is kotlinx.serialization.json.JsonPrimitive -> json.content
                 else -> json.toString()
             }
-            Log.d(AppConfig.LogTags.PHONE_BLE, "📱 Received message from watch - Key: '$key', Data: $message")
+            Log.d(
+                AppConfig.LogTags.PHONE_BLE,
+                "📱 Received message from watch - Key: '$key', Data: $message"
+            )
         }
 
         // Listen for structured data
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.STRUCTURED_DATA)) { key, json ->
             val testData: TestData = Json.decodeFromJsonElement(json)
-            Log.d(AppConfig.LogTags.PHONE_BLE, "📱 Received structured data from watch - Key: '$key', Data: $testData")
+            Log.d(
+                AppConfig.LogTags.PHONE_BLE,
+                "📱 Received structured data from watch - Key: '$key', Data: $testData"
+            )
         }
 
         // Listen for sensor CSV data from watch
@@ -57,7 +69,10 @@ class BLEHelper(private val context: Context) {
                 json is kotlinx.serialization.json.JsonPrimitive -> json.content
                 else -> json.toString()
             }
-            Log.d(AppConfig.LogTags.PHONE_BLE, "📱 Received sensor CSV data from watch - Key: '$key'")
+            Log.d(
+                AppConfig.LogTags.PHONE_BLE,
+                "📱 Received sensor CSV data from watch - Key: '$key'"
+            )
             Log.d(AppConfig.LogTags.PHONE_BLE, "📊 CSV Data (${csvData.length} chars):\n$csvData")
         }
     }

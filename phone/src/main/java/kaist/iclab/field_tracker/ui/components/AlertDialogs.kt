@@ -84,9 +84,11 @@ fun BaseAlertDialogPreview() {
                 title = "Dialog Title",
                 onDismiss = {},
                 onConfirm = {}) {
-                Text("This is a dialog message",
+                Text(
+                    "This is a dialog message",
                     color = MaterialTheme.colorScheme.onBackground,
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }

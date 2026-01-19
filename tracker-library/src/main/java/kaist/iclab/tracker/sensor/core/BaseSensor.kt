@@ -27,12 +27,15 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
     override fun updateConfig(changedValues: Map<String, String>) {
         if (sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
             throw IllegalStateException("Cannot update config while running")
-        }else{
+        } else {
             val constructor = configClass.primaryConstructor
                 ?: throw IllegalArgumentException("No primary constructor found")
             val currentConfig = configStateFlow.value
             val args = constructor.parameters.associateWith { param ->
-                val value = changedValues[param.name] ?: currentConfig::class.memberProperties.find { it.name == param.name }?.getter?.call(currentConfig)?.toString()
+                val value = changedValues[param.name]
+                    ?: currentConfig::class.memberProperties.find { it.name == param.name }?.getter?.call(
+                        currentConfig
+                    )?.toString()
                 value ?: throw IllegalArgumentException("Missing value for ${param.name}")
                 when (param.type.classifier) {
                     Long::class -> value.toLong()
@@ -56,12 +59,16 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
         get() = stateStorage.stateFlow
 
     override fun init() {
-        val sensorState = when(stateStorage.get().flag) {
-            SensorState.FLAG.ENABLED, SensorState.FLAG.RUNNING -> if(permissionManager.getPermissionFlow(permissions).value.values.any { it != PermissionState.GRANTED }) {
+        val sensorState = when (stateStorage.get().flag) {
+            SensorState.FLAG.ENABLED, SensorState.FLAG.RUNNING -> if (permissionManager.getPermissionFlow(
+                    permissions
+                ).value.values.any { it != PermissionState.GRANTED }
+            ) {
                 SensorState(SensorState.FLAG.DISABLED)
             } else {
                 stateStorage.get()
             }
+
             else -> SensorState(SensorState.FLAG.DISABLED)
         }
 
@@ -95,6 +102,7 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
         }
         onStart()
     }
+
     abstract fun onStart()
 
     override fun stop() {
@@ -103,6 +111,7 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
             stateStorage.set(SensorState(SensorState.FLAG.ENABLED))
         }
     }
+
     abstract fun onStop()
 
     /* Data-related */
@@ -110,6 +119,7 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
     override fun addListener(listener: (E) -> Unit) {
         listeners.add(listener)
     }
+
     override fun removeListener(listener: (E) -> Unit) {
         listeners.remove(listener)
     }

@@ -23,7 +23,7 @@ class Survey(
         this.flatQuestions = getFlatQuestionsRec(question.toList())
 
         CoroutineScope(Dispatchers.IO).launch {
-            combine(flatQuestions.map { it.isValid }) { q -> q.all { it }}.collect {
+            combine(flatQuestions.map { it.isValid }) { q -> q.all { it } }.collect {
                 _isAnswerValid.value = it
             }
         }

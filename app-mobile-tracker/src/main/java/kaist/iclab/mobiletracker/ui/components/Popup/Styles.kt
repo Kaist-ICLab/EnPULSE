@@ -17,13 +17,13 @@ object Styles {
     val MaxWidth = 280.dp
     val CardPadding = 16.dp
     val CardCornerRadius = 8.dp
-    
+
     // Title styles
     val TitleFontSize = 16.sp
     val TitleFontWeight = FontWeight.Bold
     val TitleColor = Color.Black
     val TitleBottomPadding = 12.dp
-    
+
     // Button styles
     val ButtonDefaultWidth = 100.dp
     val ButtonDefaultHeight = 36.dp
@@ -33,7 +33,7 @@ object Styles {
     val OutlinedButtonCornerRadius = RoundedCornerShape(8.dp)
     val ButtonBorderWidth = 1.dp
     val ButtonBorderColor = AppColors.BorderLight
-    
+
     // Spacing
     val ContentButtonSpacing = 16.dp
 }

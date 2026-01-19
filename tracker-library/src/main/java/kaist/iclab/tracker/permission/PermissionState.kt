@@ -1,6 +1,6 @@
 package kaist.iclab.tracker.permission
 
-enum class PermissionState{
+enum class PermissionState {
     NOT_REQUESTED,
     RATIONALE_REQUIRED, // The permission requires rationale
     GRANTED, // The permission is granted

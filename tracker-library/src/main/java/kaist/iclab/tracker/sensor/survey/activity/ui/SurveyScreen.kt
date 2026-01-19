@@ -1,6 +1,5 @@
 package kaist.iclab.tracker.sensor.survey.activity.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,17 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
-import kaist.iclab.tracker.sensor.survey.question.Question
 import kaist.iclab.tracker.sensor.survey.question.RadioQuestion
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
 import kotlinx.serialization.json.JsonElement
@@ -40,7 +36,7 @@ fun SurveyScreen(
             .fillMaxSize()
     ) {
         items(questionList) { question ->
-            when(question) {
+            when (question) {
                 is RadioQuestion -> RadioQuestion(question)
                 is CheckboxQuestion -> CheckboxQuestion(question)
                 is TextQuestion -> TextQuestion(question)
@@ -73,7 +69,7 @@ fun RadioQuestion(
     val isHidden = question.isHidden.collectAsState()
     val otherResponse = question.otherResponse.collectAsState()
 
-    if(isHidden.value) return
+    if (isHidden.value) return
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -109,7 +105,7 @@ fun CheckboxQuestion(
     val isHidden = question.isHidden.collectAsState()
     val otherResponse = question.otherResponse.collectAsState()
 
-    if(isHidden.value) return
+    if (isHidden.value) return
 
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -144,7 +140,7 @@ fun TextQuestion(
     val response = question.response.collectAsState()
     val isHidden = question.isHidden.collectAsState()
 
-    if(isHidden.value) return
+    if (isHidden.value) return
 
     Column(
         modifier = modifier
@@ -170,7 +166,7 @@ fun NumberQuestion(
     val response = question.response.collectAsState()
     val isHidden = question.isHidden.collectAsState()
 
-    if(isHidden.value) return
+    if (isHidden.value) return
 
     Column(
         modifier = modifier

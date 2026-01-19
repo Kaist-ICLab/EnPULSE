@@ -9,7 +9,7 @@ import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface AppUsageLogDao: BaseDao<AppUsageLogSensor.Entity, AppUsageLogEntity> {
+interface AppUsageLogDao : BaseDao<AppUsageLogSensor.Entity, AppUsageLogEntity> {
     override suspend fun insert(sensorEntity: AppUsageLogSensor.Entity, userUuid: String?) {
         val entity = AppUsageLogEntity(
             uuid = userUuid ?: "",
@@ -63,7 +63,12 @@ interface AppUsageLogDao: BaseDao<AppUsageLogSensor.Entity, AppUsageLogEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM AppUsageLogEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<AppUsageLogEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<AppUsageLogEntity>
 
     @Query("DELETE FROM AppUsageLogEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

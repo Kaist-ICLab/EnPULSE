@@ -84,7 +84,7 @@ fun SettingScreen(
             ListCard(
                 title = "Data",
                 rows = sensors.map { sensor ->
-                    { SensorSwitchRow(sensor, onClick = {onNavigateToDataConfig(sensor.id)}) }
+                    { SensorSwitchRow(sensor, onClick = { onNavigateToDataConfig(sensor.id) }) }
                 }
             )
 

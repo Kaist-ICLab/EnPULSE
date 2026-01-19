@@ -29,10 +29,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             AndroidtrackerTheme {
                 NotificationControlScreen(
-                  onPost = {notificationHandler.post()},
-                    onPostService = {notificationHandler.runService()},
-                    onStopService = {notificationHandler.stopService()},
-                    onRemove = {notificationHandler.remove()}
+                    onPost = { notificationHandler.post() },
+                    onPostService = { notificationHandler.runService() },
+                    onStopService = { notificationHandler.stopService() },
+                    onRemove = { notificationHandler.remove() }
                 )
             }
         }

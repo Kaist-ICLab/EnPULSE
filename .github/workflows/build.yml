@@ -1,4 +1,4 @@
-name: 2. Build AAR and APK Files 
+name: 2. Build AAR and APK Files
 
 on:
   workflow_dispatch:

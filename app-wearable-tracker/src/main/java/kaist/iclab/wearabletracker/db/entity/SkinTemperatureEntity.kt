@@ -16,5 +16,6 @@ data class SkinTemperatureEntity(
     val status: Int
 ) : CsvSerializable {
     override fun toCsvHeader(): String = "eventId,received,timestamp,ambientTemp,objectTemp,status"
-    override fun toCsvRow(): String = "$eventId,$received,$timestamp,$ambientTemperature,$objectTemperature,$status"
+    override fun toCsvRow(): String =
+        "$eventId,$received,$timestamp,$ambientTemperature,$objectTemperature,$status"
 }

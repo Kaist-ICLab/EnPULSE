@@ -1,20 +1,19 @@
 package kaist.iclab.mobiletracker.utils
 
-import java.time.Instant
-import java.util.UUID
 import android.util.Log
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
+import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.AccelerometerSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.EDASensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.HeartRateSensorData
-import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.PPGSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.SkinTemperatureSensorData
+import java.time.Instant
 
 /**
  * Parser for sensor data in CSV format received from wearable devices.
- * 
+ *
  * Supports parsing multiple sensor types from a single CSV string:
  * - accelerometer: eventId,received,timestamp,x,y,z
  * - ppg: eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus
@@ -24,10 +23,10 @@ import kaist.iclab.mobiletracker.data.sensors.watch.SkinTemperatureSensorData
  * - location: eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy
  */
 object SensorDataCsvParser {
-    
+
     /**
      * Parse CSV data to extract location sensor entries
-     * 
+     *
      * @param csvData The raw CSV string containing sensor data
      * @return List of parsed LocationSensorData, empty list if parsing fails
      */
@@ -56,7 +55,7 @@ object SensorDataCsvParser {
                 val altitude = parts[5].toDoubleOrNull() ?: return null
                 val speed = parts[6].toFloatOrNull() ?: return null
                 val accuracy = parts[7].toFloatOrNull() ?: return null
-                
+
                 LocationSensorData(
                     eventId = eventId,
                     uuid = null,
@@ -152,22 +151,24 @@ object SensorDataCsvParser {
         rowParser: (String) -> T?
     ): List<T> {
         val dataList = mutableListOf<T>()
-        
+
         try {
             val lines = csvData.lines()
             var inSection = false
             var headerFound = false
-            
+
             for (line in lines) {
                 val trimmedLine = line.trim()
-                
+
                 // Check if we're entering the section
-                if (trimmedLine.replace(" ", "").equals(sectionName.replace(" ", ""), ignoreCase = true)) {
+                if (trimmedLine.replace(" ", "")
+                        .equals(sectionName.replace(" ", ""), ignoreCase = true)
+                ) {
                     inSection = true
                     headerFound = false
                     continue
                 }
-                
+
                 // If we're in section, look for header
                 if (inSection && !headerFound) {
                     if (trimmedLine.contains(headerPattern, ignoreCase = true)) {
@@ -175,23 +176,24 @@ object SensorDataCsvParser {
                         continue
                     }
                 }
-                
+
                 // If header found, parse data rows
                 if (inSection && headerFound) {
                     // Check if we've moved to a new section
-                    if (trimmedLine.isNotEmpty() && 
-                        !trimmedLine.first().isDigit() && 
+                    if (trimmedLine.isNotEmpty() &&
+                        !trimmedLine.first().isDigit() &&
                         !trimmedLine.first().isLetter().not() &&
                         !trimmedLine.replace(" ", "").equals(sectionName, ignoreCase = true) &&
-                        isKnownSectionHeader(trimmedLine)) {
+                        isKnownSectionHeader(trimmedLine)
+                    ) {
                         break
                     }
-                    
+
                     // Skip empty lines
                     if (trimmedLine.isEmpty()) {
                         continue
                     }
-                    
+
                     // Parse data row
                     val data = rowParser(trimmedLine)
                     data?.let { dataList.add(it) }
@@ -200,7 +202,7 @@ object SensorDataCsvParser {
         } catch (e: Exception) {
             Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing $sectionName CSV: ${e.message}", e)
         }
-        
+
         return dataList
     }
 
@@ -209,7 +211,7 @@ object SensorDataCsvParser {
      */
     private fun isKnownSectionHeader(line: String): Boolean {
         val knownSections = listOf(
-            "Accelerometer", "PPG", "HeartRate", "SkinTemperature", 
+            "Accelerometer", "PPG", "HeartRate", "SkinTemperature",
             "EDA", "Location"
         )
         val normalizedLine = line.replace(" ", "")
@@ -230,7 +232,7 @@ object SensorDataCsvParser {
                 val x = parts[3].toFloatOrNull() ?: return null
                 val y = parts[4].toFloatOrNull() ?: return null
                 val z = parts[5].toFloatOrNull() ?: return null
-                
+
                 AccelerometerSensorData(
                     eventId = eventId,
                     uuid = null,
@@ -265,7 +267,7 @@ object SensorDataCsvParser {
                 val redStatus = parts[6].toIntOrNull() ?: return null
                 val ir = parts[7].toIntOrNull() ?: return null
                 val irStatus = parts[8].toIntOrNull() ?: return null
-                
+
                 PPGSensorData(
                     eventId = eventId,
                     uuid = null,
@@ -300,11 +302,11 @@ object SensorDataCsvParser {
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val hr = parts[3].toIntOrNull() ?: return null
                 val hrStatus = parts[4].toIntOrNull() ?: return null
-                
+
                 // Parse semicolon-separated lists
                 val ibi = parts[5].split(";").mapNotNull { it.trim().toIntOrNull() }
                 val ibiStatus = parts[6].split(";").mapNotNull { it.trim().toIntOrNull() }
-                
+
                 HeartRateSensorData(
                     eventId = eventId,
                     uuid = null,
@@ -337,7 +339,7 @@ object SensorDataCsvParser {
                 val ambientTemp = parts[3].toFloatOrNull() ?: return null
                 val objectTemp = parts[4].toFloatOrNull() ?: return null
                 val status = parts[5].toIntOrNull() ?: return null
-                
+
                 SkinTemperatureSensorData(
                     eventId = eventId,
                     uuid = null,
@@ -350,7 +352,11 @@ object SensorDataCsvParser {
                 )
             } else null
         } catch (e: Exception) {
-            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing skin temperature row: ${e.message}", e)
+            Log.e(
+                AppConfig.LogTags.PHONE_BLE,
+                "Error parsing skin temperature row: ${e.message}",
+                e
+            )
             null
         }
     }
@@ -368,7 +374,7 @@ object SensorDataCsvParser {
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val skinConductance = parts[3].toFloatOrNull() ?: return null
                 val status = parts[4].toIntOrNull() ?: return null
-                
+
                 EDASensorData(
                     eventId = eventId,
                     uuid = null,

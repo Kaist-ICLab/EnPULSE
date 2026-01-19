@@ -24,7 +24,7 @@ val authModule = module {
     single<AuthRepository> {
         AuthRepositoryImpl(context = androidContext())
     }
-    
+
     // UserProfileRepository - singleton for caching user profile
     single<UserProfileRepository> {
         UserProfileRepositoryImpl()

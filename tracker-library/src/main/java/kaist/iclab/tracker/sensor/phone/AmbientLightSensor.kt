@@ -26,7 +26,7 @@ class AmbientLightSensor(
         // Time-based sampling: record once every 60 seconds
         private const val SAMPLING_INTERVAL_MS = 60_000L
     }
-    
+
     data class Config(
         val interval: Long
     ) : SensorConfig
@@ -43,20 +43,20 @@ class AmbientLightSensor(
     override val foregroundServiceTypes: Array<Int> = listOfNotNull<Int>().toTypedArray()
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    
+
     // Time-based sampling state
     private var lastRecordedTimestamp: Long = 0L
-    
-    private val sensorEventListener = object: SensorEventListener {
+
+    private val sensorEventListener = object : SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor?, p1: Int) {}
         override fun onSensorChanged(event: SensorEvent?) {
             event?.let {
                 val timestamp = System.currentTimeMillis()
-                
+
                 // Time-based sampling: only record if interval has passed
                 if ((timestamp - lastRecordedTimestamp) >= SAMPLING_INTERVAL_MS) {
                     lastRecordedTimestamp = timestamp
-                    
+
                     listeners.forEach { listener ->
                         listener.invoke(
                             Entity(
@@ -74,7 +74,7 @@ class AmbientLightSensor(
 
     override fun init() {
         super.init()
-        if(sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) == null) {
+        if (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) == null) {
             SensorState(SensorState.FLAG.UNAVAILABLE, "AmbientLight Sensor is not available")
         }
     }
@@ -82,7 +82,7 @@ class AmbientLightSensor(
     override fun onStart() {
         // Reset sampling state - set to 0 so first reading is recorded immediately
         lastRecordedTimestamp = 0L
-        
+
         sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)?.let { sensor ->
             sensorManager.registerListener(
                 sensorEventListener,

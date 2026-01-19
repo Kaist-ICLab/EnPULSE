@@ -11,10 +11,10 @@ import java.lang.Thread.sleep
 class MainViewModelImpl(
     val database: DatabaseInterface,
     val collectorController: CollectorController
-): AbstractMainViewModel() {
+) : AbstractMainViewModel() {
     init {
         viewModelScope.launch {
-            Log.d(TAG,"INITIALIZED")
+            Log.d(TAG, "INITIALIZED")
             collectorController.isRunningFlow().collect {
                 Log.d(TAG, "isRunningState: $it")
                 _isRecordingState.value = it
@@ -24,15 +24,18 @@ class MainViewModelImpl(
 
     var timer: Job? = null
 
-    companion object{
+    companion object {
         const val TAG = "RealMainViewModel"
     }
+
     override fun tag() {
         Log.d(TAG, "tag")
-        database.insert("TAG", mapOf(
-            "timestamp" to System.currentTimeMillis(),
-            "tag" to ""
-        ))
+        database.insert(
+            "TAG", mapOf(
+                "timestamp" to System.currentTimeMillis(),
+                "tag" to ""
+            )
+        )
     }
 
     override fun export() {

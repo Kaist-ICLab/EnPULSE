@@ -5,16 +5,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlin.collections.map
-import kotlin.collections.toMutableMap
 
 class RadioQuestion(
     override val question: String,
     override val isMandatory: Boolean,
     val option: List<Option>,
     questionTrigger: List<QuestionTrigger<String>>? = null
-): Question<String>(
+) : Question<String>(
     question, isMandatory, "", questionTrigger
 ) {
     private val _otherResponse = MutableStateFlow<Map<String, String>>(mapOf())
@@ -43,7 +40,10 @@ class RadioQuestion(
             put("question", question)
             put("isMandatory", isMandatory)
             put("value", response.value)
-            if(response.value in otherResponse.value.keys) put("otherResponse", otherResponse.value[response.value])
+            if (response.value in otherResponse.value.keys) put(
+                "otherResponse",
+                otherResponse.value[response.value]
+            )
         }
 
         return jsonObject

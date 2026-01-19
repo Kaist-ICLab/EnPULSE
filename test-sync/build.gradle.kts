@@ -69,7 +69,7 @@ dependencies {
     // koin
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
-    
+
     /* Supabase - direct usage */
     implementation(libs.supabase.kt)
     implementation(libs.postgrest.kt)

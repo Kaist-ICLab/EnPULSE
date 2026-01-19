@@ -8,7 +8,7 @@ import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.entity.EDAEntity
 
 @Dao
-interface EDADao: BaseDao<EDASensor.Entity> {
+interface EDADao : BaseDao<EDASensor.Entity> {
     override suspend fun insert(sensorEntity: EDASensor.Entity) {
         val entity = sensorEntity.dataPoint.map {
             EDAEntity(
@@ -33,7 +33,8 @@ interface EDADao: BaseDao<EDASensor.Entity> {
     @Query("SELECT * FROM EDAEntity WHERE timestamp > :since ORDER BY timestamp ASC")
     suspend fun getEDADataSince(since: Long): List<EDAEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> = getEDADataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
+        getEDADataSince(timestamp)
 
     @Query("DELETE FROM EDAEntity WHERE timestamp <= :until")
     suspend fun deleteEDADataBefore(until: Long)

@@ -21,9 +21,8 @@
         </activity>
         <service
             android:name=".NotificationHandler$TestService"
-            android:foregroundServiceType="dataSync"
-            android:exported="false">
-        </service>
+            android:exported="false"
+            android:foregroundServiceType="dataSync"></service>
     </application>
 
 </manifest>

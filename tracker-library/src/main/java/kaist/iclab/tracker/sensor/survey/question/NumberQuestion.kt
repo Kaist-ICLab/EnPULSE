@@ -3,14 +3,12 @@ package kaist.iclab.tracker.sensor.survey.question
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlin.collections.toList
 
 class NumberQuestion(
     override val question: String,
     override val isMandatory: Boolean,
     questionTrigger: List<QuestionTrigger<Double?>>? = null
-): Question<Double?>(
+) : Question<Double?>(
     question, isMandatory, null, questionTrigger
 ) {
     override fun isAllowedResponse(response: Double?): Boolean {

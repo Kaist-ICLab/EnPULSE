@@ -9,7 +9,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 
 @Dao
-interface AppListChangeDao: BaseDao<AppListChangeSensor.Entity, AppListChangeEntity> {
+interface AppListChangeDao : BaseDao<AppListChangeSensor.Entity, AppListChangeEntity> {
     companion object {
         private val gson = Gson()
     }
@@ -31,7 +31,10 @@ interface AppListChangeDao: BaseDao<AppListChangeSensor.Entity, AppListChangeEnt
     @Insert
     suspend fun insertBatchUsingRoomEntity(entities: List<AppListChangeEntity>)
 
-    override suspend fun insertBatch(entities: List<AppListChangeSensor.Entity>, userUuid: String?) {
+    override suspend fun insertBatch(
+        entities: List<AppListChangeSensor.Entity>,
+        userUuid: String?
+    ) {
         val roomEntities = entities.map { entity ->
             AppListChangeEntity(
                 uuid = userUuid ?: "",
@@ -60,7 +63,12 @@ interface AppListChangeDao: BaseDao<AppListChangeSensor.Entity, AppListChangeEnt
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM AppListChangeEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<AppListChangeEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<AppListChangeEntity>
 
     @Query("DELETE FROM AppListChangeEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

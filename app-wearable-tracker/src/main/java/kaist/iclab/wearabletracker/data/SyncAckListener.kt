@@ -60,7 +60,10 @@ class SyncAckListener(
                 }
 
                 if (pendingBatch.batchId != receivedBatchId) {
-                    Log.w(TAG, "ACK batch ID mismatch. Expected: ${pendingBatch.batchId}, Received: $receivedBatchId")
+                    Log.w(
+                        TAG,
+                        "ACK batch ID mismatch. Expected: ${pendingBatch.batchId}, Received: $receivedBatchId"
+                    )
                     return@launch
                 }
 

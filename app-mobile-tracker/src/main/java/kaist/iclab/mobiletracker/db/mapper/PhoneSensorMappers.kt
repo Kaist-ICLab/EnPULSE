@@ -1,43 +1,43 @@
 package kaist.iclab.mobiletracker.db.mapper
 
-import java.time.Instant
 import kaist.iclab.mobiletracker.data.DeviceType
+import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
 import kaist.iclab.mobiletracker.data.sensors.phone.AmbientLightSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.AppListChangeSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.AppUsageLogSensorData
 import kaist.iclab.mobiletracker.data.sensors.phone.BatterySensorData
 import kaist.iclab.mobiletracker.data.sensors.phone.BluetoothScanSensorData
 import kaist.iclab.mobiletracker.data.sensors.phone.CallLogSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.MessageLogSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.UserInteractionSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.DataTrafficSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.MediaSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.StepSensorData
-import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.DeviceModeSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.ScreenSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.AppListChangeSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.AppUsageLogSensorData
-import kaist.iclab.mobiletracker.data.sensors.phone.NotificationSensorData
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kaist.iclab.mobiletracker.data.sensors.phone.WifiScanSensorData
 import kaist.iclab.mobiletracker.data.sensors.phone.ConnectivitySensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.DataTrafficSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.DeviceModeSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.MediaSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.MessageLogSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.NotificationSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.ScreenSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.StepSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.UserInteractionSensorData
+import kaist.iclab.mobiletracker.data.sensors.phone.WifiScanSensorData
+import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AmbientLightEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppUsageLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BatteryEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BluetoothScanEntity
 import kaist.iclab.mobiletracker.db.entity.phone.CallLogEntity
-import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
-import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
-import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
-import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
-import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
-import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
-import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
-import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
-import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ConnectivityEntity
+import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
+import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
+import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
+import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
+import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
+import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
+import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
+import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import java.time.Instant
 
 object AmbientLightMapper : EntityToSupabaseMapper<AmbientLightEntity, AmbientLightSensorData> {
     override fun map(entity: AmbientLightEntity, userUuid: String?): AmbientLightSensorData {
@@ -99,7 +99,8 @@ object MessageLogMapper : EntityToSupabaseMapper<MessageLogEntity, MessageLogSen
     }
 }
 
-object UserInteractionMapper : EntityToSupabaseMapper<UserInteractionEntity, UserInteractionSensorData> {
+object UserInteractionMapper :
+    EntityToSupabaseMapper<UserInteractionEntity, UserInteractionSensorData> {
     override fun map(entity: UserInteractionEntity, userUuid: String?): UserInteractionSensorData {
         return UserInteractionSensorData(
             eventId = entity.eventId,
@@ -266,7 +267,7 @@ object ConnectivityMapper : EntityToSupabaseMapper<ConnectivityEntity, Connectiv
 
 object AppListChangeMapper : EntityToSupabaseMapper<AppListChangeEntity, AppListChangeSensorData> {
     private val json = Json { ignoreUnknownKeys = true }
-    
+
     override fun map(entity: AppListChangeEntity, userUuid: String?): AppListChangeSensorData {
         // Parse JSON strings to JsonElement so Supabase stores them as native JSON (not stringified)
         val changedApp: JsonElement? = entity.changedAppJson?.let { jsonString ->
@@ -276,7 +277,7 @@ object AppListChangeMapper : EntityToSupabaseMapper<AppListChangeEntity, AppList
                 null
             }
         }
-        
+
         val appList: JsonElement? = entity.appListJson?.let { jsonString ->
             try {
                 json.parseToJsonElement(jsonString)
@@ -284,7 +285,7 @@ object AppListChangeMapper : EntityToSupabaseMapper<AppListChangeEntity, AppList
                 null
             }
         }
-        
+
         return AppListChangeSensorData(
             eventId = entity.eventId,
             uuid = userUuid,

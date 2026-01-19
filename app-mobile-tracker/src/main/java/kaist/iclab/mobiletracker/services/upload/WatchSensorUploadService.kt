@@ -10,7 +10,7 @@ import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 /**
  * Service for uploading watch sensor data from Room database to Supabase.
  * Uses registry pattern to delegate upload operations to per-sensor handlers.
- * 
+ *
  * Refactored from 234 lines to ~70 lines using SensorUploadHandlerRegistry.
  */
 class WatchSensorUploadService(
@@ -34,8 +34,9 @@ class WatchSensorUploadService(
             return Result.Error(UnsupportedOperationException("Upload not implemented for watch sensor: $sensorId"))
         }
 
-        val lastUploadTimestamp = syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
-        
+        val lastUploadTimestamp =
+            syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
+
         val userUuid = getUserUuid()
         if (userUuid == null) {
             Log.e(TAG, "Cannot upload data: No user UUID available")
@@ -48,6 +49,7 @@ class WatchSensorUploadService(
                     syncTimestampService.updateLastSuccessfulUpload(sensorId, result.data)
                     Result.Success(Unit)
                 }
+
                 is Result.Error -> result
             }
         } catch (e: Exception) {
@@ -62,10 +64,15 @@ class WatchSensorUploadService(
     suspend fun hasDataToUpload(sensorId: String): Boolean {
         return try {
             val handler = handlerRegistry.getHandler(sensorId) ?: return false
-            val lastUploadTimestamp = syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
+            val lastUploadTimestamp =
+                syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
             handler.hasDataToUpload(lastUploadTimestamp)
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking data availability for watch sensor $sensorId: ${e.message}", e)
+            Log.e(
+                TAG,
+                "Error checking data availability for watch sensor $sensorId: ${e.message}",
+                e
+            )
             false
         }
     }
@@ -75,11 +82,11 @@ class WatchSensorUploadService(
      */
     private fun getUserUuid(): String? {
         var userUuid = SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient)
-        
+
         if (userUuid.isNullOrEmpty()) {
             userUuid = syncTimestampService.getCachedUserUuid()
         }
-        
+
         return userUuid?.takeIf { it.isNotEmpty() }
     }
 }

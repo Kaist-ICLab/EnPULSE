@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import kaist.iclab.tracker.listener.AccessibilityListener
 import kaist.iclab.tracker.listener.core.AccessibilityEventInfo
 
-class AccessibilityViewModel: ViewModel() {
+class AccessibilityViewModel : ViewModel() {
     private val accessibilityListener by mutableStateOf(AccessibilityListener())
 
     private val tag = "AccessibilityListenerApp"
@@ -16,8 +16,12 @@ class AccessibilityViewModel: ViewModel() {
     fun addCallback() {
         val count = list.size
         val callback = { event: AccessibilityEventInfo ->
-            when(event){
-                is AccessibilityEventInfo.Event -> Log.v(tag, "Callback $count: Event type ${event.event?.eventType} occurred")
+            when (event) {
+                is AccessibilityEventInfo.Event -> Log.v(
+                    tag,
+                    "Callback $count: Event type ${event.event?.eventType} occurred"
+                )
+
                 else -> Log.v(tag, "Callback $count: Interrupt detected")
             }
             Unit
@@ -28,7 +32,7 @@ class AccessibilityViewModel: ViewModel() {
     }
 
     fun removeCallback() {
-        if(list.size > 0) {
+        if (list.size > 0) {
             val lastCallback = list.last()
             list.remove(lastCallback)
             accessibilityListener.removeListener(lastCallback)

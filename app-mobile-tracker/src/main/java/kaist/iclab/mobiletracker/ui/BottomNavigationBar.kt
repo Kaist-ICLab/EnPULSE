@@ -3,12 +3,11 @@ package kaist.iclab.mobiletracker.ui
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
@@ -23,8 +22,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.theme.AppColors
@@ -39,18 +39,33 @@ fun BottomNavigationBar(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
+
     // Define destinations with localized strings
     val destinations = listOf(
-        Destination(Screen.Data.route, context.getString(R.string.nav_data), Icons.Outlined.Info, Icons.Filled.Info),
-        Destination(Screen.Home.route, context.getString(R.string.nav_home), Icons.Outlined.Home, Icons.Filled.Home),
-        Destination(Screen.Setting.route, context.getString(R.string.nav_settings), Icons.Outlined.Settings, Icons.Filled.Settings)
+        Destination(
+            Screen.Data.route,
+            context.getString(R.string.nav_data),
+            Icons.Outlined.Info,
+            Icons.Filled.Info
+        ),
+        Destination(
+            Screen.Home.route,
+            context.getString(R.string.nav_home),
+            Icons.Outlined.Home,
+            Icons.Filled.Home
+        ),
+        Destination(
+            Screen.Setting.route,
+            context.getString(R.string.nav_settings),
+            Icons.Outlined.Settings,
+            Icons.Filled.Settings
+        )
     )
-    
+
     // Observe current route changes using currentBackStackEntryAsState
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    
+
     // Map sub-routes to their parent tabs
     val subRouteToTabMap = mapOf(
         Screen.Account.route to Screen.Setting.route,
@@ -60,7 +75,7 @@ fun BottomNavigationBar(
         Screen.ServerSync.route to Screen.Setting.route,
         Screen.About.route to Screen.Setting.route
     )
-    
+
     // Determine which tab should be highlighted
     // First check if current route is a root tab, otherwise check if it's a sub-route
     val activeTabRoute = when {
@@ -68,18 +83,18 @@ fun BottomNavigationBar(
         currentRoute in subRouteToTabMap -> subRouteToTabMap[currentRoute]
         else -> null
     }
-    
+
     // Find current destination index
     val currentIndex = activeTabRoute?.let { route ->
         destinations.indexOfFirst { it.route == route }
     } ?: -1
-    
+
     // Manage selected destination state using rememberSaveable
     // Initialize with current route index if found, otherwise default to 0
     var selectedDestination by rememberSaveable {
         mutableIntStateOf(if (currentIndex >= 0) currentIndex else 0)
     }
-    
+
     // Sync selectedDestination with current route when route changes
     LaunchedEffect(currentRoute) {
         if (currentIndex >= 0) {

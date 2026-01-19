@@ -71,7 +71,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
-    
+
     implementation("androidx.compose.material:material:1.9.5")
     implementation("androidx.compose.material:material-icons-extended:1.7.7")
 
@@ -82,7 +82,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.compose.lifecycle.viewmodel)
-    
+
     /* Navigation */
     implementation(libs.compose.navigation)
 
@@ -93,19 +93,19 @@ dependencies {
     implementation(libs.realtime.kt)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.core)
-    
+
     /* Google Authentication (for Supabase Auth) */
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.auth)
     implementation(libs.googleid)
-    
+
     /* Kotlin Serialization */
     implementation(libs.kotlinx.serialization.json)
-    
+
     /* Koin Dependency Injection */
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
-    
+
     // RoomDB
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
@@ -114,8 +114,8 @@ dependencies {
     /* Google Play Services Wearable */
     implementation(libs.android.gms.wearable)
     implementation(libs.kotlinx.coroutines.play.services)
-    
+
     /* Google Play Services Location */
     implementation(libs.android.gms.location)
-    
+
 }

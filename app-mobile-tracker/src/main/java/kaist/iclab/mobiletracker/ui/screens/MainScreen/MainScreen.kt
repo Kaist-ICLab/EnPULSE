@@ -38,10 +38,10 @@ fun MainScreen(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    
+
     // Loading state for Supabase operations
     var isLoading by remember { mutableStateOf(false) }
-    
+
     // Set up loading interceptor callback
     DisposableEffect(Unit) {
         val callback: (Boolean) -> Unit = { loading ->
@@ -50,7 +50,7 @@ fun MainScreen(
             }
         }
         SupabaseLoadingInterceptor.onLoadingStateChanged = callback
-        
+
         onDispose {
             SupabaseLoadingInterceptor.onLoadingStateChanged = null
         }
@@ -79,7 +79,7 @@ fun MainScreen(
                 )
             }
         }
-        
+
         // Loading overlay - placed after Scaffold so it has higher z-index (appears on top of navbar)
         // Shows automatically when Supabase operations are active
         LoadingOverlay(

@@ -11,15 +11,13 @@ import com.couchbase.lite.SelectResult
 import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class CouchbaseSurveyScheduleStorage(
     couchbase: CouchbaseDB,
     collectionName: String,
-): SurveyScheduleStorage {
+) : SurveyScheduleStorage {
     companion object {
         private val TAG = CouchbaseSurveyScheduleStorage::class.simpleName
     }
@@ -28,15 +26,17 @@ class CouchbaseSurveyScheduleStorage(
 
     override fun getNextSchedule(): SurveySchedule? {
         val now = System.currentTimeMillis()
-        val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
-            .from(DataSource.collection(collection))
-            .where(
-                Expression.property("actualTriggerTime").isNotValued().and(
-                    Expression.property("triggerTime").greaterThan(Expression.value(now - TimeUnit.MINUTES.toMillis(5)))
+        val query =
+            QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
+                .from(DataSource.collection(collection))
+                .where(
+                    Expression.property("actualTriggerTime").isNotValued().and(
+                        Expression.property("triggerTime")
+                            .greaterThan(Expression.value(now - TimeUnit.MINUTES.toMillis(5)))
+                    )
                 )
-            )
-            .orderBy(Ordering.property("triggerTime").ascending())
-            .limit(Expression.intValue(1))
+                .orderBy(Ordering.property("triggerTime").ascending())
+                .limit(Expression.intValue(1))
 
         try {
             val result = query.execute().use {
@@ -44,30 +44,34 @@ class CouchbaseSurveyScheduleStorage(
                 val docUuid = result.getString("uuid")!!
 
                 val resultDict = result.getDictionary(collection.name)
-                if(resultDict == null) null else SurveySchedule(
+                if (resultDict == null) null else SurveySchedule(
                     scheduleId = docUuid,
                     surveyId = resultDict.getString("surveyId") ?: "",
                     triggerTime = resultDict.getLong("triggerTime"),
                 )
             }
 
-            if(result != null) Log.d(TAG, "Next Schedule: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
+            if (result != null) Log.d(
+                TAG,
+                "Next Schedule: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}"
+            )
             else Log.d(TAG, "No next schedule today")
 
             return result
 
-        } catch(e: Exception) {
-            if(e is NoSuchElementException) Log.d(TAG, "No next schedule today")
+        } catch (e: Exception) {
+            if (e is NoSuchElementException) Log.d(TAG, "No next schedule today")
             else e.printStackTrace()
             return null
         }
     }
 
     override fun getLastSchedule(): SurveySchedule? {
-        val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
-            .from(DataSource.collection(collection))
-            .orderBy(Ordering.property("triggerTime").descending())
-            .limit(Expression.intValue(1))
+        val query =
+            QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
+                .from(DataSource.collection(collection))
+                .orderBy(Ordering.property("triggerTime").descending())
+                .limit(Expression.intValue(1))
 
         try {
             val result = query.execute().use {
@@ -75,29 +79,33 @@ class CouchbaseSurveyScheduleStorage(
                 val docUuid = result.getString("uuid")!!
 
                 val resultDict = result.getDictionary(collection.name)
-                if(resultDict == null) null else SurveySchedule(
+                if (resultDict == null) null else SurveySchedule(
                     scheduleId = docUuid,
                     surveyId = resultDict.getString("surveyId") ?: "",
                     triggerTime = resultDict.getLong("triggerTime"),
                 )
             }
 
-            if(result != null) Log.d(TAG, "Next Schedule: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
+            if (result != null) Log.d(
+                TAG,
+                "Next Schedule: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}"
+            )
             else Log.d(TAG, "No next schedule today")
 
             return result
 
-        } catch(e: Exception) {
-            if(e is NoSuchElementException) Log.d(TAG, "No next schedule today")
+        } catch (e: Exception) {
+            if (e is NoSuchElementException) Log.d(TAG, "No next schedule today")
             else e.printStackTrace()
             return null
         }
     }
 
     override fun getScheduleByScheduleId(scheduleId: String): SurveySchedule? {
-        val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
-            .from(DataSource.collection(collection))
-            .where(Expression.property("uuid").equalTo(Expression.string(scheduleId)))
+        val query =
+            QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
+                .from(DataSource.collection(collection))
+                .where(Expression.property("uuid").equalTo(Expression.string(scheduleId)))
 
         try {
             val result = query.execute().use {
@@ -117,10 +125,10 @@ class CouchbaseSurveyScheduleStorage(
 
             return result
 
-        } catch(e: NoSuchElementException) {
+        } catch (e: NoSuchElementException) {
             e.printStackTrace()
             return null
-        } catch(e: NullPointerException) {
+        } catch (e: NullPointerException) {
             e.printStackTrace()
             return null
         }
@@ -132,7 +140,7 @@ class CouchbaseSurveyScheduleStorage(
         val mutableDoc = MutableDocument(uuid)
         mutableDoc.apply {
             setString("surveyId", schedule.surveyId)
-            if(schedule.triggerTime != null) setLong("triggerTime", schedule.triggerTime)
+            if (schedule.triggerTime != null) setLong("triggerTime", schedule.triggerTime)
         }
 
         collection.save(mutableDoc)
@@ -162,11 +170,11 @@ class CouchbaseSurveyScheduleStorage(
             .from(DataSource.collection(collection))
 
         query.execute().use {
-            for(result in it) {
+            for (result in it) {
                 val docUuid = result.getString("uuid")!!
                 val docToDelete = collection.getDocument(docUuid)
 
-                if(docToDelete != null) collection.delete(docToDelete)
+                if (docToDelete != null) collection.delete(docToDelete)
             }
         }
     }

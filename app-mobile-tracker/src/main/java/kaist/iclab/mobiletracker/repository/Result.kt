@@ -11,24 +11,24 @@ sealed class Result<out T> {
      * Represents a successful operation with data
      */
     data class Success<T>(val data: T) : Result<T>()
-    
+
     /**
      * Represents a failed operation with an error
      */
     data class Error(val exception: Throwable) : Result<Nothing>() {
         val message: String get() = exception.message ?: "Unknown error"
     }
-    
+
     /**
      * Returns true if the result is a success
      */
     val isSuccess: Boolean get() = this is Success
-    
+
     /**
      * Returns true if the result is an error
      */
     val isError: Boolean get() = this is Error
-    
+
     /**
      * Gets the data if successful, null otherwise
      */
@@ -36,7 +36,7 @@ sealed class Result<out T> {
         is Success -> data
         is Error -> null
     }
-    
+
     /**
      * Gets the exception if error, null otherwise
      */

@@ -60,16 +60,16 @@ class MainActivity : ComponentActivity() {
         val authViewModel: AuthViewModel = koinViewModel(
             parameters = { parametersOf(this@MainActivity, serverClientId) }
         )
-        
+
         val userState by authViewModel.userState.collectAsState()
         val startDestination = if (userState.isLoggedIn) {
             Screen.Home.route
         } else {
             Screen.Login.route
         }
-        
+
         val navController = rememberNavController()
-        
+
         MainScreen(
             navController = navController,
             authViewModel = authViewModel,
@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
             permissionManager = permissionManager
         )
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         bleHelper.cleanup()

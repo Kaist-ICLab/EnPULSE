@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.Flow
  * - Watch sensors: Works directly with LocationEntity (from CSV parsing)
  */
 @Dao
-interface LocationDao: BaseDao<LocationSensor.Entity, LocationEntity> {
-    
+interface LocationDao : BaseDao<LocationSensor.Entity, LocationEntity> {
+
     // Methods for phone sensors (converting from LocationSensor.Entity)
     override suspend fun insert(sensorEntity: LocationSensor.Entity, userUuid: String?) {
         val entity = LocationEntity(
@@ -76,7 +76,10 @@ interface LocationDao: BaseDao<LocationSensor.Entity, LocationEntity> {
 
     // Device-specific query methods
     @Query("SELECT * FROM location WHERE deviceType = :deviceType AND timestamp > :afterTimestamp ORDER BY timestamp ASC")
-    suspend fun getDataAfterTimestampByDeviceType(afterTimestamp: Long, deviceType: Int): List<LocationEntity>
+    suspend fun getDataAfterTimestampByDeviceType(
+        afterTimestamp: Long,
+        deviceType: Int
+    ): List<LocationEntity>
 
     @Query("SELECT MAX(timestamp) FROM location")
     override suspend fun getLatestTimestamp(): Long?
@@ -94,7 +97,12 @@ interface LocationDao: BaseDao<LocationSensor.Entity, LocationEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM location WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<LocationEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<LocationEntity>
 
     @Query("DELETE FROM location WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

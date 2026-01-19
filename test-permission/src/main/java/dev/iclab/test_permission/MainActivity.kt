@@ -3,10 +3,6 @@ package dev.iclab.test_permission
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import dev.iclab.test_permission.ui.theme.AndroidtrackerTheme
-import kaist.iclab.tracker.permission.AndroidPermissionManager
-import kaist.iclab.tracker.permission.PermissionManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,10 +15,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dev.iclab.test_permission.ui.theme.AndroidtrackerTheme
+import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.permission.Permission
+import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.permission.PermissionState
 
 
@@ -50,7 +50,9 @@ fun PermissionScreen(permissionManager: PermissionManager) {
     // Permissions are automatically registered when getPermissionFlow() is called
     val permissionStateMap = permissionManager.getPermissionFlow(permissions).collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)) {
         Text("Permissions", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -59,7 +61,8 @@ fun PermissionScreen(permissionManager: PermissionManager) {
                 val permission = Permission.supportedPermissions[idx]
                 PermissionItem(
                     permission = permission,
-                    state = permissionStateMap.value[permission.ids.first()] ?: PermissionState.NOT_REQUESTED,
+                    state = permissionStateMap.value[permission.ids.first()]
+                        ?: PermissionState.NOT_REQUESTED,
                     onRequest = { permissionManager.request(permission.ids) }
                 )
             }
@@ -74,7 +77,9 @@ fun PermissionItem(
     onRequest: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

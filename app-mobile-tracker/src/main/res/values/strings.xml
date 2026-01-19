@@ -1,12 +1,12 @@
 <resources>
     <string name="app_name">EnPULSE</string>
     <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
-    
+
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_data">Data</string>
     <string name="nav_settings">Settings</string>
-    
+
     <!-- Home Screen -->
     <string name="home_hello">Hello, %1$s!</string>
     <string name="home_greeting_subtitle">Here is your data collection for today.</string>
@@ -30,29 +30,29 @@
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="start_sensors">Start Sensors</string>
     <string name="stop_sensors">Stop Sensors</string>
-    
+
     <!-- Enable Tracker -->
     <string name="enable_tracker_title">Start Data Collection</string>
     <string name="enable_tracker_description">Start or stop sensor data collection</string>
-    
+
     <!-- Logout Dialog -->
     <string name="logout_title">Logout</string>
     <string name="logout_message">All unbacked-up data will be deleted.\nDo you still want to proceed?</string>
     <string name="logout_confirm">Confirm</string>
     <string name="logout_close">Close</string>
-    
+
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE Logo</string>
     <string name="language_english">English</string>
     <string name="language_korean">한국어</string>
-    
+
     <!-- Settings Menu -->
     <string name="menu_account">Account</string>
     <string name="menu_campaign">Campaign</string>
     <string name="campaign_no_campaign_joined">No campaign participation</string>
     <string name="menu_language">Language</string>
-    
+
     <!-- Campaign Dialog -->
     <string name="campaign_dialog_title">Experiment Group</string>
     <string name="campaign_dialog_select">Select</string>
@@ -62,7 +62,7 @@
     <string name="menu_server_sync">Automatic Sync</string>
     <string name="menu_survey">Survey</string>
     <string name="menu_about">About</string>
-    
+
     <!-- Language Screen -->
     <string name="language_english_full">English (United States)</string>
     <string name="language_korean_full">한국어 (대한민국)</string>
@@ -71,7 +71,7 @@
     <string name="permission_screen_description">View and manage app permissions. Toggle permissions on or off to control what data the app can access.</string>
     <string name="auto_sync_screen_description">Configure automatic data synchronization to the server. Set the sync interval and network preferences.</string>
     <string name="survey_screen_description">View and manage survey configurations. Tap on a survey to edit trigger conditions and question settings.</string>
-    
+
     <!-- Permission Names -->
     <string name="permission_name_notifications">Notifications</string>
     <string name="permission_name_location">Location</string>
@@ -90,7 +90,7 @@
     <string name="permission_name_usage_stats">Usage Stats</string>
     <string name="permission_name_activity_recognition">Activity Recognition</string>
     <string name="permission_name_steps">Physical Activity (Steps)</string>
-    
+
     <!-- Permission Descriptions -->
     <string name="permission_desc_notifications">Allow app to send notifications</string>
     <string name="permission_desc_location">Access device location data</string>
@@ -109,23 +109,23 @@
     <string name="permission_desc_notification_listener">Read notification content</string>
     <string name="permission_desc_usage_stats">Collect app usage statistics</string>
     <string name="permission_desc_steps">Read step count data</string>
-    
+
     <!-- Permission Status -->
     <string name="permission_status_granted">Granted</string>
     <string name="permission_status_denied">Denied</string>
     <string name="permission_status_waiting">Not Requested</string>
     <string name="permission_status_unsupported">Device not supported</string>
     <string name="permission_status_not_fully_granted">Not fully granted</string>
-    
+
     <!-- Placeholder Screens -->
-    
+
     <!-- Data Screen -->
     <string name="data_screen_title">Collected Data</string>
     <string name="data_screen_description">View and manage all sensor data collected from your mobile and wearable devices.</string>
     <string name="data_screen_subtitle">Total %1$d Records</string>
     <string name="data_screen_refresh">Refresh</string>
     <string name="data_screen_no_data">No data collected yet</string>
-    
+
     <!-- Sensor Detail Screen -->
     <string name="sensor_detail_back">Back</string>
     <string name="sensor_detail_summary">Summary</string>
@@ -154,7 +154,7 @@
     <string name="sensor_detail_delete_cancel">Cancel</string>
     <string name="record_deleted_success">Record deleted from device and server</string>
     <string name="record_deleted_error">Failed to delete record</string>
-    
+
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">Light sensor data</string>
     <string name="sensor_desc_app_list_change">App installation changes</string>
@@ -174,14 +174,14 @@
     <string name="sensor_desc_user_interaction">User touch events</string>
     <string name="sensor_desc_wifi">WiFi connection status</string>
     <string name="sensor_desc_default">Sensor data collection</string>
-    
+
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">Data collection is running in the background</string>
-    
+
     <!-- Phone Sensor Screen -->
     <string name="turn_off_data_collection_first">Please turn off the data collection first to continue</string>
-    
+
     <!-- Data &amp; Sync Management Screen -->
     <string name="sync_current_time">Current Time</string>
     <string name="sync_last_watch_data">Last Watch Data Received</string>
@@ -213,7 +213,7 @@
     <string name="sync_clear_data_message">All local sensor data will be deleted. Data already uploaded to the server will not be affected.\n\nThis action cannot be undone.</string>
     <string name="sync_clear_data_confirm">Clear</string>
     <string name="sync_clear_data_cancel">Cancel</string>
-    
+
     <!-- Sensor Sync Status -->
     <string name="sensor_upload_data">Upload Data</string>
     <string name="sensor_delete_data">Delete Local Data</string>
@@ -245,7 +245,7 @@
     <string name="sensor_last_received_phone">Last received to phone</string>
     <string name="sensor_last_recorded_data">Last recorded data</string>
     <string name="sensor_record_count">Number of records</string>
-    
+
     <!-- Toast Messages -->
     <string name="toast_experiment_group_selected">Experiment group selected successfully</string>
     <string name="toast_data_deleted">Data deleted successfully</string>
@@ -262,7 +262,7 @@
     <string name="toast_no_data_to_export">No data to export</string>
     <string name="toast_export_failed">Failed to export data</string>
     <string name="sensor_export_csv">Export CSV</string>
-    
+
     <!-- Pagination -->
     <string name="pagination_page_format">Page %1$d / %2$d</string>
     <string name="pagination_previous">Previous Page</string>

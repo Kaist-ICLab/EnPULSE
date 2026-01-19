@@ -13,8 +13,8 @@ import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.serialization.Serializable
-import java.util.UUID
 import java.lang.ref.WeakReference
+import java.util.UUID
 
 class UserInteractionSensor(
     permissionManager: PermissionManager,
@@ -25,7 +25,7 @@ class UserInteractionSensor(
 ) {
     companion object {
         var instance: WeakReference<UserInteractionSensor>? = null
-        
+
         // Event types to filter out (noisy events)
         private val FILTERED_EVENT_TYPES = setOf(
             AccessibilityEvent.TYPE_VIEW_SCROLLED,           // 4096 - very noisy during scrolling
@@ -39,7 +39,7 @@ class UserInteractionSensor(
     }
 
     /*No attribute required... can not be data class*/
-    class Config: SensorConfig
+    class Config : SensorConfig
 
     @Serializable
     data class Entity(
@@ -64,20 +64,20 @@ class UserInteractionSensor(
     private val accessibilityListener = AccessibilityListener()
 
     private val mainCallback = mainCallback@{ e: AccessibilityEventInfo ->
-        if(e is AccessibilityEventInfo.Interrupt) return@mainCallback // Ignore interrupts
+        if (e is AccessibilityEventInfo.Interrupt) return@mainCallback // Ignore interrupts
         val event = e as AccessibilityEventInfo.Event
 
         event.event?.let { accessibilityEvent ->
             val pkg = accessibilityEvent.packageName
             val cls = accessibilityEvent.className
             val eventType = accessibilityEvent.eventType
-            
+
             // Filter out noisy event types
             if (eventType in FILTERED_EVENT_TYPES) return@mainCallback
-            
+
             if (pkg != null && cls != null) {
                 val timestamp = System.currentTimeMillis()
-                
+
                 // Emit the event to all listeners
                 listeners.forEach { listener ->
                     listener.invoke(

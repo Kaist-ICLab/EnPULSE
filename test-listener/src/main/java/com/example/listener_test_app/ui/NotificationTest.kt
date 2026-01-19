@@ -40,12 +40,13 @@ fun NotificationTest(
             viewModel.addCallback()
             Toast.makeText(context, "Callback added!", Toast.LENGTH_SHORT).show()
         },
-        removeCallback =  {
+        removeCallback = {
             viewModel.removeCallback()
             Toast.makeText(context, "Callback removed!", Toast.LENGTH_SHORT).show()
         },
         postNotification = {
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             val channelId = "test_channel"
 
             val channel = NotificationChannel(

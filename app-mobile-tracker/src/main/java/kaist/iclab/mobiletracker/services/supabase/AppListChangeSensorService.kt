@@ -15,16 +15,16 @@ class AppListChangeSensorService(
     tableName = AppConfig.SupabaseTables.APP_LIST_CHANGE_SENSOR,
     sensorName = "App List Change"
 ) {
-    
+
     override fun prepareData(data: AppListChangeSensorData): AppListChangeSensorData {
         // Don't override UUID - it should already be set to user UUID
         return data
     }
-    
+
     suspend fun insertAppListChangeSensorData(data: AppListChangeSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertAppListChangeSensorDataBatch(dataList: List<AppListChangeSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

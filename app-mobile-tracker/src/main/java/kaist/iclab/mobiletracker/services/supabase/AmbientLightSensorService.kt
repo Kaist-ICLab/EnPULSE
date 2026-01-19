@@ -15,16 +15,16 @@ class AmbientLightSensorService(
     tableName = AppConfig.SupabaseTables.AMBIENT_LIGHT_SENSOR,
     sensorName = "Ambient Light"
 ) {
-    
+
     override fun prepareData(data: AmbientLightSensorData): AmbientLightSensorData {
         // Don't override UUID - it should already be set to user UUID
         return data
     }
-    
+
     suspend fun insertAmbientLightSensorData(data: AmbientLightSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertAmbientLightSensorDataBatch(dataList: List<AmbientLightSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

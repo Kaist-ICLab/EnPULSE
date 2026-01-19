@@ -6,21 +6,20 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
-import kotlin.collections.mapOf
 
 class CheckboxQuestion(
     override val question: String,
     override val isMandatory: Boolean,
     val option: List<Option>,
     questionTrigger: List<QuestionTrigger<Set<String>>>? = null
-): Question<Set<String>>(
+) : Question<Set<String>>(
     question, isMandatory, setOf(), questionTrigger
 ) {
     private val _otherResponse = MutableStateFlow<Map<String, String>>(mapOf())
     val otherResponse = _otherResponse.asStateFlow()
 
     init {
-        _otherResponse.value = option.filter {it.allowFreeResponse }.associate { it.value to "" }
+        _otherResponse.value = option.filter { it.allowFreeResponse }.associate { it.value to "" }
     }
 
     override fun isAllowedResponse(response: Set<String>): Boolean {
@@ -33,7 +32,7 @@ class CheckboxQuestion(
     fun toggleResponse(responseItem: String, isChecked: Boolean) {
         val newResponse = this.response.value.toMutableSet()
         newResponse.apply {
-            if(isChecked) add(responseItem)
+            if (isChecked) add(responseItem)
             else remove(responseItem)
         }
 
@@ -54,7 +53,10 @@ class CheckboxQuestion(
                 response.value.forEach {
                     add(buildJsonObject {
                         put("value", it)
-                        if(it in otherResponse.value.keys) put("otherResponse", otherResponse.value[it])
+                        if (it in otherResponse.value.keys) put(
+                            "otherResponse",
+                            otherResponse.value[it]
+                        )
                     })
                 }
             }
@@ -65,6 +67,6 @@ class CheckboxQuestion(
 
     override fun initResponse() {
         setResponse(setOf())
-        _otherResponse.value = option.filter {it.allowFreeResponse }.associate { it.value to "" }
+        _otherResponse.value = option.filter { it.allowFreeResponse }.associate { it.value to "" }
     }
 }

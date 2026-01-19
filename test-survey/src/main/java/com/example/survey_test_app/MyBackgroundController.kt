@@ -5,8 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.app.Service.START_STICKY
-import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -22,11 +20,9 @@ import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
-import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.android.ext.android.inject
 import org.koin.core.qualifier.named
-import kotlin.collections.forEach
 
 class MyBackgroundController(
     private val context: Context,
@@ -188,7 +184,8 @@ class MyBackgroundController(
 
         private fun ensureNotificationChannel(channelId: String) {
             try {
-                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val notificationManager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel(channelId) == null) {
                     val channelName = try {
                         serviceNotification.channelName
@@ -210,9 +207,11 @@ class MyBackgroundController(
         private fun buildNotification(props: NotificationProperties): android.app.Notification {
             // Create intent to open the app's main launcher activity
             val packageName = this.applicationContext.packageName
-            val launchIntent = this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
+            val launchIntent =
+                this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
             val pendingIntent = if (launchIntent != null) {
-                launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                launchIntent.flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 PendingIntent.getActivity(
                     this.applicationContext,
                     0,
@@ -240,11 +239,12 @@ class MyBackgroundController(
         }
 
         private fun getServiceType(): Int {
-            val defaultServiceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            } else {
-                0
-            }
+            val defaultServiceType =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                } else {
+                    0
+                }
 
             return try {
                 requiredForegroundServiceType()
@@ -255,7 +255,8 @@ class MyBackgroundController(
 
         private fun postEmergencyNotification() {
             try {
-                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val notificationManager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel("default_channel") == null) {
                     val channel = NotificationChannel(
                         "default_channel",
@@ -267,9 +268,11 @@ class MyBackgroundController(
 
                 // Create intent to open the app's main launcher activity
                 val packageName = this.applicationContext.packageName
-                val launchIntent = this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
+                val launchIntent =
+                    this.applicationContext.packageManager.getLaunchIntentForPackage(packageName)
                 val pendingIntent = if (launchIntent != null) {
-                    launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    launchIntent.flags =
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     PendingIntent.getActivity(
                         this.applicationContext,
                         0,
@@ -295,11 +298,12 @@ class MyBackgroundController(
 
                 val notification = builder.build()
 
-                val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                } else {
-                    0
-                }
+                val serviceType =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                    } else {
+                        0
+                    }
                 this.startForeground(1, notification, serviceType)
             } catch (e: Exception) {
                 // Failed to post emergency notification

@@ -18,28 +18,28 @@ class SamsungHealthSensorInitializer(context: Context) {
     }
 
     val connectionStateFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    
+
     // SDK Policy Error state - true when dev mode is not enabled on Health Platform
     private val _sdkPolicyErrorStateFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val sdkPolicyErrorStateFlow: StateFlow<Boolean> = _sdkPolicyErrorStateFlow
-    
+
     private val connectionListener: ConnectionListener =
-            object : ConnectionListener {
-                override fun onConnectionSuccess() {
-                    Log.d(TAG, "Connection Success")
-                    connectionStateFlow.value = true
-                }
-
-                override fun onConnectionEnded() {
-                    connectionStateFlow.value = false
-                    Log.d(TAG, "Connection Ended")
-                }
-
-                override fun onConnectionFailed(e: HealthTrackerException?) {
-                    connectionStateFlow.value = false
-                    Log.e(TAG, "Connection Failed: $e")
-                }
+        object : ConnectionListener {
+            override fun onConnectionSuccess() {
+                Log.d(TAG, "Connection Success")
+                connectionStateFlow.value = true
             }
+
+            override fun onConnectionEnded() {
+                connectionStateFlow.value = false
+                Log.d(TAG, "Connection Ended")
+            }
+
+            override fun onConnectionFailed(e: HealthTrackerException?) {
+                connectionStateFlow.value = false
+                Log.e(TAG, "Connection Failed: $e")
+            }
+        }
 
     private val healthTrackingService = HealthTrackingService(connectionListener, context)
 
@@ -50,6 +50,7 @@ class SamsungHealthSensorInitializer(context: Context) {
     fun getTracker(trackerType: HealthTrackerType): HealthTracker {
         return healthTrackingService.getHealthTracker(trackerType)
     }
+
     fun getTracker(trackerType: HealthTrackerType, ppgsets: Set<PpgType>): HealthTracker {
         return healthTrackingService.getHealthTracker(trackerType, ppgsets)
     }
@@ -58,14 +59,14 @@ class SamsungHealthSensorInitializer(context: Context) {
         val supportedTrackers = healthTrackingService.trackingCapability.supportHealthTrackerTypes
         return trackerType in supportedTrackers
     }
-    
+
     /**
      * Report SDK Policy Error. Called from DataListener when it receives this error.
      */
     fun reportSdkPolicyError() {
         _sdkPolicyErrorStateFlow.value = true
     }
-    
+
     /**
      * Clear SDK Policy Error. Called when user dismisses or retries.
      */
@@ -85,18 +86,20 @@ class SamsungHealthSensorInitializer(context: Context) {
         private val callback: (MutableList<DataPoint>) -> Unit
     ) : HealthTracker.TrackerEventListener {
         override fun onDataReceived(dataPoints: MutableList<DataPoint>) {
-           callback(dataPoints)
+            callback(dataPoints)
         }
 
         override fun onError(trackerError: HealthTracker.TrackerError) {
             Log.d(javaClass.simpleName, "onError")
             when (trackerError) {
                 HealthTracker.TrackerError.PERMISSION_ERROR ->
-                        Log.e(javaClass.simpleName, "ERROR: Permission Failed")
+                    Log.e(javaClass.simpleName, "ERROR: Permission Failed")
+
                 HealthTracker.TrackerError.SDK_POLICY_ERROR -> {
-                        Log.e(javaClass.simpleName, "ERROR: SDK Policy Error")
-                        initializer?.reportSdkPolicyError()
+                    Log.e(javaClass.simpleName, "ERROR: SDK Policy Error")
+                    initializer?.reportSdkPolicyError()
                 }
+
                 else -> Log.e(javaClass.simpleName, "ERROR: Unknown ${trackerError.name}")
             }
         }

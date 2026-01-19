@@ -1,7 +1,7 @@
 package kaist.iclab.tracker.ui
 
-class FakeMainViewModelImpl: AbstractMainViewModel() {
-    companion object{
+class FakeMainViewModelImpl : AbstractMainViewModel() {
+    companion object {
         const val TAG = "FakeMainViewModel"
     }
 
@@ -12,6 +12,7 @@ class FakeMainViewModelImpl: AbstractMainViewModel() {
     override fun start() {
         _isRunningState.value = true
     }
+
     override val collectorList: List<String>
         get() = listOf("HR/IBI", "PPG", "ACC", "SkinTemp")
 

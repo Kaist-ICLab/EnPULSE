@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.helpers
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.content.res.Resources
 import java.util.Locale
 
 /**
@@ -11,19 +10,19 @@ import java.util.Locale
  * Handles saving and applying language preferences.
  */
 class LanguageHelper(private val context: Context) {
-    
+
     companion object {
         private const val PREFS_NAME = "language_preferences"
         private const val KEY_LANGUAGE = "selected_language"
         private const val LANGUAGE_ENGLISH = "en"
         private const val LANGUAGE_KOREAN = "ko"
     }
-    
+
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
         PREFS_NAME,
         Context.MODE_PRIVATE
     )
-    
+
     /**
      * Save selected language preference
      */
@@ -32,7 +31,7 @@ class LanguageHelper(private val context: Context) {
             .putString(KEY_LANGUAGE, language)
             .apply()
     }
-    
+
     /**
      * Get saved language preference
      * @return Language code (en or ko), defaults to device language or "en"
@@ -44,14 +43,14 @@ class LanguageHelper(private val context: Context) {
             if (deviceLang == "ko") LANGUAGE_KOREAN else LANGUAGE_ENGLISH
         }
     }
-    
+
     /**
      * Create a Locale from language code
      */
     private fun createLocale(language: String): Locale {
         return Locale.Builder().setLanguage(language).build()
     }
-    
+
     /**
      * Apply language to the context and return new context with updated locale
      */
@@ -59,13 +58,13 @@ class LanguageHelper(private val context: Context) {
         val language = getLanguage()
         val locale = createLocale(language)
         Locale.setDefault(locale)
-        
+
         val config = Configuration(context.resources.configuration)
         config.setLocale(locale)
-        
+
         return context.createConfigurationContext(config)
     }
-    
+
     /**
      * Apply language to base context for attachBaseContext
      * Used in Application and Activity classes
@@ -74,13 +73,13 @@ class LanguageHelper(private val context: Context) {
         val language = getLanguage()
         val locale = createLocale(language)
         Locale.setDefault(locale)
-        
+
         val config = Configuration(base.resources.configuration)
         config.setLocale(locale)
-        
+
         return base.createConfigurationContext(config)
     }
-    
+
     /**
      * Get language display name
      */
@@ -91,14 +90,14 @@ class LanguageHelper(private val context: Context) {
             else -> "English"
         }
     }
-    
+
     /**
      * Check if current language is Korean
      */
     fun isKorean(): Boolean {
         return getLanguage() == LANGUAGE_KOREAN
     }
-    
+
     /**
      * Toggle between English and Korean
      */

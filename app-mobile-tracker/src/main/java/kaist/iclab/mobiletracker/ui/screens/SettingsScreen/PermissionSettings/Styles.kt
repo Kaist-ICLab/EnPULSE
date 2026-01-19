@@ -13,10 +13,10 @@ object Styles {
     val STATUS_TEXT_FONT_SIZE = 13.sp
     val STATUS_TEXT_LINE_HEIGHT = 16.sp
     val STATUS_TOP_PADDING = 3.dp
-    
+
     // Screen-specific spacing
     val SETTING_CONTAINER_BOTTOM_PADDING = 16.dp
-    
+
     // Common styles (delegated to shared styles)
     val CARD_CORNER_RADIUS = CommonStyles.CARD_CORNER_RADIUS
     val CARD_VERTICAL_PADDING = CommonStyles.CARD_VERTICAL_PADDING

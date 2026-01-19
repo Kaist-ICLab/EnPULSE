@@ -11,32 +11,32 @@ object AppColors {
     val White = Color.White
     val Transparent = Color.Transparent
     val Background = Color(0xFFF1F1F3) // Neutral gray background
-    
+
     // Primary color
     val PrimaryColor = Color(0xFF3B82F6) // Primary blue color
     val SecondaryColor = Color(0xFF10B981) // Secondary green color (Emerald 500)
-    
+
     // Navigation bar colors
     val NavigationBarUnselected = Color(0xFF6B7280) // Gray for unselected
-    
+
     // Switch/Toggle colors
     val SwitchOff = Color(0xFF696969) // Gray for toggle off (enabled but unchecked)
     val SwitchDisabled = Color(0xFFD1D5DB) // Light gray for disabled toggle (lighter/more faded)
-    
+
     // Text colors
     val TextPrimary = Color.Black // Black text color
     val TextSecondary = Color(0xFF9CA3AF) // Light gray text color
-    
+
     // Border colors
     val BorderLight = Color(0xFFE0E0E0) // Light gray border
     val BorderDark = Color(0xFFB0B0B0) // Darker gray border
-    
+
     // Google Sign-In button colors
     val GoogleBlue = Color(0xFF4285F4)
     val GoogleRed = Color(0xFFEA4335)
     val GoogleYellow = Color(0xFFFBBC04)
     val GoogleGreen = Color(0xFF34A853)
-    
+
     // Permission status colors
     val ErrorColor = Color(0xFFDC2626) // Red color for error/denied states
 
@@ -71,7 +71,7 @@ object AppColors {
     fun getSensorColor(sensorId: String): Color {
         // Normalize by removing spaces to handle both "AmbientLight" and "Ambient Light"
         val normalizedId = sensorId.replace(" ", "")
-        
+
         return when (normalizedId) {
             // Phone Sensors
             "AmbientLight" -> ColorAmbientLight

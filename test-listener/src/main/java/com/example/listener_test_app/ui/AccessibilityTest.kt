@@ -36,7 +36,7 @@ fun AccessibilityTest(
             viewModel.addCallback()
             Toast.makeText(context, "Callback added!", Toast.LENGTH_SHORT).show()
         },
-        removeCallback =  {
+        removeCallback = {
             viewModel.removeCallback()
             Toast.makeText(context, "Callback removed!", Toast.LENGTH_SHORT).show()
         },

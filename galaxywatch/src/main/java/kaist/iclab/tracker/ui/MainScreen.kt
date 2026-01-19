@@ -57,7 +57,7 @@ fun MainScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     items(listOf("controller") + collectorConfig.keys.toList()) { name ->
-                        when(name){
+                        when (name) {
                             "controller" -> Controller(isRunning = isRunning)
                             else -> BasicToggleChip(
                                 modifier = Modifier.fillMaxWidth(),
@@ -94,7 +94,7 @@ fun Controller(
         )
         BasicIconButton(
             onClick = { /* TODO */ },
-            imageVector = if(isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+            imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
             contentDescription = "Play/Pause recording of data",
             modifier = Modifier.size(ButtonDefaults.DefaultButtonSize),
             iconModifier = Modifier.size(ButtonDefaults.LargeIconSize)
@@ -108,7 +108,6 @@ fun Controller(
         )
     }
 }
-
 
 
 //@WearPreviewSmallRound

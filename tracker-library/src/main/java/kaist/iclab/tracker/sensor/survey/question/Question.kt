@@ -50,7 +50,7 @@ sealed class Question<T>(
     }
 
     fun setResponse(response: T) {
-        if(!isAllowedResponse(response)) throw IllegalArgumentException("Invalid response value: $response")
+        if (!isAllowedResponse(response)) throw IllegalArgumentException("Invalid response value: $response")
         _response.value = response
     }
 
@@ -60,22 +60,38 @@ sealed class Question<T>(
     abstract fun initResponse()
 
     private fun setIsValid() {
-        if(isHidden.value || !isMandatory) _isValid.value = true
+        if (isHidden.value || !isMandatory) _isValid.value = true
         else _isValid.value = !isEmpty(response.value)
     }
 
     private fun eval(expr: Expression<T>, value: T): Boolean {
-        return when(expr) {
-            is ValueComparator<T> -> when(expr) {
+        return when (expr) {
+            is ValueComparator<T> -> when (expr) {
                 is ValueComparator.Equal<T> -> expr.value == value
-                is ValueComparator.GreaterThan<T> -> compareValuesAny(value, expr.value)?.let { it > 0 } ?: false
-                is ValueComparator.GreaterThanOrEqual<T> -> compareValuesAny(value, expr.value)?.let { it >= 0 } ?: false
-                is ValueComparator.LessThan<T> -> compareValuesAny(value, expr.value)?.let { it < 0 } ?: false
-                is ValueComparator.LessThanOrEqual<T> -> compareValuesAny(value, expr.value)?.let { it <= 0 } ?: false
+                is ValueComparator.GreaterThan<T> -> compareValuesAny(
+                    value,
+                    expr.value
+                )?.let { it > 0 } ?: false
+
+                is ValueComparator.GreaterThanOrEqual<T> -> compareValuesAny(
+                    value,
+                    expr.value
+                )?.let { it >= 0 } ?: false
+
+                is ValueComparator.LessThan<T> -> compareValuesAny(
+                    value,
+                    expr.value
+                )?.let { it < 0 } ?: false
+
+                is ValueComparator.LessThanOrEqual<T> -> compareValuesAny(
+                    value,
+                    expr.value
+                )?.let { it <= 0 } ?: false
+
                 is ValueComparator.NotEqual<T> -> expr.value != value
             }
 
-            is Operator<T> -> when(expr) {
+            is Operator<T> -> when (expr) {
                 is Operator.And<T> -> eval(expr.a, value) && eval(expr.b, value)
                 is Operator.Not<T> -> !eval(expr.a, value)
                 is Operator.Or<T> -> eval(expr.a, value) || eval(expr.b, value)

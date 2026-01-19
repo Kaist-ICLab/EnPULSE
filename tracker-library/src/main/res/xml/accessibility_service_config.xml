@@ -1,15 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo#attr_android:accessibilityFlags
+<?xml version="1.0" encoding="utf-8"?><!-- https://developer.android.com/reference/android/accessibilityservice/AccessibilityServiceInfo#attr_android:accessibilityFlags
 typeTouchInteractionStart|typeViewAccessibilityFocused|typeWindowContentChanged|typeWindowStateChanged|typeWindowsChanged
 android:accessibilityEventTypes="typeViewClicked|typeViewFocused|typeViewLongClicked|typeViewSelected|typeViewTextChanged|typeViewTextSelectionChanged"
     android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews|flagReportViewIds|flagRequestFilterKeyEvents|flagRequestFingerprintGestures|flagRequestTouchExplorationMode|flagRetrieveInteractiveWindows"
 -->
-<accessibility-service
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeViewTextChanged|typeViewTextSelectionChanged|typeViewFocused|typeWindowContentChanged|typeWindowStateChanged|typeWindowsChanged"
-    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews|flagReportViewIds|flagRequestFilterKeyEvents"
     android:accessibilityFeedbackType="feedbackAllMask"
-    android:notificationTimeout="0"
-    android:canRetrieveWindowContent="true"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows|flagIncludeNotImportantViews|flagReportViewIds|flagRequestFilterKeyEvents"
     android:canRequestFilterKeyEvents="true"
-    android:canRequestTouchExplorationMode="true" />
+    android:canRequestTouchExplorationMode="true"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="0" />

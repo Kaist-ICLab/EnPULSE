@@ -1,12 +1,12 @@
 <resources>
     <string name="app_name">EnPULSE</string>
     <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
-    
+
     <!-- Navigation -->
     <string name="nav_home">홈</string>
     <string name="nav_data">데이터</string>
     <string name="nav_settings">설정</string>
-    
+
     <!-- Home Screen -->
     <string name="home_hello">안녕하세요, %1$s님!</string>
     <string name="home_greeting_subtitle">오늘의 데이터 수집 현황입니다.</string>
@@ -30,29 +30,29 @@
     <string name="sign_in_with_google">Google로 로그인</string>
     <string name="start_sensors">센서 시작</string>
     <string name="stop_sensors">센서 중지</string>
-    
+
     <!-- Enable Tracker -->
     <string name="enable_tracker_title">데이터 수집 시작</string>
     <string name="enable_tracker_description">센서 데이터 수집 시작 또는 중지</string>
-    
+
     <!-- Logout Dialog -->
     <string name="logout_title">로그아웃</string>
     <string name="logout_message">백업하지 않은 데이터는 모두 삭제됩니다.\n그래도 계속하시겠습니까?</string>
     <string name="logout_confirm">확인</string>
     <string name="logout_close">닫기</string>
-    
+
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE 로고</string>
     <string name="language_english">English</string>
     <string name="language_korean">한국어</string>
-    
+
     <!-- Settings Menu -->
     <string name="menu_account">계정</string>
     <string name="menu_campaign">캠페인</string>
     <string name="campaign_no_campaign_joined">캠페인 참여 없음</string>
     <string name="menu_language">언어</string>
-    
+
     <!-- Campaign Dialog -->
     <string name="campaign_dialog_title">실험 그룹</string>
     <string name="campaign_dialog_select">선택</string>
@@ -62,7 +62,7 @@
     <string name="menu_server_sync">자동 동기화</string>
     <string name="menu_survey">설문</string>
     <string name="menu_about">정보</string>
-    
+
     <!-- Language Screen -->
     <string name="language_english_full">English (United States)</string>
     <string name="language_korean_full">한국어 (대한민국)</string>
@@ -71,7 +71,7 @@
     <string name="permission_screen_description">앱 권한을 보기 및 관리하세요. 권한을 켜거나 끄면 앱이 액세스할 수 있는 데이터를 제어할 수 있습니다.</string>
     <string name="auto_sync_screen_description">서버에 자동으로 데이터를 동기화하도록 구성합니다. 동기화 간격과 네트워크 설정을 지정하세요.</string>
     <string name="survey_screen_description">설문 구성을 보고 관리합니다. 설문을 탭하여 트리거 조건과 질문 설정을 편집하세요.</string>
-    
+
     <!-- Permission Names -->
     <string name="permission_name_notifications">알림</string>
     <string name="permission_name_location">위치</string>
@@ -90,7 +90,7 @@
     <string name="permission_name_usage_stats">사용 통계</string>
     <string name="permission_name_activity_recognition">신체 활동 인식</string>
     <string name="permission_name_steps">신체 활동 (걸음 수)</string>
-    
+
     <!-- Permission Descriptions -->
     <string name="permission_desc_notifications">앱이 알림을 보낼 수 있도록 허용</string>
     <string name="permission_desc_location">기기 위치 데이터 액세스</string>
@@ -109,23 +109,23 @@
     <string name="permission_desc_notification_listener">알림 내용 읽기</string>
     <string name="permission_desc_usage_stats">앱 사용 통계 수집</string>
     <string name="permission_desc_steps">걸음 수 데이터 읽기</string>
-    
+
     <!-- Permission Status -->
     <string name="permission_status_granted">허용됨</string>
     <string name="permission_status_denied">거부됨</string>
     <string name="permission_status_waiting">요청 안됨</string>
     <string name="permission_status_unsupported">기기에서 지원하지 않음</string>
     <string name="permission_status_not_fully_granted">완전히 허용되지 않음</string>
-    
+
     <!-- Placeholder Screens -->
-    
+
     <!-- Data Screen -->
     <string name="data_screen_title">수집된 데이터</string>
     <string name="data_screen_description">모바일 및 웨어러블 기기에서 수집된 모든 센서 데이터를 확인하고 관리할 수 있습니다.</string>
     <string name="data_screen_subtitle">총 %1$d개 레코드</string>
     <string name="data_screen_refresh">새로고침</string>
     <string name="data_screen_no_data">수집된 데이터가 없습니다</string>
-    
+
     <!-- Sensor Detail Screen -->
     <string name="sensor_detail_back">뒤로</string>
     <string name="sensor_detail_summary">요약</string>
@@ -154,7 +154,7 @@
     <string name="sensor_detail_delete_cancel">취소</string>
     <string name="record_deleted_success">기기 및 서버에서 기록이 삭제되었습니다</string>
     <string name="record_deleted_error">기록 삭제에 실패했습니다</string>
-    
+
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">조도 센서 데이터</string>
     <string name="sensor_desc_app_list_change">앱 설치 변경사항</string>
@@ -174,14 +174,14 @@
     <string name="sensor_desc_user_interaction">사용자 터치 이벤트</string>
     <string name="sensor_desc_wifi">WiFi 연결 상태</string>
     <string name="sensor_desc_default">센서 데이터 수집</string>
-    
+
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">백그라운드 센서 컨트롤러가 실행 중입니다</string>
-    
+
     <!-- Phone Sensor Screen -->
     <string name="turn_off_data_collection_first">계속하려면 먼저 데이터 수집을 끄세요</string>
-    
+
     <!-- Data &amp; Sync Management Screen -->
     <string name="sync_current_time">현재 시간</string>
     <string name="sync_last_watch_data">마지막 워치 데이터 수신</string>
@@ -213,9 +213,9 @@
     <string name="sync_clear_data_message">모든 로컬 센서 데이터가 삭제됩니다. 서버에 이미 업로드된 데이터는 영향을 받지 않습니다.\n\n이 작업은 취소할 수 없습니다.</string>
     <string name="sync_clear_data_confirm">삭제</string>
     <string name="sync_clear_data_cancel">취소</string>
-    
+
     <!-- Sensor Sync Status -->
-    <string name="sensor_upload_data">데이터 업로드</string>    
+    <string name="sensor_upload_data">데이터 업로드</string>
     <string name="sensor_delete_data">로컬 데이터 삭제</string>
     <string name="sensor_delete_data_confirm">로컬 센서 데이터 삭제</string>
     <string name="sensor_delete_data_message">이 센서의 모든 로컬 데이터를 삭제하시겠습니까? 서버에 이미 업로드된 데이터는 영향을 받지 않습니다.\n\n이 작업은 취소할 수 없습니다.</string>
@@ -245,7 +245,7 @@
     <string name="sensor_last_received_phone">마지막 폰 수신</string>
     <string name="sensor_last_recorded_data">마지막 기록된 데이터</string>
     <string name="sensor_record_count">레코드 수</string>
-    
+
     <!-- Toast Messages -->
     <string name="toast_experiment_group_selected">실험 그룹이 성공적으로 선택되었습니다</string>
     <string name="toast_data_deleted">데이터가 성공적으로 삭제되었습니다</string>
@@ -262,7 +262,7 @@
     <string name="toast_no_data_to_export">내보낼 데이터가 없습니다</string>
     <string name="toast_export_failed">데이터 내보내기 실패</string>
     <string name="sensor_export_csv">CSV 내보내기</string>
-    
+
     <!-- Pagination -->
     <string name="pagination_page_format">%1$d / %2$d 페이지</string>
     <string name="pagination_previous">이전 페이지</string>

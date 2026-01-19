@@ -2,12 +2,11 @@ package kaist.iclab.mobiletracker.di
 
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.DataRepository
-import kaist.iclab.mobiletracker.repository.HomeRepository
+import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
+import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.services.CampaignService
 import kaist.iclab.mobiletracker.services.ProfileService
-import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
-import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.viewmodels.data.DataViewModel
 import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import kaist.iclab.mobiletracker.viewmodels.home.HomeViewModel
@@ -45,7 +44,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // AccountSettingsViewModel
     viewModel {
         AccountSettingsViewModel(
@@ -56,7 +55,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // ServerSyncSettingsViewModel
     viewModel {
         DataSyncSettingsViewModel(
@@ -66,7 +65,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // DataViewModel for Data screen
     viewModel {
         DataViewModel(
@@ -74,7 +73,7 @@ val viewModelModule = module {
             context = androidContext()
         )
     }
-    
+
     // SensorDetailViewModel for Sensor Detail screen
     viewModel { (sensorId: String) ->
         SensorDetailViewModel(

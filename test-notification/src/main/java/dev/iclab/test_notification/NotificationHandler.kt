@@ -89,12 +89,13 @@ class NotificationHandler(private val context: Context) {
                     Log.d("TestService", "Service is running...")
                 }
             }
-            val serviceNotification = NotificationCompat.Builder(this.applicationContext, serviceChannelId)
-                .setSmallIcon(R.drawable.ic_notification_service)
-                .setContentTitle("Test Service Notification")
-                .setContentText("Testing service...")
-                .setOngoing(true)
-                .build()
+            val serviceNotification =
+                NotificationCompat.Builder(this.applicationContext, serviceChannelId)
+                    .setSmallIcon(R.drawable.ic_notification_service)
+                    .setContentTitle("Test Service Notification")
+                    .setContentText("Testing service...")
+                    .setOngoing(true)
+                    .build()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceCompat.startForeground(

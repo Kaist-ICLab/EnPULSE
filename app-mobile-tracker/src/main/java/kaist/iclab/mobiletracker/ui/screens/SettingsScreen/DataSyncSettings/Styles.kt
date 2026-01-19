@@ -13,7 +13,7 @@ object Styles {
     val CARD_CONTENT_PADDING = 16.dp
     val PHONE_SENSOR_CARD_PADDING = 12.dp
     val TEXT_SPACING = 6.dp
-    
+
     // Buttons
     val BUTTON_SPACING = 16.dp
     val BUTTON_ROW_SPACING = 12.dp
@@ -22,7 +22,7 @@ object Styles {
     val BUTTON_TEXT_SIZE = 14.sp
     val BUTTON_ICON_SIZE = 20.dp
     val BUTTON_ICON_SPACING = 8.dp
-    
+
     // Sensor Card
     val SENSOR_CARD_SPACING = 8.dp
     val SENSOR_CARD_TITLE_FONT_SIZE = 16.sp
@@ -34,22 +34,22 @@ object Styles {
     val SECTION_DESCRIPTION_FONT_SIZE = 13.sp
     val SECTION_DESCRIPTION_SPACING = 8.dp
     val DELETE_BUTTON_SIZE = 18.dp
-    
+
     // Small action buttons
     val SMALL_BUTTON_HEIGHT = 32.dp
     val SMALL_BUTTON_PADDING_HORIZONTAL = 12.dp
     val SMALL_BUTTON_PADDING_VERTICAL = 6.dp
     val SMALL_BUTTON_FONT_SIZE = 12.sp
     val SMALL_BUTTON_CORNER_RADIUS = 6.dp
-    
+
     // Status text (between title and description) - screen-specific
     val STATUS_TEXT_FONT_SIZE = 13.sp
     val STATUS_TEXT_LINE_HEIGHT = 16.sp
     val STATUS_TOP_PADDING = 3.dp
-    
+
     // Screen-specific spacing
     val SETTING_CONTAINER_BOTTOM_PADDING = 16.dp
-    
+
     // Common styles (delegated to shared styles)
     val HEADER_HEIGHT = CommonStyles.HEADER_HEIGHT
     val HEADER_HORIZONTAL_PADDING = CommonStyles.HEADER_HORIZONTAL_PADDING

@@ -32,7 +32,7 @@ object Styles {
     val INFO_ROW_VERTICAL_PADDING = 12.dp
     val INFO_LABEL_FONT_SIZE = 14.sp
     val INFO_VALUE_FONT_SIZE = 14.sp
-    
+
     // Common styles (delegated to shared styles)
     val HEADER_HEIGHT = CommonStyles.HEADER_HEIGHT
     val HEADER_HORIZONTAL_PADDING = CommonStyles.HEADER_HORIZONTAL_PADDING

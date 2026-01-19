@@ -1,7 +1,7 @@
 package kaist.iclab.mobiletracker.repository.handlers.phone
 
-import kaist.iclab.mobiletracker.db.dao.phone.BluetoothScanDao
 import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.db.dao.phone.BluetoothScanDao
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 
@@ -15,7 +15,7 @@ class BluetoothScanDataHandler(private val dao: BluetoothScanDao) : SensorDataHa
 
     override suspend fun getRecordCount() = dao.getRecordCount()
     override suspend fun getLatestTimestamp() = dao.getLatestTimestamp()
-    override suspend fun getRecordCountAfterTimestamp(timestamp: Long) = 
+    override suspend fun getRecordCountAfterTimestamp(timestamp: Long) =
         dao.getRecordCountAfterTimestamp(timestamp)
 
     override suspend fun getRecordsPaginated(

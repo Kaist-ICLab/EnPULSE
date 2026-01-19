@@ -15,16 +15,16 @@ class PPGSensorService(
     tableName = AppConfig.SupabaseTables.PPG_SENSOR,
     sensorName = "PPG"
 ) {
-    
+
     override fun prepareData(data: PPGSensorData): PPGSensorData {
         // Don't override UUID - it should already be set to user UUID from mapper
         return data
     }
-    
+
     suspend fun insertPPGSensorData(data: PPGSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertPPGSensorDataBatch(dataList: List<PPGSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

@@ -67,7 +67,7 @@ fun MainApp(
                 onNavigateToDataConfig = { navController.navigate("${AppScreens.DataConfig.name}/${it}") },
                 controllerState = controllerState.value,
                 onControllerStateChange = { if (it) viewModel.start() else viewModel.stop() },
-                sensors = viewModel.sensors.map{ it.toSensorUIModel() },
+                sensors = viewModel.sensors.map { it.toSensorUIModel() },
                 permissionMap = permissionState.value,
                 userState = userState.value,
                 deviceInfo = viewModel.getDeviceInfo(),
@@ -90,19 +90,27 @@ fun MainApp(
                 navigateBack = { navController.popBackStack() }
             )
         }
-        composable(route = "${AppScreens.DataConfig.name}/{data}", arguments = listOf(
+        composable(
+            route = "${AppScreens.DataConfig.name}/{data}", arguments = listOf(
             navArgument("data") { type = NavType.StringType }
         )) { backStackEntry ->
             val sensorName = backStackEntry.arguments?.getString("data") ?: error("Name is null")
-            val sensor = viewModel.sensors.find { it.NAME == sensorName } ?: error("No sensor with the name $sensorName found")
-            val dataStorage = viewModel.sensorDataStorages.find { it.ID == sensor.ID } ?: error("No data storage with the name $sensorName found")
-            val stat =  dataStorage.statFlow.collectAsState().value
+            val sensor = viewModel.sensors.find { it.NAME == sensorName }
+                ?: error("No sensor with the name $sensorName found")
+            val dataStorage = viewModel.sensorDataStorages.find { it.ID == sensor.ID }
+                ?: error("No data storage with the name $sensorName found")
+            val stat = dataStorage.statFlow.collectAsState().value
             DataConfigScreen(
                 canNavigateBack = navController.previousBackStackEntry != null,
                 navigateBack = { navController.popBackStack() },
                 sensor = sensor.toSensorUIModel(),
                 permissionMap = permissionState.value.filter { it.key in sensor.permissions },
-                onPermissionRequest = { names,onResult -> viewModel.requestPermissions(names, onResult) },
+                onPermissionRequest = { names, onResult ->
+                    viewModel.requestPermissions(
+                        names,
+                        onResult
+                    )
+                },
                 recordCount = NumberFormat.getNumberInstance(Locale.US).format(stat.count),
                 lastUpdated = convertUnixToFormatted(stat.timestamp),
             )

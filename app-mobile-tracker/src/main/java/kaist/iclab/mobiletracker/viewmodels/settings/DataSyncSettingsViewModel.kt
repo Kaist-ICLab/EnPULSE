@@ -1,7 +1,6 @@
 package kaist.iclab.mobiletracker.viewmodels.settings
 
 import android.content.Context
-import android.content.res.Configuration
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,8 +22,6 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import java.text.NumberFormat
-import java.util.Locale
 
 class DataSyncSettingsViewModel(
     private val phoneSensorRepository: PhoneSensorRepository,
@@ -140,13 +137,13 @@ class DataSyncSettingsViewModel(
                 var uploadedCount = 0
                 var skippedCount = 0
                 var failedCount = 0
-                
+
                 val totalSensorsCount = sensors.size + SensorTypeHelper.watchSensorIds.size
 
                 // Upload all phone sensors
                 sensors.forEach { sensor ->
                     val sensorId = sensor.id
-                    
+
                     try {
                         // Check if data is available (but don't show toast for individual sensors)
                         if (!phoneSensorUploadService.hasDataToUpload(sensorId)) {
@@ -158,6 +155,7 @@ class DataSyncSettingsViewModel(
                                 is Result.Success -> {
                                     uploadedCount++
                                 }
+
                                 is Result.Error -> {
                                     failedCount++
                                     Log.e(
@@ -170,32 +168,46 @@ class DataSyncSettingsViewModel(
                         }
                     } catch (e: Exception) {
                         failedCount++
-                        Log.e(TAG, "Exception uploading sensor data for ${sensor.name}: ${e.message}", e)
+                        Log.e(
+                            TAG,
+                            "Exception uploading sensor data for ${sensor.name}: ${e.message}",
+                            e
+                        )
                     }
                 }
-                
+
                 // Upload all watch sensors
                 SensorTypeHelper.watchSensorIds.forEach { sensorId ->
                     try {
                         if (!watchSensorUploadService.hasDataToUpload(sensorId)) {
                             skippedCount++
                         } else {
-                            when (val result = watchSensorUploadService.uploadSensorData(sensorId)) {
+                            when (val result =
+                                watchSensorUploadService.uploadSensorData(sensorId)) {
                                 is Result.Success -> {
                                     uploadedCount++
                                 }
+
                                 is Result.Error -> {
                                     failedCount++
-                                    Log.e(TAG, "Error uploading watch sensor data for $sensorId: ${result.message}", result.exception)
+                                    Log.e(
+                                        TAG,
+                                        "Error uploading watch sensor data for $sensorId: ${result.message}",
+                                        result.exception
+                                    )
                                 }
                             }
                         }
                     } catch (e: Exception) {
                         failedCount++
-                        Log.e(TAG, "Exception uploading watch sensor data for $sensorId: ${e.message}", e)
+                        Log.e(
+                            TAG,
+                            "Exception uploading watch sensor data for $sensorId: ${e.message}",
+                            e
+                        )
                     }
                 }
-                
+
                 // Show summary toast
                 when {
                     uploadedCount > 0 -> {
@@ -206,16 +218,18 @@ class DataSyncSettingsViewModel(
                             uploadedCount
                         )
                     }
+
                     skippedCount == totalSensorsCount -> {
                         // All sensors skipped (no new data)
                         AppToast.show(context, R.string.toast_no_data_to_upload)
                     }
+
                     failedCount > 0 && uploadedCount == 0 -> {
                         // All attempts failed and none were successful
                         AppToast.show(context, R.string.toast_sensor_data_upload_error)
                     }
                 }
-                
+
                 // Refresh timestamps
                 loadTimestamps()
             } catch (e: Exception) {

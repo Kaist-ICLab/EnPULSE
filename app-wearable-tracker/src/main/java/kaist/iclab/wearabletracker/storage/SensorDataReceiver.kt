@@ -22,20 +22,33 @@ class SensorDataReceiver(
     private val context: Context,
 ) {
     private val serviceIntent = Intent(context, SensorDataReceiverService::class.java)
-    fun startBackgroundCollection() { context.startForegroundService(serviceIntent) }
-    fun stopBackgroundCollection() { context.stopService(serviceIntent) }
+    fun startBackgroundCollection() {
+        context.startForegroundService(serviceIntent)
+    }
 
-    class SensorDataReceiverService: Service() {
+    fun stopBackgroundCollection() {
+        context.stopService(serviceIntent)
+    }
+
+    class SensorDataReceiverService : Service() {
         private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("sensors"))
-        private val sensorDataStorages by inject<Map<String, BaseDao<SensorEntity>>>(qualifier = named("sensorDataStorages"))
+        private val sensorDataStorages by inject<Map<String, BaseDao<SensorEntity>>>(
+            qualifier = named(
+                "sensorDataStorages"
+            )
+        )
         private val serviceNotification by inject<BackgroundController.ServiceNotification>()
 
-        private val listener: Map<String, (SensorEntity) -> Unit > = sensors.associate { it.id to
-            { e: SensorEntity ->
-                // NOTE: Uncomment this if you want to verify the data is received
-                Log.v("SensorDataReceiver", "[WEARABLE] - Data received from ${it.name}: $e")
-                CoroutineScope(Dispatchers.IO).launch { sensorDataStorages[it.id]!!.insert(e) }
-            }
+        private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate {
+            it.id to
+                    { e: SensorEntity ->
+                        // NOTE: Uncomment this if you want to verify the data is received
+                        Log.v(
+                            "SensorDataReceiver",
+                            "[WEARABLE] - Data received from ${it.name}: $e"
+                        )
+                        CoroutineScope(Dispatchers.IO).launch { sensorDataStorages[it.id]!!.insert(e) }
+                    }
         }
 
         override fun onBind(p0: Intent?): IBinder? = null
@@ -51,7 +64,8 @@ class SensorDataReceiver(
                 .setOngoing(true)
                 .build()
 
-            val serviceType = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
+            val serviceType =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
 
             this.startForeground(
                 serviceNotification.notificationId,
@@ -63,7 +77,7 @@ class SensorDataReceiver(
             for (sensor in sensors) {
                 sensor.removeListener(listener[sensor.id]!!)
             }
-            
+
             // Then add listeners
             for (sensor in sensors) {
                 sensor.addListener(listener[sensor.id]!!)

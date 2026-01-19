@@ -29,7 +29,8 @@ data class Permission(
                 name = "Background Location",
                 ids = arrayOf(
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION)
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
             ),
             Permission(
                 name = "Read Contacts",
@@ -75,7 +76,7 @@ data class Permission(
                 name = "Body Sensors",
                 ids = listOfNotNull(
                     Manifest.permission.BODY_SENSORS,
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.BODY_SENSORS_BACKGROUND else null
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.BODY_SENSORS_BACKGROUND else null
                 ).toTypedArray()
             ),
             Permission(
@@ -100,10 +101,10 @@ data class Permission(
     /**
      * Compares two Permission objects for equality.
      * Two Permission objects are considered equal if they have the same name and ids array content.
-     * 
+     *
      * @param other The object to compare with this Permission
      * @return true if the objects are equal, false otherwise
-     * 
+     *
      * Note: Uses contentEquals() for the ids array to compare array contents rather than array references.
      */
     override fun equals(other: Any?): Boolean {
@@ -125,10 +126,10 @@ data class Permission(
     /**
      * Generates a hash code for this Permission object.
      * Used by hash-based collections (HashSet, HashMap) for efficient storage and lookup.
-     * 
+     *
      * @return A hash code value for this object
-     * 
-     * Note: 
+     *
+     * Note:
      * - Must be consistent with equals(): if two objects are equal, they must have the same hashCode
      * - Uses contentHashCode() for the ids array to hash based on array contents
      * - Uses prime number 31 for combining hash codes (common practice in Java/Kotlin)
@@ -144,7 +145,7 @@ data class Permission(
  * Gets the aggregated permission state for a Permission object with multiple IDs.
  * Returns GRANTED only if all IDs are GRANTED.
  * Otherwise, returns the "worst" state (PERMANENTLY_DENIED > RATIONALE_REQUIRED > NOT_REQUESTED > UNSUPPORTED)
- * 
+ *
  * @param permissionStateMap A map of permission IDs to their current PermissionState
  * @return The aggregated PermissionState for this Permission
  */

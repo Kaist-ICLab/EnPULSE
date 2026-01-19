@@ -10,12 +10,12 @@ import kotlinx.coroutines.sync.withLock
 object SupabaseLoadingInterceptor {
     private var activeOperations = 0
     private val mutex = Mutex()
-    
+
     /**
      * Callback to be set from MainScreen to update loading state
      */
     var onLoadingStateChanged: ((Boolean) -> Unit)? = null
-    
+
     /**
      * Increment active operations counter and notify listener
      * Call this at the start of a Supabase operation
@@ -29,7 +29,7 @@ object SupabaseLoadingInterceptor {
             }
         }
     }
-    
+
     /**
      * Decrement active operations counter and notify listener
      * Call this at the end of a Supabase operation (in finally block)
@@ -45,7 +45,7 @@ object SupabaseLoadingInterceptor {
             }
         }
     }
-    
+
     /**
      * Execute a Supabase operation with automatic loading state management
      * @param operation The suspend function to execute

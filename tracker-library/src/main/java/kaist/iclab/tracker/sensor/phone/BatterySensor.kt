@@ -20,7 +20,7 @@ class BatterySensor(
 ) : BaseSensor<BatterySensor.Config, BatterySensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
 ) {
-    class Config: SensorConfig
+    class Config : SensorConfig
 
     @Serializable
     data class Entity(
@@ -30,7 +30,7 @@ class BatterySensor(
         val status: Int,
         val level: Int,
         val temperature: Int
-    ): SensorEntity()
+    ) : SensorEntity()
 
     override val permissions = listOfNotNull<String>().toTypedArray()
     override val foregroundServiceTypes: Array<Int> = listOfNotNull<Int>().toTypedArray()
@@ -43,7 +43,7 @@ class BatterySensor(
     )
 
     private val mainCallback = { intent: Intent? ->
-        if(intent == null)
+        if (intent == null)
             throw NullPointerException("Intent does not exist!")
 
         val timestamp = System.currentTimeMillis()

@@ -39,11 +39,12 @@ class SettingsViewModel(
     val lastSyncTimestamp: StateFlow<Long?> = _lastSyncTimestamp.asStateFlow()
 
     // Samsung Health connection state - Start button should be disabled when false
-    val isSamsungHealthConnected: StateFlow<Boolean> = samsungHealthSensorInitializer.connectionStateFlow
-    
+    val isSamsungHealthConnected: StateFlow<Boolean> =
+        samsungHealthSensorInitializer.connectionStateFlow
+
     // SDK Policy Error state - true when dev mode is not enabled on Health Platform
     val sdkPolicyError: StateFlow<Boolean> = samsungHealthSensorInitializer.sdkPolicyErrorStateFlow
-    
+
     /**
      * Clear the SDK Policy Error and stop logging (called when user dismisses the error screen).
      */
@@ -59,7 +60,7 @@ class SettingsViewModel(
                 else sensorDataReceiver.stopBackgroundCollection()
             }
         }
-        
+
         // Stop controller immediately when SDK Policy Error is detected
         // This ensures the Start button doesn't show "recording" state while error popup is visible
         CoroutineScope(Dispatchers.IO).launch {

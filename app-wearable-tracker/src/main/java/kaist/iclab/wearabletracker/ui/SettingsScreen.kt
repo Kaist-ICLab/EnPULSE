@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
-import kaist.iclab.wearabletracker.R
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
@@ -54,6 +53,7 @@ import androidx.wear.compose.material.dialog.Dialog
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
 import kaist.iclab.wearabletracker.helpers.PermissionHelper
@@ -113,10 +113,10 @@ fun SettingsScreen(
 
     // Samsung Health connection state
     val isSamsungHealthConnected by settingsViewModel.isSamsungHealthConnected.collectAsState()
-    
+
     // SDK Policy Error state (dev mode not enabled on Health Platform)
     val hasSdkPolicyError by settingsViewModel.sdkPolicyError.collectAsState()
-    
+
     // State for showing connection error when user tries to start without connection
     var showConnectionError by remember { mutableStateOf(false) }
 
@@ -145,12 +145,14 @@ fun SettingsScreen(
                 onDismiss = { settingsViewModel.clearSdkPolicyError() }
             )
         }
+
         showConnectionError -> {
             // Show error screen when user tries to start without Samsung Health connection
             SamsungHealthConnectionErrorScreen(
                 onRetry = { showConnectionError = false }
             )
         }
+
         else -> {
             // Always show main settings UI
             Scaffold(

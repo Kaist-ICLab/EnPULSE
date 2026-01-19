@@ -22,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
 
 class SettingsViewModel(
     private val backgroundController: BackgroundController,
@@ -140,7 +139,11 @@ class SettingsViewModel(
                         try {
                             onGranted()
                         } catch (e: Exception) {
-                            Log.e(TAG, "Error in onGranted callback for $errorContext: ${e.message}", e)
+                            Log.e(
+                                TAG,
+                                "Error in onGranted callback for $errorContext: ${e.message}",
+                                e
+                            )
                         }
                         job?.cancel()
                     }

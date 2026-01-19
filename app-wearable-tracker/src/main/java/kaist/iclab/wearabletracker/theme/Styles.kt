@@ -82,7 +82,7 @@ object AppSpacing {
     val md = 8.dp
     val lg = 10.dp
     val xl = 16.dp
-    
+
     // Component-specific padding
     val deviceInfoTop = 2.dp
     val deviceInfoBottom = 4.dp

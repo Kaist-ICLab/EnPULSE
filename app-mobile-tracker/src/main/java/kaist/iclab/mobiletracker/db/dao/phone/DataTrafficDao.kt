@@ -8,7 +8,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.tracker.sensor.phone.DataTrafficSensor
 
 @Dao
-interface DataTrafficDao: BaseDao<DataTrafficSensor.Entity, DataTrafficEntity> {
+interface DataTrafficDao : BaseDao<DataTrafficSensor.Entity, DataTrafficEntity> {
     override suspend fun insert(sensorEntity: DataTrafficSensor.Entity, userUuid: String?) {
         val entity = DataTrafficEntity(
             uuid = userUuid ?: "",
@@ -59,7 +59,12 @@ interface DataTrafficDao: BaseDao<DataTrafficSensor.Entity, DataTrafficEntity> {
     suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
     @Query("SELECT * FROM DataTrafficEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
-    suspend fun getRecordsPaginated(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<DataTrafficEntity>
+    suspend fun getRecordsPaginated(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<DataTrafficEntity>
 
     @Query("DELETE FROM DataTrafficEntity WHERE id = :recordId")
     suspend fun deleteById(recordId: Long)

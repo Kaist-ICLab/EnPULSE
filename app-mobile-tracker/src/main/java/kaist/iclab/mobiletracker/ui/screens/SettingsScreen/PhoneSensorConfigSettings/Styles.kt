@@ -10,7 +10,7 @@ import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.Styles as CommonStyle
 object Styles {
     // Screen-specific spacing
     val SETTING_CONTAINER_BOTTOM_PADDING = 16.dp
-    
+
     // Common styles (delegated to shared styles)
     val CARD_CORNER_RADIUS = CommonStyles.CARD_CORNER_RADIUS
     val CARD_VERTICAL_PADDING = CommonStyles.CARD_VERTICAL_PADDING

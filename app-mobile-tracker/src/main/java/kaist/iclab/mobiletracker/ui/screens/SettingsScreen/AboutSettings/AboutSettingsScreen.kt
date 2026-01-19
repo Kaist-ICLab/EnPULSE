@@ -23,12 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.helpers.ImageAsset
+import kaist.iclab.mobiletracker.ui.theme.AppColors
 
 /**
  * About settings screen
@@ -91,7 +89,7 @@ fun AboutSettingsScreen(
                     contentDescription = context.getString(R.string.mobile_tracker_logo),
                     modifier = Modifier.size(Styles.LOGO_SIZE)
                 )
-                
+
                 Spacer(modifier = Modifier.height(Styles.LOGO_BOTTOM_PADDING))
 
                 // App name

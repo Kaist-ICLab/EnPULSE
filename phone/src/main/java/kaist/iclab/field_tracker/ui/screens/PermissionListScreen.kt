@@ -79,7 +79,10 @@ fun PermissionStateSwitchRow(
         switchStatus = SwitchStatus(
             isChecked = permissionState == PermissionState.GRANTED,
             onCheckedChange = { if (it) onPermissionRequest(permission.ids) },
-            disabled = !setOf(PermissionState.NOT_REQUESTED, PermissionState.RATIONALE_REQUIRED).contains(permissionState)
+            disabled = !setOf(
+                PermissionState.NOT_REQUESTED,
+                PermissionState.RATIONALE_REQUIRED
+            ).contains(permissionState)
         )
     )
 }

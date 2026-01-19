@@ -150,7 +150,7 @@ fun SensorStatusScreen(
             .fillMaxSize()
             .padding(top = 0.dp)
     ) {
-        Row{
+        Row {
             Text(
                 text = "Connection: ${if (connectionState.value) "Connected" else "Disconnected"}",
                 fontSize = 10.sp
@@ -161,7 +161,7 @@ fun SensorStatusScreen(
                         Log.d("DATA", it.toString())
                     }
                 }
-            }){
+            }) {
                 Text("init")
             }
 
@@ -169,21 +169,32 @@ fun SensorStatusScreen(
 
         sensors.forEach { (sensorName, sensor) ->
             val sensorState = sensor.sensorStateFlow.collectAsState()
-            SensorControlItem(sensorName,sensorState.value.flag == SensorState.FLAG.RUNNING , sensorState.value.flag.toString(), { sensor.start() }, { sensor.stop() })
+            SensorControlItem(
+                sensorName,
+                sensorState.value.flag == SensorState.FLAG.RUNNING,
+                sensorState.value.flag.toString(),
+                { sensor.start() },
+                { sensor.stop() })
         }
     }
 }
 
 
 @Composable
-fun SensorControlItem(sensorName: String, isRunning: Boolean, state: String ,start: () -> Unit, stop: () -> Unit) {
+fun SensorControlItem(
+    sensorName: String,
+    isRunning: Boolean,
+    state: String,
+    start: () -> Unit,
+    stop: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(text = sensorName, fontSize = 14.sp)
         Text(text = state, fontSize = 14.sp)
-        Button(onClick = {if(isRunning) stop() else start()}) {
+        Button(onClick = { if (isRunning) stop() else start() }) {
             Text(if (isRunning) "Stop" else "Start", fontSize = 10.sp)
         }
     }

@@ -10,9 +10,11 @@ class CouchbaseDB(
     companion object {
         private const val DB_NAME = "TRACKER"
     }
+
     val database: Database by lazy {
         Database(DB_NAME)
     }
+
     init {
         CouchbaseLite.init(context)
     }

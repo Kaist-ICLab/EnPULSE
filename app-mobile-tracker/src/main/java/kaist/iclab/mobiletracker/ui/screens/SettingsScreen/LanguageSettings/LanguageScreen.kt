@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
@@ -70,7 +69,7 @@ fun LanguageScreen(
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
             }
-            
+
             // Description text
             Text(
                 text = context.getString(R.string.language_screen_description),

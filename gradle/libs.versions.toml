@@ -159,7 +159,7 @@ compose = [
     "compose-material3",
     "compose-android-material3",
     "compose-material-icons-extended",
-#    "compose-compiler"
+    #    "compose-compiler"
 ]
 compose-wear = [
     "wear-compose-material",
@@ -167,12 +167,12 @@ compose-wear = [
     "wear-tooling-preview",
 ]
 androidx = [
-#    "androidx-junit",
-#    "androidx-espresso-core",
+    #    "androidx-junit",
+    #    "androidx-espresso-core",
     "androidx-core-ktx",
     "androidx-appcompat",
     "androidx-lifecycle-runtime-ktx",
-#    "androidx-navigation-runtime-ktx",
+    #    "androidx-navigation-runtime-ktx",
 ]
 auth = [
     "firebase-auth",

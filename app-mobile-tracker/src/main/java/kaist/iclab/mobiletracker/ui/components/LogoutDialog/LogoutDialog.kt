@@ -17,7 +17,7 @@ fun LogoutDialog(
     onConfirm: () -> Unit
 ) {
     val context = LocalContext.current
-    
+
     PopupDialog(
         title = context.getString(R.string.logout_title),
         content = {

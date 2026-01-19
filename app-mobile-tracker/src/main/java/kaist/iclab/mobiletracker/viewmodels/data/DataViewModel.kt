@@ -1,15 +1,15 @@
 package kaist.iclab.mobiletracker.viewmodels.data
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.repository.DataRepository
+import kaist.iclab.mobiletracker.repository.DateFilter
 import kaist.iclab.mobiletracker.repository.SensorInfo
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.CsvExportHelper
-import kaist.iclab.mobiletracker.repository.DateFilter
-import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,26 +42,27 @@ class DataViewModel(
 
     private val _uiState = MutableStateFlow(DataUiState())
     val uiState: StateFlow<DataUiState> = _uiState.asStateFlow()
-    
+
     private val prefs = context.getSharedPreferences("sync_timestamps", Context.MODE_PRIVATE)
-    private val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+    private val dateFormat =
+        java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
 
     init {
         loadSensorInfo()
         startTimestampUpdates()
     }
-    
+
     private fun startTimestampUpdates() {
         viewModelScope.launch {
             while (true) {
                 val currentTime = dateFormat.format(java.util.Date())
-                val lastWatch = prefs.getLong("last_watch_data", 0L).let { 
-                    if (it > 0) dateFormat.format(java.util.Date(it)) else null 
+                val lastWatch = prefs.getLong("last_watch_data", 0L).let {
+                    if (it > 0) dateFormat.format(java.util.Date(it)) else null
                 }
-                val lastUpload = prefs.getLong("last_successful_upload", 0L).let { 
-                    if (it > 0) dateFormat.format(java.util.Date(it)) else null 
+                val lastUpload = prefs.getLong("last_successful_upload", 0L).let {
+                    if (it > 0) dateFormat.format(java.util.Date(it)) else null
                 }
-                
+
                 _uiState.value = _uiState.value.copy(
                     currentTime = currentTime,
                     lastWatchData = lastWatch,
@@ -143,37 +144,37 @@ class DataViewModel(
             } finally {
                 _uiState.value = _uiState.value.copy(isDeleting = false)
             }
-            }
         }
+    }
 
-    
+
     /**
      * Export all sensor data to CSV files.
      */
     fun exportAllToCsv() {
         if (_uiState.value.isExporting) return
-        
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isExporting = true)
             try {
                 // Collect data for all active sensors
                 val allSensors = dataRepository.getAllSensorInfo()
                 val sensorsWithData = allSensors.filter { it.recordCount > 0 }
-                
+
                 if (sensorsWithData.isEmpty()) {
                     AppToast.show(context, R.string.toast_no_data_to_export)
                     _uiState.value = _uiState.value.copy(isExporting = false)
                     return@launch
                 }
-                
+
                 val uris = mutableListOf<android.net.Uri>()
-                
+
                 for (sensor in sensorsWithData) {
                     val records = dataRepository.getAllSensorRecordsForExport(
                         sensorId = sensor.sensorId,
                         dateFilter = DateFilter.ALL_TIME
                     )
-                    
+
                     if (records.isNotEmpty()) {
                         val uri = CsvExportHelper.exportToCsv(context, sensor.displayName, records)
                         if (uri != null) {
@@ -181,13 +182,13 @@ class DataViewModel(
                         }
                     }
                 }
-                
+
                 if (uris.isNotEmpty()) {
                     CsvExportHelper.shareMultipleCsv(context, uris, "All Sensor Data Export")
                 } else {
                     AppToast.show(context, R.string.toast_export_failed)
                 }
-                
+
             } catch (e: Exception) {
                 Log.e("DataViewModel", "Error exporting all data", e)
                 AppToast.show(context, R.string.toast_export_failed)

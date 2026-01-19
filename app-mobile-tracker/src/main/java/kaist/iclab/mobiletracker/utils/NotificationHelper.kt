@@ -15,7 +15,7 @@ import kaist.iclab.mobiletracker.R
  * Provides a simple API for creating notifications with common configurations.
  */
 object NotificationHelper {
-    
+
     /**
      * Creates a PendingIntent that opens the MainActivity when clicked
      */
@@ -33,7 +33,7 @@ object NotificationHelper {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
-    
+
     /**
      * Ensures a notification channel exists, creating it if necessary
      */
@@ -53,7 +53,7 @@ object NotificationHelper {
             }
         }
     }
-    
+
     /**
      * Builds a basic notification with common settings
      */
@@ -75,14 +75,14 @@ object NotificationHelper {
             .setPriority(priority)
             .setAutoCancel(autoCancel)
             .setOngoing(ongoing)
-        
+
         if (pendingIntent != null) {
             builder.setContentIntent(pendingIntent)
         }
-        
+
         return builder
     }
-    
+
     /**
      * Shows a notification
      */
@@ -91,7 +91,8 @@ object NotificationHelper {
         notificationId: Int,
         notification: android.app.Notification
     ) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(notificationId, notification)
     }
 }

@@ -16,12 +16,12 @@ import java.util.Locale
  * Helper class for exporting sensor data to CSV format.
  */
 object CsvExportHelper {
-    
+
     private const val TAG = "CsvExportHelper"
-    
+
     /**
      * Export sensor records to a CSV file.
-     * 
+     *
      * @param context Android context
      * @param sensorName Name of the sensor (used in filename)
      * @param records List of sensor records to export
@@ -36,52 +36,53 @@ object CsvExportHelper {
             Log.w(TAG, "No records to export")
             return null
         }
-        
+
         try {
             // Create export directory
             val exportDir = File(context.cacheDir, "exports")
             if (!exportDir.exists()) {
                 exportDir.mkdirs()
             }
-            
+
             // Generate filename with timestamp
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val sanitizedName = sensorName.replace(" ", "_").replace("/", "_")
             val fileName = "${sanitizedName}_$timestamp.csv"
             val file = File(exportDir, fileName)
-            
+
             // Get all unique field names from records
             val allFieldNames = records
                 .flatMap { it.fields.keys }
                 .distinct()
                 .sorted()
-            
+
             // Write CSV
             FileWriter(file).use { writer ->
                 // Write header
                 val header = listOf("id", "timestamp") + allFieldNames
                 writer.write(header.joinToString(","))
                 writer.write("\n")
-                
+
                 // Write data rows
                 records.forEach { record ->
-                    val timestampStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
-                        .format(Date(record.timestamp))
-                    
+                    val timestampStr =
+                        SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+                            .format(Date(record.timestamp))
+
                     val row = listOf(
                         record.id.toString(),
                         timestampStr
                     ) + allFieldNames.map { fieldName ->
                         escapeCsvField(record.fields[fieldName] ?: "")
                     }
-                    
+
                     writer.write(row.joinToString(","))
                     writer.write("\n")
                 }
             }
-            
+
             Log.d(TAG, "Exported ${records.size} records to ${file.absolutePath}")
-            
+
             // Return file URI using FileProvider
             return FileProvider.getUriForFile(
                 context,
@@ -93,7 +94,7 @@ object CsvExportHelper {
             return null
         }
     }
-    
+
     /**
      * Export multiple sensors to separate CSV files and return as a list of URIs.
      */
@@ -105,7 +106,7 @@ object CsvExportHelper {
             exportToCsv(context, sensorName, records)
         }
     }
-    
+
     /**
      * Share a CSV file using Android's share intent.
      */
@@ -116,35 +117,35 @@ object CsvExportHelper {
             putExtra(Intent.EXTRA_SUBJECT, "$sensorName Data Export")
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        
+
         val chooser = Intent.createChooser(shareIntent, "Share CSV")
         chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooser)
     }
-    
+
     /**
      * Share multiple CSV files.
      */
     fun shareMultipleCsv(context: Context, uris: List<Uri>, title: String = "Sensor Data Export") {
         if (uris.isEmpty()) return
-        
+
         if (uris.size == 1) {
             shareCsv(context, uris.first(), title)
             return
         }
-        
+
         val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
             type = "text/csv"
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
             putExtra(Intent.EXTRA_SUBJECT, title)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        
+
         val chooser = Intent.createChooser(shareIntent, "Share CSV Files")
         chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooser)
     }
-    
+
     /**
      * Escape a field value for CSV format.
      * Wraps in quotes if contains comma, newline, or quote.

@@ -35,7 +35,8 @@ val realModule = module {
                 channelName = "Tracker Service",
                 icon = R.drawable.app_icon,
                 title = "Tracker Service",
-                description = "Tracker service is running now...")
+                description = "Tracker service is running now..."
+            )
         )
     }
     single<PermissionManager> {

@@ -9,7 +9,7 @@ import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
-abstract class SurveyActivity: ComponentActivity() {
+abstract class SurveyActivity : ComponentActivity() {
     companion object {
         lateinit var survey: Survey
         lateinit var initSurvey: (String, String?) -> Survey

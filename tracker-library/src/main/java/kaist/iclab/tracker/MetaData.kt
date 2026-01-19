@@ -15,8 +15,10 @@ class MetaData(
         Settings.Secure.ANDROID_ID
     )
     val deviceModel: String = android.os.Build.MODEL
-//    val deviceName: String = android.os.Build.DEVICE
-    val deviceName: String = Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
+
+    //    val deviceName: String = android.os.Build.DEVICE
+    val deviceName: String =
+        Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
     val osVersion: String = android.os.Build.VERSION.RELEASE
 
     val appId = packageInfo.packageName

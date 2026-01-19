@@ -23,10 +23,11 @@ class AuthViewModel(
     private val TAG = "AuthViewModel"
 
     val userState: StateFlow<UserState> = authentication.userStateFlow
-    
+
     // Expose cached profile from repository
-    val userProfile: StateFlow<kaist.iclab.mobiletracker.data.sensors.phone.ProfileData?> = userProfileRepository.profileFlow
-    
+    val userProfile: StateFlow<kaist.iclab.mobiletracker.data.sensors.phone.ProfileData?> =
+        userProfileRepository.profileFlow
+
     private var previousLoginState = false
     private var lastSavedToken: String? = null
 
@@ -37,28 +38,28 @@ class AuthViewModel(
                 loadUserProfile()
             }
         }
-        
+
         // Observe userState changes to get token after login and save it automatically
         viewModelScope.launch {
             userState.collect { state ->
                 val currentToken = state.token
-                
+
                 // When user successfully logs in, automatically get token
                 if (state.isLoggedIn && !previousLoginState && currentToken == null) {
                     previousLoginState = true
                     authentication.getToken()
                 }
-                
+
                 // When token becomes available, save it to repository and log it (only once per token)
                 if (state.isLoggedIn && currentToken != null && currentToken != lastSavedToken) {
                     authRepository.saveToken(currentToken)
                     lastSavedToken = currentToken
-                    
+
                     // Save profile to profiles table if not exists, then load and cache it
                     saveProfileIfNotExists(state)
                     loadUserProfile()
                 }
-                
+
                 // Clear profile when user logs out
                 if (!state.isLoggedIn) {
                     userProfileRepository.clearProfile()
@@ -68,7 +69,7 @@ class AuthViewModel(
             }
         }
     }
-    
+
     /**
      * Save user profile to profiles table if it doesn't exist
      * Gets UUID from Supabase session and email from user state
@@ -78,21 +79,22 @@ class AuthViewModel(
         if (user == null || user.email.isEmpty()) {
             return
         }
-        
+
         try {
             // Get UUID from Supabase session
             val uuid = getUuidFromSession()
             if (uuid == null) {
                 return
             }
-            
+
             val email = user.email
-            
+
             // Save profile if not exists (campaign_id will be null initially)
             when (val result = profileService.createProfileIfNotExists(uuid, email, null)) {
                 is Result.Success -> {
                     // Profile saved successfully
                 }
+
                 is Result.Error -> {
                     Log.e(TAG, "Error saving profile: ${result.message}", result.exception)
                 }
@@ -101,7 +103,7 @@ class AuthViewModel(
             Log.e(TAG, "Error in saveProfileIfNotExists: ${e.message}", e)
         }
     }
-    
+
     /**
      * Load user profile from Supabase and cache it
      * Called after successful login to make profile data available throughout the app
@@ -113,16 +115,21 @@ class AuthViewModel(
                 if (uuid == null) {
                     return@launch
                 }
-                
+
                 when (val result = profileService.getProfileByUuid(uuid)) {
                     is Result.Success -> {
                         userProfileRepository.saveProfile(result.data)
                     }
+
                     is Result.Error -> {
                         // Profile might not exist yet, which is okay
                         // Only log if it's not a "not found" error
                         if (result.exception !is NoSuchElementException) {
-                            Log.e(TAG, "Error loading user profile: ${result.message}", result.exception)
+                            Log.e(
+                                TAG,
+                                "Error loading user profile: ${result.message}",
+                                result.exception
+                            )
                         }
                     }
                 }
@@ -131,7 +138,7 @@ class AuthViewModel(
             }
         }
     }
-    
+
     /**
      * Get UUID from Supabase session
      * Gets UUID from SupabaseAuth
@@ -163,7 +170,7 @@ class AuthViewModel(
             userProfileRepository.clearProfile() // Clear cached profile on logout
         }
     }
-    
+
     /**
      * Refresh user profile from Supabase
      * Useful when profile data might have changed (e.g., campaign updated)

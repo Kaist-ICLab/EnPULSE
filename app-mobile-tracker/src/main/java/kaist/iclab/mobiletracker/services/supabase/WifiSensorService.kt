@@ -24,7 +24,7 @@ class WifiSensorService(
     suspend fun insertWifiSensorData(data: WifiScanSensorData): Result<Unit> {
         return upsertToSupabase(prepareData(data))
     }
-    
+
     suspend fun insertWifiSensorDataBatch(dataList: List<WifiScanSensorData>): Result<Unit> {
         val preparedList = dataList.map { prepareData(it) }
         return upsertBatchToSupabase(preparedList)

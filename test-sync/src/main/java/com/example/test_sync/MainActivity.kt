@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
         internetHelper = InternetHelper()
         supabaseHelper = SupabaseHelper()
-        
+
         setContent {
             AndroidtrackerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                         // Supabase Communication
                         sendToSupabase = supabaseHelper::sendData,
                         getFromSupabase = supabaseHelper::getData,
-                        
+
                         // Data Polling Control
                         togglePolling = ::togglePolling,
 
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    
+
     /**
      * Toggle polling
      */

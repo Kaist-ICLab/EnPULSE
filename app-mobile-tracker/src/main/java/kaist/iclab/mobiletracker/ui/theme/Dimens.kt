@@ -41,12 +41,12 @@ object Dimens {
 
     val ButtonHeightSmall = 32.dp
     val ButtonHeightStandard = 48.dp
-    
+
     // Custom Sizes
     val IconSizeContainer = 42.dp
     val WidthLabel = 90.dp
     val IconSizeDelete = 18.dp
-    
+
     // Corners
     val CornerRadiusSmall = 4.dp
     val CornerRadiusMedium = 8.dp
