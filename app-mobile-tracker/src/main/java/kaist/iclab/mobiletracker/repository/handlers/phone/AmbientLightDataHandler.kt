@@ -1,7 +1,7 @@
 package kaist.iclab.mobiletracker.repository.handlers.phone
 
-import kaist.iclab.mobiletracker.db.dao.phone.AmbientLightDao
 import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.db.dao.phone.AmbientLightDao
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 

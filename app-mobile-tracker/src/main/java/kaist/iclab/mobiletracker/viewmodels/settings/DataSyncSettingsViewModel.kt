@@ -1,7 +1,6 @@
 package kaist.iclab.mobiletracker.viewmodels.settings
 
 import android.content.Context
-import android.content.res.Configuration
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,8 +22,6 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import java.text.NumberFormat
-import java.util.Locale
 
 class DataSyncSettingsViewModel(
     private val phoneSensorRepository: PhoneSensorRepository,

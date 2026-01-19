@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.helpers
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
-import android.content.res.Resources
 import java.util.Locale
 
 /**

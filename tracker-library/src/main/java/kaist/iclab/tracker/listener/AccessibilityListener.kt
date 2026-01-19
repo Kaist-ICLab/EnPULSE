@@ -1,7 +1,6 @@
 package kaist.iclab.tracker.listener
 
 import android.accessibilityservice.AccessibilityService
-import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import kaist.iclab.tracker.listener.core.AccessibilityEventInfo
 import kaist.iclab.tracker.listener.core.Listener

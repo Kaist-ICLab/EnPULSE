@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.repository
 
-import kaist.iclab.mobiletracker.db.dao.common.BaseDao
 import kaist.iclab.mobiletracker.db.dao.common.LocationDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine

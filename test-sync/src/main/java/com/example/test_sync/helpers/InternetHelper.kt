@@ -1,14 +1,14 @@
 package com.example.test_sync.helpers
 
 import android.util.Log
+import com.example.test_sync.TestData
+import com.example.test_sync.config.AppConfig
 import kaist.iclab.tracker.sync.internet.InternetDataChannel
 import kaist.iclab.tracker.sync.internet.InternetMethod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import com.example.test_sync.TestData
-import com.example.test_sync.config.AppConfig
 
 class InternetHelper {
     private val internetChannel = InternetDataChannel()

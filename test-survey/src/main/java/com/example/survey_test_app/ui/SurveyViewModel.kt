@@ -8,7 +8,6 @@ import com.example.survey_test_app.MyBackgroundController
 import com.example.survey_test_app.SurveyDataReceiver
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.permission.PermissionState
-import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.survey.SurveySensor

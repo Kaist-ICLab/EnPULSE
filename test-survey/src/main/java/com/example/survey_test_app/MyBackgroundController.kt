@@ -5,8 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.app.Service.START_STICKY
-import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -22,11 +20,9 @@ import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
-import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.android.ext.android.inject
 import org.koin.core.qualifier.named
-import kotlin.collections.forEach
 
 class MyBackgroundController(
     private val context: Context,

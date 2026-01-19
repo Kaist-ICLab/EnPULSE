@@ -23,12 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.helpers.ImageAsset
+import kaist.iclab.mobiletracker.ui.theme.AppColors
 
 /**
  * About settings screen

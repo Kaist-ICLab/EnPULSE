@@ -3,8 +3,6 @@ package kaist.iclab.tracker.sensor.survey.question
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlin.collections.toList
 
 class NumberQuestion(
     override val question: String,

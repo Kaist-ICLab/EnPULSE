@@ -7,12 +7,11 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
-import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
+import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity

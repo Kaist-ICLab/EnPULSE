@@ -1,16 +1,15 @@
 package com.example.test_sync.helpers
 
 import android.util.Log
-import io.github.jan.supabase.SupabaseClient
+import com.example.test_sync.config.AppConfig
 import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.realtime.Realtime
-import io.github.jan.supabase.postgrest.Postgrest
-import kotlinx.serialization.Serializable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import com.example.test_sync.config.AppConfig
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class SupabaseData(

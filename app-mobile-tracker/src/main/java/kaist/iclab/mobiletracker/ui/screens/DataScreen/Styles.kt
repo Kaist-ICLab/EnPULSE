@@ -1,8 +1,6 @@
 package kaist.iclab.mobiletracker.ui.screens.DataScreen
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kaist.iclab.mobiletracker.ui.theme.Dimens
 
 /**

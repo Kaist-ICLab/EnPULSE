@@ -2,19 +2,23 @@ package kaist.iclab.mobiletracker.di
 
 import kaist.iclab.mobiletracker.db.TrackerRoomDB
 import kaist.iclab.mobiletracker.db.dao.common.BaseDao
-import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepositoryImpl
+import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.supabase.AccelerometerSensorService
 import kaist.iclab.mobiletracker.services.supabase.EDASensorService
 import kaist.iclab.mobiletracker.services.supabase.HeartRateSensorService
 import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
 import kaist.iclab.mobiletracker.services.supabase.PPGSensorService
 import kaist.iclab.mobiletracker.services.supabase.SkinTemperatureSensorService
-import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.*
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchAccelerometerUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchEDAUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchHeartRateUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchLocationUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchPPGUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchSkinTemperatureUploadHandler
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

@@ -10,10 +10,7 @@ import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
 import kaist.iclab.tracker.sensor.survey.SurveySensor
-import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
-import kaist.iclab.tracker.sensor.survey.question.Expression
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
-import kaist.iclab.tracker.sensor.survey.question.Operator
 import kaist.iclab.tracker.sensor.survey.question.Option
 import kaist.iclab.tracker.sensor.survey.question.QuestionTrigger
 import kaist.iclab.tracker.sensor.survey.question.RadioQuestion

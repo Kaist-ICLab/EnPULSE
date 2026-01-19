@@ -5,9 +5,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlin.collections.map
-import kotlin.collections.toMutableMap
 
 class RadioQuestion(
     override val question: String,

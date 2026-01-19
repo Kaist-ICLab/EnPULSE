@@ -11,8 +11,6 @@ import com.couchbase.lite.SelectResult
 import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 

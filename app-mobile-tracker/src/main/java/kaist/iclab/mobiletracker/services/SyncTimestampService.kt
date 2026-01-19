@@ -2,8 +2,8 @@ package kaist.iclab.mobiletracker.services
 
 import android.content.Context
 import android.content.SharedPreferences
-import kaist.iclab.mobiletracker.utils.DateTimeFormatter
 import androidx.core.content.edit
+import kaist.iclab.mobiletracker.utils.DateTimeFormatter
 
 /**
  * Service for tracking and retrieving sync-related timestamps.

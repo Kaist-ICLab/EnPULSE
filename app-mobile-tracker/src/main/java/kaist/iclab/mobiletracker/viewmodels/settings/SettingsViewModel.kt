@@ -22,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
 
 class SettingsViewModel(
     private val backgroundController: BackgroundController,

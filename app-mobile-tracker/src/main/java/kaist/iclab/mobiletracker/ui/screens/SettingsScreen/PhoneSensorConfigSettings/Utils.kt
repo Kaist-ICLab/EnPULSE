@@ -6,9 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.ui.utils.getSensorIcon
 import kaist.iclab.mobiletracker.ui.utils.getSensorDescriptionResId
 import kaist.iclab.mobiletracker.ui.utils.getSensorDisplayName
+import kaist.iclab.mobiletracker.ui.utils.getSensorIcon
 
 /**
  * Data class representing sensor configuration

@@ -25,6 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.MainThread
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.samsung.android.sdk.health.data.HealthDataService
@@ -36,7 +37,6 @@ import com.samsung.android.sdk.health.data.permission.AccessType
 import com.samsung.android.sdk.health.data.request.DataTypes
 import kaist.iclab.tracker.listener.AccessibilityListener
 import kaist.iclab.tracker.listener.NotificationListener
-import kaist.iclab.tracker.permission.HardwareAvailabilityChecker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -47,7 +47,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
-import androidx.core.content.edit
 
 class AndroidPermissionManager(
     private val context: Context

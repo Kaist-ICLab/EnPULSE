@@ -2,14 +2,14 @@ package com.example.test_sync.helpers
 
 import android.content.Context
 import android.util.Log
+import com.example.test_sync.TestData
+import com.example.test_sync.config.AppConfig
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
-import com.example.test_sync.TestData
-import com.example.test_sync.config.AppConfig
 
 class BLEHelper(private val context: Context) {
     private lateinit var bleChannel: BLEDataChannel

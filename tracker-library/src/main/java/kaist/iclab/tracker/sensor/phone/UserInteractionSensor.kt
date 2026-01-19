@@ -13,8 +13,8 @@ import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.serialization.Serializable
-import java.util.UUID
 import java.lang.ref.WeakReference
+import java.util.UUID
 
 class UserInteractionSensor(
     permissionManager: PermissionManager,
