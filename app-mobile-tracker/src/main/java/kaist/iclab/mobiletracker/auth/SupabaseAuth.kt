@@ -134,7 +134,7 @@ class SupabaseAuth(
             )
             handleCredential(result.credential)
         } catch (e: GetCredentialException) {
-            Log.e(TAG, "Authentication failed: ${e.message}", e)
+            Log.e(TAG, "Login failed: ${e.message}", e)
 
             // Handle specific error cases
             val errorMessage = when {
@@ -144,15 +144,15 @@ class SupabaseAuth(
                                 e.message?.contains("reauth", ignoreCase = true) == true ||
                                 e.message?.contains("[16]", ignoreCase = false) == true
                         ) -> {
-                    "Your Google account needs to be re-authenticated. Please check your Google account settings and try again."
+                    "Login failed. Please try again"
                 }
 
                 e is GetCredentialCancellationException -> {
-                    "Authentication was cancelled. Please try again."
+                    "Login was cancelled. Please try again."
                 }
 
                 else -> {
-                    "Authentication failed: ${e.message}"
+                    "Login failed: ${e.message}"
                 }
             }
 
