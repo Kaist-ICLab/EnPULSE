@@ -22,6 +22,21 @@ interface AccelerometerDao : BaseDao<AccelerometerSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<AccelerometerSensor.Entity>) {
+        val entities = sensorEntities.flatMap { sensorEntity ->
+            sensorEntity.dataPoint.map {
+                AccelerometerEntity(
+                    received = it.received,
+                    timestamp = it.timestamp,
+                    x = it.x,
+                    y = it.y,
+                    z = it.z
+                )
+            }
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(accelerometerEntity: List<AccelerometerEntity>)
 
@@ -30,11 +45,11 @@ interface AccelerometerDao : BaseDao<AccelerometerSensor.Entity> {
 
     override suspend fun getAllForExport(): List<CsvSerializable> = getAllAccelerometerData()
 
-    @Query("SELECT * FROM AccelerometerEntity WHERE timestamp > :since ORDER BY timestamp ASC")
-    suspend fun getAccelerometerDataSince(since: Long): List<AccelerometerEntity>
+    @Query("SELECT * FROM AccelerometerEntity WHERE timestamp > :since ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getAccelerometerDataSince(since: Long, limit: Int): List<AccelerometerEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
-        getAccelerometerDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long, limit: Int): List<CsvSerializable> =
+        getAccelerometerDataSince(timestamp, limit)
 
     @Query("DELETE FROM AccelerometerEntity WHERE timestamp <= :until")
     suspend fun deleteAccelerometerDataBefore(until: Long)

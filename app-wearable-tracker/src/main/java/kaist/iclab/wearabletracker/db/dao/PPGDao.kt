@@ -26,6 +26,24 @@ interface PPGDao : BaseDao<PPGSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<PPGSensor.Entity>) {
+        val entities = sensorEntities.flatMap { sensorEntity ->
+            sensorEntity.dataPoint.map {
+                PPGEntity(
+                    received = it.received,
+                    timestamp = it.timestamp,
+                    green = it.green,
+                    red = it.red,
+                    ir = it.ir,
+                    greenStatus = it.greenStatus,
+                    redStatus = it.redStatus,
+                    irStatus = it.irStatus,
+                )
+            }
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(ppgEntity: List<PPGEntity>)
 
@@ -34,11 +52,11 @@ interface PPGDao : BaseDao<PPGSensor.Entity> {
 
     override suspend fun getAllForExport(): List<CsvSerializable> = getAllPPGData()
 
-    @Query("SELECT * FROM PPGEntity WHERE timestamp > :since ORDER BY timestamp ASC")
-    suspend fun getPPGDataSince(since: Long): List<PPGEntity>
+    @Query("SELECT * FROM PPGEntity WHERE timestamp > :since ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getPPGDataSince(since: Long, limit: Int): List<PPGEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
-        getPPGDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long, limit: Int): List<CsvSerializable> =
+        getPPGDataSince(timestamp, limit)
 
     @Query("DELETE FROM PPGEntity WHERE timestamp <= :until")
     suspend fun deletePPGDataBefore(until: Long)

@@ -92,8 +92,8 @@ fun MainApp(
         }
         composable(
             route = "${AppScreens.DataConfig.name}/{data}", arguments = listOf(
-            navArgument("data") { type = NavType.StringType }
-        )) { backStackEntry ->
+                navArgument("data") { type = NavType.StringType }
+            )) { backStackEntry ->
             val sensorName = backStackEntry.arguments?.getString("data") ?: error("Name is null")
             val sensor = viewModel.sensors.find { it.NAME == sensorName }
                 ?: error("No sensor with the name $sensorName found")

@@ -50,9 +50,11 @@ fun PermissionScreen(permissionManager: PermissionManager) {
     // Permissions are automatically registered when getPermissionFlow() is called
     val permissionStateMap = permissionManager.getPermissionFlow(permissions).collectAsState()
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
         Text("Permissions", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(8.dp))
 

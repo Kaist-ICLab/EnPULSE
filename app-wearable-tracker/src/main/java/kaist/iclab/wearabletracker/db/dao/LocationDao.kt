@@ -22,19 +22,37 @@ interface LocationDao : BaseDao<LocationSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<LocationSensor.Entity>) {
+        val entities = sensorEntities.map { sensorEntity ->
+            LocationEntity(
+                received = sensorEntity.received,
+                timestamp = sensorEntity.timestamp,
+                latitude = sensorEntity.latitude,
+                longitude = sensorEntity.longitude,
+                altitude = sensorEntity.altitude,
+                speed = sensorEntity.speed,
+                accuracy = sensorEntity.accuracy
+            )
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(locationEntity: LocationEntity)
+
+    @Insert
+    suspend fun insertUsingRoomEntity(locationEntities: List<LocationEntity>)
 
     @Query("SELECT * FROM LocationEntity ORDER BY timestamp ASC")
     suspend fun getAllLocationData(): List<LocationEntity>
 
     override suspend fun getAllForExport(): List<CsvSerializable> = getAllLocationData()
 
-    @Query("SELECT * FROM LocationEntity WHERE timestamp > :since ORDER BY timestamp ASC")
-    suspend fun getLocationDataSince(since: Long): List<LocationEntity>
+    @Query("SELECT * FROM LocationEntity WHERE timestamp > :since ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getLocationDataSince(since: Long, limit: Int): List<LocationEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
-        getLocationDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long, limit: Int): List<CsvSerializable> =
+        getLocationDataSince(timestamp, limit)
 
     @Query("DELETE FROM LocationEntity WHERE timestamp <= :until")
     suspend fun deleteLocationDataBefore(until: Long)

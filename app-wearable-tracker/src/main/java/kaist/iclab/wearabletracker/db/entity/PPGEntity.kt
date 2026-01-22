@@ -10,13 +10,13 @@ data class PPGEntity(
     val id: Int = 0,
     val eventId: String = UUID.randomUUID().toString(),
     val received: Long,
-    val timestamp: Long,
     val green: Int,
     val red: Int,
     val ir: Int,
     val greenStatus: Int,
     val redStatus: Int,
     val irStatus: Int,
+    override val timestamp: Long
 ) : CsvSerializable {
     override fun toCsvHeader(): String =
         "eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
