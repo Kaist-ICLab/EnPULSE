@@ -22,6 +22,21 @@ interface SkinTemperatureDao : BaseDao<SkinTemperatureSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<SkinTemperatureSensor.Entity>) {
+        val entities = sensorEntities.flatMap { sensorEntity ->
+            sensorEntity.dataPoint.map {
+                SkinTemperatureEntity(
+                    received = it.received,
+                    timestamp = it.timestamp,
+                    objectTemperature = it.objectTemperature,
+                    ambientTemperature = it.ambientTemperature,
+                    status = it.status
+                )
+            }
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(skinTemperatureEntity: List<SkinTemperatureEntity>)
 

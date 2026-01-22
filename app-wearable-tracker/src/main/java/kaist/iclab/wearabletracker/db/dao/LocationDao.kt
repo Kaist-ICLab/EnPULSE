@@ -22,8 +22,26 @@ interface LocationDao : BaseDao<LocationSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<LocationSensor.Entity>) {
+        val entities = sensorEntities.map { sensorEntity ->
+            LocationEntity(
+                received = sensorEntity.received,
+                timestamp = sensorEntity.timestamp,
+                latitude = sensorEntity.latitude,
+                longitude = sensorEntity.longitude,
+                altitude = sensorEntity.altitude,
+                speed = sensorEntity.speed,
+                accuracy = sensorEntity.accuracy
+            )
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(locationEntity: LocationEntity)
+
+    @Insert
+    suspend fun insertUsingRoomEntity(locationEntities: List<LocationEntity>)
 
     @Query("SELECT * FROM LocationEntity ORDER BY timestamp ASC")
     suspend fun getAllLocationData(): List<LocationEntity>

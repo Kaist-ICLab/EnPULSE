@@ -23,6 +23,22 @@ interface HeartRateDao : BaseDao<HeartRateSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<HeartRateSensor.Entity>) {
+        val entities = sensorEntities.flatMap { sensorEntity ->
+            sensorEntity.dataPoint.map {
+                HeartRateEntity(
+                    received = it.received,
+                    timestamp = it.timestamp,
+                    hr = it.hr,
+                    hrStatus = it.hrStatus,
+                    ibi = it.ibi,
+                    ibiStatus = it.ibiStatus
+                )
+            }
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(heartRateEntity: List<HeartRateEntity>)
 

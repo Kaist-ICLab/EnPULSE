@@ -1,10 +1,14 @@
 package kaist.iclab.wearabletracker.db.dao
 
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 
 interface BaseDao<T : SensorEntity> {
     suspend fun insert(sensorEntity: T)
+    suspend fun insert(sensorEntities: List<T>)
+
     suspend fun deleteAll()
 
     /**

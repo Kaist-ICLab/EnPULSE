@@ -26,6 +26,24 @@ interface PPGDao : BaseDao<PPGSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<PPGSensor.Entity>) {
+        val entities = sensorEntities.flatMap { sensorEntity ->
+            sensorEntity.dataPoint.map {
+                PPGEntity(
+                    received = it.received,
+                    timestamp = it.timestamp,
+                    green = it.green,
+                    red = it.red,
+                    ir = it.ir,
+                    greenStatus = it.greenStatus,
+                    redStatus = it.redStatus,
+                    irStatus = it.irStatus,
+                )
+            }
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(ppgEntity: List<PPGEntity>)
 

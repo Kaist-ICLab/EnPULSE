@@ -22,6 +22,20 @@ interface EDADao : BaseDao<EDASensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<EDASensor.Entity>) {
+        val entities = sensorEntities.flatMap { sensorEntity ->
+            sensorEntity.dataPoint.map {
+                EDAEntity(
+                    received = it.received,
+                    timestamp = it.timestamp,
+                    skinConductance = it.skinConductance,
+                    status = it.status
+                )
+            }
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(edaEntity: List<EDAEntity>)
 

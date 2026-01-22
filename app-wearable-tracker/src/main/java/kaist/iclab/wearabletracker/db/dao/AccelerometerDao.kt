@@ -22,6 +22,21 @@ interface AccelerometerDao : BaseDao<AccelerometerSensor.Entity> {
         insertUsingRoomEntity(entity)
     }
 
+    override suspend fun insert(sensorEntities: List<AccelerometerSensor.Entity>) {
+        val entities = sensorEntities.flatMap { sensorEntity ->
+            sensorEntity.dataPoint.map {
+                AccelerometerEntity(
+                    received = it.received,
+                    timestamp = it.timestamp,
+                    x = it.x,
+                    y = it.y,
+                    z = it.z
+                )
+            }
+        }
+        insertUsingRoomEntity(entities)
+    }
+
     @Insert
     suspend fun insertUsingRoomEntity(accelerometerEntity: List<AccelerometerEntity>)
 
