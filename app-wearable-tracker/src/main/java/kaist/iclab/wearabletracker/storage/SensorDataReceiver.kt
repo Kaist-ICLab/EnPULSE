@@ -11,10 +11,12 @@ import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.wearabletracker.Constants.DB.BATCH_SIZE
+import kaist.iclab.wearabletracker.Constants.DB.BUFFER_SIZE
 import kaist.iclab.wearabletracker.Constants.DB.FLUSH_INTERVAL_MS
 import kaist.iclab.wearabletracker.db.dao.BaseDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -48,7 +50,10 @@ class SensorDataReceiver(
         private val coroutineScope by inject<CoroutineScope>()
 
         // Channel to receive sensor events
-        private val eventChannel = Channel<Pair<String, SensorEntity>>(Channel.UNLIMITED)
+        private val eventChannel = Channel<Pair<String, SensorEntity>>(
+            capacity = BUFFER_SIZE,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
         private var batchJob: Job? = null
 
         private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate {

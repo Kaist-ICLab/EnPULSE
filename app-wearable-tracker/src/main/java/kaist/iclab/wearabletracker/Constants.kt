@@ -65,6 +65,7 @@ object Constants {
      * Database Constants
      */
     object DB {
+        const val BUFFER_SIZE = 1000
         const val BATCH_SIZE = 50
         const val FLUSH_INTERVAL_MS = 2000L
     }

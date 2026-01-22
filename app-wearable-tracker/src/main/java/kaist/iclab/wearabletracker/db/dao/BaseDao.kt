@@ -1,7 +1,5 @@
 package kaist.iclab.wearabletracker.db.dao
 
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 
