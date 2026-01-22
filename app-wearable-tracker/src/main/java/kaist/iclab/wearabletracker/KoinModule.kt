@@ -242,7 +242,8 @@ val koinModule = module {
         PhoneCommunicationManager(
             androidContext = androidContext(),
             daos = get(named("sensorDataStorages")),
-            syncPreferencesHelper = get()
+            syncPreferencesHelper = get(),
+            coroutineScope = get()
         )
     }
 
@@ -272,5 +273,10 @@ val koinModule = module {
             repository = get(),
             samsungHealthSensorInitializer = get()
         )
+    }
+
+    // CoroutineScope
+    single<kotlinx.coroutines.CoroutineScope> {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
     }
 }

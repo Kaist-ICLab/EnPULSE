@@ -24,6 +24,7 @@ class PhoneCommunicationManager(
     private val androidContext: Context,
     private val daos: Map<String, BaseDao<*>>,
     private val syncPreferencesHelper: SyncPreferencesHelper,
+    private val coroutineScope: kotlinx.coroutines.CoroutineScope
 ) {
     private val TAG = javaClass.simpleName
     private val bleChannel: BLEDataChannel = BLEDataChannel(androidContext)
@@ -51,7 +52,7 @@ class PhoneCommunicationManager(
      * Only sends data collected since the last successful sync.
      */
     fun sendDataToPhone() {
-        CoroutineScope(Dispatchers.IO).launch {
+        coroutineScope.launch {
             try {
                 if (!isPhoneAvailable()) {
                     Log.e(
