@@ -45,11 +45,11 @@ interface SkinTemperatureDao : BaseDao<SkinTemperatureSensor.Entity> {
 
     override suspend fun getAllForExport(): List<CsvSerializable> = getAllSkinTemperatureData()
 
-    @Query("SELECT * FROM SkinTemperatureEntity WHERE timestamp > :since ORDER BY timestamp ASC")
-    suspend fun getSkinTemperatureDataSince(since: Long): List<SkinTemperatureEntity>
+    @Query("SELECT * FROM SkinTemperatureEntity WHERE timestamp > :since ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getSkinTemperatureDataSince(since: Long, limit: Int): List<SkinTemperatureEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
-        getSkinTemperatureDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long, limit: Int): List<CsvSerializable> =
+        getSkinTemperatureDataSince(timestamp, limit)
 
     @Query("DELETE FROM SkinTemperatureEntity WHERE timestamp <= :until")
     suspend fun deleteSkinTemperatureDataBefore(until: Long)

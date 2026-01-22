@@ -10,10 +10,10 @@ data class SkinTemperatureEntity(
     val id: Int = 0,
     val eventId: String = UUID.randomUUID().toString(),
     val received: Long,
-    val timestamp: Long,
     val objectTemperature: Float,
     val ambientTemperature: Float,
-    val status: Int
+    val status: Int,
+    override val timestamp: Long
 ) : CsvSerializable {
     override fun toCsvHeader(): String = "eventId,received,timestamp,ambientTemp,objectTemp,status"
     override fun toCsvRow(): String =

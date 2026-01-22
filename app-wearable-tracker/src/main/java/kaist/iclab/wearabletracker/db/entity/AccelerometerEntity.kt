@@ -10,10 +10,10 @@ data class AccelerometerEntity(
     val id: Int = 0,
     val eventId: String = UUID.randomUUID().toString(),
     val received: Long,
-    val timestamp: Long,
     val x: Float,
     val y: Float,
-    val z: Float
+    val z: Float,
+    override val timestamp: Long
 ) : CsvSerializable {
     override fun toCsvHeader(): String = "eventId,received,timestamp,x,y,z"
     override fun toCsvRow(): String = "$eventId,$received,$timestamp,$x,$y,$z"

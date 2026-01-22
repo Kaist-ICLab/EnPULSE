@@ -52,11 +52,11 @@ interface PPGDao : BaseDao<PPGSensor.Entity> {
 
     override suspend fun getAllForExport(): List<CsvSerializable> = getAllPPGData()
 
-    @Query("SELECT * FROM PPGEntity WHERE timestamp > :since ORDER BY timestamp ASC")
-    suspend fun getPPGDataSince(since: Long): List<PPGEntity>
+    @Query("SELECT * FROM PPGEntity WHERE timestamp > :since ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getPPGDataSince(since: Long, limit: Int): List<PPGEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
-        getPPGDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long, limit: Int): List<CsvSerializable> =
+        getPPGDataSince(timestamp, limit)
 
     @Query("DELETE FROM PPGEntity WHERE timestamp <= :until")
     suspend fun deletePPGDataBefore(until: Long)

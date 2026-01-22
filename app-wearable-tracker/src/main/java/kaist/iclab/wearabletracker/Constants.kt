@@ -68,6 +68,7 @@ object Constants {
         const val BUFFER_SIZE = 1000
         const val BATCH_SIZE = 50
         const val FLUSH_INTERVAL_MS = 2000L
+        const val SYNC_BATCH_LIMIT = 2000 // Max records per sync batch
     }
 }
 

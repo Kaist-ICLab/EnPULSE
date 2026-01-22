@@ -47,11 +47,11 @@ interface HeartRateDao : BaseDao<HeartRateSensor.Entity> {
 
     override suspend fun getAllForExport(): List<CsvSerializable> = getAllHeartRateData()
 
-    @Query("SELECT * FROM HeartRateEntity WHERE timestamp > :since ORDER BY timestamp ASC")
-    suspend fun getHeartRateDataSince(since: Long): List<HeartRateEntity>
+    @Query("SELECT * FROM HeartRateEntity WHERE timestamp > :since ORDER BY timestamp ASC LIMIT :limit")
+    suspend fun getHeartRateDataSince(since: Long, limit: Int): List<HeartRateEntity>
 
-    override suspend fun getDataSince(timestamp: Long): List<CsvSerializable> =
-        getHeartRateDataSince(timestamp)
+    override suspend fun getDataSince(timestamp: Long, limit: Int): List<CsvSerializable> =
+        getHeartRateDataSince(timestamp, limit)
 
     @Query("DELETE FROM HeartRateEntity WHERE timestamp <= :until")
     suspend fun deleteHeartRateDataBefore(until: Long)

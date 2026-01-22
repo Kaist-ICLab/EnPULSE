@@ -12,6 +12,7 @@ import kaist.iclab.wearabletracker.db.dao.BaseDao
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -50,6 +51,11 @@ class PhoneCommunicationManager(
      * Send new sensor data to the phone app via BLE (incremental sync).
      * Only sends data collected since the last successful sync.
      */
+    /**
+     * Send new sensor data to the phone app via BLE (incremental sync).
+     * Only sends data collected since the last successful sync.
+     * Implementing Chunked Sync to avoid OOM.
+     */
     fun sendDataToPhone() {
         coroutineScope.launch {
             try {
@@ -67,8 +73,87 @@ class PhoneCommunicationManager(
                     return@launch
                 }
 
-                val result = generateIncrementalCSVData()
-                if (result == null) {
+                // Global start time for this sync session
+                val lastSyncTime = syncPreferencesHelper.getLastSyncTimestamp() ?: 0L
+                var dataSent = false
+                var errorOccurred = false
+
+                // Track max timestamp seen across all sensors to update global pref at end
+                var maxTimestampSeen = lastSyncTime
+
+                // Iterate each sensor and send its data in chunks
+                daos.forEach { (sensorId, dao) ->
+                    // Guard to stop processing if error occurred
+                    if (errorOccurred) return@forEach
+
+                    while (coroutineContext.isActive) {
+                        // Fetch a page of data
+                        // We use lastSyncTime as base, because we delete sent data immediately.
+                        // So getting > lastSyncTime effectively gets the "next" available data.
+                        val data = dao.getDataSince(
+                            lastSyncTime,
+                            kaist.iclab.wearabletracker.Constants.DB.SYNC_BATCH_LIMIT
+                        )
+
+                        if (data.isEmpty()) {
+                            break // Sensor done
+                        }
+
+                        dataSent = true
+
+                        // Calculate max timestamp in this specific chunk
+                        val chunkMaxTimestamp = data.maxOf { it.timestamp }
+                        maxTimestampSeen = maxOf(maxTimestampSeen, chunkMaxTimestamp)
+
+                        val batchId = UUID.randomUUID().toString()
+
+                        // Build CSV for this chunk
+                        val csvBuilder = StringBuilder()
+                        csvBuilder.append("BATCH:$batchId\n")
+                        csvBuilder.append("SINCE:$lastSyncTime\n")
+                        csvBuilder.append("---DATA---\n")
+                        csvBuilder.append("$sensorId\n")
+                        csvBuilder.append(data.first().toCsvHeader() + "\n")
+                        data.forEach { entity ->
+                            csvBuilder.append(entity.toCsvRow() + "\n")
+                        }
+                        // Add newline at end of batch
+                        csvBuilder.append("\n")
+
+                        val batch = SyncBatch(
+                            batchId = batchId,
+                            startTimestamp = lastSyncTime,
+                            endTimestamp = chunkMaxTimestamp,
+                            recordCount = data.size,
+                            createdAt = System.currentTimeMillis()
+                        )
+
+                        // We do NOT save pending batch persistently here to avoid IO overhead in loop,
+                        // and because we treat `bleChannel.send` + `delete` as an atomic unit for this chunk.
+
+                        try {
+                            bleChannel.send(Constants.BLE.KEY_SENSOR_DATA, csvBuilder.toString())
+
+                            // Send/Delete succeeded for this chunk
+                            dao.deleteDataBefore(chunkMaxTimestamp)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error sending chunk for $sensorId: ${e.message}", e)
+                            errorOccurred = true
+                            break // Stop this sensor loop
+                        }
+                    }
+                }
+
+                if (dataSent && !errorOccurred) {
+                    // Update global last sync timestamp
+                    // Use System.currentTimeMillis() to be conservative for next sync, 
+                    // or use maxTimestampSeen. System time is consistent with original logic.
+                    syncPreferencesHelper.saveLastSyncTimestamp(System.currentTimeMillis())
+
+                    withContext(Dispatchers.Main) {
+                        NotificationHelper.showPhoneCommunicationSuccess(androidContext)
+                    }
+                } else if (!dataSent) {
                     Log.w(TAG, "No new data to send")
                     withContext(Dispatchers.Main) {
                         NotificationHelper.showPhoneCommunicationFailure(
@@ -76,34 +161,16 @@ class PhoneCommunicationManager(
                             androidContext.getString(R.string.notification_no_data)
                         )
                     }
-                    return@launch
-                }
-
-                val (batch, csvData) = result
-
-                // Save pending batch BEFORE sending (for recovery if interrupted)
-                syncPreferencesHelper.savePendingBatch(batch)
-
-                try {
-                    bleChannel.send(Constants.BLE.KEY_SENSOR_DATA, csvData)
-
-                    // Immediate confirmation (fallback). Reliable cleanup is handled by SyncAckListener.
-                    onSyncConfirmed(batch)
-
-                    withContext(Dispatchers.Main) {
-                        NotificationHelper.showPhoneCommunicationSuccess(androidContext)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error sending data to phone: ${e.message}", e)
-                    // Keep pending batch for retry - don't clear it
+                } else {
+                    // Error case handled by previous logging/notification? 
                     withContext(Dispatchers.Main) {
                         NotificationHelper.showPhoneCommunicationFailure(
                             androidContext,
-                            e,
                             androidContext.getString(R.string.notification_send_failed)
                         )
                     }
                 }
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error in sendDataToPhone: ${e.message}", e)
                 withContext(Dispatchers.Main) {
@@ -115,72 +182,5 @@ class PhoneCommunicationManager(
                 }
             }
         }
-    }
-
-    /**
-     * Called when sync is confirmed (either by ACK or immediately for now).
-     * Updates last sync timestamp and deletes synced data from watch.
-     */
-    private suspend fun onSyncConfirmed(batch: SyncBatch) {
-        // Delete synced data from all DAOs
-        daos.values.forEach { dao ->
-            dao.deleteDataBefore(batch.endTimestamp)
-        }
-
-        // Update last sync timestamp
-        syncPreferencesHelper.saveLastSyncTimestamp(batch.endTimestamp)
-
-        // Clear pending batch
-        syncPreferencesHelper.clearPendingBatch()
-    }
-
-    /**
-     * Generate CSV data for incremental sync.
-     * Only includes data since the last successful sync.
-     * Returns null if there's no new data to send.
-     */
-    private suspend fun generateIncrementalCSVData(): Pair<SyncBatch, String>? {
-        val lastSyncTime = syncPreferencesHelper.getLastSyncTimestamp() ?: 0L
-        val batchId = UUID.randomUUID().toString()
-        val csvBuilder = StringBuilder()
-        var totalRecords = 0
-        var maxTimestamp = lastSyncTime
-
-        // Add batch header
-        csvBuilder.append("BATCH:$batchId\n")
-        csvBuilder.append("SINCE:$lastSyncTime\n")
-        csvBuilder.append("---DATA---\n")
-
-        daos.forEach { (sensorId, dao) ->
-            val data = dao.getDataSince(lastSyncTime)
-            if (data.isNotEmpty()) {
-                csvBuilder.append("$sensorId\n")
-                csvBuilder.append(data.first().toCsvHeader() + "\n")
-                data.forEach { entity ->
-                    csvBuilder.append(entity.toCsvRow() + "\n")
-                    // We need to track max timestamp - parse from row or use system time
-                }
-                totalRecords += data.size
-                csvBuilder.append("\n")
-            }
-        }
-
-        // No new data
-        if (totalRecords == 0) {
-            return null
-        }
-
-        // Use current time as end timestamp (conservative - ensures no data loss)
-        maxTimestamp = System.currentTimeMillis()
-
-        val batch = SyncBatch(
-            batchId = batchId,
-            startTimestamp = lastSyncTime,
-            endTimestamp = maxTimestamp,
-            recordCount = totalRecords,
-            createdAt = System.currentTimeMillis()
-        )
-
-        return Pair(batch, csvBuilder.toString())
     }
 }

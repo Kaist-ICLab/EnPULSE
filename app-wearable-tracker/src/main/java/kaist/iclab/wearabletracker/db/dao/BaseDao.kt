@@ -17,8 +17,9 @@ interface BaseDao<T : SensorEntity> {
     /**
      * Get data since the given timestamp for incremental sync.
      * @param timestamp Only return records with timestamp > this value
+     * @param limit Maximum number of records to return
      */
-    suspend fun getDataSince(timestamp: Long): List<CsvSerializable>
+    suspend fun getDataSince(timestamp: Long, limit: Int): List<CsvSerializable>
 
     /**
      * Delete data before/up to the given timestamp after successful sync.

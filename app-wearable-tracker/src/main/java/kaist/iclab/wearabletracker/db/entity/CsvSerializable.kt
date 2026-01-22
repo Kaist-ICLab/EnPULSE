@@ -14,4 +14,9 @@ interface CsvSerializable {
      * Returns a single CSV row representing this entity's data.
      */
     fun toCsvRow(): String
+
+    /**
+     * The timestamp of the record
+     */
+    val timestamp: Long
 }
