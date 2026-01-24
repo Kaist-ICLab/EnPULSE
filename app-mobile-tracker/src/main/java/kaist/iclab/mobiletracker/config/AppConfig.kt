@@ -13,7 +13,7 @@ object AppConfig {
      * Get this from your Supabase project dashboard > Settings > API
      * Example: https://your-project-id.supabase.co
      */
-    const val SUPABASE_URL = "http://143.248.57.5:8000/"
+    const val SUPABASE_URL = "https://mobile-agent-data.iclab.dev/"
 
     /**
      * Supabase anonymous/public key
