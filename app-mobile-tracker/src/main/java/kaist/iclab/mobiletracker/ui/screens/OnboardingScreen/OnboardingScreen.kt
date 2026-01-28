@@ -202,17 +202,21 @@ fun OnboardingScreen(
                     )
                 }
                 Spacer(modifier = Modifier.width(Styles.SPACING_M))
-                TextButton(
+                Button(
                     onClick = onLogout,
                     modifier = Modifier
-                        .weight(1.2f)
-                        .height(Styles.BUTTON_HEIGHT)
+                        .weight(1.8f)
+                        .height(Styles.BUTTON_HEIGHT),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.ErrorColor,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(Styles.CORNER_RADIUS)
                 ) {
                     Text(
                         text = context.getString(R.string.logout_title),
                         fontSize = Styles.LOGOUT_BUTTON_FONT_SIZE,
-                        color = AppColors.TextPrimary,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
