@@ -271,6 +271,7 @@
     <string name="onboarding_loading">Loading campaigns…</string>
     <string name="onboarding_no_campaigns">No campaigns available</string>
     <string name="onboarding_start">Start</string>
+    <string name="onboarding_help_text">Please consult the researcher to choose which experiment group is appropriate for you</string>
 
     <!-- Pagination -->
     <string name="pagination_page_format">Page %1$d / %2$d</string>

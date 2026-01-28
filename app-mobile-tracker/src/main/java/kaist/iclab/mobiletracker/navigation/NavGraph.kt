@@ -22,11 +22,11 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.screens.DataScreen.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.HomeScreen.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.LoginScreen.LoginScreen
+import kaist.iclab.mobiletracker.ui.screens.OnboardingScreen.OnboardingScreen
 import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AboutSettings.AboutSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.AccountSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.CampaignSettings.CampaignSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.OnboardingScreen.OnboardingScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.LanguageSettings.LanguageScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.PermissionSettingsScreen
@@ -100,33 +100,26 @@ fun NavGraph(
         val currentRoute = navController.currentDestination?.route
 
         if (userState.isLoggedIn) {
-            // Capture in local val to enable smart cast
-            val profile = userProfile
-            
             // Wait for profile to be loaded before deciding navigation
-            if (profile == null) {
-                // Profile not loaded yet, wait for next recomposition
-                return@LaunchedEffect
-            }
-            
-            // Check if user needs onboarding (for testing: show when HAS campaign)
-            val needsOnboarding = profile.campaign_id != null
-            
-            when {
+            val profile = userProfile ?: return@LaunchedEffect
+
+            // Check if user needs onboarding (show when HAS NO campaign)
+            val needsOnboarding = profile.campaign_id == null
+
+            when (currentRoute) {
                 // User is on Login screen and needs onboarding
-                currentRoute == Screen.Login.route && needsOnboarding -> {
+                Screen.Login.route -> if (needsOnboarding) {
                     navController.navigate(Screen.Onboarding.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
-                }
-                // User is on Login screen and doesn't need onboarding
-                currentRoute == Screen.Login.route && !needsOnboarding -> {
+                } else {
+                    // User is on Login screen and doesn't need onboarding
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }
                 // User completed onboarding (on Onboarding screen and now doesn't need it)
-                currentRoute == Screen.Onboarding.route && !needsOnboarding -> {
+                Screen.Onboarding.route -> if (!needsOnboarding) {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
@@ -188,8 +181,7 @@ fun NavGraph(
             OnboardingScreen(
                 onOnboardingComplete = {
                     // Navigation is handled by LaunchedEffect observing userProfile
-                },
-                onLanguageChanged = onLanguageChanged
+                }
             )
         }
 
