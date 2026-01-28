@@ -265,7 +265,7 @@
 
     <!-- Onboarding Screen -->
     <string name="onboarding_welcome">EnPULSE에 오신 것을 환영합니다!</string>
-    <string name="onboarding_description">데이터 수집을 시작하려면 실험 그룹을 선택해 주세요.</string>
+    <string name="onboarding_description">시작하려면 실험 그룹을 선택해 주세요.</string>
     <string name="onboarding_select_campaign">실험 그룹</string>
     <string name="onboarding_ok">확인</string>
     <string name="onboarding_loading">캠페인 로딩 중…</string>

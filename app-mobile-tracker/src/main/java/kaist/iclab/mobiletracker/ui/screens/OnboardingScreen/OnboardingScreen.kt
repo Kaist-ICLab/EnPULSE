@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -46,7 +48,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun OnboardingScreen(
     viewModel: OnboardingViewModel = koinViewModel(),
-    onOnboardingComplete: () -> Unit
+    onOnboardingComplete: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -63,64 +66,65 @@ fun OnboardingScreen(
         viewModel.loadCampaigns()
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(AppColors.Background)
             .systemBarsPadding()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = Styles.SCREEN_PADDING_HORIZONTAL),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Top section: Logo, title, desc
+        // 1. Top Section (Top Aligned)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.TopCenter)
-                .padding(top = 24.dp),
+                .padding(top = Styles.HEADER_TOP_PADDING),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo - smaller
             ImageAsset(
                 assetPath = "icon.png",
                 contentDescription = context.getString(R.string.mobile_tracker_logo),
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(Styles.LOGO_SIZE)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(Styles.SPACING_L))
 
             // Welcome Title
             Text(
                 text = context.getString(R.string.onboarding_welcome),
-                fontSize = 22.sp,
+                fontSize = Styles.WELCOME_FONT_SIZE,
                 fontWeight = FontWeight.Bold,
                 color = AppColors.TextPrimary,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(Styles.SPACING_S))
 
             // Description
             Text(
                 text = context.getString(R.string.onboarding_description),
-                fontSize = 14.sp,
+                fontSize = Styles.DESCRIPTION_FONT_SIZE,
                 color = AppColors.TextSecondary,
                 textAlign = TextAlign.Center
             )
         }
 
-        // 2. Center section: Campaign List
-        Column(
+        // 2. Center Section (Fills remaining space and centers its content)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(BiasAlignment(0f, 0.2f))
+                .weight(1f),
+            contentAlignment = Alignment.Center
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = AppColors.White),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(Styles.CORNER_RADIUS),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 if (uiState.isLoading) {
-                    Box(modifier = Modifier.padding(16.dp)) {
+                    Box(modifier = Modifier.padding(Styles.SPACING_L)) {
                         Text(
                             text = context.getString(R.string.onboarding_loading),
                             modifier = Modifier.fillMaxWidth(),
@@ -129,7 +133,7 @@ fun OnboardingScreen(
                         )
                     }
                 } else if (uiState.campaigns.isEmpty()) {
-                    Box(modifier = Modifier.padding(16.dp)) {
+                    Box(modifier = Modifier.padding(Styles.SPACING_L)) {
                         Text(
                             text = context.getString(R.string.onboarding_no_campaigns),
                             modifier = Modifier.fillMaxWidth(),
@@ -139,7 +143,7 @@ fun OnboardingScreen(
                     }
                 } else {
                     LazyColumn(
-                        modifier = Modifier.heightIn(max = 240.dp)
+                        modifier = Modifier.heightIn(min = Styles.LIST_MIN_HEIGHT, max = Styles.LIST_MAX_HEIGHT)
                     ) {
                         itemsIndexed(uiState.campaigns) { index, campaign ->
                             CampaignListItem(
@@ -152,42 +156,66 @@ fun OnboardingScreen(
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+        // 3. Bottom Section (Bottom Aligned)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = Styles.BOTTOM_PADDING),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text = context.getString(R.string.onboarding_help_text),
-                fontSize = 12.sp,
-                color = AppColors.TextSecondary,
+                fontSize = Styles.HELP_FONT_SIZE,
+                color = AppColors.TextPrimary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = Styles.SPACING_S)
             )
-        }
 
-        // 3. Bottom section: Start button
-        Button(
-            onClick = { viewModel.confirmSelection() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(Styles.BUTTON_HEIGHT)
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp),
-            enabled = uiState.selectedCampaign != null && !uiState.isLoading,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AppColors.PrimaryColor,
-                contentColor = Color.White,
-                disabledContainerColor = AppColors.BorderLight,
-                disabledContentColor = AppColors.TextSecondary
-            ),
-            shape = RoundedCornerShape(Styles.CORNER_RADIUS)
-        ) {
-            Text(
-                text = context.getString(R.string.onboarding_start),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Spacer(modifier = Modifier.height(Styles.SPACING_XXL))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { viewModel.confirmSelection() },
+                    modifier = Modifier
+                        .weight(3f)
+                        .height(Styles.BUTTON_HEIGHT),
+                    enabled = uiState.selectedCampaign != null && !uiState.isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.PrimaryColor,
+                        contentColor = Color.White,
+                        disabledContainerColor = AppColors.BorderLight,
+                        disabledContentColor = AppColors.TextSecondary
+                    ),
+                    shape = RoundedCornerShape(Styles.CORNER_RADIUS)
+                ) {
+                    Text(
+                        text = context.getString(R.string.onboarding_start),
+                        fontSize = Styles.START_BUTTON_FONT_SIZE,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.width(Styles.SPACING_M))
+                TextButton(
+                    onClick = onLogout,
+                    modifier = Modifier
+                        .weight(1.2f)
+                        .height(Styles.BUTTON_HEIGHT)
+                ) {
+                    Text(
+                        text = context.getString(R.string.logout_title),
+                        fontSize = Styles.LOGOUT_BUTTON_FONT_SIZE,
+                        color = AppColors.TextPrimary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
         }
     }
 }
@@ -207,12 +235,12 @@ fun CampaignListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = Styles.ITEM_HORIZONTAL_PADDING, vertical = Styles.ITEM_VERTICAL_PADDING),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = name,
-                fontSize = 14.sp,
+                fontSize = Styles.ITEM_FONT_SIZE,
                 color = AppColors.TextPrimary,
                 modifier = Modifier.weight(1f)
             )
@@ -230,8 +258,8 @@ fun CampaignListItem(
         if (showDivider) {
             HorizontalDivider(
                 color = AppColors.BorderLight,
-                thickness = 1.dp,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                thickness = Styles.BORDER_WIDTH,
+                modifier = Modifier.padding(horizontal = Styles.ITEM_HORIZONTAL_PADDING)
             )
         }
     }

@@ -181,6 +181,9 @@ fun NavGraph(
             OnboardingScreen(
                 onOnboardingComplete = {
                     // Navigation is handled by LaunchedEffect observing userProfile
+                },
+                onLogout = {
+                    authViewModel.logout()
                 }
             )
         }
@@ -270,4 +273,3 @@ fun NavGraph(
         }
     }
 }
-
