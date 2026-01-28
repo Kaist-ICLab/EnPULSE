@@ -263,6 +263,15 @@
     <string name="toast_export_failed">Failed to export data</string>
     <string name="sensor_export_csv">Export CSV</string>
 
+    <!-- Onboarding Screen -->
+    <string name="onboarding_welcome">Welcome to EnPULSE!</string>
+    <string name="onboarding_description">Please select your experiment group to get started with data collection.</string>
+    <string name="onboarding_select_campaign">Experiment Group</string>
+    <string name="onboarding_ok">OK</string>
+    <string name="onboarding_loading">Loading campaigns…</string>
+    <string name="onboarding_no_campaigns">No campaigns available</string>
+    <string name="onboarding_start">Start</string>
+
     <!-- Pagination -->
     <string name="pagination_page_format">Page %1$d / %2$d</string>
     <string name="pagination_previous">Previous Page</string>

@@ -89,4 +89,14 @@ val viewModelModule = module {
             surveySensor = get<SurveySensor>()
         )
     }
+
+    // OnboardingViewModel
+    viewModel {
+        kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel(
+            campaignService = get<CampaignService>(),
+            profileService = get<ProfileService>(),
+            supabaseHelper = get<SupabaseHelper>(),
+            userProfileRepository = get<UserProfileRepository>()
+        )
+    }
 }

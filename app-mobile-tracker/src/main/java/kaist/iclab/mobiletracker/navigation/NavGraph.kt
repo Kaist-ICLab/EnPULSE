@@ -26,6 +26,7 @@ import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScree
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AboutSettings.AboutSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.AccountSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.CampaignSettings.CampaignSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.OnboardingScreen.OnboardingScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.LanguageSettings.LanguageScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.PermissionSettingsScreen
@@ -48,6 +49,7 @@ fun NavGraph(
     permissionManager: AndroidPermissionManager
 ) {
     val userState by authViewModel.userState.collectAsState()
+    val userProfile by authViewModel.userProfile.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -92,26 +94,48 @@ fun NavGraph(
         }
     }
 
-    // Navigate based on authentication state
-    LaunchedEffect(userState.isLoggedIn) {
+    // Navigate based on authentication state and profile
+    LaunchedEffect(userState.isLoggedIn, userProfile) {
         val mainTabs = listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
         val currentRoute = navController.currentDestination?.route
 
         if (userState.isLoggedIn) {
-            // Navigate to Home screen (main tab) when user logs in
-            // Only navigate if we are currently on the Login screen, preventing
-            // forced navigation when restoring state on sub-screens (e.g. Language change)
-            if (currentRoute == Screen.Login.route) {
-                navController.navigate(Screen.Home.route) {
-                    // Clear back stack to prevent going back to login
-                    popUpTo(Screen.Login.route) { inclusive = true }
+            // Capture in local val to enable smart cast
+            val profile = userProfile
+            
+            // Wait for profile to be loaded before deciding navigation
+            if (profile == null) {
+                // Profile not loaded yet, wait for next recomposition
+                return@LaunchedEffect
+            }
+            
+            // Check if user needs onboarding (for testing: show when HAS campaign)
+            val needsOnboarding = profile.campaign_id != null
+            
+            when {
+                // User is on Login screen and needs onboarding
+                currentRoute == Screen.Login.route && needsOnboarding -> {
+                    navController.navigate(Screen.Onboarding.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+                // User is on Login screen and doesn't need onboarding
+                currentRoute == Screen.Login.route && !needsOnboarding -> {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+                // User completed onboarding (on Onboarding screen and now doesn't need it)
+                currentRoute == Screen.Onboarding.route && !needsOnboarding -> {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
                 }
             }
         } else {
             // Navigate to Login when user logs out
             if (currentRoute !in mainTabs && currentRoute != Screen.Login.route) {
                 navController.navigate(Screen.Login.route) {
-                    // Clear back stack to prevent going back to main tabs
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -155,6 +179,15 @@ fun NavGraph(
                     if (activity != null) {
                         authViewModel.login(activity)
                     }
+                },
+                onLanguageChanged = onLanguageChanged
+            )
+        }
+
+        composable(route = Screen.Onboarding.route) {
+            OnboardingScreen(
+                onOnboardingComplete = {
+                    // Navigation is handled by LaunchedEffect observing userProfile
                 },
                 onLanguageChanged = onLanguageChanged
             )
