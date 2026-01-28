@@ -22,6 +22,7 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.screens.DataScreen.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.HomeScreen.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.LoginScreen.LoginScreen
+import kaist.iclab.mobiletracker.ui.screens.OnboardingScreen.OnboardingScreen
 import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AboutSettings.AboutSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.AccountSettingsScreen
@@ -48,6 +49,7 @@ fun NavGraph(
     permissionManager: AndroidPermissionManager
 ) {
     val userState by authViewModel.userState.collectAsState()
+    val userProfile by authViewModel.userProfile.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -92,26 +94,41 @@ fun NavGraph(
         }
     }
 
-    // Navigate based on authentication state
-    LaunchedEffect(userState.isLoggedIn) {
+    // Navigate based on authentication state and profile
+    LaunchedEffect(userState.isLoggedIn, userProfile) {
         val mainTabs = listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
         val currentRoute = navController.currentDestination?.route
 
         if (userState.isLoggedIn) {
-            // Navigate to Home screen (main tab) when user logs in
-            // Only navigate if we are currently on the Login screen, preventing
-            // forced navigation when restoring state on sub-screens (e.g. Language change)
-            if (currentRoute == Screen.Login.route) {
-                navController.navigate(Screen.Home.route) {
-                    // Clear back stack to prevent going back to login
-                    popUpTo(Screen.Login.route) { inclusive = true }
+            // Wait for profile to be loaded before deciding navigation
+            val profile = userProfile ?: return@LaunchedEffect
+
+            // Check if user needs onboarding (show when HAS NO campaign)
+            val needsOnboarding = profile.campaign_id == null
+
+            when (currentRoute) {
+                // User is on Login screen and needs onboarding
+                Screen.Login.route -> if (needsOnboarding) {
+                    navController.navigate(Screen.Onboarding.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                } else {
+                    // User is on Login screen and doesn't need onboarding
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+                // User completed onboarding (on Onboarding screen and now doesn't need it)
+                Screen.Onboarding.route -> if (!needsOnboarding) {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                    }
                 }
             }
         } else {
             // Navigate to Login when user logs out
             if (currentRoute !in mainTabs && currentRoute != Screen.Login.route) {
                 navController.navigate(Screen.Login.route) {
-                    // Clear back stack to prevent going back to main tabs
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -157,6 +174,17 @@ fun NavGraph(
                     }
                 },
                 onLanguageChanged = onLanguageChanged
+            )
+        }
+
+        composable(route = Screen.Onboarding.route) {
+            OnboardingScreen(
+                onOnboardingComplete = {
+                    // Navigation is handled by LaunchedEffect observing userProfile
+                },
+                onLogout = {
+                    authViewModel.logout()
+                }
             )
         }
 
@@ -245,4 +273,3 @@ fun NavGraph(
         }
     }
 }
-

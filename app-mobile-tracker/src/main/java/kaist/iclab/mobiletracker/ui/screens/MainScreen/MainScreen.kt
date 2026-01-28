@@ -60,8 +60,8 @@ fun MainScreen(
         Scaffold(
             containerColor = AppColors.Background,
             bottomBar = {
-                // Show bottom navigation for all routes except Login
-                if (currentRoute != Screen.Login.route) {
+                // Show bottom navigation for all routes except Login and Onboarding
+                if (currentRoute != Screen.Login.route && currentRoute != Screen.Onboarding.route) {
                     BottomNavigationBar(navController = navController)
                 }
             }
