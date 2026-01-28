@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 
 sealed class Question<T>(
+    open val id: Int,
     open val question: String,
     open val isMandatory: Boolean,
     initialValue: T,
@@ -58,28 +59,10 @@ sealed class Question<T>(
     abstract fun isEmpty(response: T): Boolean
     abstract fun getResponseJson(): JsonElement
     abstract fun initResponse()
+    abstract fun eval(expr: Expression<T>, value: T): Boolean
 
     private fun setIsValid() {
         if(isHidden.value || !isMandatory) _isValid.value = true
         else _isValid.value = !isEmpty(response.value)
-    }
-
-    private fun eval(expr: Expression<T>, value: T): Boolean {
-        return when(expr) {
-            is ValueComparator<T> -> when(expr) {
-                is ValueComparator.Equal<T> -> expr.value == value
-//                is ValueComparator.GreaterThan<T> -> expr.value > value
-//                is ValueComparator.GreaterThanOrEqual<T> -> expr.value >= value
-//                is ValueComparator.LessThan<T> -> expr.value < value
-//                is ValueComparator.LessThanOrEqual<T> -> expr.value <= value
-                is ValueComparator.NotEqual<T> -> expr.value != value
-            }
-
-            is Operator<T> -> when(expr) {
-                is Operator.And<T> -> eval(expr.a, value) && eval(expr.b, value)
-                is Operator.Not<T> -> !eval(expr.a, value)
-                is Operator.Or<T> -> eval(expr.a, value) || eval(expr.b, value)
-            }
-        }
     }
 }

@@ -11,14 +11,14 @@ import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
 import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
-import kaist.iclab.tracker.sensor.survey.question.Expression
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
 import kaist.iclab.tracker.sensor.survey.question.Operator
 import kaist.iclab.tracker.sensor.survey.question.Option
 import kaist.iclab.tracker.sensor.survey.question.QuestionTrigger
 import kaist.iclab.tracker.sensor.survey.question.RadioQuestion
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
-import kaist.iclab.tracker.sensor.survey.question.ValueComparator
+import kaist.iclab.tracker.sensor.survey.question.Predicate
+import kaist.iclab.tracker.sensor.survey.question.SetPredicate
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
@@ -76,42 +76,47 @@ val koinModule = module {
                 survey = mapOf(
                     "test" to Survey(
                         TextQuestion(
+                            id = 1,
                             question = "Your name?",
                             isMandatory = true,
                         ),
                         NumberQuestion(
+                            id = 2,
                             question = "Your age?",
                             isMandatory = false,
                         ),
                         RadioQuestion(
+                            id = 3,
                             question = "How are you?",
                             isMandatory = true,
                             option = listOf(
                                 Option("Good"),
                                 Option("Bad"),
                                 Option("Okay"),
-                                Option("Other", displayText = "Other:", allowFreeResponse = true)
+                                Option("Other: ", allowFreeResponse = true)
                             )
                         ),
-                        RadioQuestion(
-                            question = "Choose even number",
+                        CheckboxQuestion(
+                            id = 4,
+                            question = "Choose all even number",
                             isMandatory = false,
                             option = listOf(
                                 Option("1"),
                                 Option("2"),
-                                Option("3"),
+                                Option("4"),
                                 Option("5")
                             ),
                             questionTrigger = listOf(
                                 QuestionTrigger(
-                                    predicate = ValueComparator.Equal("2"),
+                                    predicate = Predicate.Equal(setOf(1, 2)),
                                     children = listOf(
                                         RadioQuestion(
+                                            id = 5,
                                             question = "Is P = NP?",
                                             isMandatory = true,
                                             option = listOf(
-                                                Option("Yes", displayText = "Hell yeah"),
-                                                Option("No", displayText = "Nah")
+                                                Option("Hell yeah"),
+                                                Option("Nah")
                                             ),
                                         )
                                     )
@@ -121,6 +126,7 @@ val koinModule = module {
                     ),
                     "fixedTime" to Survey(
                         TextQuestion(
+                            id = 6,
                             question = "Testing",
                             isMandatory = true,
                         ),
