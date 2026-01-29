@@ -84,13 +84,13 @@ fun RadioQuestion(
         question.option.forEachIndexed { index, option ->
             InputButtonRow(
                 isRadioButton = true,
-                option = option.value,
+                index = index,
                 optionDisplayText = option.displayText,
-                selected = (option.value == response.value),
-                onClick = { question.setResponse(option.value) },
+                selected = (index == response.value),
+                onClick = { question.setResponse(index) },
                 allowFreeResponse = option.allowFreeResponse,
-                freeResponse = otherResponse.value[option.value] ?: "",
-                onFreeResponseChange = { question.setOtherResponse(option.value, it) }
+                freeResponse = otherResponse.value[index] ?: "",
+                onFreeResponseChange = { question.setOtherResponse(index, it) }
             )
         }
     }
@@ -117,16 +117,16 @@ fun CheckboxQuestion(
             isMandatory = question.isMandatory
         )
         question.option.forEachIndexed { index, option ->
-            val selected = (option.value in response.value)
+            val selected = (index in response.value)
             InputButtonRow(
                 isRadioButton = false,
-                option = option.value,
+                index = index,
                 optionDisplayText = option.displayText,
                 selected = selected,
-                onClick = { question.toggleResponse(option.value, !selected) },
+                onClick = { question.toggleResponse(index, !selected) },
                 allowFreeResponse = option.allowFreeResponse,
-                freeResponse = otherResponse.value[option.value] ?: "",
-                onFreeResponseChange = { question.setOtherResponse(option.value, it) }
+                freeResponse = otherResponse.value[index] ?: "",
+                onFreeResponseChange = { question.setOtherResponse(index, it) }
             )
         }
     }

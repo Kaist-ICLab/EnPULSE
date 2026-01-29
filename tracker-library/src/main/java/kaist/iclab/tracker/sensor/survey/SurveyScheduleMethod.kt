@@ -4,10 +4,14 @@ sealed class SurveyScheduleMethod {
     data class ESM(
         val minInterval: Long,
         val maxInterval: Long,
+        val startOfDay: Long,
+        val endOfDay: Long,
         val numSurvey: Int,
-    ) : SurveyScheduleMethod()
+    ): SurveyScheduleMethod()
 
     data class Fixed(
         val timeOfDay: List<Long>
-    ) : SurveyScheduleMethod()
+    ): SurveyScheduleMethod()
+
+    class Manual: SurveyScheduleMethod()
 }

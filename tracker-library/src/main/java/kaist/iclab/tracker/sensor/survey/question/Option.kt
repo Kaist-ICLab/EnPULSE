@@ -1,7 +1,6 @@
 package kaist.iclab.tracker.sensor.survey.question
 
 data class Option(
-    val value: String,
-    val displayText: String? = null,
+    val displayText: String,
     val allowFreeResponse: Boolean = false,
 )

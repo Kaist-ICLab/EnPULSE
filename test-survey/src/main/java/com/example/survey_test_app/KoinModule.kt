@@ -10,12 +10,15 @@ import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
 import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
+import kaist.iclab.tracker.sensor.survey.question.Operator
 import kaist.iclab.tracker.sensor.survey.question.Option
 import kaist.iclab.tracker.sensor.survey.question.QuestionTrigger
 import kaist.iclab.tracker.sensor.survey.question.RadioQuestion
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
-import kaist.iclab.tracker.sensor.survey.question.ValueComparator
+import kaist.iclab.tracker.sensor.survey.question.Predicate
+import kaist.iclab.tracker.sensor.survey.question.SetPredicate
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
@@ -52,96 +55,87 @@ val koinModule = module {
         SurveySensor(
             context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
-            configStorage = SimpleStateStorage(
-                SurveySensor.Config(
-                    startTimeOfDay = TimeUnit.HOURS.toMillis(9),
-                    endTimeOfDay = TimeUnit.HOURS.toMillis(25),
-                    scheduleMethod = mapOf(
-//                    "test" to SurveyScheduleMethod.Fixed(
-//                        timeOfDay = listOf(
-//                            (System.currentTimeMillis() + 30_000 + TimeUnit.HOURS.toMillis(9)) % 86_400_000
-//                        )
-//                    ),
-                        "test" to SurveyScheduleMethod.ESM(
+            configStorage = SimpleStateStorage(SurveySensor.Config(
+                survey = mapOf(
+                    "test" to Survey(
+                        scheduleMethod = SurveyScheduleMethod.ESM(
                             minInterval = TimeUnit.MINUTES.toMillis(30),
                             maxInterval = TimeUnit.MINUTES.toMillis(45),
+                            startOfDay = TimeUnit.HOURS.toMillis(9),
+                            endOfDay = TimeUnit.HOURS.toMillis(25),
                             numSurvey = 30,
                         ),
-                        "fixedTime" to SurveyScheduleMethod.Fixed(
-                            timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
-                        ),
-                    ),
-                    survey = mapOf(
-                        "test" to Survey(
-                            TextQuestion(
-                                question = "Your name?",
-                                isMandatory = true,
-                            ),
-                            NumberQuestion(
-                                question = "Your age?",
-                                isMandatory = false,
-                            ),
-                            RadioQuestion(
-                                question = "How are you?",
-                                isMandatory = true,
-                                option = listOf(
-                                    Option("Good"),
-                                    Option("Bad"),
-                                    Option("Okay"),
-                                    Option(
-                                        "Other",
-                                        displayText = "Other:",
-                                        allowFreeResponse = true
-                                    )
-                                )
-                            ),
-                            RadioQuestion(
-                                question = "Choose even number",
-                                isMandatory = false,
-                                option = listOf(
-                                    Option("1"),
-                                    Option("2"),
-                                    Option("3"),
-                                    Option("5")
-                                ),
-                                questionTrigger = listOf(
-                                    QuestionTrigger(
-                                        predicate = ValueComparator.Equal("2"),
-                                        children = listOf(
-                                            RadioQuestion(
-                                                question = "Is P = NP?",
-                                                isMandatory = true,
-                                                option = listOf(
-                                                    Option("Yes", displayText = "Hell yeah"),
-                                                    Option("No", displayText = "Nah")
-                                                ),
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-                        "fixedTime" to Survey(
-                            TextQuestion(
-                                question = "Testing",
-                                isMandatory = true,
-                            ),
-                        )
-                    ),
-                    notificationConfig = mapOf(
-                        "test" to SurveyNotificationConfig(
+                        notificationConfig = SurveyNotificationConfig(
                             title = "Survey Test",
                             description = "This is a survey test",
                             icon = R.drawable.ic_launcher_foreground
                         ),
-                        "fixedTime" to SurveyNotificationConfig(
+                        TextQuestion(
+                            id = 1,
+                            question = "Your name?",
+                            isMandatory = true,
+                        ),
+                        NumberQuestion(
+                            id = 2,
+                            question = "Your age?",
+                            isMandatory = false,
+                        ),
+                        RadioQuestion(
+                            id = 3,
+                            question = "How are you?",
+                            isMandatory = true,
+                            option = listOf(
+                                Option("Good"),
+                                Option("Bad"),
+                                Option("Okay"),
+                                Option("Other: ", allowFreeResponse = true)
+                            )
+                        ),
+                        CheckboxQuestion(
+                            id = 4,
+                            question = "Choose all even number",
+                            isMandatory = false,
+                            option = listOf(
+                                Option("1"),
+                                Option("2"),
+                                Option("4"),
+                                Option("5")
+                            ),
+                            questionTrigger = listOf(
+                                QuestionTrigger(
+                                    predicate = Predicate.Equal(setOf(1, 2)),
+                                    children = listOf(
+                                        RadioQuestion(
+                                            id = 5,
+                                            question = "Is P = NP?",
+                                            isMandatory = true,
+                                            option = listOf(
+                                                Option("Hell yeah"),
+                                                Option("Nah")
+                                            ),
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    "fixedTime" to Survey(
+                        scheduleMethod = SurveyScheduleMethod.Fixed(
+                            timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
+                        ),
+                        notificationConfig = SurveyNotificationConfig(
                             title = "Survey Test",
                             description = "This is a fixed time survey at 3PM",
                             icon = R.drawable.ic_launcher_foreground
-                        )
-                    ),
-                )
-            ),
+                        ),
+                        TextQuestion(
+                            id = 6,
+                            question = "Testing",
+                            isMandatory = true,
+                        ),
+                    )
+                ),
+            )),
             stateStorage = CouchbaseSensorStateStorage(
                 couchbase = get(),
                 collectionName = SurveySensor::class.simpleName ?: ""

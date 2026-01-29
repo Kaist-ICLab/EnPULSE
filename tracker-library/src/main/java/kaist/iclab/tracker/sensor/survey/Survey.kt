@@ -12,6 +12,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 class Survey(
+    val scheduleMethod: SurveyScheduleMethod,
+    val notificationConfig: SurveyNotificationConfig,
     vararg question: Question<*>
 ) {
     private val _isAnswerValid = MutableStateFlow(false)

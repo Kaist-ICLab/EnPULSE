@@ -58,7 +58,7 @@ fun QuestionText(
 @Composable
 fun InputButtonRow(
     isRadioButton: Boolean,
-    option: String,
+    index: Int,
     optionDisplayText: String?,
     selected: Boolean,
     onClick: () -> Unit,
@@ -94,7 +94,7 @@ fun InputButtonRow(
             modifier = Modifier.width(8.dp)
         )
         Text(
-            text = optionDisplayText ?: option
+            text = optionDisplayText ?: index.toString()
         )
 
         if (allowFreeResponse) {
