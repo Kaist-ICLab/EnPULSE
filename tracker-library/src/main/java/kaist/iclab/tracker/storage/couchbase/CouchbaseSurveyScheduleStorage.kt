@@ -11,8 +11,6 @@ import com.couchbase.lite.SelectResult
 import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
-import java.time.LocalDate
-import java.time.ZoneId
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -26,14 +24,16 @@ class CouchbaseSurveyScheduleStorage(
 
     private val collection = couchbase.getCollection(collectionName)
 
-    override fun getNextSchedule(): SurveySchedule? {
+    override fun getNextSchedule(surveyId: String?): SurveySchedule? {
         val now = System.currentTimeMillis()
         val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
             .from(DataSource.collection(collection))
             .where(
                 Expression.property("actualTriggerTime").isNotValued().and(
                     Expression.property("triggerTime").greaterThan(Expression.value(now - TimeUnit.MINUTES.toMillis(5)))
-                )
+                ). apply {
+                    if(surveyId != null) and(Expression.property("surveyId").equalTo(Expression.value(surveyId)))
+                }
             )
             .orderBy(Ordering.property("triggerTime").ascending())
             .limit(Expression.intValue(1))
@@ -63,9 +63,12 @@ class CouchbaseSurveyScheduleStorage(
         }
     }
 
-    override fun getLastSchedule(): SurveySchedule? {
+    override fun getLastSchedule(surveyId: String?): SurveySchedule? {
         val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
             .from(DataSource.collection(collection))
+            .apply {
+                if(surveyId !== null) where(Expression.property("surveyId").equalTo(Expression.value(surveyId)))
+            }
             .orderBy(Ordering.property("triggerTime").descending())
             .limit(Expression.intValue(1))
 

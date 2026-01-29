@@ -56,25 +56,20 @@ val koinModule = module {
             context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
             configStorage = SimpleStateStorage(SurveySensor.Config(
-                startTimeOfDay = TimeUnit.HOURS.toMillis(9),
-                endTimeOfDay = TimeUnit.HOURS.toMillis(25),
-                scheduleMethod = mapOf(
-//                    "test" to SurveyScheduleMethod.Fixed(
-//                        timeOfDay = listOf(
-//                            (System.currentTimeMillis() + 30_000 + TimeUnit.HOURS.toMillis(9)) % 86_400_000
-//                        )
-//                    ),
-                    "test" to SurveyScheduleMethod.ESM(
-                        minInterval = TimeUnit.MINUTES.toMillis(30),
-                        maxInterval = TimeUnit.MINUTES.toMillis(45),
-                        numSurvey = 30,
-                    ),
-                    "fixedTime" to SurveyScheduleMethod.Fixed(
-                        timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
-                    ),
-                ),
                 survey = mapOf(
                     "test" to Survey(
+                        scheduleMethod = SurveyScheduleMethod.ESM(
+                            minInterval = TimeUnit.MINUTES.toMillis(30),
+                            maxInterval = TimeUnit.MINUTES.toMillis(45),
+                            startOfDay = TimeUnit.HOURS.toMillis(9),
+                            endOfDay = TimeUnit.HOURS.toMillis(25),
+                            numSurvey = 30,
+                        ),
+                        notificationConfig = SurveyNotificationConfig(
+                            title = "Survey Test",
+                            description = "This is a survey test",
+                            icon = R.drawable.ic_launcher_foreground
+                        ),
                         TextQuestion(
                             id = 1,
                             question = "Your name?",
@@ -125,23 +120,19 @@ val koinModule = module {
                         )
                     ),
                     "fixedTime" to Survey(
+                        scheduleMethod = SurveyScheduleMethod.Fixed(
+                            timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
+                        ),
+                        notificationConfig = SurveyNotificationConfig(
+                            title = "Survey Test",
+                            description = "This is a fixed time survey at 3PM",
+                            icon = R.drawable.ic_launcher_foreground
+                        ),
                         TextQuestion(
                             id = 6,
                             question = "Testing",
                             isMandatory = true,
                         ),
-                    )
-                ),
-                notificationConfig = mapOf(
-                    "test" to SurveyNotificationConfig(
-                        title = "Survey Test",
-                        description = "This is a survey test",
-                        icon = R.drawable.ic_launcher_foreground
-                    ),
-                    "fixedTime" to SurveyNotificationConfig(
-                        title = "Survey Test",
-                        description = "This is a fixed time survey at 3PM",
-                        icon = R.drawable.ic_launcher_foreground
                     )
                 ),
             )),
