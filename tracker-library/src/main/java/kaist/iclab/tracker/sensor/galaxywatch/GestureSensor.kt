@@ -99,7 +99,6 @@ class GestureSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val eventDetected: Boolean,
         val classIndex: Int?,
         val label: String?,
         val score: Int?,
@@ -325,7 +324,6 @@ class GestureSensor(
         val entity = Entity(
             received = received,
             timestamp = timestamp,
-            eventDetected = eventDetected,
             classIndex = classIndex,
             label = classIndex?.let { LABELS.getOrNull(it) },
             score = classIndex?.let { probabilities?.getOrNull(it) },

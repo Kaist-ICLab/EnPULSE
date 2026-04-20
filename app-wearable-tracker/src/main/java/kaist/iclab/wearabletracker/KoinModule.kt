@@ -247,7 +247,6 @@ val koinModule = module {
             get<SkinTemperatureSensor>(),
             get<EDASensor>(),
             get<IMUSensor>(),
-            get<AudioSensor>(),
             get<GestureSensor>(),
             get<LocationSensor>()
         )
