@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 class AutoSyncManager(
     private val context: Context,
     private val phoneCommunicationManager: PhoneCommunicationManager,
+    private val microEmaResponseManager: MicroEmaResponseManager,
     private val syncPreferencesHelper: SyncPreferencesHelper,
     private val controllerStateFlow: StateFlow<ControllerState>,
     private val coroutineScope: CoroutineScope
@@ -61,6 +62,9 @@ class AutoSyncManager(
                 }
 
                 phoneCommunicationManager.sendDataToPhone(isSilent = true)
+                
+                // Also retry any pending MicroEMA responses
+                microEmaResponseManager.retrySyncUnsynced()
             }
         }
     }

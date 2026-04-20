@@ -658,7 +658,7 @@ private fun TapButtonsInput(
 }
 
 /**
- * Crown-scrollable number picker (0–10 range).
+ * Scrollable number picker (0–10 range).
  */
 @Composable
 private fun NumberPickerInput(

@@ -256,6 +256,7 @@ val koinModule = module {
         AutoSyncManager(
             context = androidContext(),
             phoneCommunicationManager = get(),
+            microEmaResponseManager = get(),
             syncPreferencesHelper = get(),
             controllerStateFlow = get<BackgroundController>().controllerStateFlow,
             coroutineScope = get()
