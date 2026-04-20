@@ -154,6 +154,12 @@ class BLEHelper(
                     )
                     // Send ACK back to watch immediately so it can clean up its DB
                     sendMicroEmaAck(processedIds)
+
+                    // Attempt to upload immediately for real-time responsiveness
+                    // We launch this in the IO dispatcher so it doesn't block BLE reception
+                    appScope.io.launch {
+                        surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(

@@ -1,117 +1,58 @@
 {
-  "surveyId": 42,
-  "title": "Micro EMA",
-  "expireAfterMs": 10000,
+  "surveyId": 34,
+  "title": "Basic survey",
+  "expireAfterMs": 60000,
   "questions": [
     {
-      "id": 101,
-      "surveyId": 42,
-      "text": "How stressed do you feel right now?",
+      "id": 27,
+      "surveyId": 34,
+      "text": "How are you feeling today?",
       "answerType": "RADIO",
       "isMandatory": true,
       "options": [
         {
-          "id": 201,
-          "display": "1"
+          "id": 23,
+          "display": "Good"
         },
         {
-          "id": 202,
-          "display": "2"
+          "id": 24,
+          "display": "Bad"
         },
         {
-          "id": 203,
-          "display": "3"
-        },
-        {
-          "id": 204,
-          "display": "4"
-        },
-        {
-          "id": 205,
-          "display": "5"
+          "id": 25,
+          "display": "Okay"
         }
       ]
     },
     {
-      "id": 102,
-      "surveyId": 42,
-      "text": "What are you doing right now?",
-      "answerType": "RADIO",
-      "isMandatory": true,
-      "options": [
-        {
-          "id": 301,
-          "display": "Working"
-        },
-        {
-          "id": 302,
-          "display": "Studying"
-        },
-        {
-          "id": 303,
-          "display": "Eating"
-        },
-        {
-          "id": 304,
-          "display": "Exercising"
-        },
-        {
-          "id": 305,
-          "display": "Resting"
-        }
-      ]
-    },
-    {
-      "id": 103,
-      "surveyId": 42,
-      "text": "What symptoms are you feeling?",
+      "id": 28,
+      "surveyId": 34,
+      "text": "What is the capital of England?",
       "answerType": "CHECKBOX",
-      "isMandatory": true,
+      "isMandatory": false,
       "options": [
         {
-          "id": 701,
-          "display": "Headache"
+          "id": 29,
+          "display": "E"
         },
         {
-          "id": 702,
-          "display": "Cough"
-        },
-        {
-          "id": 703,
-          "display": "Fever"
-        },
-        {
-          "id": 704,
-          "display": "Nausea"
-        },
-        {
-          "id": 705,
-          "display": "Fatigue"
+          "id": 30,
+          "display": "London"
         }
       ]
     },
     {
-      "id": 105,
-      "surveyId": 42,
-      "text": "Are you alone?",
-      "answerType": "RADIO",
-      "isMandatory": true,
-      "options": [
-        {
-          "id": 801,
-          "display": "Yes"
-        },
-        {
-          "id": 802,
-          "display": "No"
-        }
-      ]
-    },
-    {
-      "id": 106,
-      "surveyId": 42,
-      "text": "Any other comments or details?",
+      "id": 25,
+      "surveyId": 34,
+      "text": "What is your name?",
       "answerType": "TEXT",
+      "isMandatory": true
+    },
+    {
+      "id": 26,
+      "surveyId": 34,
+      "text": "Your age?",
+      "answerType": "NUMBER",
       "isMandatory": false
     }
   ]

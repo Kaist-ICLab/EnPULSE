@@ -362,42 +362,17 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         failureCount: AtomicInteger,
         failedSensors: MutableList<String>
     ) {
-        try {
-            val unsynced = microEmaResponseDao.getUnsyncedResponses()
-            if (unsynced.isEmpty()) return
-
-            val inserts = unsynced.map { entity ->
-                fun formatTimestamp(millisStr: String?) = millisStr?.toLongOrNull()?.let {
-                    Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).format(isoFormatter)
-                }
-
-                SurveyQuestionResponseInsert(
-                    questionId = entity.questionId,
-                    uuid = entity.uuid,
-                    triggerTime = formatTimestamp(entity.triggerTime),
-                    actualTriggerTime = formatTimestamp(entity.actualTriggerTime),
-                    surveyStartTime = formatTimestamp(entity.surveyStartTime),
-                    responseSubmissionTime = formatTimestamp(entity.responseSubmissionTime),
-                    response = Json.parseToJsonElement(entity.responseJson).jsonObject
-                )
-            }
-
-            when (val result = surveyService.submitSurveyResponses(inserts)) {
-                is Result.Success -> {
-                    Log.d(TAG, "Successfully uploaded ${unsynced.size} MicroEMA responses")
-                    microEmaResponseDao.markAsSynced(unsynced.map { it.id })
+        when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
+            is Result.Success -> {
+                if (result.data > 0) {
                     successCount.incrementAndGet()
                 }
-                is Result.Error -> {
-                    Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
-                    failureCount.incrementAndGet()
-                    failedSensors.add("MicroEMA")
-                }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error processing MicroEMA responses upload: ${e.message}", e)
-            failureCount.incrementAndGet()
-            failedSensors.add("MicroEMA")
+            is Result.Error -> {
+                Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
+                failureCount.incrementAndGet()
+                failedSensors.add("MicroEMA")
+            }
         }
     }
 }

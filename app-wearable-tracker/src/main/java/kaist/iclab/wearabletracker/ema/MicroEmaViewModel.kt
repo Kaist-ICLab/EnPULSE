@@ -120,6 +120,7 @@ class MicroEmaViewModel(
     fun dismiss() {
         if (_isComplete.value) return
 
+        responseTime = System.currentTimeMillis()
         _finalStatus.value = ResponseStatus.DISMISSED
         stopCountdown()
         submitWithStatus(ResponseStatus.DISMISSED)
@@ -131,6 +132,7 @@ class MicroEmaViewModel(
     private fun onExpired() {
         if (_isComplete.value) return
 
+        responseTime = System.currentTimeMillis()
         _finalStatus.value = ResponseStatus.EXPIRED
         submitWithStatus(ResponseStatus.EXPIRED)
     }
@@ -153,7 +155,7 @@ class MicroEmaViewModel(
             status = status,
             triggerTime = triggerTime,
             surveyStartTime = surveyStartTime,
-            responseTime = if (status == ResponseStatus.ANSWERED) responseTime else null
+            responseTime = responseTime ?: System.currentTimeMillis()
         )
 
         viewModelScope.launch {
