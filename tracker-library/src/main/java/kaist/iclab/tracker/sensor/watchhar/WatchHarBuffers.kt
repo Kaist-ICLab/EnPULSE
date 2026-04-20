@@ -18,19 +18,6 @@ internal class FloatRingBuffer(private val capacity: Int) {
         if (size < capacity) size++
     }
 
-    fun write(values: FloatArray) {
-        for (value in values) {
-            write(value)
-        }
-    }
-
-    fun getLastData(count: Int): FloatArray {
-        require(count <= capacity) { "count is larger than buffer size" }
-        val result = FloatArray(count)
-        copyLastDataTo(result)
-        return result
-    }
-
     fun copyLastDataTo(destination: FloatArray) {
         val count = destination.size
         require(count <= capacity) { "Buffer size too small" }

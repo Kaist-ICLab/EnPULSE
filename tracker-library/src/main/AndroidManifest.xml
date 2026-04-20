@@ -103,7 +103,7 @@
         <service
             android:name=".sensor.controller.BackgroundController$ControllerService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone"></service>
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone" />
 
         <service
             android:name=".listener.AccessibilityListener$AccessibilityServiceAdaptor"
@@ -127,6 +127,6 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".sensor.survey.activity.DefaultSurveyActivity"></activity>
+        <activity android:name=".sensor.survey.activity.DefaultSurveyActivity" />
     </application>
 </manifest>

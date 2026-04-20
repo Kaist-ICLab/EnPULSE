@@ -232,7 +232,7 @@ class GestureSensor(
             }
             normalize(snapshot)
             snapshot
-        } ?: return
+        }
 
         val detectedNow = synchronized(dataLock) {
             val probability = eventDetector?.run(detectionSnapshot) ?: return
@@ -318,7 +318,6 @@ class GestureSensor(
 
     private fun emitEntity(
         timestamp: Long,
-        eventDetected: Boolean,
         classIndex: Int?,
         probabilities: List<Int>?,
     ) {
@@ -350,7 +349,6 @@ class GestureSensor(
         val scaledProbabilities = scaleProbabilitiesToThousand(averagedProbabilities)
         emitEntity(
             timestamp = timestamp,
-            eventDetected = true,
             classIndex = classIndex,
             probabilities = scaledProbabilities
         )
