@@ -3,6 +3,8 @@ package kaist.iclab.mobiletracker
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.di.appModule
 import kaist.iclab.mobiletracker.di.authModule
 import kaist.iclab.mobiletracker.di.databaseModule
@@ -14,22 +16,23 @@ import kaist.iclab.mobiletracker.di.watchSensorModule
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.tracker.sensor.controller.BackgroundController
+import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
+import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.tracker.sensor.controller.ControllerState
-import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.component.KoinComponent
 import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.qualifier.named
 import org.koin.core.logger.Level
 
 /**
  * Application class for MobileTracker app.
  * Handles global initialization and setup that should happen when the app starts.
  */
-class MobileTrackerApplication : Application(), KoinComponent {
+class MobileTrackerApplication : Application(), KoinComponent, BackgroundControllerDependenciesProvider {
 
     override fun attachBaseContext(base: Context) {
         val context = LanguageHelper(base).attachBaseContextWithLanguage(base)
@@ -107,5 +110,15 @@ class MobileTrackerApplication : Application(), KoinComponent {
                 }
             }
         }
+    }
+
+    override fun provideBackgroundControllerDependencies(): BackgroundControllerDependencies {
+        val koin = getKoin()
+        return BackgroundControllerDependencies(
+            controllerStateStorage = koin.get(named("phoneControllerStateStorage")),
+            sensors = koin.get(named("phoneSensors")),
+            serviceNotification = koin.get(),
+            allowPartialSensing = true
+        )
     }
 }
