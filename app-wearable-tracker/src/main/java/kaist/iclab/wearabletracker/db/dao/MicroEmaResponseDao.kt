@@ -12,7 +12,7 @@ import kaist.iclab.wearabletracker.db.entity.MicroEmaResponseEntity
 interface MicroEmaResponseDao {
 
     @Insert
-    suspend fun insertAll(responses: List<MicroEmaResponseEntity>)
+    suspend fun insertAll(responses: List<MicroEmaResponseEntity>): List<Long>
 
     @Query("SELECT * FROM micro_ema_responses WHERE synced = 0 ORDER BY triggerTime ASC")
     suspend fun getUnsyncedResponses(): List<MicroEmaResponseEntity>

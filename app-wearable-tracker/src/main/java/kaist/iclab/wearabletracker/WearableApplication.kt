@@ -2,6 +2,7 @@ package kaist.iclab.wearabletracker
 
 import android.app.Application
 import kaist.iclab.wearabletracker.data.SyncAckListener
+import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -20,5 +21,6 @@ class WearableApplication : Application() {
 
         // Start listening for sync ACKs from the phone
         get<SyncAckListener>().startListening()
+        get<MicroEmaResponseManager>().startListening()
     }
 }

@@ -1,7 +1,7 @@
 {
   "surveyId": 42,
-  "title": "Stress Check",
-  "expireAfterMs": 30000,
+  "title": "Micro EMA",
+  "expireAfterMs": 10000,
   "questions": [
     {
       "id": 101,
@@ -31,6 +31,88 @@
           "display": "5"
         }
       ]
+    },
+    {
+      "id": 102,
+      "surveyId": 42,
+      "text": "What are you doing right now?",
+      "answerType": "RADIO",
+      "isMandatory": true,
+      "options": [
+        {
+          "id": 301,
+          "display": "Working"
+        },
+        {
+          "id": 302,
+          "display": "Studying"
+        },
+        {
+          "id": 303,
+          "display": "Eating"
+        },
+        {
+          "id": 304,
+          "display": "Exercising"
+        },
+        {
+          "id": 305,
+          "display": "Resting"
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "surveyId": 42,
+      "text": "What symptoms are you feeling?",
+      "answerType": "CHECKBOX",
+      "isMandatory": true,
+      "options": [
+        {
+          "id": 701,
+          "display": "Headache"
+        },
+        {
+          "id": 702,
+          "display": "Cough"
+        },
+        {
+          "id": 703,
+          "display": "Fever"
+        },
+        {
+          "id": 704,
+          "display": "Nausea"
+        },
+        {
+          "id": 705,
+          "display": "Fatigue"
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "surveyId": 42,
+      "text": "Are you alone?",
+      "answerType": "RADIO",
+      "isMandatory": true,
+      "options": [
+        {
+          "id": 801,
+          "display": "Yes"
+        },
+        {
+          "id": 802,
+          "display": "No"
+        }
+      ]
+    },
+    {
+      "id": 106,
+      "surveyId": 42,
+      "text": "Any other comments or details?",
+      "answerType": "TEXT",
+      "isMandatory": false
     }
   ]
 }

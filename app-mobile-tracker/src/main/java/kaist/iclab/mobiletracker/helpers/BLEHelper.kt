@@ -21,9 +21,7 @@ import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -105,9 +103,11 @@ class BLEHelper(
                 }
 
                 val jsonArray = Json.parseToJsonElement(jsonString).jsonArray
+                val processedIds = mutableListOf<Long>()
 
                 val responses = jsonArray.mapNotNull { element ->
                     val obj = element.jsonObject
+                    val watchId = obj["id"]?.jsonPrimitive?.content?.toLongOrNull()
                     val questionId = obj["questionId"]?.jsonPrimitive?.content?.toIntOrNull()
                         ?: return@mapNotNull null
                     val value = obj["value"]?.let {
@@ -115,7 +115,8 @@ class BLEHelper(
                     }
                     val status = obj["status"]?.jsonPrimitive?.content ?: "ANSWERED"
                     val triggerTime = obj["triggerTime"]?.jsonPrimitive?.content?.toLongOrNull()
-                    val surveyStartTime = obj["surveyStartTime"]?.jsonPrimitive?.content?.toLongOrNull()
+                    val surveyStartTime =
+                        obj["surveyStartTime"]?.jsonPrimitive?.content?.toLongOrNull()
                     val responseTime = obj["responseTime"]?.jsonPrimitive?.content?.toLongOrNull()
 
                     // Build the response JSON that goes into the `response` column
@@ -124,6 +125,8 @@ class BLEHelper(
                         put("value", value)
                         put("status", status)
                     }
+
+                    if (watchId != null) processedIds.add(watchId)
 
                     fun formatTimestamp(millis: Long?) =
                         millis?.let {
@@ -144,19 +147,45 @@ class BLEHelper(
                 if (responses.isNotEmpty()) {
                     when (val result = surveyService.submitSurveyResponses(responses)) {
                         is Result.Success -> {
-                            Log.d(AppConfig.LogTags.PHONE_BLE,
-                                "[MICRO_EMA] Uploaded ${responses.size} responses to Supabase")
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "[MICRO_EMA] Uploaded ${responses.size} responses to Supabase"
+                            )
+                            // Send ACK back to watch
+                            sendMicroEmaAck(processedIds)
                         }
+
                         is Result.Error -> {
-                            Log.e(AppConfig.LogTags.PHONE_BLE,
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
                                 "[MICRO_EMA] Failed to upload: ${result.message}",
-                                result.exception)
+                                result.exception
+                            )
                         }
                     }
                 }
             } catch (e: Exception) {
-                Log.e(AppConfig.LogTags.PHONE_BLE,
-                    "[MICRO_EMA] Error processing response: ${e.message}", e)
+                Log.e(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "[MICRO_EMA] Error processing response: ${e.message}", e
+                )
+            }
+        }
+    }
+
+    /**
+     * Send ACK back to watch for successfully processed microEMA responses.
+     * Format: List of watch database IDs as a comma-separated string.
+     */
+    private fun sendMicroEmaAck(ids: List<Long>) {
+        if (ids.isEmpty()) return
+        appScope.io.launch {
+            try {
+                val ackData = ids.joinToString(",")
+                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_ACK, ackData)
+                Log.d(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Sent ACK for IDs: $ackData")
+            } catch (e: Exception) {
+                Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Failed to send ACK: ${e.message}")
             }
         }
     }

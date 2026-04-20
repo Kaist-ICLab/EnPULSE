@@ -313,7 +313,8 @@ val koinModule = module {
     single {
         MicroEmaResponseManager(
             dao = get(),
-            phoneCommunicationManager = get()
+            phoneCommunicationManager = get(),
+            coroutineScope = get()
         )
     }
 

@@ -16,6 +16,7 @@ import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class AccountSettingsViewModel(
@@ -156,8 +156,10 @@ class AccountSettingsViewModel(
             _isReloadingConfig.value = true
             try {
                 // Fetch surveys and sensors concurrently
-                val surveyDeferred = async { surveyRepository.fetchAndPersistSurveys(currentCampaignId) }
-                val sensorDeferred = async { campaignSensorRepository.fetchActiveSensors(currentCampaignId.toLong()) }
+                val surveyDeferred =
+                    async { surveyRepository.fetchAndPersistSurveys(currentCampaignId) }
+                val sensorDeferred =
+                    async { campaignSensorRepository.fetchActiveSensors(currentCampaignId.toLong()) }
 
                 val surveyResult = surveyDeferred.await()
                 val sensorResult = sensorDeferred.await()

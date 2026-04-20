@@ -1,5 +1,10 @@
 package kaist.iclab.wearabletracker.ema
-
+ 
+import android.content.Intent
+import android.speech.RecognizerIntent
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,14 +16,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -31,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.app.RemoteInput
+import androidx.wear.input.RemoteInputIntentHelper
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -43,10 +54,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.Checkbox
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Picker
 import androidx.wear.compose.material.Text
+import androidx.wear.compose.material.ToggleChip
+import androidx.wear.compose.material.ToggleChipDefaults
 import androidx.wear.compose.material.rememberPickerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Mic
+import androidx.wear.compose.material.Icon
 import kaist.iclab.wearabletracker.R
 import kotlinx.coroutines.delay
 
@@ -59,6 +77,12 @@ private val DarkSurface = Color(0xFF3C4043)
 private val TimerSafe = Color(0xFF81C995)
 private val TimerWarning = Color(0xFFF4B400)
 private val TimerCritical = Color(0xFFF28B82)
+
+/**
+ * Auto-detect whether options represent a Likert scale (all numeric) or categorical labels.
+ */
+private fun isLikertScale(options: List<WatchOption>): Boolean =
+    options.all { it.display.toDoubleOrNull() != null }
 
 /**
  * Main microEMA screen — displays a single question and handles the response.
@@ -74,6 +98,7 @@ fun MicroEmaScreen(
     onFinish: () -> Unit
 ) {
     val question by viewModel.question.collectAsState()
+    val config by viewModel.surveyConfig.collectAsState()
     val isComplete by viewModel.isComplete.collectAsState()
     val finalStatus by viewModel.finalStatus.collectAsState()
     val remainingTimeMs by viewModel.remainingTimeMs.collectAsState()
@@ -102,9 +127,8 @@ fun MicroEmaScreen(
     ) {
         // Bezel Timer (Circular Progress)
         if (!isComplete && remainingTimeMs != null) {
-            val totalTime = viewModel.question.value?.let { 30000L } ?: 30000L // Default or from config
-            // Use 30s as default if config is missing for visualization
-            val progress = (remainingTimeMs!!.toFloat() / 30000f).coerceIn(0f, 1f)
+            val totalTime = config?.expireAfterMs ?: 30000L
+            val progress = (remainingTimeMs!!.toFloat() / totalTime.toFloat()).coerceIn(0f, 1f)
             val color = when {
                 progress > 0.6f -> TimerSafe
                 progress > 0.3f -> TimerWarning
@@ -191,8 +215,12 @@ private fun SingleQuestionView(
         }
 
         // --- SECTION 2: Middle (Interaction / Options) ---
-        // This section is NOT weighted, so it stays at the vertical midpoint of the Column
         var selectedIndex by remember { mutableIntStateOf(question.options.size / 2) }
+        var selectedIds by remember { mutableStateOf(emptySet<Int>()) }
+        var selectedNumber by remember { mutableStateOf("5") }
+        var enteredText by remember { mutableStateOf("") }
+        
+        val isLikert = remember(question) { isLikertScale(question.options) }
         
         Box(
             modifier = Modifier.padding(vertical = 4.dp),
@@ -205,48 +233,84 @@ private fun SingleQuestionView(
                             options = question.options,
                             onSelect = onAnswer
                         )
-                    } else {
+                    } else if (isLikert) {
                         HorizontalOptionInput(
                             options = question.options,
                             selectedIndex = selectedIndex,
                             onIndexChanged = { selectedIndex = it }
                         )
+                    } else {
+                        CategoricalOptionInput(
+                            options = question.options,
+                            selectedIndex = selectedIndex,
+                            onIndexChanged = { selectedIndex = it }
+                        )
                     }
+                }
+                AnswerType.CHECKBOX -> {
+                    CheckboxInput(
+                        options = question.options,
+                        selectedIds = selectedIds,
+                        onToggle = { id ->
+                            selectedIds = if (selectedIds.contains(id)) {
+                                selectedIds - id
+                            } else {
+                                selectedIds + id
+                            }
+                        }
+                    )
                 }
                 AnswerType.NUMBER -> {
                     NumberPickerInput(
-                        onValueChange = { /* handled by inner state for now */ },
-                        onSelect = onAnswer // Fallback for simple case, but usually needs a separate picker state
+                        onValueChange = { selectedNumber = it },
+                        onSelect = onAnswer
                     )
                 }
-                else -> {
-                    if (question.options.isNotEmpty()) {
-                        HorizontalOptionInput(
-                            options = question.options,
-                            selectedIndex = selectedIndex,
-                            onIndexChanged = { selectedIndex = it }
-                        )
-                    }
+                AnswerType.TEXT -> {
+                    TextInput(
+                        currentText = enteredText,
+                        onResult = { enteredText = it }
+                    )
                 }
             }
         }
 
         // --- SECTION 3: Bottom (Actions) ---
-        // We use weight(1f) to mirror the top layout, pushing the options to the exact center
         Box(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            val showConfirm = question.answerType != AnswerType.RADIO || question.options.size > 2
+            // Show confirm for Likert, Categorical, Checkbox, and Number/Text
+            val showConfirm = when {
+                question.answerType == AnswerType.RADIO && question.options.size <= 2 -> false
+                else -> true
+            }
             
             ActionButtonGroup(
                 showConfirm = showConfirm,
                 onConfirm = {
-                    if (question.answerType == AnswerType.RADIO && question.options.isNotEmpty()) {
-                        onAnswer(question.options[selectedIndex].display)
-                    } else {
-                        // For NumberPicker, it has its own selection logic
-                        // In this refactored structure, we might need a hoisted state for NumberPicker
+                    when (question.answerType) {
+                        AnswerType.RADIO -> {
+                            if (question.options.isNotEmpty()) {
+                                onAnswer(question.options[selectedIndex].display)
+                            }
+                        }
+                        AnswerType.CHECKBOX -> {
+                            if (selectedIds.isNotEmpty()) {
+                                val selectedTexts = question.options
+                                    .filter { it.id in selectedIds }
+                                    .joinToString(", ") { it.display }
+                                onAnswer(selectedTexts)
+                            }
+                        }
+                        AnswerType.TEXT -> {
+                            if (enteredText.isNotBlank()) {
+                                onAnswer(enteredText)
+                            }
+                        }
+                        AnswerType.NUMBER -> {
+                            onAnswer(selectedNumber)
+                        }
                     }
                 },
                 onDismiss = onDismiss
@@ -322,6 +386,242 @@ private fun HorizontalOptionInput(
 }
 
 /**
+ * Horizontal pager showing one categorical option at a time.
+ * User swipes left/right to browse options; the visible option is always selected.
+ */
+@Composable
+private fun CategoricalOptionInput(
+    options: List<WatchOption>,
+    selectedIndex: Int,
+    onIndexChanged: (Int) -> Unit
+) {
+    val pagerState = rememberPagerState(
+        initialPage = selectedIndex,
+        pageCount = { options.size }
+    )
+
+    // Sync pager scroll → selectedIndex
+    LaunchedEffect(pagerState.currentPage) {
+        onIndexChanged(pagerState.currentPage)
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Pager showing one option at a time
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp),
+            pageSpacing = 8.dp
+        ) { page ->
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Button(
+                    onClick = { },
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(34.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = AccentBlue),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = options[page].display,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Page indicator dots
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(options.size) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(if (index == pagerState.currentPage) 6.dp else 4.dp)
+                        .background(
+                            color = if (index == pagerState.currentPage) AccentBlue else MutedGrey.copy(alpha = 0.5f),
+                            shape = CircleShape
+                        )
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Vertically scrollable list of categorical options with checkboxes (multi-select).
+ */
+@Composable
+private fun CheckboxInput(
+    options: List<WatchOption>,
+    selectedIds: Set<Int>,
+    onToggle: (Int) -> Unit
+) {
+    val listState = rememberLazyListState()
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(76.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp)
+    ) {
+        itemsIndexed(options) { index: Int, option: WatchOption ->
+            val isChecked = selectedIds.contains(option.id)
+            ToggleChip(
+                checked = isChecked,
+                onCheckedChange = { onToggle(option.id) },
+                label = {
+                    Text(
+                        text = option.display,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                toggleControl = {
+                    Checkbox(
+                        checked = isChecked,
+                        onCheckedChange = { onToggle(option.id) }
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp),
+                colors = ToggleChipDefaults.toggleChipColors(
+                    checkedStartBackgroundColor = AccentBlue.copy(alpha = 0.2f),
+                    checkedEndBackgroundColor = AccentBlue.copy(alpha = 0.2f),
+                    uncheckedStartBackgroundColor = DarkSurface.copy(alpha = 0.6f),
+                    uncheckedEndBackgroundColor = DarkSurface.copy(alpha = 0.6f),
+                    checkedContentColor = Color.White,
+                    uncheckedContentColor = Color.White,
+                    checkedToggleControlColor = AccentBlue
+                )
+            )
+        }
+    }
+}
+
+/**
+ * Button that launches system remote input (keyboard/voice/handwriting).
+ */
+@Composable
+private fun TextInput(
+    currentText: String,
+    onResult: (String) -> Unit
+) {
+    // 1. Launcher for Unified Input (Keyboard/Handwriting/Voice)
+    val textLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val data = result.data
+        if (result.resultCode == Activity.RESULT_OK && data != null) {
+            val bundle = RemoteInput.getResultsFromIntent(data)
+            val text = bundle?.getCharSequence("ema_text_input")?.toString()
+            if (!text.isNullOrBlank()) {
+                onResult(text)
+            }
+        }
+    }
+
+    // 2. Launcher for Direct Voice-only Input (STT)
+    val voiceLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val results = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val firstResult = results?.firstOrNull()
+            if (!firstResult.isNullOrBlank()) {
+                onResult(firstResult)
+            }
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(0.95f)
+            .height(40.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // --- Manual Text Button (Keyboard) ---
+        Button(
+            onClick = {
+                val intent = RemoteInputIntentHelper.createActionRemoteInputIntent()
+                val remoteInputs = listOf(
+                    RemoteInput.Builder("ema_text_input")
+                        .setLabel("Enter your answer")
+                        .build()
+                )
+                RemoteInputIntentHelper.putRemoteInputsExtra(intent, remoteInputs)
+                textLauncher.launch(intent)
+            },
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            colors = ButtonDefaults.buttonColors(backgroundColor = DarkSurface.copy(alpha = 0.6f)),
+            shape = RoundedCornerShape(50)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Keyboard,
+                    contentDescription = "Type",
+                    modifier = Modifier.size(14.dp),
+                    tint = MutedGrey
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+                Text(
+                    text = currentText.ifBlank { "Tap to type..." },
+                    fontSize = 11.sp,
+                    color = if (currentText.isBlank()) MutedGrey else Color.White,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        // --- Direct Mic Button ---
+        Button(
+            onClick = {
+                val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
+                }
+                voiceLauncher.launch(intent)
+            },
+            modifier = Modifier.size(40.dp),
+            colors = ButtonDefaults.buttonColors(backgroundColor = AccentBlue),
+            shape = CircleShape
+        ) {
+            Icon(
+                imageVector = Icons.Default.Mic,
+                contentDescription = "Speak",
+                modifier = Modifier.size(20.dp),
+                tint = Color.Black
+            )
+        }
+    }
+}
+
+/**
  * Two large tap buttons for ≤2 options (Yes/No, binary choices).
  */
 @Composable
@@ -370,6 +670,11 @@ private fun NumberPickerInput(
         initialNumberOfOptions = numberOptions.size,
         initiallySelectedOption = 5
     )
+
+    // Sync picker scroll → onValueChange
+    LaunchedEffect(pickerState.selectedOption) {
+        onValueChange(numberOptions[pickerState.selectedOption])
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally

@@ -81,14 +81,14 @@ class MicroEmaViewModel(
 
         _surveyConfig.value = config
 
-        val firstQuestion = config.questions.firstOrNull()
-        if (firstQuestion == null) {
+        val selectedQuestion = config.questions.randomOrNull()
+        if (selectedQuestion == null) {
             Log.e(TAG, "Survey has no questions — finishing immediately")
             _isComplete.value = true
             return
         }
 
-        _question.value = firstQuestion
+        _question.value = selectedQuestion
         surveyStartTime = System.currentTimeMillis()
 
         // Start countdown timer if configured
@@ -97,7 +97,7 @@ class MicroEmaViewModel(
             startCountdown(expiryMs)
         }
 
-        Log.d(TAG, "Survey started: ${config.title}, question: ${firstQuestion.text}")
+        Log.d(TAG, "Survey started: ${config.title}, question: ${selectedQuestion.text}")
     }
 
     /**

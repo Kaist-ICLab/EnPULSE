@@ -22,9 +22,10 @@ data class WatchOption(
  * Answer type for a question. Derived from `survey_question.answer_type`.
  * The watch UI determines the input widget based on this type + number of options:
  *   - RADIO with ≤2 options → two large tap buttons (Yes/No style)
- *   - RADIO with 3+ options → crown-scrollable Picker (Likert scale)
+ *   - RADIO with 3+ options → horizontal carousel or scrollable chips (Likert/Categorical)
+ *   - CHECKBOX → scrollable list of toggle chips (multi-select)
  *   - NUMBER → crown-scrollable picker 0–10
- *   - TEXT → short text input (rarely used on watch)
+ *   - TEXT → manual keyboard/handwriting entry or direct STT voice dictation
  */
 @Serializable
 enum class AnswerType {
@@ -74,6 +75,7 @@ enum class ResponseStatus {
  * A single question's response within a microEMA session.
  */
 data class MicroEmaResponse(
+    val id: Long? = null,
     val surveyId: Int,
     val questionId: Int,
     val answer: String?,
