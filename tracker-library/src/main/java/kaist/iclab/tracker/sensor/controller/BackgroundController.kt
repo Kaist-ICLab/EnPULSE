@@ -49,11 +49,6 @@ class BackgroundController(
         notificationManager.createNotificationChannel(serviceChannel)
 
         sensors.forEach { it.init() }
-
-        BackgroundControllerServiceLocator.controllerStateStorage = controllerStateStorage
-        BackgroundControllerServiceLocator.sensors = sensors
-        BackgroundControllerServiceLocator.serviceNotification = serviceNotification
-        BackgroundControllerServiceLocator.allowPartialSensing = allowPartialSensing
     }
 
     override val controllerStateFlow: StateFlow<ControllerState> = controllerStateStorage.stateFlow
@@ -82,14 +77,30 @@ class BackgroundController(
             var isServiceRunning = false
         }
 
-        private val stateStorage = BackgroundControllerServiceLocator.controllerStateStorage
-        private val sensors = BackgroundControllerServiceLocator.sensors
-        private val serviceNotification = BackgroundControllerServiceLocator.serviceNotification
-        private val partialSensingAllowed = BackgroundControllerServiceLocator.allowPartialSensing
+        private lateinit var stateStorage: StateStorage<ControllerState>
+        private lateinit var sensors: List<Sensor<*, *>>
+        private lateinit var serviceNotification: ServiceNotification
+        private var partialSensingAllowed: Boolean = false
+
+        override fun onCreate() {
+            super.onCreate()
+            resolveDependencies()
+        }
 
         override fun onBind(intent: Intent?): Binder? = null
         override fun onDestroy() {
             stop()
+        }
+
+        private fun resolveDependencies() {
+            val provider = application as? BackgroundControllerDependenciesProvider
+                ?: error("Application must implement BackgroundControllerDependenciesProvider")
+            val dependencies = provider.provideBackgroundControllerDependencies()
+
+            stateStorage = dependencies.controllerStateStorage
+            sensors = dependencies.sensors
+            serviceNotification = dependencies.serviceNotification
+            partialSensingAllowed = dependencies.allowPartialSensing
         }
 
         private fun run() {
@@ -122,6 +133,9 @@ class BackgroundController(
         override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
             // CRITICAL: Call startForeground IMMEDIATELY - this must happen within 5 seconds
             try {
+                if (!::stateStorage.isInitialized || !::serviceNotification.isInitialized) {
+                    resolveDependencies()
+                }
                 val notificationProps = getNotificationProperties()
                 ensureNotificationChannel(notificationProps.channelId)
                 val notification = buildNotification(notificationProps)
@@ -320,7 +334,6 @@ class BackgroundController(
 
             val defaultServiceType =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
-            val sensors = BackgroundControllerServiceLocator.sensors
 
             // Get all service types from enabled sensors, but filter to only allowed types
             val calculatedTypes = sensors.filter {

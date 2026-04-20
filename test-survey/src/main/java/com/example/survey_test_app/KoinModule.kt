@@ -5,6 +5,7 @@ import com.example.survey_test_app.storage.SimpleStateStorage
 import com.example.survey_test_app.ui.SurveyViewModel
 import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
 import kaist.iclab.tracker.permission.AndroidPermissionManager
+import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
@@ -146,7 +147,7 @@ val koinModule = module {
 
     // Global Controller
     single {
-        MyBackgroundController.ServiceNotification(
+        BackgroundController.ServiceNotification(
             channelId = "BackgroundControllerService",
             channelName = "TrackerTest",
             notificationId = 1,
@@ -161,12 +162,12 @@ val koinModule = module {
             couchbase = get(),
             defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
             clazz = ControllerState::class.java,
-            collectionName = MyBackgroundController::class.simpleName ?: ""
+            collectionName = BackgroundController::class.simpleName ?: ""
         )
     }
 
     single {
-        MyBackgroundController(
+        BackgroundController(
             context = androidContext(),
             controllerStateStorage = get(qualifier("controllerState")),
             sensors = listOf(get<SurveySensor>()),

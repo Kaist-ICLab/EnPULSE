@@ -23,8 +23,8 @@
             android:name="com.example.survey_test_app.SurveyDataReceiver$SurveyDataReceiverService"
             android:foregroundServiceType="specialUse" />
         <service
-            android:name="MyBackgroundController$ControllerService"
+            android:name="kaist.iclab.tracker.sensor.controller.BackgroundController$ControllerService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice"></service>
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice" />
     </application>
 </manifest>

@@ -18,6 +18,7 @@ import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
 import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
+import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.data.SyncAckListener
@@ -276,15 +277,19 @@ val koinModule = module {
         )
     }
 
+    single<StateStorage<ControllerState>>(named("watchControllerStateStorage")) {
+        CouchbaseStateStorage(
+            couchbase = get(),
+            defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
+            clazz = ControllerState::class.java,
+            collectionName = BackgroundController::class.simpleName ?: ""
+        )
+    }
+
     single {
         BackgroundController(
             context = androidContext(),
-            controllerStateStorage = CouchbaseStateStorage(
-                couchbase = get(),
-                defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
-                clazz = ControllerState::class.java,
-                collectionName = BackgroundController::class.simpleName ?: ""
-            ),
+            controllerStateStorage = get(named("watchControllerStateStorage")),
             sensors = get(qualifier("sensors")),
             serviceNotification = get<BackgroundController.ServiceNotification>(),
             allowPartialSensing = true
