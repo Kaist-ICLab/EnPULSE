@@ -72,6 +72,7 @@
     <string name="language_korean_full">한국어 (대한민국)</string>
     <string name="language_screen_description">Select your preferred language for the app interface. The app will display all text and menus in the selected language.</string>
     <string name="phone_sensor_screen_description">Enable or disable individual phone sensors for data collection. Toggle each sensor on or off to control what data is being tracked.</string>
+    <string name="phone_sensor_empty_config">No sensors have been configured for your campaign by the researcher.</string>
     <string name="permission_screen_description">View and manage app permissions. Toggle permissions on or off to control what data the app can access.</string>
 
 
@@ -158,6 +159,13 @@
     <string name="sensor_detail_delete_cancel">Cancel</string>
     <string name="record_deleted_success">Record deleted from device and server</string>
     <string name="record_deleted_error">Failed to delete record</string>
+
+    <string name="menu_reload_config">Reload Config</string>
+    <string name="menu_reload_config_desc">Refresh the config from server</string>
+    <string name="reload_config_dialog_title">Reload Configuration</string>
+    <string name="reload_config_dialog_message">Are you sure you want to reload? This will fetch the latest settings for your current campaign.</string>
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="toast_success_saved">Successfully loaded active config.</string>
 
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">Light sensor data</string>

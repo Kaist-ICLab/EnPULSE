@@ -2,10 +2,14 @@ package kaist.iclab.mobiletracker.viewmodels.auth
 
 import android.app.Activity
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
 import kaist.iclab.mobiletracker.repository.AuthRepository
+import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
+import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.tracker.auth.Authentication
@@ -34,8 +38,11 @@ import kotlinx.coroutines.launch
 class AuthViewModel(
     private val authentication: Authentication,
     private val authRepository: AuthRepository,
-    private val userProfileRepository: UserProfileRepository
+    private val userProfileRepository: UserProfileRepository,
+    private val campaignSensorRepository: CampaignSensorRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
     private val TAG = "AuthViewModel"
 
     val userState: StateFlow<UserState> = authentication.userStateFlow
@@ -45,11 +52,19 @@ class AuthViewModel(
     val uiEvent: SharedFlow<AuthUiEvent> = _uiEvent.asSharedFlow()
 
     // Expose cached profile from repository
-    val userProfile: StateFlow<kaist.iclab.mobiletracker.data.sensors.phone.ProfileData?> =
+    val userProfile: StateFlow<ProfileData?> =
         userProfileRepository.profileFlow
 
-    private var previousLoginState = false
+    private var previousLoginState: Boolean
+        get() = savedStateHandle[KEY_PREVIOUS_LOGIN_STATE] ?: false
+        set(value) {
+            savedStateHandle[KEY_PREVIOUS_LOGIN_STATE] = value
+        }
     private var lastSavedToken: String? = null
+
+    companion object {
+        private const val KEY_PREVIOUS_LOGIN_STATE = "previous_login_state"
+    }
 
     init {
         // Load profile if user is already logged in (e.g., app restart)
@@ -84,6 +99,7 @@ class AuthViewModel(
                 // Clear profile when user logs out
                 if (!state.isLoggedIn) {
                     userProfileRepository.clearProfile()
+                    campaignSensorRepository.clearCache()
                     previousLoginState = false
                     lastSavedToken = null
                 }
@@ -120,11 +136,19 @@ class AuthViewModel(
      * Suspending function to load user profile.
      */
     private suspend fun loadUserProfileSuspend() {
-        userProfileRepository.refreshProfile()
-            .onFailure { e ->
-                Log.e(TAG, "Error loading user profile: ${e.message}", e)
+        when (val result = userProfileRepository.refreshProfile()) {
+            is Result.Success -> {
+                val profile = result.data
+                if (profile?.campaignId == null) {
+                    campaignSensorRepository.clearCache()
+                }
+            }
+
+            is Result.Error -> {
+                Log.e(TAG, "Error loading user profile: ${result.message}", result.exception)
                 _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))
             }
+        }
     }
 
     fun login(activity: Activity) {

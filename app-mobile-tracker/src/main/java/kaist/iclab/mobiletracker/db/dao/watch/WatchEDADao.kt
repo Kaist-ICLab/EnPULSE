@@ -26,6 +26,9 @@ interface WatchEDADao : BaseDao<WatchEDAEntity, WatchEDAEntity> {
     @Query("SELECT * FROM watch_eda WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<WatchEDAEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM watch_eda WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM watch_eda")
     override suspend fun getLatestTimestamp(): Long?
 

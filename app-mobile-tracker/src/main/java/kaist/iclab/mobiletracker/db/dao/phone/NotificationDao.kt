@@ -54,6 +54,9 @@ interface NotificationDao : BaseDao<NotificationSensor.Entity, NotificationEntit
     @Query("SELECT * FROM NotificationEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<NotificationEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM NotificationEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT COUNT(*) FROM NotificationEntity WHERE timestamp >= :afterTimestamp")
     fun getDailyNotificationCount(afterTimestamp: Long): Flow<Int>
 

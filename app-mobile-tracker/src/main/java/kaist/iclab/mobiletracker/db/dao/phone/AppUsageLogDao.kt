@@ -50,6 +50,9 @@ interface AppUsageLogDao : BaseDao<AppUsageLogSensor.Entity, AppUsageLogEntity> 
     @Query("SELECT * FROM AppUsageLogEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<AppUsageLogEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM AppUsageLogEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT COUNT(*) FROM AppUsageLogEntity WHERE timestamp >= :afterTimestamp")
     fun getDailyAppUsageCount(afterTimestamp: Long): Flow<Int>
 

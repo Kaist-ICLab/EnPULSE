@@ -21,9 +21,9 @@ import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.tracker.auth.Authentication
 import kaist.iclab.tracker.auth.User
 import kaist.iclab.tracker.auth.UserState
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +47,7 @@ class SupabaseAuth(
 
     private val supabaseClient = supabaseHelper.supabaseClient
     private val credentialManager = CredentialManager.create(context)
+    private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
     private val _userStateFlow = MutableStateFlow<UserState>(
         UserState(isLoggedIn = false, user = null, token = null)
@@ -64,7 +65,7 @@ class SupabaseAuth(
      * Supabase-kt automatically persists sessions on Android using SharedPreferences.
      */
     private fun checkCurrentSessionAsync() {
-        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+        authScope.launch {
             try {
                 // Small delay to ensure Supabase client is fully initialized and has loaded persisted session
                 delay(200)
@@ -93,9 +94,7 @@ class SupabaseAuth(
         SupabaseLoadingInterceptor.withLoading {
             try {
                 supabaseClient.auth.currentSessionOrNull()?.let { session ->
-                    val token =
-                        SupabaseSessionHelper.getPropertyValue(session, "accessToken") as? String
-                    _userStateFlow.value = _userStateFlow.value.copy(token = token)
+                    _userStateFlow.value = _userStateFlow.value.copy(token = session.accessToken)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error getting token: ${e.message}", e)
@@ -183,36 +182,19 @@ class SupabaseAuth(
     }
 
     /**
-     * Extract user name from Supabase user metadata or email
-     * Uses reflection to avoid explicit type dependency
+     * Create UserState from Supabase session using typed SDK access.
      */
-    private fun extractUserName(user: Any): String {
-        val email = SupabaseSessionHelper.getPropertyValue(user, "email") as? String
-        val metadata = SupabaseSessionHelper.getPropertyValue(user, "userMetadata") as? Map<*, *>?
-
-        return metadata?.get("full_name") as? String
-            ?: metadata?.get("name") as? String
-            ?: email?.substringBefore("@")
-            ?: "No name"
-    }
-
-    /**
-     * Create UserState from Supabase session
-     */
-    private fun createUserStateFromSession(session: Any): UserState {
-        val supabaseUser = SupabaseSessionHelper.getPropertyValue(session, "user")
+    private fun createUserStateFromSession(session: io.github.jan.supabase.auth.user.UserSession): UserState {
+        val sessionInfo = SupabaseSessionHelper.getSessionInfo(session)
             ?: return createErrorState("Session has no user")
-
-        val accessToken = SupabaseSessionHelper.getPropertyValue(session, "accessToken") as? String
-        val email = SupabaseSessionHelper.getPropertyValue(supabaseUser, "email") as? String
 
         return UserState(
             isLoggedIn = true,
             user = User(
-                email = email ?: "No email",
-                name = extractUserName(supabaseUser)
+                email = sessionInfo.email,
+                name = sessionInfo.userName
             ),
-            token = accessToken
+            token = sessionInfo.accessToken
         )
     }
 

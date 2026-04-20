@@ -191,7 +191,7 @@ class DataRepositoryImpl(
             try {
                 supabaseHelper.supabaseClient.from(handler.supabaseTableName).delete {
                     filter {
-                        eq("event_id", eventId)
+                        eq(handler.remoteIdColumnName, eventId)
                     }
                 }
                 Log.d("DataRepositoryImpl", "Deleted record from Supabase: $eventId")
@@ -244,12 +244,24 @@ class DataRepositoryImpl(
         val handler = handlerRegistry.getHandler(sensorId) ?: return emptyList()
         val afterTimestamp = getTimestampForFilter(dateFilter)
 
-        // Get all records without pagination (use a very large limit)
-        return handler.getRecordsPaginated(
-            afterTimestamp = afterTimestamp,
-            isAscending = false,
-            limit = Int.MAX_VALUE,
-            offset = 0
-        )
+        val allRecords = mutableListOf<SensorRecord>()
+        val batchSize = 5000
+        var offset = 0
+
+        while (true) {
+            val records = handler.getRecordsPaginated(
+                afterTimestamp = afterTimestamp,
+                isAscending = true,
+                limit = batchSize,
+                offset = offset
+            )
+
+            if (records.isEmpty()) break
+            allRecords.addAll(records)
+            if (records.size < batchSize) break
+            offset += batchSize
+        }
+
+        return allRecords
     }
 }

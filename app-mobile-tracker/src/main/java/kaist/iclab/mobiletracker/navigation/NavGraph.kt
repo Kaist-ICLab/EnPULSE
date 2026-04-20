@@ -105,7 +105,7 @@ fun NavGraph(
             val profile = userProfile ?: return@LaunchedEffect
 
             // Check if user needs onboarding (show when HAS NO campaign)
-            val needsOnboarding = profile.campaign_id == null
+            val needsOnboarding = profile.campaignId == null
 
             when (currentRoute) {
                 // User is on Login screen and needs onboarding

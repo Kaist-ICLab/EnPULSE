@@ -76,7 +76,7 @@ class ProfileService(
                     ProfileData(
                         uuid = uuid,
                         email = email,
-                        campaign_id = campaignId
+                        campaignId = campaignId
                     )
                 )
             }
@@ -115,7 +115,7 @@ class ProfileService(
             if (existingProfile == null) {
                 Result.Error(AppError.NotFound("Profile with UUID $uuid not found"))
             } else {
-                saveProfile(existingProfile.copy(campaign_id = campaignId))
+                saveProfile(existingProfile.copy(campaignId = campaignId))
             }
         }
     }

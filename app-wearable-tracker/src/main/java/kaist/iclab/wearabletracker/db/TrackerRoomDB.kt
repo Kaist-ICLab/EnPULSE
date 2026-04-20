@@ -32,7 +32,7 @@ import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
 abstract class TrackerRoomDB : RoomDatabase() {
     abstract fun accelerometerDao(): AccelerometerDao
     abstract fun ppgDao(): PPGDao
-    abstract fun heatRateDao(): HeartRateDao
+    abstract fun heartRateDao(): HeartRateDao
     abstract fun skinTemperatureDao(): SkinTemperatureDao
     abstract fun edaDao(): EDADao
     abstract fun locationDao(): LocationDao

@@ -74,6 +74,16 @@ interface LocationDao : BaseDao<LocationSensor.Entity, LocationEntity> {
     @Query("SELECT * FROM location WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<LocationEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM location WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
+    // Device-specific check methods
+    @Query("SELECT EXISTS(SELECT 1 FROM location WHERE deviceType = :deviceType AND timestamp > :afterTimestamp)")
+    suspend fun hasDataAfterTimestampByDeviceType(
+        afterTimestamp: Long,
+        deviceType: Int
+    ): Boolean
+
     // Device-specific query methods
     @Query("SELECT * FROM location WHERE deviceType = :deviceType AND timestamp > :afterTimestamp ORDER BY timestamp ASC")
     suspend fun getDataAfterTimestampByDeviceType(

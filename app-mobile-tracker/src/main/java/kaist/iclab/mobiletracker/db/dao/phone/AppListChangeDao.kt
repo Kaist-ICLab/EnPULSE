@@ -53,6 +53,9 @@ interface AppListChangeDao : BaseDao<AppListChangeSensor.Entity, AppListChangeEn
     @Query("SELECT * FROM AppListChangeEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<AppListChangeEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM AppListChangeEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM AppListChangeEntity")
     override suspend fun getLatestTimestamp(): Long?
 

@@ -109,7 +109,8 @@ val watchSensorModule = module {
         WatchSensorUploadService(
             handlerRegistry = get(named("watchUploadHandlerRegistry")),
             supabaseHelper = get(),
-            syncTimestampService = SyncTimestampService(androidContext())
+            syncTimestampService = SyncTimestampService(androidContext()),
+            campaignSensorRepository = get()
         )
     }
 }

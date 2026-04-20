@@ -72,6 +72,7 @@
     <string name="language_korean_full">한국어 (대한민국)</string>
     <string name="language_screen_description">앱 인터페이스에 사용할 언어를 선택하세요. 선택한 언어로 모든 텍스트와 메뉴가 표시됩니다.</string>
     <string name="phone_sensor_screen_description">데이터 수집을 위해 개별 폰 센서를 활성화하거나 비활성화하세요. 각 센서를 켜거나 끄면 추적되는 데이터를 제어할 수 있습니다.</string>
+    <string name="phone_sensor_empty_config">해당 캠페인에 대해 연구자가 설정한 센서가 없습니다.</string>
     <string name="permission_screen_description">앱 권한을 보기 및 관리하세요. 권한을 켜거나 끄면 앱이 액세스할 수 있는 데이터를 제어할 수 있습니다.</string>
 
 
@@ -158,6 +159,13 @@
     <string name="sensor_detail_delete_cancel">취소</string>
     <string name="record_deleted_success">기기 및 서버에서 기록이 삭제되었습니다</string>
     <string name="record_deleted_error">기록 삭제에 실패했습니다</string>
+
+    <string name="menu_reload_config">설정 다시 불러오기</string>
+    <string name="menu_reload_config_desc">서버에서 설정을 새로고침합니다</string>
+    <string name="reload_config_dialog_title">설정 다시 불러오기</string>
+    <string name="reload_config_dialog_message">설정을 다시 불러오시겠습니까? 현재 캠페인의 최신 설정 데이터를 가져옵니다.</string>
+    <string name="error_generic">문제가 발생했습니다. 다시 시도해 주세요.</string>
+    <string name="toast_success_saved">설정을 성공적으로 불러왔습니다.</string>
 
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">조도 센서 데이터</string>

@@ -29,13 +29,6 @@ object AppConfig {
     val SUPABASE_ANON_KEY: String = BuildConfig.SUPABASE_ANON_KEY
 
     /**
-     * Supabase service role key
-     * Injected from local.properties (SUPABASE_SERVICE_ROLE_KEY) or environment variable
-     * ⚠️ WARNING: Handle with care, this has administrative privileges!
-     */
-    val SUPABASE_SERVICE_ROLE_KEY: String = BuildConfig.SUPABASE_SERVICE_ROLE_KEY
-
-    /**
      * Supabase table names for sensor data
      * Centralized location for all Supabase table names used in the application
      */

@@ -4,6 +4,8 @@ import kaist.iclab.mobiletracker.db.TrackerRoomDB
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignRepositoryImpl
+import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
+import kaist.iclab.mobiletracker.repository.CampaignSensorRepositoryImpl
 import kaist.iclab.mobiletracker.repository.DataRepository
 import kaist.iclab.mobiletracker.repository.DataRepositoryImpl
 import kaist.iclab.mobiletracker.repository.HomeRepository
@@ -39,6 +41,7 @@ import kaist.iclab.mobiletracker.repository.handlers.watch.WatchSkinTemperatureD
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
+import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -139,6 +142,20 @@ val repositoryModule = module {
     single<CampaignRepository> {
         CampaignRepositoryImpl(
             campaignService = get()
+        )
+    }
+
+    // CampaignSensorRepository for active sensor management
+    single {
+        CampaignSensorConfigStorage(
+            couchbase = get()
+        )
+    }
+
+    single<CampaignSensorRepository> {
+        CampaignSensorRepositoryImpl(
+            supabaseHelper = get(),
+            persistentStorage = get()
         )
     }
 

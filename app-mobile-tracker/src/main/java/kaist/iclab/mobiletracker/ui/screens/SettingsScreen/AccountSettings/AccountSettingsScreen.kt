@@ -17,10 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -33,6 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,6 +47,8 @@ import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.ui.components.CampaignDialog.CampaignDialog
 import kaist.iclab.mobiletracker.ui.components.LogoutDialog.LogoutDialog
+import kaist.iclab.mobiletracker.ui.components.Popup.DialogButtonConfig
+import kaist.iclab.mobiletracker.ui.components.Popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
@@ -73,13 +79,14 @@ fun AccountSettingsScreen(
     val selectedCampaignId by accountSettingsViewModel.selectedCampaignId.collectAsState()
     val selectedCampaignName by accountSettingsViewModel.selectedCampaignName.collectAsState()
 
-    // Data collection running if started timestamp is not null
-    val isDataCollectionRunning by remember {
-        mutableStateOf(syncTimestampService.getDataCollectionStarted() != null)
-    }
+    // Data collection running state from ViewModel
+    val isDataCollectionRunning by accountSettingsViewModel.isDataCollectionRunning.collectAsState()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showCampaignDialog by remember { mutableStateOf(false) }
+    var showReloadDialog by remember { mutableStateOf(false) }
+
+    val isReloadingConfig by accountSettingsViewModel.isReloadingConfig.collectAsState()
 
     // Fetch campaigns when dialog is shown (refresh in case new campaigns were added)
     // Note: Initial data (campaigns + user campaign) is already loaded in ViewModel init
@@ -113,6 +120,36 @@ fun AccountSettingsScreen(
             },
             onJoinCampaign = { campaignId, password ->
                 accountSettingsViewModel.joinCampaign(campaignId, password)
+            }
+        )
+    }
+
+    // Reload Config Dialog
+    if (showReloadDialog) {
+        PopupDialog(
+            title = context.getString(R.string.reload_config_dialog_title),
+            content = {
+                Text(
+                    text = context.getString(R.string.reload_config_dialog_message),
+                    fontSize = 14.sp,
+                    color = Color(0xFF6B7280),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                )
+            },
+            primaryButton = DialogButtonConfig(
+                text = context.getString(R.string.logout_confirm),
+                onClick = {
+                    accountSettingsViewModel.reloadConfig()
+                    showReloadDialog = false
+                },
+            ),
+            secondaryButton = DialogButtonConfig(
+                text = context.getString(R.string.logout_close),
+                onClick = { showReloadDialog = false },
+                isPrimary = false
+            ),
+            onDismiss = {
+                if (!isReloadingConfig) showReloadDialog = false
             }
         )
     }
@@ -226,6 +263,29 @@ fun AccountSettingsScreen(
                             }
                         }
                     )
+
+                    // Reload Config Menu Item
+                    if (selectedCampaignName != null) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            thickness = 0.5.dp,
+                            color = AppColors.BorderLight
+                        )
+                        CampaignMenuItem(
+                            title = context.getString(R.string.menu_reload_config),
+                            description = context.getString(R.string.menu_reload_config_desc),
+                            icon = Icons.Filled.Refresh,
+                            hasSelectedExperiment = false,
+                            isEnabled = !isDataCollectionRunning && !isReloadingConfig,
+                            onClick = {
+                                if (isDataCollectionRunning) {
+                                    AppToast.show(context, R.string.turn_off_data_collection_first)
+                                } else {
+                                    showReloadDialog = true
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -261,6 +321,7 @@ private fun InfoRow(
 private fun CampaignMenuItem(
     title: String,
     description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.AutoMirrored.Filled.Assignment,
     hasSelectedExperiment: Boolean,
     isEnabled: Boolean,
     onClick: () -> Unit,
@@ -269,6 +330,7 @@ private fun CampaignMenuItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .alpha(if (isEnabled) 1f else 0.6f)
             .clickable { onClick() }
             .padding(
                 horizontal = SettingsStyles.MENU_ITEM_HORIZONTAL_PADDING,
@@ -277,7 +339,7 @@ private fun CampaignMenuItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.Assignment,
+            imageVector = icon,
             contentDescription = null,
             tint = AppColors.PrimaryColor,
             modifier = Modifier.size(SettingsStyles.ICON_SIZE)

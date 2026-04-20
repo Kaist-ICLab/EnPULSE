@@ -59,6 +59,9 @@ interface MediaDao : BaseDao<MediaSensor.Entity, MediaEntity> {
     @Query("SELECT * FROM MediaEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<MediaEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM MediaEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM MediaEntity")
     override suspend fun getLatestTimestamp(): Long?
 

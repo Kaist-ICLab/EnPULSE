@@ -16,23 +16,22 @@ import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.DateTimeFormatter
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.tracker.sensor.core.Sensor
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 
 class DataSyncSettingsViewModel(
     private val phoneSensorRepository: PhoneSensorRepository,
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
+    private val sensors: List<Sensor<*, *>>,
+    private val phoneSensorUploadService: PhoneSensorUploadService,
+    private val watchSensorUploadService: WatchSensorUploadService,
     private val context: Context
-) : ViewModel(), KoinComponent {
-    private val sensors: List<Sensor<*, *>> by inject(qualifier = named("phoneSensors"))
-    private val phoneSensorUploadService: PhoneSensorUploadService by inject()
-    private val watchSensorUploadService: WatchSensorUploadService by inject()
+) : ViewModel() {
     private val TAG = "ServerSyncSettingsViewModel"
 
     // Current time (updates every second)
@@ -122,33 +121,40 @@ class DataSyncSettingsViewModel(
 
                 val totalSensorsCount = sensors.size + SensorTypeHelper.watchSensorIds.size
 
-                // Upload all phone sensors
-                sensors.forEach { sensor ->
-                    if (!phoneSensorUploadService.hasDataToUpload(sensor.id)) {
-                        skippedCount++
-                    } else {
-                        phoneSensorUploadService.uploadSensorData(sensor.id)
-                            .onSuccess { uploadedCount++ }
-                            .onFailure { e ->
-                                failedCount++
-                                Log.e(TAG, "Upload failed for ${sensor.name}: ${e.message}", e)
-                            }
+                // Upload all phone sensors in parallel
+                val phoneJobs = sensors.map { sensor ->
+                    viewModelScope.async {
+                        if (!phoneSensorUploadService.hasDataToUpload(sensor.id)) {
+                            skippedCount++
+                        } else {
+                            phoneSensorUploadService.uploadSensorData(sensor.id)
+                                .onSuccess { _: Unit -> uploadedCount++ }
+                                .onFailure { e: Throwable ->
+                                    failedCount++
+                                    Log.e(TAG, "Upload failed for ${sensor.name}: ${e.message}", e)
+                                }
+                        }
                     }
                 }
 
-                // Upload all watch sensors
-                SensorTypeHelper.watchSensorIds.forEach { sensorId ->
-                    if (!watchSensorUploadService.hasDataToUpload(sensorId)) {
-                        skippedCount++
-                    } else {
-                        watchSensorUploadService.uploadSensorData(sensorId)
-                            .onSuccess { uploadedCount++ }
-                            .onFailure { e ->
-                                failedCount++
-                                Log.e(TAG, "Upload failed for $sensorId: ${e.message}", e)
-                            }
+                // Upload all watch sensors in parallel
+                val watchJobs = SensorTypeHelper.watchSensorIds.map { sensorId ->
+                    viewModelScope.async {
+                        if (!watchSensorUploadService.hasDataToUpload(sensorId)) {
+                            skippedCount++
+                        } else {
+                            watchSensorUploadService.uploadSensorData(sensorId)
+                                .onSuccess { _: Unit -> uploadedCount++ }
+                                .onFailure { e: Throwable ->
+                                    failedCount++
+                                    Log.e(TAG, "Upload failed for $sensorId: ${e.message}", e)
+                                }
+                        }
                     }
                 }
+
+                // Wait for all uploads to complete
+                (phoneJobs + watchJobs).awaitAll()
 
                 // Show summary toast
                 when {

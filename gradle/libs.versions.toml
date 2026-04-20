@@ -47,6 +47,7 @@ material = "1.13.0"
 coreKtxVersion = "1.7.0"
 composeFoundation = "1.5.0"
 coreSplashscreen = "1.0.1"
+securityCrypto = "1.1.0-alpha06"
 
 okhttp = "5.1.0"
 retrofit = "3.0.0"
@@ -133,6 +134,7 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "composeFoundation" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
 
 [bundles]

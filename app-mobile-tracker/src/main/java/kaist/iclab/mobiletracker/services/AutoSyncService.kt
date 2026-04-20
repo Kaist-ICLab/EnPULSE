@@ -19,6 +19,7 @@ import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.tracker.sensor.core.Sensor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
@@ -60,14 +61,15 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         }
     }
 
-    private val syncTimestampService: SyncTimestampService by lazy {
-        SyncTimestampService(this)
-    }
+    private val syncTimestampService by inject<SyncTimestampService>()
     private val phoneSensorUploadService: PhoneSensorUploadService by inject()
     private val watchSensorUploadService: WatchSensorUploadService by inject()
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
 
     private var lastSyncTime: Long = 0
+
+    /** Guards against duplicate sync loops from repeated onStartCommand calls */
+    private var syncLoopJob: Job? = null
 
     /** Prevents overlapping sync cycles when uploads take longer than the interval */
     private val isSyncing = AtomicBoolean(false)
@@ -88,6 +90,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
      * Uses lifecycleScope for automatic cancellation on service destruction.
      */
     private fun startAutoSync() {
+        if (syncLoopJob?.isActive == true) return
         Log.d(TAG, "Starting auto sync service")
         // Create notification channel
         NotificationHelper.ensureNotificationChannel(
@@ -97,7 +100,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         )
 
         // lifecycleScope automatically cancels when service is destroyed
-        lifecycleScope.launch(Dispatchers.IO) {
+        syncLoopJob = lifecycleScope.launch(Dispatchers.IO) {
             lastSyncTime = System.currentTimeMillis()
 
             while (isActive) {
@@ -156,11 +159,11 @@ class AutoSyncService : LifecycleService(), KoinComponent {
             return
         }
 
-        // All conditions met, trigger sync
-        lastSyncTime = currentTime
+        // All conditions met, trigger sync - update lastSyncTime AFTER completion to ensure retry on failure
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 uploadAllSensorData()
+                lastSyncTime = System.currentTimeMillis()
             } finally {
                 isSyncing.set(false)
             }

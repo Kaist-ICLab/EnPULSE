@@ -59,6 +59,9 @@ interface UserInteractionDao : BaseDao<UserInteractionSensor.Entity, UserInterac
     @Query("SELECT * FROM UserInteractionEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<UserInteractionEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM UserInteractionEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM UserInteractionEntity")
     override suspend fun getLatestTimestamp(): Long?
 

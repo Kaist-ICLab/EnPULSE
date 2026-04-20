@@ -35,6 +35,7 @@ object Constants {
      */
     object Prefs {
         const val PREFS_NAME = "language_preferences"
+        const val SYNC_PREFS_NAME = "sync_preferences"
         const val KEY_LANGUAGE = "selected_language"
 
         // Auto Sync Prefs

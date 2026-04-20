@@ -55,6 +55,13 @@ interface BaseDao<TEntity, TRoom> {
     suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<TRoom>
 
     /**
+     * Check if there is data after a specific timestamp (for efficient sync checks).
+     * @param afterTimestamp The timestamp threshold (in milliseconds)
+     * @return True if at least one record exists after the threshold
+     */
+    suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
+    /**
      * Get record count after a specific timestamp (e.g. for "today" counts).
      * @param afterTimestamp The timestamp threshold (in milliseconds)
      */

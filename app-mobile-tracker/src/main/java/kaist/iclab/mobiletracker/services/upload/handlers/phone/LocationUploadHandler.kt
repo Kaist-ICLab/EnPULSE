@@ -18,24 +18,42 @@ class LocationUploadHandler(
     override val sensorId = "Location"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        val entities =
-            dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
-        return entities.isNotEmpty()
+        return dao.hasDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
-            val entities =
-                dao.getDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
-            if (entities.isEmpty()) {
+            val batchSize = kaist.iclab.mobiletracker.Constants.Network.UPLOAD_BATCH_SIZE
+            var currentMaxTimestamp = lastUploadTimestamp
+            var uploadedAny = false
+
+            while (true) {
+                val entities = dao.getRecordsPaginatedByDeviceType(
+                    afterTimestamp = currentMaxTimestamp + 1,
+                    isAscending = true,
+                    limit = batchSize,
+                    offset = 0,
+                    deviceType = DeviceType.PHONE.value
+                )
+
+                if (entities.isEmpty()) break
+
+                val supabaseDataList =
+                    entities.map { entity -> PhoneLocationMapper.map(entity, userUuid) }
+                service.insertLocationSensorDataBatch(supabaseDataList)
+                    .getOrElse { error -> throw error }
+
+                currentMaxTimestamp = entities.maxOf { entity -> entity.timestamp }
+                uploadedAny = true
+
+                if (entities.size < batchSize) break
+            }
+
+            if (!uploadedAny) {
                 throw IllegalStateException("No new $sensorId data to upload")
             }
 
-            val supabaseDataList =
-                entities.map { entity -> PhoneLocationMapper.map(entity, userUuid) }
-            service.insertLocationSensorDataBatch(supabaseDataList)
-                .getOrElse { error -> throw error }
-            entities.maxOf { entity -> entity.timestamp }
+            currentMaxTimestamp
         }
     }
 

@@ -49,6 +49,9 @@ interface WifiScanDao : BaseDao<WifiScanSensor.Entity, WifiScanEntity> {
     @Query("SELECT * FROM WifiScanEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<WifiScanEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM WifiScanEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM WifiScanEntity")
     override suspend fun getLatestTimestamp(): Long?
 

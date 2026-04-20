@@ -50,6 +50,7 @@ val koinModule = module {
             TrackerRoomDB::class.java,
             "wearable_tracker_db"
         )
+            .fallbackToDestructiveMigration()
             .build()
     }
 
@@ -256,7 +257,7 @@ val koinModule = module {
         mapOf(
             get<AccelerometerSensor>().id to get<TrackerRoomDB>().accelerometerDao(),
             get<PPGSensor>().id to get<TrackerRoomDB>().ppgDao(),
-            get<HeartRateSensor>().id to get<TrackerRoomDB>().heatRateDao(),
+            get<HeartRateSensor>().id to get<TrackerRoomDB>().heartRateDao(),
             get<SkinTemperatureSensor>().id to get<TrackerRoomDB>().skinTemperatureDao(),
             get<EDASensor>().id to get<TrackerRoomDB>().edaDao(),
             get<LocationSensor>().id to get<TrackerRoomDB>().locationDao()
@@ -353,7 +354,9 @@ val koinModule = module {
         )
     }
 
-    // CoroutineScope
+    // Global CoroutineScope for background operations (PhoneCommunicationManager, AutoSyncManager,
+    // SyncAckListener, SensorDataReceiverService). This scope intentionally lives for the entire
+    // process lifetime and is never cancelled, matching the Koin singleton lifecycle.
     single<kotlinx.coroutines.CoroutineScope> {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
     }

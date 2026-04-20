@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
 import kaist.iclab.mobiletracker.data.survey.SurveyConfig
 import kaist.iclab.mobiletracker.repository.CampaignRepository
+import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
@@ -34,7 +35,8 @@ data class OnboardingUiState(
 class OnboardingViewModel(
     private val campaignRepository: CampaignRepository,
     private val userProfileRepository: UserProfileRepository,
-    private val surveyRepository: SurveyRepository
+    private val surveyRepository: SurveyRepository,
+    private val campaignSensorRepository: CampaignSensorRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OnboardingUiState())
@@ -68,6 +70,10 @@ class OnboardingViewModel(
                 is Result.Success -> {
                     // Fetch surveys
                     val surveyResult = surveyRepository.fetchAndPersistSurveys(selectedCampaign.id)
+
+                    // Fetch active sensors for the campaign
+                    val sensorResult =
+                        campaignSensorRepository.fetchActiveSensors(selectedCampaign.id.toLong())
 
                     // Refresh profile to trigger navigation
                     userProfileRepository.refreshProfile()

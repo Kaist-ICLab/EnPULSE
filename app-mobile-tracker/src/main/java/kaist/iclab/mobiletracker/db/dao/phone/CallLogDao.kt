@@ -47,6 +47,9 @@ interface CallLogDao : BaseDao<CallLogSensor.Entity, CallLogEntity> {
     @Query("SELECT * FROM CallLogEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<CallLogEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM CallLogEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM CallLogEntity")
     override suspend fun getLatestTimestamp(): Long?
 

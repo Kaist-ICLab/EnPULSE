@@ -61,6 +61,9 @@ interface BluetoothScanDao : BaseDao<BluetoothScanSensor.Entity, BluetoothScanEn
     @Query("SELECT * FROM BluetoothScanEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<BluetoothScanEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM BluetoothScanEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT COUNT(*) FROM BluetoothScanEntity WHERE timestamp >= :afterTimestamp")
     fun getDailyBluetoothCount(afterTimestamp: Long): Flow<Int>
 

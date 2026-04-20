@@ -19,6 +19,7 @@ val databaseModule = module {
             TrackerRoomDB::class.java,
             "mobile_tracker_db"
         )
+            .fallbackToDestructiveMigration()
             .build()
     }
 }

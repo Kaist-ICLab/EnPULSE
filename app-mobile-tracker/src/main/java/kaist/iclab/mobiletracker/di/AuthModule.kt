@@ -42,7 +42,9 @@ val authModule = module {
         AuthViewModel(
             authentication = authentication,
             authRepository = get<AuthRepository>(),
-            userProfileRepository = get<UserProfileRepository>()
+            userProfileRepository = get<UserProfileRepository>(),
+            campaignSensorRepository = get(),
+            savedStateHandle = get()
         )
     }
 }

@@ -26,6 +26,9 @@ interface WatchAccelerometerDao : BaseDao<WatchAccelerometerEntity, WatchAcceler
     @Query("SELECT * FROM watch_accelerometer WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<WatchAccelerometerEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM watch_accelerometer WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM watch_accelerometer")
     override suspend fun getLatestTimestamp(): Long?
 

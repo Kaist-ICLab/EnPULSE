@@ -137,6 +137,9 @@ dependencies {
     implementation(libs.androidx.credentials.auth)
     implementation(libs.googleid)
 
+    /* Security - Encrypted SharedPreferences */
+    implementation(libs.androidx.security.crypto)
+
     /* Kotlin Serialization */
     implementation(libs.kotlinx.serialization.json)
 

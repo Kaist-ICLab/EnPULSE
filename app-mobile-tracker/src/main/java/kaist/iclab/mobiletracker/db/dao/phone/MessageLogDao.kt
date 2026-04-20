@@ -47,6 +47,9 @@ interface MessageLogDao : BaseDao<MessageLogSensor.Entity, MessageLogEntity> {
     @Query("SELECT * FROM MessageLogEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<MessageLogEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM MessageLogEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM MessageLogEntity")
     override suspend fun getLatestTimestamp(): Long?
 

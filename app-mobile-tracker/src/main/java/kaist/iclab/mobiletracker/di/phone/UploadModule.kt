@@ -210,7 +210,8 @@ val uploadModule = module {
         PhoneSensorUploadService(
             handlerRegistry = get(),
             supabaseHelper = get(),
-            syncTimestampService = get()
+            syncTimestampService = get(),
+            campaignSensorRepository = get()
         )
     }
 }

@@ -48,4 +48,7 @@ interface SensorDataHandler {
 
     /** Get the Supabase table name for this sensor */
     val supabaseTableName: String
+
+    /** Get the remote ID column name (default: "event_id") */
+    val remoteIdColumnName: String get() = "event_id"
 }

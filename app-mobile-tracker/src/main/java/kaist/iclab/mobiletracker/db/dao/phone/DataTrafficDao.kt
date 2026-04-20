@@ -49,6 +49,9 @@ interface DataTrafficDao : BaseDao<DataTrafficSensor.Entity, DataTrafficEntity> 
     @Query("SELECT * FROM DataTrafficEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<DataTrafficEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM DataTrafficEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM DataTrafficEntity")
     override suspend fun getLatestTimestamp(): Long?
 

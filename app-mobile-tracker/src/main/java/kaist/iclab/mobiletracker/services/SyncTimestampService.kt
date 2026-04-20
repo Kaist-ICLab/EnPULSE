@@ -12,7 +12,7 @@ import kaist.iclab.mobiletracker.utils.DateTimeFormatter
  */
 class SyncTimestampService(private val context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(
-        Constants.Prefs.PREFS_NAME,
+        Constants.Prefs.SYNC_PREFS_NAME,
         Context.MODE_PRIVATE
     )
 
@@ -198,13 +198,16 @@ class SyncTimestampService(private val context: Context) {
 
     /**
      * Clear all sensor upload timestamps
+     * @param existingEditor Optional existing editor to use for atomicity
      */
-    fun clearAllSensorUploadTimestamps() {
+    fun clearAllSensorUploadTimestamps(existingEditor: SharedPreferences.Editor? = null) {
         val allKeys = prefs.all.keys
         val keysToRemove = allKeys.filter { it.startsWith("last_upload_") }
-        val editor = prefs.edit()
+        val editor = existingEditor ?: prefs.edit()
         keysToRemove.forEach { editor.remove(it) }
-        editor.apply()
+        if (existingEditor == null) {
+            editor.apply()
+        }
     }
 
     /**
@@ -219,8 +222,8 @@ class SyncTimestampService(private val context: Context) {
     fun clearAllSyncTimestamps() {
         val editor = prefs.edit()
 
-        // Clear all per-sensor upload timestamps
-        clearAllSensorUploadTimestamps()
+        // Clear all per-sensor upload timestamps using the same editor
+        clearAllSensorUploadTimestamps(editor)
 
         // Clear global upload timestamp
         editor.remove(Constants.Prefs.KEY_LAST_SUCCESSFUL_UPLOAD)

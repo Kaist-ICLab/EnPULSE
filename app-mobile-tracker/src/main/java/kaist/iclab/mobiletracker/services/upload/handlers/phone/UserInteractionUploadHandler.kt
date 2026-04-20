@@ -17,21 +17,40 @@ class UserInteractionUploadHandler(
     override val sensorId = "UserInteraction"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        val entities = dao.getDataAfterTimestamp(lastUploadTimestamp)
-        return entities.isNotEmpty()
+        return dao.hasDataAfterTimestamp(lastUploadTimestamp)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
-            val entities = dao.getDataAfterTimestamp(lastUploadTimestamp)
-            if (entities.isEmpty()) {
+            val batchSize = kaist.iclab.mobiletracker.Constants.Network.UPLOAD_BATCH_SIZE
+            var currentMaxTimestamp = lastUploadTimestamp
+            var uploadedAny = false
+
+            while (true) {
+                val entities = dao.getRecordsPaginated(
+                    afterTimestamp = currentMaxTimestamp + 1,
+                    isAscending = true,
+                    limit = batchSize,
+                    offset = 0
+                )
+
+                if (entities.isEmpty()) break
+
+                val supabaseDataList = entities.map { UserInteractionMapper.map(it, userUuid) }
+                service.insertUserInteractionSensorDataBatch(supabaseDataList)
+                    .getOrElse { throw it }
+
+                currentMaxTimestamp = entities.maxOf { it.timestamp }
+                uploadedAny = true
+
+                if (entities.size < batchSize) break
+            }
+
+            if (!uploadedAny) {
                 throw IllegalStateException("No new $sensorId data to upload")
             }
 
-            val supabaseDataList = entities.map { UserInteractionMapper.map(it, userUuid) }
-            service.insertUserInteractionSensorDataBatch(supabaseDataList)
-                .getOrElse { throw it }
-            entities.maxOf { it.timestamp }
+            currentMaxTimestamp
         }
     }
 

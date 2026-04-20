@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.data.sensors.phone
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -13,10 +14,16 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class CampaignTableData(
-    val id: Int? = null,
-    val campaignId: Int,
+    val id: Long? = null,
+    @SerialName("campaign_id")
+    val campaignId: Long,
     val name: String,
-    val description: String,
-    val dailyCountMax: Int
+    val description: String? = null,
+    @SerialName("daily_count_max")
+    val dailyCountMax: Int? = null,
+    @SerialName("is_custom")
+    val isCustom: Boolean,
+    @SerialName("display_name")
+    val displayName: String
 )
 

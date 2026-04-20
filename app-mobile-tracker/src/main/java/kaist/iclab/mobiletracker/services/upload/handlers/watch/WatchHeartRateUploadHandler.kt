@@ -18,24 +18,40 @@ class WatchHeartRateUploadHandler(
     override val sensorId = "WatchHeartRate"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        val entities = dao.getDataAfterTimestamp(lastUploadTimestamp)
-        return entities.isNotEmpty()
+        return dao.hasDataAfterTimestamp(lastUploadTimestamp)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
-            val entities = dao.getDataAfterTimestamp(lastUploadTimestamp)
-            if (entities.isEmpty()) {
+            val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
+            var currentMaxTimestamp = lastUploadTimestamp
+            var uploadedAny = false
+
+            while (true) {
+                val entities = dao.getRecordsPaginated(
+                    afterTimestamp = currentMaxTimestamp + 1,
+                    isAscending = true,
+                    limit = batchSize,
+                    offset = 0
+                )
+
+                if (entities.isEmpty()) break
+
+                val supabaseDataList = entities.map { HeartRateMapper.map(it, userUuid) }
+                service.insertHeartRateSensorDataBatch(supabaseDataList)
+                    .getOrElse { throw it }
+
+                currentMaxTimestamp = entities.maxOf { it.timestamp }
+                uploadedAny = true
+
+                if (entities.size < batchSize) break
+            }
+
+            if (!uploadedAny) {
                 throw IllegalStateException("No new $sensorId data to upload")
             }
 
-            val supabaseDataList = entities.map { HeartRateMapper.map(it, userUuid) }
-            // Upload in chunks to avoid HTTP request timeouts on large datasets
-            supabaseDataList.chunked(Constants.Network.UPLOAD_BATCH_SIZE).forEach { chunk ->
-                service.insertHeartRateSensorDataBatch(chunk)
-                    .getOrElse { throw it }
-            }
-            entities.maxOf { it.timestamp }
+            currentMaxTimestamp
         }
     }
 

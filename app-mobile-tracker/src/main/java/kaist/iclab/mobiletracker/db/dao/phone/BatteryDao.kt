@@ -50,6 +50,9 @@ interface BatteryDao : BaseDao<BatterySensor.Entity, BatteryEntity> {
     @Query("SELECT * FROM BatteryEntity WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<BatteryEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM BatteryEntity WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT COUNT(*) FROM BatteryEntity WHERE timestamp >= :afterTimestamp")
     fun getDailyBatteryCount(afterTimestamp: Long): Flow<Int>
 

@@ -31,7 +31,9 @@ val viewModelModule = module {
             homeRepository = get(),
             backgroundController = get(),
             syncTimestampService = get(),
-            userProfileRepository = get()
+            userProfileRepository = get(),
+            campaignSensorRepository = get(),
+            surveyRepository = get()
         )
     }
 
@@ -41,6 +43,7 @@ val viewModelModule = module {
             backgroundController = get(),
             permissionManager = get<AndroidPermissionManager>(),
             syncTimestampService = get(),
+            campaignSensorRepository = get(),
             context = androidContext()
         )
     }
@@ -51,6 +54,8 @@ val viewModelModule = module {
             campaignRepository = get<CampaignRepository>(),
             userProfileRepository = get<UserProfileRepository>(),
             surveyRepository = get<SurveyRepository>(),
+            campaignSensorRepository = get(),
+            backgroundController = get(),
             context = androidContext()
         )
     }
@@ -61,6 +66,9 @@ val viewModelModule = module {
             phoneSensorRepository = get<PhoneSensorRepository>(),
             watchSensorRepository = get<WatchSensorRepository>(),
             timestampService = get(),
+            sensors = get(qualifier = org.koin.core.qualifier.named("phoneSensors")),
+            phoneSensorUploadService = get(),
+            watchSensorUploadService = get(),
             context = androidContext()
         )
     }
@@ -95,7 +103,8 @@ val viewModelModule = module {
         kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel(
             campaignRepository = get<CampaignRepository>(),
             userProfileRepository = get<UserProfileRepository>(),
-            surveyRepository = get<SurveyRepository>()
+            surveyRepository = get<SurveyRepository>(),
+            campaignSensorRepository = get()
         )
     }
 }

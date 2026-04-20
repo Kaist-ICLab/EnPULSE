@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.data.sensors.phone
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,7 +13,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ProfileData(
     val uuid: String,
-    val campaign_id: Int? = null,
+    @SerialName("campaign_id")
+    val campaignId: Int? = null,
     val email: String
 )
 

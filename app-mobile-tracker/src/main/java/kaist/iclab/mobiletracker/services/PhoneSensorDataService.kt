@@ -12,21 +12,25 @@ import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionResponseInsert
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
+import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.utils.NotificationHelper
+import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.JsonObject
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
@@ -59,7 +63,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
     private val phoneSensorRepository by inject<PhoneSensorRepository>()
     private val serviceNotification by inject<BackgroundController.ServiceNotification>()
-    private val timestampService: SyncTimestampService by lazy { SyncTimestampService(this) }
+    private val timestampService by inject<SyncTimestampService>()
     private val surveySensor by inject<SurveySensor>()
     private val surveyService by inject<SurveyService>()
     private val userProfileRepository by inject<UserProfileRepository>()
@@ -69,6 +73,10 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         capacity = Constants.DB.BUFFER_SIZE,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
+
+    // Guards against duplicate registration / batch processing on repeated onStartCommand
+    private var listenersRegistered = false
+    private var batchProcessingJob: Job? = null
 
     // Listener just sends to channel
     private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate { sensor ->
@@ -120,13 +128,25 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         startForeground(serviceNotification.notificationId, postNotification, serviceType)
     }
 
-    private fun registerListeners() {
-        // Remove first to avoid duplicates
-        sensors.forEach { it.removeListener(listener[it.id]!!) }
-        surveySensor.removeListener(surveyResponseListener)
+    private val campaignSensorRepository by inject<CampaignSensorRepository>()
 
-        // Add listeners
-        sensors.forEach { it.addListener(listener[it.id]!!) }
+    private fun registerListeners() {
+        if (listenersRegistered) return
+        listenersRegistered = true
+
+        val activeSensors = campaignSensorRepository.getActiveSensors().map { it.name }
+
+        sensors.forEach { sensor ->
+            // Convert library sensor ID (e.g., "Location", "AppUsageLog") to campaign table name format
+            val campaignSensorName = sensor.id.toCampaignSensorName()
+
+            if (activeSensors.contains(campaignSensorName)) {
+                sensor.addListener(listener[sensor.id]!!)
+            }
+        }
+
+        // Survey is currently triggered out-of-band by push notifications or local schedules.
+        // We always keep it registered, but it only collects when a survey is explicitly scheduled.
         surveySensor.addListener(surveyResponseListener)
     }
 
@@ -134,7 +154,8 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
      * Starts batch processing using lifecycleScope for automatic cancellation.
      */
     private fun startBatchProcessing() {
-        lifecycleScope.launch(Dispatchers.IO) {
+        if (batchProcessingJob?.isActive == true) return
+        batchProcessingJob = lifecycleScope.launch(Dispatchers.IO) {
             val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
             var lastFlushTime = System.currentTimeMillis()
 
@@ -225,20 +246,29 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     }
 
     override fun onDestroy() {
-        sensors.forEach { it.removeListener(listener[it.id]!!) }
-        surveySensor.removeListener(surveyResponseListener)
+        // Only remove if we registered
+        if (listenersRegistered) {
+            sensors.forEach { it.removeListener(listener[it.id]!!) }
+            surveySensor.removeListener(surveyResponseListener)
+            listenersRegistered = false
+        }
 
-        // Flush remaining data before destruction
+        // Flush remaining data before destruction with a timeout to avoid ANR
         runBlocking {
-            val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
-            while (true) {
-                val result = eventChannel.tryReceive()
-                if (result.isSuccess) {
-                    val (id, entity) = result.getOrThrow()
-                    buffer.getOrPut(id) { mutableListOf() }.add(entity)
-                } else break
+            val flushed = withTimeoutOrNull(3000L) {
+                val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
+                while (true) {
+                    val result = eventChannel.tryReceive()
+                    if (result.isSuccess) {
+                        val (id, entity) = result.getOrThrow()
+                        buffer.getOrPut(id) { mutableListOf() }.add(entity)
+                    } else break
+                }
+                flushBuffer(buffer)
             }
-            flushBuffer(buffer)
+            if (flushed == null) {
+                Log.w(TAG, "onDestroy flush timed out after 3s — some buffered data may be lost")
+            }
         }
 
         super.onDestroy()

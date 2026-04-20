@@ -68,8 +68,8 @@ class MainActivity : ComponentActivity() {
         // Note: If logged in but profile not loaded yet, start at Login and NavGraph will redirect
         val startDestination = when {
             !userState.isLoggedIn -> Screen.Login.route
-            userProfile == null -> Screen.Login.route  // Profile loading, start at Login
-            userProfile?.campaign_id == null -> Screen.Onboarding.route  // No campaign -> onboarding
+            userProfile == null -> Screen.Home.route  // Default to Home while profile is loading to avoid flicker
+            userProfile?.campaignId == null -> Screen.Onboarding.route  // No campaign -> onboarding
             else -> Screen.Home.route  // Has campaign -> home
         }
 

@@ -37,3 +37,11 @@ object SensorTypeHelper {
         return !isWatchSensor(sensorId)
     }
 }
+
+/**
+ * Extension to convert library PascalCase sensor IDs to Supabase snake_case campaign names.
+ * e.g., "AppUsageLog" -> "app_usage_log_sensor"
+ */
+fun String.toCampaignSensorName(): String {
+    return this.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").lowercase() + "_sensor"
+}

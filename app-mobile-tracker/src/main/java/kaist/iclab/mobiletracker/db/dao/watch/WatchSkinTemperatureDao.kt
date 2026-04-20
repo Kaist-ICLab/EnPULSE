@@ -30,6 +30,9 @@ interface WatchSkinTemperatureDao :
     @Query("SELECT * FROM watch_skin_temperature WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<WatchSkinTemperatureEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM watch_skin_temperature WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM watch_skin_temperature")
     override suspend fun getLatestTimestamp(): Long?
 

@@ -26,6 +26,9 @@ interface WatchHeartRateDao : BaseDao<WatchHeartRateEntity, WatchHeartRateEntity
     @Query("SELECT * FROM watch_heart_rate WHERE timestamp > :afterTimestamp ORDER BY timestamp ASC")
     override suspend fun getDataAfterTimestamp(afterTimestamp: Long): List<WatchHeartRateEntity>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM watch_heart_rate WHERE timestamp > :afterTimestamp)")
+    override suspend fun hasDataAfterTimestamp(afterTimestamp: Long): Boolean
+
     @Query("SELECT MAX(timestamp) FROM watch_heart_rate")
     override suspend fun getLatestTimestamp(): Long?
 

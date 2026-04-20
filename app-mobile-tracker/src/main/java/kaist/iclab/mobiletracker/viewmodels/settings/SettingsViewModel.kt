@@ -9,9 +9,10 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.services.AutoSyncService
-import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.sensor.controller.BackgroundController
@@ -20,7 +21,11 @@ import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -45,6 +50,7 @@ class SettingsViewModel(
     private val backgroundController: BackgroundController,
     private val permissionManager: AndroidPermissionManager,
     private val syncTimestampService: SyncTimestampService,
+    private val campaignSensorRepository: CampaignSensorRepository,
     private val context: Context
 ) : ViewModel() {
     companion object {
@@ -54,49 +60,36 @@ class SettingsViewModel(
     private val sensors = backgroundController.sensors
 
     val sensorMap = sensors.associateBy { it.name }
-    val sensorState = sensors.associate { it.name to it.sensorStateFlow }
+
+    // Reactive filtered sensor state based on active campaign sensors
+    val sensorState: StateFlow<Map<String, StateFlow<SensorState>>> =
+        campaignSensorRepository.activeSensorsFlow
+            .combine(MutableStateFlow(sensors)) { activeSensors, allSensors ->
+                val activeNames = activeSensors.map { it.name }
+                allSensors.filter { sensor: Sensor<*, *> ->
+                    val campaignSensorName = sensor.id.toCampaignSensorName()
+                    activeNames.contains(campaignSensorName)
+                }.associate { sensor: Sensor<*, *> -> sensor.name to sensor.sensorStateFlow }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = sensors.associate { it.name to it.sensorStateFlow }
+            )
     val controllerState = backgroundController.controllerStateFlow
 
     init {
-        observeControllerState()
+        // Note: PhoneSensorDataService lifecycle is managed at the Application level
+        // (MobileTrackerApplication) to survive ViewModel recreation.
     }
 
-    /**
-     * Observes controller state changes and manages PhoneSensorDataService lifecycle
-     */
-    private fun observeControllerState() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                backgroundController.controllerStateFlow
-                    .collect { state ->
-                        handleControllerStateChange(state)
-                    }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error observing controller state: ${e.message}", e)
-            }
-        }
-    }
-
-    /**
-     * Handles controller state changes by starting/stopping the phone sensor service
-     */
-    private fun handleControllerStateChange(state: ControllerState) {
-        try {
-            when (state.flag) {
-                ControllerState.FLAG.RUNNING -> PhoneSensorDataService.start(context)
-                else -> PhoneSensorDataService.stop(context)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error managing phone sensor service: ${e.message}", e)
-        }
-    }
 
     /**
      * Toggles a sensor on or off based on its current state
      */
     fun toggleSensor(sensorName: String) {
         val sensor = getSensor(sensorName) ?: return
-        val currentState = sensorState[sensorName]?.value?.flag ?: return
+        val currentState = sensorState.value[sensorName]?.value?.flag ?: return
 
         when (currentState) {
             SensorState.FLAG.DISABLED -> enableSensor(sensor, sensorName)

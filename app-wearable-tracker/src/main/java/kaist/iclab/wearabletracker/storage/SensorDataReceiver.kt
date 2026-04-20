@@ -62,6 +62,9 @@ class SensorDataReceiver(
         )
         private var batchJob: Job? = null
 
+        // Guards against duplicate registration on repeated onStartCommand
+        private var listenersRegistered = false
+
         private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate {
             it.id to
                     { e: SensorEntity ->
@@ -96,14 +99,12 @@ class SensorDataReceiver(
             // Start batch processing
             startBatchProcessing()
 
-            // Remove listeners first to prevent duplicates if onStartCommand is called multiple times
-            for (sensor in sensors) {
-                sensor.removeListener(listener[sensor.id]!!)
-            }
-
-            // Then add listeners
-            for (sensor in sensors) {
-                sensor.addListener(listener[sensor.id]!!)
+            // Register listeners only once to prevent duplicates
+            if (!listenersRegistered) {
+                listenersRegistered = true
+                for (sensor in sensors) {
+                    sensor.addListener(listener[sensor.id]!!)
+                }
             }
 
             return START_STICKY
@@ -175,8 +176,11 @@ class SensorDataReceiver(
 
         override fun onDestroy() {
             // Unregister listeners
-            for (sensor in sensors) {
-                sensor.removeListener(listener[sensor.id]!!)
+            if (listenersRegistered) {
+                for (sensor in sensors) {
+                    sensor.removeListener(listener[sensor.id]!!)
+                }
+                listenersRegistered = false
             }
 
             // Cancel incoming data processing job
