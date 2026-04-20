@@ -90,9 +90,7 @@ fun NavGraph(
 
     // Handle language change by recreating activity
     val onLanguageChanged: () -> Unit = {
-        if (activity != null) {
-            activity.recreate()
-        }
+        activity?.recreate()
     }
 
     // Navigate based on authentication state and profile
