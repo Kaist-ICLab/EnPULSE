@@ -1,5 +1,5 @@
 # EnPULSE
-**EnPULSE(Enabling Platform for User Logging and Sensing Environment)** is a sensor data collection platform for mobile and wrist-worn wearable device.
+**EnPULSE(Enabling Platform for User Logging and Sensing Environment)** is a sensor data collection platform for mobile and wrist-worn wearable device. Developed by KAIST Interactive Computing Laboratory.
 
 ## Overview
 EnPULSE consist of several core components, which can be also used individually.
