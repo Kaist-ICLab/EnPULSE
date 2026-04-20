@@ -1,7 +1,5 @@
 package kaist.iclab.wearabletracker.ui
 
-import android.content.Intent
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,9 +16,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.wear.compose.material.Chip
-import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
@@ -30,7 +25,6 @@ import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
 import kaist.iclab.wearabletracker.helpers.PermissionHelper
-import kaist.iclab.wearabletracker.ema.WatchSurveyActivity
 import kaist.iclab.wearabletracker.ui.components.AutoSyncSettings
 import kaist.iclab.wearabletracker.ui.components.DeviceStatusInfo
 import kaist.iclab.wearabletracker.ui.components.FlushConfirmationDialog
@@ -201,25 +195,6 @@ fun SettingsScreen(
                             onIntervalChange = { settingsViewModel.setAutoSyncInterval(it) }
                         )
 
-                        // MicroEMA Launch Button
-                        Chip(
-                            onClick = {
-                                val intent = Intent(context, WatchSurveyActivity::class.java)
-                                context.startActivity(intent)
-                            },
-                            label = {
-                                androidx.wear.compose.material.Text(
-                                    text = "📋 MicroEMA (Temp)",
-                                    fontSize = 14.sp
-                                )
-                            },
-                            colors = ChipDefaults.chipColors(
-                                backgroundColor = androidx.compose.ui.graphics.Color(0xFF8AB4F8)
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
 
                         availableSensors.forEach { (name, _) ->
                             SensorToggleChip(

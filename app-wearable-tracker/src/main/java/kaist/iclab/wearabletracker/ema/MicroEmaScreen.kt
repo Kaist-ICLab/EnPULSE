@@ -1,8 +1,9 @@
 package kaist.iclab.wearabletracker.ema
- 
+
+import android.app.Activity
+import android.app.RemoteInput
 import android.content.Intent
 import android.speech.RecognizerIntent
-import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -30,6 +31,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,8 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import android.app.RemoteInput
-import androidx.wear.input.RemoteInputIntentHelper
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -56,15 +58,13 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Checkbox
 import androidx.wear.compose.material.CircularProgressIndicator
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Picker
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.ToggleChip
 import androidx.wear.compose.material.ToggleChipDefaults
 import androidx.wear.compose.material.rememberPickerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.Mic
-import androidx.wear.compose.material.Icon
+import androidx.wear.input.RemoteInputIntentHelper
 import kaist.iclab.wearabletracker.R
 import kotlinx.coroutines.delay
 
@@ -134,10 +134,12 @@ fun MicroEmaScreen(
                 progress > 0.3f -> TimerWarning
                 else -> TimerCritical
             }
-            
+
             CircularProgressIndicator(
                 progress = progress,
-                modifier = Modifier.fillMaxSize().padding(2.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(2.dp),
                 startAngle = 270f,
                 endAngle = 270f,
                 indicatorColor = color,
@@ -219,9 +221,9 @@ private fun SingleQuestionView(
         var selectedIds by remember { mutableStateOf(emptySet<Int>()) }
         var selectedNumber by remember { mutableStateOf("5") }
         var enteredText by remember { mutableStateOf("") }
-        
+
         val isLikert = remember(question) { isLikertScale(question.options) }
-        
+
         Box(
             modifier = Modifier.padding(vertical = 4.dp),
             contentAlignment = Alignment.Center
@@ -247,6 +249,7 @@ private fun SingleQuestionView(
                         )
                     }
                 }
+
                 AnswerType.CHECKBOX -> {
                     CheckboxInput(
                         options = question.options,
@@ -260,12 +263,14 @@ private fun SingleQuestionView(
                         }
                     )
                 }
+
                 AnswerType.NUMBER -> {
                     NumberPickerInput(
                         onValueChange = { selectedNumber = it },
                         onSelect = onAnswer
                     )
                 }
+
                 AnswerType.TEXT -> {
                     TextInput(
                         currentText = enteredText,
@@ -285,7 +290,7 @@ private fun SingleQuestionView(
                 question.answerType == AnswerType.RADIO && question.options.size <= 2 -> false
                 else -> true
             }
-            
+
             ActionButtonGroup(
                 showConfirm = showConfirm,
                 onConfirm = {
@@ -295,6 +300,7 @@ private fun SingleQuestionView(
                                 onAnswer(question.options[selectedIndex].display)
                             }
                         }
+
                         AnswerType.CHECKBOX -> {
                             if (selectedIds.isNotEmpty()) {
                                 val selectedTexts = question.options
@@ -303,11 +309,13 @@ private fun SingleQuestionView(
                                 onAnswer(selectedTexts)
                             }
                         }
+
                         AnswerType.TEXT -> {
                             if (enteredText.isNotBlank()) {
                                 onAnswer(enteredText)
                             }
                         }
+
                         AnswerType.NUMBER -> {
                             onAnswer(selectedNumber)
                         }
@@ -330,7 +338,8 @@ private fun HorizontalOptionInput(
     selectedIndex: Int,
     onIndexChanged: (Int) -> Unit
 ) {
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(0, selectedIndex - 1))
+    val listState =
+        rememberLazyListState(initialFirstVisibleItemIndex = maxOf(0, selectedIndex - 1))
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -452,7 +461,9 @@ private fun CategoricalOptionInput(
                     modifier = Modifier
                         .size(if (index == pagerState.currentPage) 6.dp else 4.dp)
                         .background(
-                            color = if (index == pagerState.currentPage) AccentBlue else MutedGrey.copy(alpha = 0.5f),
+                            color = if (index == pagerState.currentPage) AccentBlue else MutedGrey.copy(
+                                alpha = 0.5f
+                            ),
                             shape = CircleShape
                         )
                 )
@@ -602,7 +613,10 @@ private fun TextInput(
         Button(
             onClick = {
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    putExtra(
+                        RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                        RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+                    )
                     putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
                 }
                 voiceLauncher.launch(intent)
@@ -730,7 +744,7 @@ private fun ActionButtonGroup(
                 fontWeight = FontWeight.Medium
             )
         }
-        
+
         if (showConfirm) {
             Button(
                 onClick = onConfirm,
@@ -780,7 +794,12 @@ private fun CompletionView(status: ResponseStatus?) {
         val (icon, label, color) = when (status) {
             ResponseStatus.ANSWERED -> Triple("✓", stringResource(R.string.ema_done), ConfirmGreen)
             ResponseStatus.EXPIRED -> Triple("⏰", stringResource(R.string.ema_time_up), Color.White)
-            ResponseStatus.DISMISSED -> Triple("✕", stringResource(R.string.ema_dismissed), RejectGrey)
+            ResponseStatus.DISMISSED -> Triple(
+                "✕",
+                stringResource(R.string.ema_dismissed),
+                RejectGrey
+            )
+
             null -> Triple("…", stringResource(R.string.ema_finishing), MutedGrey)
         }
 

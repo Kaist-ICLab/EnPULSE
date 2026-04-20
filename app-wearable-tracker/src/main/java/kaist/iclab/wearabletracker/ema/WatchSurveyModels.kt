@@ -29,10 +29,17 @@ data class WatchOption(
  */
 @Serializable
 enum class AnswerType {
-    @SerialName("RADIO") RADIO,
-    @SerialName("CHECKBOX") CHECKBOX,
-    @SerialName("NUMBER") NUMBER,
-    @SerialName("TEXT") TEXT
+    @SerialName("RADIO")
+    RADIO,
+
+    @SerialName("CHECKBOX")
+    CHECKBOX,
+
+    @SerialName("NUMBER")
+    NUMBER,
+
+    @SerialName("TEXT")
+    TEXT
 }
 
 /**
@@ -45,7 +52,7 @@ data class WatchQuestion(
     @SerialName("surveyId") val surveyId: Int,
     val text: String,
     @SerialName("answerType") val answerType: AnswerType,
-    @SerialName("isMandatory") val isMandatory: Boolean,
+    @SerialName("isMandatory") val isMandatory: Boolean = true,
     val options: List<WatchOption> = emptyList()
 )
 

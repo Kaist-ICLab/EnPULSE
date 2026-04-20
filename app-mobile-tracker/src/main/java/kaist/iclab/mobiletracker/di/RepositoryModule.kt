@@ -166,5 +166,10 @@ val repositoryModule = module {
             supabaseHelper = get()
         )
     }
+
+    // MicroEmaRepository for watch-side survey management
+    single {
+        kaist.iclab.mobiletracker.repository.MicroEmaRepository(get())
+    }
 }
 

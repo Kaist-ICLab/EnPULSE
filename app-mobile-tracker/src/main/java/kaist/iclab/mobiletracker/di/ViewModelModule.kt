@@ -44,6 +44,8 @@ val viewModelModule = module {
             permissionManager = get<AndroidPermissionManager>(),
             syncTimestampService = get(),
             campaignSensorRepository = get(),
+            bleHelper = get(),
+            triggerManager = get(),
             context = androidContext()
         )
     }

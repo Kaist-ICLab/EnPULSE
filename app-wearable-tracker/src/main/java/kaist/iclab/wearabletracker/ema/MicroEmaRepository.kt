@@ -1,63 +1,45 @@
 package kaist.iclab.wearabletracker.ema
 
-import android.content.Context
 import android.util.Log
-import kotlinx.serialization.json.Json
 
 /**
- * Repository that loads and caches the microEMA survey configuration.
+ * Repository that holds the active microEMA survey configuration.
  *
- * Phase 1: Loads from a bundled JSON asset in the watch app.
- * Future: Will fetch from the phone via MessageClient.
+ * Just-in-Time (JIT) Architecture: 
+ * This repository no longer loads from local assets. Instead, it is populated
+ * dynamically when a BLE trigger is received from the phone.
  */
-class MicroEmaRepository(
-    private val context: Context
-) {
+class MicroEmaRepository {
     companion object {
         private const val TAG = "MicroEmaRepo"
-        private const val ASSET_FILE = "micro_ema_config.json"
     }
 
-    private val json = Json { ignoreUnknownKeys = true }
-
-    // In-memory cache
-    private var cachedConfig: WatchSurveyConfig? = null
+    // In-memory holder for the active session configuration
+    private var activeConfig: WatchSurveyConfig? = null
 
     /**
-     * Load survey config from the bundled JSON asset.
-     * Caches the result in memory so subsequent calls are instant.
-     *
-     * @return [WatchSurveyConfig] or null if loading/parsing fails.
+     * Get the active survey config received from the phone.
      */
     fun loadSurveyConfig(): WatchSurveyConfig? {
-        cachedConfig?.let { return it }
-
-        return try {
-            val jsonString = context.assets.open(ASSET_FILE)
-                .bufferedReader()
-                .use { it.readText() }
-            val config = parseSurveyConfig(jsonString)
-            cachedConfig = config
-            Log.d(TAG, "Loaded survey config: ${config.title} with ${config.questions.size} questions")
-            config
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to load survey config from assets", e)
-            null
-        }
+        Log.d(TAG, "Loading active config. Is null? ${activeConfig == null}")
+        return activeConfig
     }
 
     /**
-     * Parse a JSON string into a [WatchSurveyConfig].
-     * This method is also useful when receiving config from the phone via MessageClient.
+     * Update the active config. Called when a new BLE trigger is received.
      */
-    fun parseSurveyConfig(jsonString: String): WatchSurveyConfig {
-        return json.decodeFromString<WatchSurveyConfig>(jsonString)
+    fun updateConfig(config: WatchSurveyConfig) {
+        this.activeConfig = config
+        Log.d(
+            TAG,
+            "Active config updated for Survey ID: ${config.surveyId} with ${config.questions.size} questions"
+        )
     }
 
     /**
-     * Clear the cached config (e.g., when a new config is received from the phone).
+     * Clear the cached config.
      */
     fun clearCache() {
-        cachedConfig = null
+        activeConfig = null
     }
 }

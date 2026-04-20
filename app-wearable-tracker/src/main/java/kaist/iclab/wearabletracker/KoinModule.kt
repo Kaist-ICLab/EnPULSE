@@ -256,7 +256,7 @@ val koinModule = module {
         AutoSyncManager(
             context = androidContext(),
             phoneCommunicationManager = get(),
-            microEmaResponseManager = get(),
+            microEmaResponseManager = get<MicroEmaResponseManager>(),
             syncPreferencesHelper = get(),
             controllerStateFlow = get<BackgroundController>().controllerStateFlow,
             coroutineScope = get()
@@ -304,7 +304,7 @@ val koinModule = module {
     // --- MicroEMA ---
 
     single {
-        MicroEmaRepository(context = androidContext())
+        MicroEmaRepository()
     }
 
     single {
@@ -313,6 +313,8 @@ val koinModule = module {
 
     single {
         MicroEmaResponseManager(
+            context = androidContext(),
+            repository = get(),
             dao = get(),
             phoneCommunicationManager = get(),
             coroutineScope = get()

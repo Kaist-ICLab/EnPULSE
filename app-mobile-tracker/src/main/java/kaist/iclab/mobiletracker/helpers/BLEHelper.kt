@@ -12,9 +12,12 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
+import kaist.iclab.mobiletracker.repository.MicroEmaRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
+import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
+import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
@@ -23,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -40,7 +44,9 @@ import java.time.format.DateTimeFormatter
 class BLEHelper(
     private val context: Context,
     private val watchSensorRepository: WatchSensorRepository,
-    private val timestampService: SyncTimestampService
+    private val timestampService: SyncTimestampService,
+    private val microEmaRepository: MicroEmaRepository,
+    private val microEmaResponseDao: MicroEmaResponseDao
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
@@ -114,10 +120,9 @@ class BLEHelper(
                         if (it is JsonNull) null else it.jsonPrimitive.content
                     }
                     val status = obj["status"]?.jsonPrimitive?.content ?: "ANSWERED"
-                    val triggerTime = obj["triggerTime"]?.jsonPrimitive?.content?.toLongOrNull()
-                    val surveyStartTime =
-                        obj["surveyStartTime"]?.jsonPrimitive?.content?.toLongOrNull()
-                    val responseTime = obj["responseTime"]?.jsonPrimitive?.content?.toLongOrNull()
+                    val triggerTime = obj["triggerTime"]?.jsonPrimitive?.content
+                    val surveyStartTime = obj["surveyStartTime"]?.jsonPrimitive?.content
+                    val responseTime = obj["responseTime"]?.jsonPrimitive?.content
 
                     // Build the response JSON that goes into the `response` column
                     val responseJson = buildJsonObject {
@@ -128,41 +133,27 @@ class BLEHelper(
 
                     if (watchId != null) processedIds.add(watchId)
 
-                    fun formatTimestamp(millis: Long?) =
-                        millis?.let {
-                            Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).format(isoFormatter)
-                        }
-
-                    SurveyQuestionResponseInsert(
-                        questionId = questionId,
+                    MicroEmaResponseEntity(
+                        watchId = watchId ?: 0L,
                         uuid = uuid,
-                        triggerTime = formatTimestamp(triggerTime),
-                        actualTriggerTime = formatTimestamp(triggerTime),
-                        surveyStartTime = formatTimestamp(surveyStartTime),
-                        responseSubmissionTime = formatTimestamp(responseTime),
-                        response = responseJson
+                        questionId = questionId,
+                        triggerTime = triggerTime,
+                        actualTriggerTime = triggerTime,
+                        surveyStartTime = surveyStartTime,
+                        responseSubmissionTime = responseTime,
+                        responseJson = responseJson.toString(),
+                        isSynced = false
                     )
                 }
 
                 if (responses.isNotEmpty()) {
-                    when (val result = surveyService.submitSurveyResponses(responses)) {
-                        is Result.Success -> {
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "[MICRO_EMA] Uploaded ${responses.size} responses to Supabase"
-                            )
-                            // Send ACK back to watch
-                            sendMicroEmaAck(processedIds)
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "[MICRO_EMA] Failed to upload: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
+                    microEmaResponseDao.insertAll(responses)
+                    Log.d(
+                        AppConfig.LogTags.PHONE_BLE,
+                        "[MICRO_EMA] Cached ${responses.size} responses locally on phone"
+                    )
+                    // Send ACK back to watch immediately so it can clean up its DB
+                    sendMicroEmaAck(processedIds)
                 }
             } catch (e: Exception) {
                 Log.e(
@@ -186,6 +177,52 @@ class BLEHelper(
                 Log.d(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Sent ACK for IDs: $ackData")
             } catch (e: Exception) {
                 Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Failed to send ACK: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Send a remote trigger to the watch to immediately start a microEMA survey session.
+     * This uses a Just-in-Time architecture: the phone picks a question from the master config
+     * and sends the entire question data to the watch.
+     */
+    fun triggerMicroEmaOnWatch() {
+        appScope.io.launch {
+            try {
+                val config = microEmaRepository.loadConfig()
+                if (config == null) {
+                    Log.e(
+                        AppConfig.LogTags.PHONE_BLE,
+                        "[MICRO_EMA] Failed to load config, cannot trigger"
+                    )
+                    return@launch
+                }
+
+                // Pick a random question to send
+                val question = config.questions.randomOrNull()
+                if (question == null) {
+                    Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Config has no questions")
+                    return@launch
+                }
+
+                // Wrap in a mini-config for the watch
+                val triggerPayload = buildJsonObject {
+                    put("surveyId", config.surveyId)
+                    put("title", config.title)
+                    put("expireAfterMs", config.expireAfterMs)
+                    put("question", Json.encodeToJsonElement(question))
+                }.toString()
+
+                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_TRIGGER, triggerPayload)
+                Log.d(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "[MICRO_EMA] Sent JIT trigger to watch: ${question.text}"
+                )
+            } catch (e: Exception) {
+                Log.e(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "[MICRO_EMA] Failed to send trigger: ${e.message}"
+                )
             }
         }
     }

@@ -9,6 +9,8 @@ import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kaist.iclab.mobiletracker.helpers.BLEHelper
+import kaist.iclab.mobiletracker.helpers.MicroEmaTriggerManager
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.services.AutoSyncService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
@@ -49,10 +51,28 @@ class SettingsViewModel(
     private val permissionManager: AndroidPermissionManager,
     private val syncTimestampService: SyncTimestampService,
     private val campaignSensorRepository: CampaignSensorRepository,
+    private val bleHelper: BLEHelper,
+    private val triggerManager: MicroEmaTriggerManager,
     private val context: Context
 ) : ViewModel() {
     companion object {
         private const val TAG = "SettingsViewModel"
+    }
+
+    // --- MicroEMA ---
+    val isMicroEmaTestModeEnabled = triggerManager.isTestModeEnabled
+
+    fun toggleMicroEmaTestMode(enabled: Boolean) {
+        if (enabled) {
+            // Trigger every 1 minute for testing (configurable)
+            triggerManager.startTestTimer(intervalMinutes = 1)
+        } else {
+            triggerManager.stopTestTimer()
+        }
+    }
+
+    fun triggerMicroEmaOnWatch() {
+        bleHelper.triggerMicroEmaOnWatch()
     }
 
     private val sensors = backgroundController.sensors
@@ -237,5 +257,6 @@ class SettingsViewModel(
             Log.e(TAG, "Error stopping logging: ${e.message}", e)
         }
     }
+
 }
 

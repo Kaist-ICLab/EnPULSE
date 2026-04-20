@@ -13,6 +13,7 @@ object Constants {
         const val KEY_SYNC_ACK = "sync_ack"
         const val KEY_MICRO_EMA_RESPONSE = "micro_ema_response"
         const val KEY_MICRO_EMA_ACK = "micro_ema_ack"
+        const val KEY_MICRO_EMA_TRIGGER = "micro_ema_trigger"
     }
 
     /**

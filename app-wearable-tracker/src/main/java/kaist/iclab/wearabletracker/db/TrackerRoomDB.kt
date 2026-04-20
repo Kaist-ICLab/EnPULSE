@@ -14,8 +14,8 @@ import kaist.iclab.wearabletracker.db.entity.AccelerometerEntity
 import kaist.iclab.wearabletracker.db.entity.EDAEntity
 import kaist.iclab.wearabletracker.db.entity.HeartRateEntity
 import kaist.iclab.wearabletracker.db.entity.LocationEntity
-import kaist.iclab.wearabletracker.db.entity.PPGEntity
 import kaist.iclab.wearabletracker.db.entity.MicroEmaResponseEntity
+import kaist.iclab.wearabletracker.db.entity.PPGEntity
 import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
 
 @Database(
