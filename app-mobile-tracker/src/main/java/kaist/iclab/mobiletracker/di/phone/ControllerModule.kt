@@ -22,7 +22,6 @@ import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
-import kaist.iclab.tracker.storage.core.StateStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -68,20 +67,16 @@ val controllerModule = module {
         )
     }
 
-    single<StateStorage<ControllerState>>(named("phoneControllerStateStorage")) {
-        CouchbaseStateStorage(
-            couchbase = get(),
-            defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
-            clazz = ControllerState::class.java,
-            collectionName = BackgroundController::class.simpleName ?: ""
-        )
-    }
-
     // BackgroundController
     single {
         BackgroundController(
             context = androidContext(),
-            controllerStateStorage = get(named("phoneControllerStateStorage")),
+            controllerStateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
+                clazz = ControllerState::class.java,
+                collectionName = BackgroundController::class.simpleName ?: ""
+            ),
             sensors = get(named("phoneSensors")),
             serviceNotification = get<BackgroundController.ServiceNotification>(),
             allowPartialSensing = true,

@@ -4,9 +4,9 @@ import android.Manifest
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
+import com.example.survey_test_app.MyBackgroundController
 import com.example.survey_test_app.SurveyDataReceiver
 import kaist.iclab.tracker.permission.AndroidPermissionManager
-import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent.inject
 
 class SurveyViewModel(
-    private val backgroundController: BackgroundController,
+    private val backgroundController: MyBackgroundController,
     private val permissionManager: AndroidPermissionManager,
     private val surveyDataReceiver: SurveyDataReceiver,
     private val surveyScheduleStorage: CouchbaseSurveyScheduleStorage
