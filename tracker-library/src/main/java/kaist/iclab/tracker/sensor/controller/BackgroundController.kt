@@ -314,7 +314,8 @@ class BackgroundController(
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
             )
 
             val defaultServiceType =

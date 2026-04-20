@@ -16,6 +16,9 @@ fun getSensorTitleResId(sensorId: String): Int {
         "SkinTemperature" -> R.string.sensor_skin_temperature
         "EDA" -> R.string.sensor_eda
         "Location" -> R.string.sensor_location
+        "IMU" -> R.string.sensor_imu
+        "Audio" -> R.string.sensor_audio
+        "Gesture" -> R.string.sensor_gesture
         else -> R.string.sensor_default
     }
 }

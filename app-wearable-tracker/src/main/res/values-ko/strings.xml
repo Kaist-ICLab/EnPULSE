@@ -43,6 +43,9 @@
     <string name="sensor_skin_temperature">피부 온도</string>
     <string name="sensor_eda">EDA</string>
     <string name="sensor_location">위치</string>
+    <string name="sensor_imu">IMU</string>
+    <string name="sensor_audio">오디오</string>
+    <string name="sensor_gesture">제스쳐</string>
     <string name="sensor_default">센서</string>
 
     <!-- Samsung Health Connection -->

@@ -9,10 +9,13 @@ import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.galaxywatch.AccelerometerSensor
+import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
 import kaist.iclab.tracker.sensor.galaxywatch.EDASensor
 import kaist.iclab.tracker.sensor.galaxywatch.HeartRateSensor
+import kaist.iclab.tracker.sensor.galaxywatch.IMUSensor
 import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
+import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kaist.iclab.wearabletracker.data.AutoSyncManager
@@ -151,6 +154,65 @@ val koinModule = module {
     }
 
     single {
+        IMUSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = IMUSensor.Config(),
+                clazz = IMUSensor.Config::class.java,
+                collectionName = (IMUSensor::class.simpleName ?: "") + "config"
+            ),
+            stateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
+                clazz = SensorState::class.java,
+                collectionName = IMUSensor::class.simpleName ?: ""
+            )
+        )
+    }
+
+    single {
+        AudioSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = AudioSensor.Config(),
+                clazz = AudioSensor.Config::class.java,
+                collectionName = (AudioSensor::class.simpleName ?: "") + "config"
+            ),
+            stateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
+                clazz = SensorState::class.java,
+                collectionName = AudioSensor::class.simpleName ?: ""
+            )
+        )
+    }
+
+    single {
+        GestureSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = GestureSensor.Config(),
+                clazz = GestureSensor.Config::class.java,
+                collectionName = (GestureSensor::class.simpleName ?: "") + "config"
+            ),
+            stateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
+                clazz = SensorState::class.java,
+                collectionName = GestureSensor::class.simpleName ?: ""
+            ),
+            imuSensor = get(),
+            audioSensor = get()
+        )
+    }
+
+    single {
         LocationSensor(
             context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
@@ -184,6 +246,9 @@ val koinModule = module {
             get<HeartRateSensor>(),
             get<SkinTemperatureSensor>(),
             get<EDASensor>(),
+            get<IMUSensor>(),
+            get<AudioSensor>(),
+            get<GestureSensor>(),
             get<LocationSensor>()
         )
     }

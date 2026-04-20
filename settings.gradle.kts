@@ -36,7 +36,7 @@ include(":samsung-health-sensor-api")
 
 // Main Modules
 include(":tracker-library")
-//include(":app-wearable-tracker")
+include(":app-wearable-tracker")
 //include(":app-mobile-tracker")
 
 // Test Modules
