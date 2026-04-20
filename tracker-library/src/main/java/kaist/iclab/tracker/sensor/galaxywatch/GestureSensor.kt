@@ -93,6 +93,7 @@ class GestureSensor(
         val thresholdHigh: Float = 0.7f,
         val thresholdLow: Float = 0.5f,
         val interpreterThreads: Int = 2,
+        val classificationIntervalMillis: Long = 200L,
     ) : SensorConfig
 
     @Serializable
@@ -125,6 +126,7 @@ class GestureSensor(
     private var modelRunner: WatchHarClassifier? = null
     private var eventDetector: WatchHarEventDetector? = null
     private var eventActive = false
+    private var lastClassificationTimestamp = Long.MIN_VALUE
     private val classVoteCounts = IntArray(NUM_CLASSES)
     private val probabilitySums = FloatArray(NUM_CLASSES)
     private var predictionCount = 0
@@ -155,6 +157,7 @@ class GestureSensor(
             eventWindow.clear()
             audioBuffer.clear()
             movingAvgWindow.clear()
+            lastClassificationTimestamp = Long.MIN_VALUE
         }
         resetEventAggregation()
 
@@ -194,6 +197,7 @@ class GestureSensor(
             eventWindow.clear()
             audioBuffer.clear()
             movingAvgWindow.clear()
+            lastClassificationTimestamp = Long.MIN_VALUE
         }
         eventActive = false
         resetEventAggregation()
@@ -250,6 +254,7 @@ class GestureSensor(
                 resetEventAggregation()
                 synchronized(dataLock) {
                     audioBuffer.clear()
+                    lastClassificationTimestamp = Long.MIN_VALUE
                 }
                 if (audioSensor.sensorStateFlow.value.flag != SensorState.FLAG.RUNNING) {
                     ownsAudioSensor = true
@@ -264,6 +269,7 @@ class GestureSensor(
                 ownsAudioSensor = false
                 synchronized(dataLock) {
                     audioBuffer.clear()
+                    lastClassificationTimestamp = Long.MIN_VALUE
                 }
                 emitAggregatedEvent(entity.timestamp)
                 resetEventAggregation()
@@ -274,14 +280,27 @@ class GestureSensor(
     private fun handleAudioEntity(entity: AudioSensor.Entity) {
         if (!eventActive) return
 
-        synchronized(dataLock) {
+        val shouldClassify = synchronized(dataLock) {
             audioBuffer.write(entity.samples.toShortArray())
             if (!audioBuffer.isFull() || imuWindow.size < CLASSIFIER_WINDOW_FRAMES) {
                 return
             }
+
+            val intervalMillis = configStateFlow.value.classificationIntervalMillis.coerceAtLeast(0L)
+            if (intervalMillis > 0L &&
+                lastClassificationTimestamp != Long.MIN_VALUE &&
+                entity.timestamp - lastClassificationTimestamp < intervalMillis
+            ) {
+                return
+            }
+
+            lastClassificationTimestamp = entity.timestamp
+            true
         }
 
-        classify(entity.timestamp)
+        if (shouldClassify) {
+            classify(entity.timestamp)
+        }
     }
 
     private fun classify(timestamp: Long) {
