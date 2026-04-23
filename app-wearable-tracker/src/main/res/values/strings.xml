@@ -45,6 +45,7 @@
     <string name="sensor_imu">IMU</string>
     <string name="sensor_audio">Audio</string>
     <string name="sensor_gesture">Gesture</string>
+    <string name="sensor_stress">Stress</string>
     <string name="sensor_default">Sensor</string>
 
     <!-- Samsung Health Connection -->

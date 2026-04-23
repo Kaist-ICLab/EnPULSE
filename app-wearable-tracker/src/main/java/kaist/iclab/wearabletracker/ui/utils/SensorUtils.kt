@@ -19,6 +19,7 @@ fun getSensorTitleResId(sensorId: String): Int {
         "IMU" -> R.string.sensor_imu
         "Audio" -> R.string.sensor_audio
         "Gesture" -> R.string.sensor_gesture
+        "Stress" ->R.string.sensor_stress
         else -> R.string.sensor_default
     }
 }
