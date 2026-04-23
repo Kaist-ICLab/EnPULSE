@@ -240,7 +240,7 @@ class SurveyService(
             val isoFormatter = java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
             val inserts = unsynced.map { entity ->
                 fun formatTimestamp(millisStr: String?) = millisStr?.toLongOrNull()?.let {
-                    java.time.Instant.ofEpochMilli(it).atOffset(java.time.ZoneOffset.UTC).format(isoFormatter)
+                    Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).format(isoFormatter)
                 }
 
                 SurveyQuestionResponseInsert(
