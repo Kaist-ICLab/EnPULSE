@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlinCompose)
+    alias(libs.plugins.kotlinSerialization)
 
     id("com.google.devtools.ksp")
 }
@@ -67,6 +68,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.wear.compose.material)
+    implementation(libs.wear.input)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.wear.tooling.preview)
     implementation(libs.compose.activity)

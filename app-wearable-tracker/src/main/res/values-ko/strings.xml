@@ -73,4 +73,13 @@
     <string name="interval_2h">2시간</string>
     <string name="interval_6h">6시간</string>
     <string name="interval_12h">12시간</string>
+    <!-- MicroEMA -->
+    <string name="ema_low">낮음</string>
+    <string name="ema_high">높음</string>
+    <string name="ema_dismiss">무시</string>
+    <string name="ema_loading">로딩 중...</string>
+    <string name="ema_done">답변해주셔서 감사합니다</string>
+    <string name="ema_time_up">시간 종료</string>
+    <string name="ema_dismissed">무시됨</string>
+    <string name="ema_finishing">마무리 중</string>
 </resources>

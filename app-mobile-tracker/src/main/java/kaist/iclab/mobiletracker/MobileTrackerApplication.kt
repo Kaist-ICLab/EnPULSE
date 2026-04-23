@@ -106,7 +106,11 @@ class MobileTrackerApplication : Application(), KoinComponent, BackgroundControl
                         else -> PhoneSensorDataService.stop(this@MobileTrackerApplication)
                     }
                 } catch (e: Exception) {
-                    Log.e("MobileTrackerApplication", "Error managing phone sensor service: ${e.message}", e)
+                    Log.e(
+                        "MobileTrackerApplication",
+                        "Error managing phone sensor service: ${e.message}",
+                        e
+                    )
                 }
             }
         }

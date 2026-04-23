@@ -1,5 +1,8 @@
 package kaist.iclab.mobiletracker.services
 
+import android.util.Log
+import java.time.Instant
+import java.time.ZoneOffset
 import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.data.survey.OptionConfig
@@ -17,6 +20,7 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.runCatchingSuspend
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 
 /**
  * Service for fetching survey configuration from Supabase
@@ -220,6 +224,48 @@ class SurveyService(
     suspend fun submitSurveyResponses(responses: List<SurveyQuestionResponseInsert>): Result<Unit> {
         return ErrorClassifier.runClassified(TAG, "submitSurveyResponses") {
             supabaseClient.from(Constants.DB.TABLE_RESPONSE).insert(responses)
+        }
+    }
+
+    /**
+     * Upload locally cached MicroEMA responses to Supabase.
+     */
+    suspend fun uploadUnsyncedMicroEmaResponses(
+        microEmaResponseDao: kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
+    ): Result<Int> {
+        return try {
+            val unsynced = microEmaResponseDao.getUnsyncedResponses()
+            if (unsynced.isEmpty()) return Result.Success(0)
+
+            val isoFormatter = java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+            val inserts = unsynced.map { entity ->
+                fun formatTimestamp(millisStr: String?) = millisStr?.toLongOrNull()?.let {
+                    java.time.Instant.ofEpochMilli(it).atOffset(java.time.ZoneOffset.UTC).format(isoFormatter)
+                }
+
+                SurveyQuestionResponseInsert(
+                    questionId = entity.questionId,
+                    uuid = entity.uuid,
+                    triggerTime = formatTimestamp(entity.triggerTime),
+                    actualTriggerTime = formatTimestamp(entity.actualTriggerTime),
+                    surveyStartTime = formatTimestamp(entity.surveyStartTime),
+                    responseSubmissionTime = formatTimestamp(entity.responseSubmissionTime)
+                        ?: formatTimestamp(entity.actualTriggerTime)
+                        ?: Instant.now().atOffset(ZoneOffset.UTC).format(isoFormatter),
+                    response = kotlinx.serialization.json.Json.parseToJsonElement(entity.responseJson).jsonObject
+                )
+            }
+
+            when (val result = submitSurveyResponses(inserts)) {
+                is Result.Success -> {
+                    microEmaResponseDao.markAsSynced(unsynced.map { it.id })
+                    Log.d(TAG, "Successfully uploaded ${unsynced.size} MicroEMA responses")
+                    Result.Success(unsynced.size)
+                }
+                is Result.Error -> Result.Error(Exception("Failed to upload: ${result.message}", result.exception))
+            }
+        } catch (e: Exception) {
+            Result.Error(Exception("Error processing MicroEMA upload: ${e.message}", e))
         }
     }
 }

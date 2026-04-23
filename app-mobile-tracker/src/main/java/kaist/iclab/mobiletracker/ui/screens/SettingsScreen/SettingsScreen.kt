@@ -1,13 +1,18 @@
 package kaist.iclab.mobiletracker.ui.screens.SettingsScreen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
@@ -18,15 +23,22 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.components.AppHeader
 import kaist.iclab.mobiletracker.ui.components.AppMenuItem
+import kaist.iclab.mobiletracker.ui.components.Toggle.Toggle
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.MainSettings.EnableTrackerCard
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
@@ -79,6 +91,65 @@ fun SettingsScreen(
                             }
                         }
                     )
+                }
+
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Styles.CARD_CONTAINER_HORIZONTAL_PADDING),
+                        colors = CardDefaults.cardColors(containerColor = AppColors.White),
+                        shape = Styles.CARD_SHAPE
+                    ) {
+                        val isTestModeEnabled by settingsViewModel.isMicroEmaTestModeEnabled.collectAsState()
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    onClick = {
+                                        settingsViewModel.toggleMicroEmaTestMode(!isTestModeEnabled)
+                                    }
+                                )
+                                .padding(
+                                    horizontal = Styles.MENU_ITEM_HORIZONTAL_PADDING,
+                                    vertical = Styles.ENABLE_TRACKER_VERTICAL_PADDING
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "MicroEMA Auto Trigger (1 min)",
+                                    color = AppColors.TextPrimary,
+                                    fontSize = Styles.TEXT_FONT_SIZE,
+                                    lineHeight = Styles.TEXT_LINE_HEIGHT,
+                                    modifier = Modifier.padding(top = Styles.TEXT_TOP_PADDING)
+                                )
+                            }
+                            Spacer(Modifier.width(Styles.ICON_SPACER_WIDTH))
+                            Toggle(
+                                checked = isTestModeEnabled,
+                                onCheckedChange = { settingsViewModel.toggleMicroEmaTestMode(it) },
+                                enabled = true
+                            )
+                        }
+
+                        HorizontalDivider(
+                            color = AppColors.BorderDark,
+                            thickness = 0.dp
+                        )
+
+                        AppMenuItem(
+                            title = "MicroEMA Manual Trigger",
+                            icon = Icons.Filled.PhoneAndroid,
+                            onClick = { settingsViewModel.triggerMicroEmaOnWatch() },
+                            showDivider = false,
+                            iconTint = AppColors.PrimaryColor
+                        )
+                    }
                 }
 
                 item {

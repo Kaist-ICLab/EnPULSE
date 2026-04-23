@@ -1,0 +1,59 @@
+{
+  "surveyId": 34,
+  "title": "Basic survey",
+  "expireAfterMs": 60000,
+  "questions": [
+    {
+      "id": 27,
+      "surveyId": 34,
+      "text": "How are you feeling today?",
+      "answerType": "RADIO",
+      "isMandatory": true,
+      "options": [
+        {
+          "id": 23,
+          "display": "Good"
+        },
+        {
+          "id": 24,
+          "display": "Bad"
+        },
+        {
+          "id": 25,
+          "display": "Okay"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "surveyId": 34,
+      "text": "What is the capital of England?",
+      "answerType": "CHECKBOX",
+      "isMandatory": false,
+      "options": [
+        {
+          "id": 29,
+          "display": "E"
+        },
+        {
+          "id": 30,
+          "display": "London"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "surveyId": 34,
+      "text": "What is your name?",
+      "answerType": "TEXT",
+      "isMandatory": true
+    },
+    {
+      "id": 26,
+      "surveyId": 34,
+      "text": "Your age?",
+      "answerType": "NUMBER",
+      "isMandatory": false
+    }
+  ]
+}
