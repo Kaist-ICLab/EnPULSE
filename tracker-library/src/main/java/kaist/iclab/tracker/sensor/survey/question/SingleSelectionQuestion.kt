@@ -5,16 +5,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
 
-class CheckboxQuestion(
+class SingleSelectionQuestion(
     override val id: Int,
     override val question: String,
     override val isMandatory: Boolean,
     val option: List<Option>,
-    questionTrigger: List<QuestionTrigger<Set<Int>>>? = null
-) : Question<Set<Int>>(
-    id, question, isMandatory, setOf(), questionTrigger
+    questionTrigger: List<QuestionTrigger<Int?>>? = null
+) : Question<Int?>(
+    id, question, isMandatory, null, questionTrigger
 ) {
     private val _otherResponse = MutableStateFlow<Map<Int, String>>(mapOf())
     val otherResponse = _otherResponse.asStateFlow()
@@ -24,21 +23,13 @@ class CheckboxQuestion(
             option.indices.associateWith { "" }.filter { option[it.key].allowFreeResponse }
     }
 
-    override fun isAllowedResponse(response: Set<Int>): Boolean {
-        return response.all { it in option.indices }
+    override fun isAllowedResponse(response: Int?): Boolean {
+        val optionValues = option.indices
+        return (response === null) || (response in optionValues)
     }
 
-    override fun isEmpty(response: Set<Int>) = response.isEmpty()
+    override fun isEmpty(response: Int?) = (response === null)
 
-    fun toggleResponse(responseItemIdx: Int, isChecked: Boolean) {
-        val newResponse = this.response.value.toMutableSet()
-        newResponse.apply {
-            if (isChecked) add(responseItemIdx)
-            else remove(responseItemIdx)
-        }
-
-        setResponse(newResponse)
-    }
 
     fun setOtherResponse(optionIdx: Int, response: String) {
         _otherResponse.value = otherResponse.value.toMutableMap().apply {
@@ -50,34 +41,32 @@ class CheckboxQuestion(
         val jsonObject = buildJsonObject {
             put("id", id)
             put("isMandatory", isMandatory)
-            putJsonArray("response") {
-                response.value.forEach {
-                    add(buildJsonObject {
-                        put("value", it)
-                        if (it in otherResponse.value.keys) put(
-                            "otherResponse",
-                            otherResponse.value[it]
-                        )
-                    })
-                }
-            }
+            put("value", response.value)
+            if (response.value in otherResponse.value.keys) put(
+                "otherResponse",
+                otherResponse.value[response.value]
+            )
         }
 
         return jsonObject
     }
 
     override fun initResponse() {
-        setResponse(setOf())
+        setResponse(null)
         _otherResponse.value =
             option.indices.associateWith { "" }.filter { option[it.key].allowFreeResponse }
     }
 
-    override fun eval(expr: Expression<Set<Int>>, value: Set<Int>): Boolean =
-        when (expr) {
+    override fun eval(expr: Expression<Int?>, value: Int?): Boolean {
+        if (value == null) return false
+        return when (expr) {
             is Predicate.Equal -> expr.value == value
             is Predicate.NotEqual -> expr.value != value
 
-            is SetPredicate.Contains<*, *> -> value.contains(expr.value)
+            is ComparablePredicate.GreaterThan -> value > expr.value!!
+            is ComparablePredicate.GreaterThanOrEqual -> value >= expr.value!!
+            is ComparablePredicate.LessThan -> value < expr.value!!
+            is ComparablePredicate.LessThanOrEqual -> value <= expr.value!!
 
             is Operator.And -> eval(expr.a, value) && eval(expr.b, value)
             is Operator.Or -> eval(expr.a, value) || eval(expr.b, value)
@@ -85,4 +74,5 @@ class CheckboxQuestion(
 
             else -> error("Unreachable")
         }
+    }
 }

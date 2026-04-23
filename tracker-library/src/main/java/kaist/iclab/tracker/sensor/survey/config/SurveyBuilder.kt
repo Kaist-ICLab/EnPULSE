@@ -3,7 +3,7 @@ package kaist.iclab.tracker.sensor.survey.config
 import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
-import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
+import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.ComparablePredicate
 import kaist.iclab.tracker.sensor.survey.question.Expression
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
@@ -11,7 +11,7 @@ import kaist.iclab.tracker.sensor.survey.question.Option
 import kaist.iclab.tracker.sensor.survey.question.Predicate
 import kaist.iclab.tracker.sensor.survey.question.Question
 import kaist.iclab.tracker.sensor.survey.question.QuestionTrigger
-import kaist.iclab.tracker.sensor.survey.question.RadioQuestion
+import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.SetPredicate
 import kaist.iclab.tracker.sensor.survey.question.StringPredicate
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
@@ -115,7 +115,7 @@ object SurveyBuilder {
                     val options = config.options?.map { Option(it.display, it.allowFreeResponse) }
                         ?: emptyList()
                     if (options.isEmpty()) return null
-                    RadioQuestion(
+                    SingleSelectionQuestion(
                         id = config.id,
                         question = config.text,
                         isMandatory = config.isMandatory,
@@ -128,7 +128,7 @@ object SurveyBuilder {
                     val options = config.options?.map { Option(it.display, it.allowFreeResponse) }
                         ?: emptyList()
                     if (options.isEmpty()) return null
-                    CheckboxQuestion(
+                    MultipleSelectionQuestion(
                         id = config.id,
                         question = config.text,
                         isMandatory = config.isMandatory,
