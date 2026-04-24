@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
+
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

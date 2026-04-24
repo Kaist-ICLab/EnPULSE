@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.db.dao.phone
 
+
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy

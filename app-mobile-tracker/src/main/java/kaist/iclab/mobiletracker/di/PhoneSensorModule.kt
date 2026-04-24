@@ -6,6 +6,7 @@ import kaist.iclab.mobiletracker.di.phone.controllerModule
 import kaist.iclab.mobiletracker.di.phone.coreSensorsModule
 import kaist.iclab.mobiletracker.di.phone.surveySensorModule
 import kaist.iclab.mobiletracker.di.phone.uploadModule
+import kaist.iclab.mobiletracker.di.phone.microEmaSensorModule
 import org.koin.dsl.module
 
 /**
@@ -18,6 +19,7 @@ val phoneSensorModule = module {
         activitySensorsModule,
         surveySensorModule,
         controllerModule,
-        uploadModule
+        uploadModule,
+        microEmaSensorModule
     )
 }

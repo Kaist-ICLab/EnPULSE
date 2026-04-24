@@ -1,8 +1,7 @@
 package kaist.iclab.mobiletracker.services
 
+
 import android.util.Log
-import java.time.Instant
-import java.time.ZoneOffset
 import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.data.survey.OptionConfig
@@ -21,6 +20,8 @@ import kaist.iclab.mobiletracker.repository.runCatchingSuspend
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import java.time.Instant
+import java.time.ZoneOffset
 
 /**
  * Service for fetching survey configuration from Supabase

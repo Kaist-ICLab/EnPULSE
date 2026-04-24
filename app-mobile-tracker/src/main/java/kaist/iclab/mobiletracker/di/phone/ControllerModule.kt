@@ -4,6 +4,7 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
@@ -51,6 +52,7 @@ val controllerModule = module {
             get<UserInteractionSensor>(),
             get<WifiScanSensor>(),
             get<SurveySensor>(),
+            get<MicroEmaSensor>(),
         )
     }
 

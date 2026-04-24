@@ -1,5 +1,13 @@
 package kaist.iclab.wearabletracker.db.dao
 
+import kaist.iclab.tracker.ema.WatchSurveyConfig
+import kaist.iclab.tracker.ema.WatchQuestion
+import kaist.iclab.tracker.ema.WatchOption
+import kaist.iclab.tracker.ema.AnswerType
+import kaist.iclab.tracker.ema.ResponseStatus
+import kaist.iclab.tracker.ema.MicroEmaResponse
+
+
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query

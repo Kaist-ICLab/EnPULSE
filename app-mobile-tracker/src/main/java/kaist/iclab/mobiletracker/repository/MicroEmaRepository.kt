@@ -1,8 +1,9 @@
 package kaist.iclab.mobiletracker.repository
 
+
 import android.content.Context
 import android.util.Log
-import kaist.iclab.mobiletracker.data.survey.WatchSurveyConfig
+import kaist.iclab.tracker.ema.WatchSurveyConfig
 import kotlinx.serialization.json.Json
 
 /**

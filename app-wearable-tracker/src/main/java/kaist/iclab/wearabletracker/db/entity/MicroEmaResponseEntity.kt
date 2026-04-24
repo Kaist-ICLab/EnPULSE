@@ -1,5 +1,13 @@
 package kaist.iclab.wearabletracker.db.entity
 
+import kaist.iclab.tracker.ema.WatchSurveyConfig
+import kaist.iclab.tracker.ema.WatchQuestion
+import kaist.iclab.tracker.ema.WatchOption
+import kaist.iclab.tracker.ema.AnswerType
+import kaist.iclab.tracker.ema.ResponseStatus
+import kaist.iclab.tracker.ema.MicroEmaResponse
+
+
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

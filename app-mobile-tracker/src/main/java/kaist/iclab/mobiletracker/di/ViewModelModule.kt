@@ -45,7 +45,6 @@ val viewModelModule = module {
             syncTimestampService = get(),
             campaignSensorRepository = get(),
             bleHelper = get(),
-            triggerManager = get(),
             context = androidContext()
         )
     }

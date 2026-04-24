@@ -101,47 +101,6 @@ fun SettingsScreen(
                         colors = CardDefaults.cardColors(containerColor = AppColors.White),
                         shape = Styles.CARD_SHAPE
                     ) {
-                        val isTestModeEnabled by settingsViewModel.isMicroEmaTestModeEnabled.collectAsState()
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    onClick = {
-                                        settingsViewModel.toggleMicroEmaTestMode(!isTestModeEnabled)
-                                    }
-                                )
-                                .padding(
-                                    horizontal = Styles.MENU_ITEM_HORIZONTAL_PADDING,
-                                    vertical = Styles.ENABLE_TRACKER_VERTICAL_PADDING
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = "MicroEMA Auto Trigger (1 min)",
-                                    color = AppColors.TextPrimary,
-                                    fontSize = Styles.TEXT_FONT_SIZE,
-                                    lineHeight = Styles.TEXT_LINE_HEIGHT,
-                                    modifier = Modifier.padding(top = Styles.TEXT_TOP_PADDING)
-                                )
-                            }
-                            Spacer(Modifier.width(Styles.ICON_SPACER_WIDTH))
-                            Toggle(
-                                checked = isTestModeEnabled,
-                                onCheckedChange = { settingsViewModel.toggleMicroEmaTestMode(it) },
-                                enabled = true
-                            )
-                        }
-
-                        HorizontalDivider(
-                            color = AppColors.BorderDark,
-                            thickness = 0.dp
-                        )
-
                         AppMenuItem(
                             title = "MicroEMA Manual Trigger",
                             icon = Icons.Filled.PhoneAndroid,
