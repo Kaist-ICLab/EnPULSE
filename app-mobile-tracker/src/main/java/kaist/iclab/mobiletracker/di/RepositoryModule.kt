@@ -161,10 +161,17 @@ val repositoryModule = module {
     }
 
     // UserProfileRepository for user profile management
+    single {
+        kaist.iclab.mobiletracker.storage.UserProfileStorage(
+            couchbase = get()
+        )
+    }
+
     single<UserProfileRepository> {
         UserProfileRepositoryImpl(
             profileService = get(),
-            supabaseHelper = get()
+            supabaseHelper = get(),
+            persistentStorage = get()
         )
     }
 

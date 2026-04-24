@@ -96,9 +96,12 @@ class HomeViewModel(
                 .distinctUntilChanged()
                 .filterNotNull()
                 .collect { campaignId ->
-                    // Auto-fetch configs on startup or when campaign changes
-                    campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
-                    surveyRepository.fetchAndPersistSurveys(campaignId.toInt())
+                    // Auto-fetch configs on startup or when campaign changes, 
+                    // BUT only if data collection is not currently running to ensure protocol consistency.
+                    if (backgroundController.controllerStateFlow.value.flag != ControllerState.FLAG.RUNNING) {
+                        campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
+                        surveyRepository.fetchAndPersistSurveys(campaignId.toInt())
+                    }
                 }
         }
     }

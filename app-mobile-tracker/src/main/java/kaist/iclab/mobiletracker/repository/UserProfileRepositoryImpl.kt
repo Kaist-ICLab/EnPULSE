@@ -14,26 +14,32 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class UserProfileRepositoryImpl(
     private val profileService: ProfileService,
-    private val supabaseHelper: SupabaseHelper
+    private val supabaseHelper: SupabaseHelper,
+    private val persistentStorage: kaist.iclab.mobiletracker.storage.UserProfileStorage
 ) : UserProfileRepository {
 
     companion object {
         private const val TAG = "UserProfileRepo"
     }
 
-    private val _profile = MutableStateFlow<ProfileData?>(null)
+    private val _profile = MutableStateFlow<ProfileData?>(
+        persistentStorage.get().takeIf { it.uuid.isNotEmpty() }
+    )
     override val profileFlow: StateFlow<ProfileData?> = _profile.asStateFlow()
 
     override fun getCurrentUuid(): String? {
-        return SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient)
+        return _profile.value?.uuid?.takeIf { it.isNotEmpty() }
+            ?: SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient)
     }
 
     override fun saveProfile(profile: ProfileData) {
         _profile.value = profile
+        persistentStorage.set(profile)
     }
 
     override fun clearProfile() {
         _profile.value = null
+        persistentStorage.set(ProfileData())
     }
 
     override suspend fun updateCampaignId(campaignId: Int): Result<Unit> {
@@ -49,6 +55,7 @@ class UserProfileRepositoryImpl(
         return when (val result = profileService.getProfileByUuid(uuid)) {
             is Result.Success -> {
                 _profile.value = result.data
+                result.data?.let { persistentStorage.set(it) }
                 result
             }
 
