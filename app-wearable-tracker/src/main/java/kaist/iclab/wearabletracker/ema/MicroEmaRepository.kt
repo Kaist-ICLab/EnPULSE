@@ -1,14 +1,8 @@
 package kaist.iclab.wearabletracker.ema
 
-import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
-import kaist.iclab.tracker.sensor.microema.WatchQuestion
-import kaist.iclab.tracker.sensor.microema.WatchOption
-import kaist.iclab.tracker.sensor.microema.AnswerType
-import kaist.iclab.tracker.sensor.microema.ResponseStatus
-import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
-
 
 import android.util.Log
+import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 
 /**
  * Repository that holds the active microEMA survey configuration.

@@ -1,12 +1,5 @@
 package kaist.iclab.wearabletracker.db.dao
 
-import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
-import kaist.iclab.tracker.sensor.microema.WatchQuestion
-import kaist.iclab.tracker.sensor.microema.WatchOption
-import kaist.iclab.tracker.sensor.microema.AnswerType
-import kaist.iclab.tracker.sensor.microema.ResponseStatus
-import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
-
 
 import androidx.room.Dao
 import androidx.room.Insert

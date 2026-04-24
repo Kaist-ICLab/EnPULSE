@@ -1,14 +1,15 @@
 package kaist.iclab.wearabletracker.ema
 
-import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
-import kaist.iclab.tracker.sensor.microema.WatchQuestion
-import kaist.iclab.tracker.sensor.microema.WatchOption
-import kaist.iclab.tracker.sensor.microema.AnswerType
-import kaist.iclab.tracker.sensor.microema.ResponseStatus
-import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
 
-
+import android.content.Context
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.util.Log
+import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
+import kaist.iclab.tracker.sensor.microema.ResponseStatus
+import kaist.iclab.tracker.sensor.microema.WatchQuestion
+import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.db.dao.MicroEmaResponseDao
@@ -19,10 +20,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
-import android.content.Context
+
 /**
  * Manages microEMA response persistence (Room) and sync (BLE → phone → Supabase).
  *
@@ -72,30 +70,32 @@ class MicroEmaResponseManager(
         ) { _, jsonElement ->
             try {
                 Log.d(TAG, "Received JIT trigger payload: $jsonElement")
-                
+
                 val triggerObj = when (jsonElement) {
                     is kotlinx.serialization.json.JsonObject -> jsonElement
                     is kotlinx.serialization.json.JsonPrimitive -> {
                         // It's a string, parse it
                         json.parseToJsonElement(jsonElement.content).jsonObject
                     }
+
                     else -> {
                         // Fallback toString/parse
                         json.parseToJsonElement(jsonElement.toString()).jsonObject
                     }
                 }
-                
+
                 val surveyId = triggerObj["surveyId"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
                 val title = triggerObj["title"]?.jsonPrimitive?.content ?: "Micro EMA"
-                val expireAfterMs = triggerObj["expireAfterMs"]?.jsonPrimitive?.content?.toLongOrNull()
+                val expireAfterMs =
+                    triggerObj["expireAfterMs"]?.jsonPrimitive?.content?.toLongOrNull()
                 val questionJson = triggerObj["question"] ?: run {
                     Log.e(TAG, "Trigger payload missing 'question' field")
                     return@addOnReceivedListener
                 }
-                
+
                 Log.d(TAG, "Parsing question JSON: $questionJson")
                 val question = json.decodeFromJsonElement<WatchQuestion>(questionJson)
-                
+
                 // Update repository with this session's dynamic config
                 val jitConfig = WatchSurveyConfig(
                     surveyId = surveyId,
@@ -104,7 +104,7 @@ class MicroEmaResponseManager(
                     questions = listOf(question)
                 )
                 repository.updateConfig(jitConfig)
-                
+
                 Log.d(TAG, "Launching WatchSurveyActivity...")
                 launchMicroEma()
             } catch (e: Exception) {
@@ -116,13 +116,15 @@ class MicroEmaResponseManager(
     private fun launchMicroEma() {
         try {
             // Trigger a double-buzz vibration to physically alert the user
-            val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
+            val vibrator =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    val vibratorManager =
+                        context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                    vibratorManager.defaultVibrator
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                }
             vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 200, 100, 200), -1))
 
             val intent = android.content.Intent(context, WatchSurveyActivity::class.java).apply {

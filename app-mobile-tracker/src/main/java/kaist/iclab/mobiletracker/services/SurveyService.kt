@@ -241,7 +241,8 @@ class SurveyService(
             val isoFormatter = java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
             val inserts = unsynced.map { entity ->
                 fun formatTimestamp(millisStr: String?) = millisStr?.toLongOrNull()?.let {
-                    java.time.Instant.ofEpochMilli(it).atOffset(java.time.ZoneOffset.UTC).format(isoFormatter)
+                    java.time.Instant.ofEpochMilli(it).atOffset(java.time.ZoneOffset.UTC)
+                        .format(isoFormatter)
                 }
 
                 SurveyQuestionResponseInsert(
@@ -264,7 +265,13 @@ class SurveyService(
                     Log.d(TAG, "Successfully uploaded ${unsynced.size} MicroEMA responses")
                     Result.Success(unsynced.size)
                 }
-                is Result.Error -> Result.Error(Exception("Failed to upload: ${result.message}", result.exception))
+
+                is Result.Error -> Result.Error(
+                    Exception(
+                        "Failed to upload: ${result.message}",
+                        result.exception
+                    )
+                )
             }
         } catch (e: Exception) {
             Result.Error(Exception("Error processing MicroEMA upload: ${e.message}", e))

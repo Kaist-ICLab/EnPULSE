@@ -4,9 +4,9 @@ import kaist.iclab.mobiletracker.di.phone.activitySensorsModule
 import kaist.iclab.mobiletracker.di.phone.communicationSensorsModule
 import kaist.iclab.mobiletracker.di.phone.controllerModule
 import kaist.iclab.mobiletracker.di.phone.coreSensorsModule
+import kaist.iclab.mobiletracker.di.phone.microEmaSensorModule
 import kaist.iclab.mobiletracker.di.phone.surveySensorModule
 import kaist.iclab.mobiletracker.di.phone.uploadModule
-import kaist.iclab.mobiletracker.di.phone.microEmaSensorModule
 import org.koin.dsl.module
 
 /**

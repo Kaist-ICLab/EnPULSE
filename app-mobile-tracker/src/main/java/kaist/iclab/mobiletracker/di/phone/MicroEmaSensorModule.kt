@@ -1,10 +1,10 @@
 package kaist.iclab.mobiletracker.di.phone
 
-import kaist.iclab.tracker.permission.AndroidPermissionManager
-import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
 import kaist.iclab.mobiletracker.storage.CouchbaseSensorStateStorage
 import kaist.iclab.mobiletracker.storage.SimpleStateStorage
+import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.DefaultTriggerEngine

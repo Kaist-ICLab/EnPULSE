@@ -1,12 +1,5 @@
 package kaist.iclab.wearabletracker.ema
 
-import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
-import kaist.iclab.tracker.sensor.microema.WatchQuestion
-import kaist.iclab.tracker.sensor.microema.WatchOption
-import kaist.iclab.tracker.sensor.microema.AnswerType
-import kaist.iclab.tracker.sensor.microema.ResponseStatus
-import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
-
 
 import android.app.Activity
 import android.app.RemoteInput
@@ -73,6 +66,10 @@ import androidx.wear.compose.material.ToggleChip
 import androidx.wear.compose.material.ToggleChipDefaults
 import androidx.wear.compose.material.rememberPickerState
 import androidx.wear.input.RemoteInputIntentHelper
+import kaist.iclab.tracker.sensor.microema.AnswerType
+import kaist.iclab.tracker.sensor.microema.ResponseStatus
+import kaist.iclab.tracker.sensor.microema.WatchOption
+import kaist.iclab.tracker.sensor.microema.WatchQuestion
 import kaist.iclab.wearabletracker.R
 import kotlinx.coroutines.delay
 
@@ -335,6 +332,7 @@ private fun SingleQuestionView(
                         AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
                             onAnswer(selectedNumber)
                         }
+
                         AnswerType.BINARY -> {
                             // Handled directly by TapButtonsInput
                         }
