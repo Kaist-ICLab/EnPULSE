@@ -3,12 +3,12 @@ package kaist.iclab.mobiletracker.viewmodels.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
-import kaist.iclab.mobiletracker.data.survey.SurveyConfig
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
+import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kotlinx.coroutines.flow.MutableStateFlow

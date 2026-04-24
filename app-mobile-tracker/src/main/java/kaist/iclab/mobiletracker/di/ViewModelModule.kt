@@ -18,6 +18,7 @@ import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.survey.SurveySensor
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -45,6 +46,10 @@ val viewModelModule = module {
             syncTimestampService = get(),
             campaignSensorRepository = get(),
             bleHelper = get(),
+            surveyService = get(),
+            campaignRepository = get(),
+            userProfileRepository = get(),
+            microEmaConfigStorage = get(named("microEmaConfigStorage")),
             context = androidContext()
         )
     }

@@ -185,7 +185,8 @@ private fun SingleQuestionView(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Reduced top margin to lift the question slightly higher

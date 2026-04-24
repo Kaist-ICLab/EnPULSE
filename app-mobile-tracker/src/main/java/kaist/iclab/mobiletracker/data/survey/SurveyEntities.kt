@@ -65,6 +65,5 @@ data class SurveyQuestionResponseInsert(
     @SerialName("actual_trigger_time") val actualTriggerTime: String? = null,
     @SerialName("survey_start_time") val surveyStartTime: String? = null,
     @SerialName("response_submission_time") val responseSubmissionTime: String? = null,
-    val response: JsonElement,
-    @SerialName("device_type") val deviceType: Int? = null
+    val response: JsonElement
 )

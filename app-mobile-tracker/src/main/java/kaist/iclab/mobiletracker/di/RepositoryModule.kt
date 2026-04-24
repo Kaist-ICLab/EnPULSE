@@ -133,7 +133,8 @@ val repositoryModule = module {
         SurveyRepositoryImpl(
             surveyService = get(),
             persistentStorage = get(),
-            inMemoryStorage = get(named("surveySensorConfigStorage")),
+            phoneSensorConfigStorage = get(named("surveySensorConfigStorage")),
+            microEmaConfigStorage = get(named("microEmaConfigStorage")),
             scheduleStorage = get()
         )
     }
@@ -167,9 +168,5 @@ val repositoryModule = module {
         )
     }
 
-    // MicroEmaRepository for watch-side survey management
-    single {
-        kaist.iclab.mobiletracker.repository.MicroEmaRepository(get())
-    }
 }
 

@@ -31,7 +31,8 @@ class MicroEmaSensor(
 
     @Serializable
     data class Config(
-        val rules: List<TriggerRule> = emptyList()
+        val rules: List<TriggerRule> = emptyList(),
+        val watchSurveyConfigs: Map<Int, WatchSurveyConfig> = emptyMap()
     ) : SensorConfig {
         companion object {
             fun fromJson(jsonString: String): Config {
@@ -79,8 +80,15 @@ class MicroEmaSensor(
 
     override fun init() {
         super.init()
-        // Load config and rules
         val currentConfig: Config = configStorage.get()
+        
+        // 1. Register Action Handler for MicroEMA
+        triggerEngine.registerActionHandler(
+            "MICRO_EMA", 
+            MicroEmaTriggerAction(bleChannel, currentConfig.watchSurveyConfigs)
+        )
+
+        // 2. Load existing rules
         currentConfig.rules.forEach { rule: TriggerRule ->
             triggerEngine.addRule(rule)
         }

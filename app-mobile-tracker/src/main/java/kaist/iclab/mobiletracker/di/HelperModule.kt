@@ -11,13 +11,13 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 val helperModule = module {
-    // BLEHelper - injects WatchSensorRepository and SyncTimestampService
+    // BLEHelper - injects WatchSensorRepository, MicroEma config, and SyncTimestampService
     single {
         BLEHelper(
             context = androidContext(),
             watchSensorRepository = get<WatchSensorRepository>(),
             timestampService = get(),
-            microEmaRepository = get(),
+            microEmaConfigStorage = get(org.koin.core.qualifier.named("microEmaConfigStorage")),
             microEmaResponseDao = get<TrackerRoomDB>().microEmaResponseDao()
         )
     }
