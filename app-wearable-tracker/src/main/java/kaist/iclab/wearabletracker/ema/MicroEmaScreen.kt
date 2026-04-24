@@ -1,11 +1,11 @@
 package kaist.iclab.wearabletracker.ema
 
-import kaist.iclab.tracker.ema.WatchSurveyConfig
-import kaist.iclab.tracker.ema.WatchQuestion
-import kaist.iclab.tracker.ema.WatchOption
-import kaist.iclab.tracker.ema.AnswerType
-import kaist.iclab.tracker.ema.ResponseStatus
-import kaist.iclab.tracker.ema.MicroEmaResponse
+import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
+import kaist.iclab.tracker.sensor.microema.WatchQuestion
+import kaist.iclab.tracker.sensor.microema.WatchOption
+import kaist.iclab.tracker.sensor.microema.AnswerType
+import kaist.iclab.tracker.sensor.microema.ResponseStatus
+import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
 
 
 import android.app.Activity
@@ -272,7 +272,14 @@ private fun SingleQuestionView(
                     )
                 }
 
-                AnswerType.NUMBER -> {
+                AnswerType.BINARY -> {
+                    TapButtonsInput(
+                        options = question.options,
+                        onSelect = onAnswer
+                    )
+                }
+
+                AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
                     NumberPickerInput(
                         onValueChange = { selectedNumber = it },
                         onSelect = onAnswer
@@ -295,6 +302,7 @@ private fun SingleQuestionView(
         ) {
             // Show confirm for Likert, Categorical, Checkbox, and Number/Text
             val showConfirm = when {
+                question.answerType == AnswerType.BINARY -> false
                 question.answerType == AnswerType.RADIO && question.options.size <= 2 -> false
                 else -> true
             }
@@ -324,8 +332,11 @@ private fun SingleQuestionView(
                             }
                         }
 
-                        AnswerType.NUMBER -> {
+                        AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
                             onAnswer(selectedNumber)
+                        }
+                        AnswerType.BINARY -> {
+                            // Handled directly by TapButtonsInput
                         }
                     }
                 },

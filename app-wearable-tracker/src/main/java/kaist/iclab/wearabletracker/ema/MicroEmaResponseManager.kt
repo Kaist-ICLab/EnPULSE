@@ -1,11 +1,11 @@
 package kaist.iclab.wearabletracker.ema
 
-import kaist.iclab.tracker.ema.WatchSurveyConfig
-import kaist.iclab.tracker.ema.WatchQuestion
-import kaist.iclab.tracker.ema.WatchOption
-import kaist.iclab.tracker.ema.AnswerType
-import kaist.iclab.tracker.ema.ResponseStatus
-import kaist.iclab.tracker.ema.MicroEmaResponse
+import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
+import kaist.iclab.tracker.sensor.microema.WatchQuestion
+import kaist.iclab.tracker.sensor.microema.WatchOption
+import kaist.iclab.tracker.sensor.microema.AnswerType
+import kaist.iclab.tracker.sensor.microema.ResponseStatus
+import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
 
 
 import android.util.Log

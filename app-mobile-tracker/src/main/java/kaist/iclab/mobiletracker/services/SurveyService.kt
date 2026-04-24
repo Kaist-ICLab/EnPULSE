@@ -253,7 +253,8 @@ class SurveyService(
                     responseSubmissionTime = formatTimestamp(entity.responseSubmissionTime)
                         ?: formatTimestamp(entity.actualTriggerTime)
                         ?: Instant.now().atOffset(ZoneOffset.UTC).format(isoFormatter),
-                    response = kotlinx.serialization.json.Json.parseToJsonElement(entity.responseJson).jsonObject
+                    response = kotlinx.serialization.json.Json.parseToJsonElement(entity.responseJson).jsonObject,
+                    deviceType = entity.deviceType
                 )
             }
 

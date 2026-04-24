@@ -1,4 +1,4 @@
-package kaist.iclab.tracker.ema
+package kaist.iclab.tracker.sensor.microema
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -28,11 +28,17 @@ enum class AnswerType {
     @SerialName("CHECKBOX")
     CHECKBOX,
 
+    @SerialName("NUMBERSCALE")
+    NUMBERSCALE,
+
     @SerialName("NUMBER")
     NUMBER,
 
     @SerialName("TEXT")
-    TEXT
+    TEXT,
+
+    @SerialName("BINARY")
+    BINARY
 }
 
 /**

@@ -1,8 +1,8 @@
 package kaist.iclab.tracker.sensor.microema
 
 import android.content.Context
-import kaist.iclab.tracker.ema.EmaConstants
-import kaist.iclab.tracker.ema.MicroEmaResponse
+import kaist.iclab.tracker.sensor.microema.EmaConstants
+import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -64,7 +64,8 @@ class MicroEmaSensor(
                 actualTriggerTime = response.triggerTime, // Or extract from response if available
                 surveyStartTime = response.surveyStartTime,
                 responseSubmissionTime = response.responseTime ?: System.currentTimeMillis(),
-                response = responseJson
+                response = responseJson,
+                deviceType = 1 // Watch
             )
             
             // Emit the response as a standard survey sensor entity

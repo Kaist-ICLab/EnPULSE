@@ -141,6 +141,7 @@ class BLEHelper(
                         surveyStartTime = surveyStartTime,
                         responseSubmissionTime = responseTime,
                         responseJson = responseJson.toString(),
+                        deviceType = 1,
                         isSynced = false
                     )
                 }

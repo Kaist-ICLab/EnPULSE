@@ -26,5 +26,7 @@ data class MicroEmaResponseEntity(
     /** The JSON string of the response payload (value and status) */
     val responseJson: String,
 
+    val deviceType: Int = 1,
+
     val isSynced: Boolean = false
 )

@@ -1,4 +1,4 @@
-package kaist.iclab.tracker.ema
+package kaist.iclab.tracker.sensor.microema
 
 /**
  * Shared constants for MicroEMA.

@@ -104,14 +104,7 @@ object SurveyBuilder {
                     questionTrigger = childrenQuestions as? List<QuestionTrigger<String>>
                 )
 
-                "NUMBER" -> NumberQuestion(
-                    id = config.id,
-                    question = config.text,
-                    isMandatory = config.isMandatory,
-                    questionTrigger = childrenQuestions as? List<QuestionTrigger<Double?>>
-                )
-
-                "RADIO" -> {
+                "RADIO", "BINARY" -> {
                     val options = config.options?.map { Option(it.display, it.allowFreeResponse) }
                         ?: emptyList()
                     if (options.isEmpty()) return null
@@ -137,6 +130,13 @@ object SurveyBuilder {
                     )
                 }
 
+                "NUMBER", "NUMBERSCALE" -> NumberQuestion(
+                    id = config.id,
+                    question = config.text,
+                    isMandatory = config.isMandatory,
+                    questionTrigger = childrenQuestions as? List<QuestionTrigger<Double?>>
+                )
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -154,8 +154,8 @@ object SurveyBuilder {
 
         return when (parentType.uppercase()) {
             "TEXT" -> QuestionTrigger(expression as Expression<String>, questions)
-            "NUMBER" -> QuestionTrigger(expression as Expression<Double?>, questions)
-            "RADIO" -> QuestionTrigger(expression as Expression<Int?>, questions)
+            "NUMBER", "NUMBERSCALE" -> QuestionTrigger(expression as Expression<Double?>, questions)
+            "RADIO", "BINARY" -> QuestionTrigger(expression as Expression<Int?>, questions)
             "CHECKBOX" -> QuestionTrigger(expression as Expression<Set<Int>>, questions)
             else -> null
         }
@@ -168,8 +168,8 @@ object SurveyBuilder {
     ): Expression<*>? {
         return when (parentType.uppercase()) {
             "TEXT" -> parseTextExpression(op, value)
-            "NUMBER" -> parseNumberExpression(op, value)
-            "RADIO" -> parseRadioExpression(op, value)
+            "NUMBER", "NUMBERSCALE" -> parseNumberExpression(op, value)
+            "RADIO", "BINARY" -> parseRadioExpression(op, value)
             "CHECKBOX" -> parseCheckboxExpression(op, value)
             else -> null
         }

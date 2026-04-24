@@ -3,7 +3,7 @@ package kaist.iclab.mobiletracker.repository
 
 import android.content.Context
 import android.util.Log
-import kaist.iclab.tracker.ema.WatchSurveyConfig
+import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kotlinx.serialization.json.Json
 
 /**
