@@ -171,7 +171,9 @@ val repositoryModule = module {
         UserProfileRepositoryImpl(
             profileService = get(),
             supabaseHelper = get(),
-            persistentStorage = get()
+            persistentStorage = get(),
+            campaignSensorRepository = get(),
+            surveyRepository = get()
         )
     }
 

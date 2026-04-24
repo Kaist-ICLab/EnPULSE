@@ -114,16 +114,9 @@ class AccountSettingsViewModel(
 
         when (val result = userProfileRepository.updateCampaignId(campaignIdInt)) {
             is Result.Success -> {
-                val surveyResult = surveyRepository.fetchAndPersistSurveys(campaignIdInt)
+                val syncResult = userProfileRepository.syncFullStudyConfig()
 
-                // Fetch active sensors for the campaign
-                campaignSensorRepository.fetchActiveSensors(campaignIdInt.toLong())
-
-                _isSyncingSurveys.value = false
-
-                userProfileRepository.refreshProfile()
-
-                if (surveyResult.isSuccess) {
+                if (syncResult.isSuccess) {
                     AppToast.show(context, R.string.toast_experiment_group_selected)
                 } else {
                     AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
@@ -131,7 +124,7 @@ class AccountSettingsViewModel(
             }
 
             is Result.Error -> {
-                // Error handling if needed, or just let error classifier log it
+                // Error handling handled by ErrorClassifier
             }
         }
     }
@@ -144,27 +137,14 @@ class AccountSettingsViewModel(
     }
 
     fun reloadConfig() {
-        val currentCampaignId = _selectedCampaignId.value?.toIntOrNull()
-        if (currentCampaignId == null) {
-            AppToast.show(context, R.string.campaign_no_campaign_joined)
-            return
-        }
-
         if (_isReloadingConfig.value) return
 
         viewModelScope.launch {
             _isReloadingConfig.value = true
             try {
-                // Fetch surveys and sensors concurrently
-                val surveyDeferred =
-                    async { surveyRepository.fetchAndPersistSurveys(currentCampaignId) }
-                val sensorDeferred =
-                    async { campaignSensorRepository.fetchActiveSensors(currentCampaignId.toLong()) }
+                val result = userProfileRepository.syncFullStudyConfig()
 
-                val surveyResult = surveyDeferred.await()
-                val sensorResult = sensorDeferred.await()
-
-                if (surveyResult.isSuccess && sensorResult.isSuccess) {
+                if (result.isSuccess) {
                     AppToast.show(context, R.string.toast_success_saved)
                 } else {
                     AppToast.show(context, R.string.error_generic)

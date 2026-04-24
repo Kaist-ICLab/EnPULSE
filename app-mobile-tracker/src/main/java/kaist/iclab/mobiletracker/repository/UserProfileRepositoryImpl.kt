@@ -15,7 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 class UserProfileRepositoryImpl(
     private val profileService: ProfileService,
     private val supabaseHelper: SupabaseHelper,
-    private val persistentStorage: kaist.iclab.mobiletracker.storage.UserProfileStorage
+    private val persistentStorage: kaist.iclab.mobiletracker.storage.UserProfileStorage,
+    private val campaignSensorRepository: CampaignSensorRepository,
+    private val surveyRepository: SurveyRepository
 ) : UserProfileRepository {
 
     companion object {
@@ -63,6 +65,27 @@ class UserProfileRepositoryImpl(
         }
     }
 
+    override suspend fun syncFullStudyConfig(): Result<ProfileData?> {
+        // 1. Refresh profile first to get latest campaign ID
+        val profileResult = refreshProfile()
+        if (profileResult is Result.Error) return profileResult
+
+        val profile = profileResult.getOrNull()
+        val campaignId = profile?.campaignId
+
+        // 2. If we have a campaign, fetch sensors and surveys
+        if (campaignId != null) {
+            campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
+            surveyRepository.fetchAndPersistSurveys(campaignId)
+        } else {
+            // If no campaign, clear caches to be safe
+            campaignSensorRepository.clearCache()
+            surveyRepository.clearSurveys()
+        }
+
+        return profileResult
+    }
+
     override suspend fun createProfileIfNotExists(
         email: String,
         campaignId: Int?
@@ -72,4 +95,3 @@ class UserProfileRepositoryImpl(
         return profileService.createProfileIfNotExists(uuid, email, campaignId)
     }
 }
-

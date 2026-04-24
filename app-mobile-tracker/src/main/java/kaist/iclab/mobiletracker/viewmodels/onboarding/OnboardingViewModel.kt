@@ -68,22 +68,9 @@ class OnboardingViewModel(
 
             when (val result = userProfileRepository.updateCampaignId(selectedCampaign.id)) {
                 is Result.Success -> {
-                    // Fetch surveys
-                    val surveyResult = surveyRepository.fetchAndPersistSurveys(selectedCampaign.id)
-
-                    // Fetch active sensors for the campaign
-                    campaignSensorRepository.fetchActiveSensors(selectedCampaign.id.toLong())
-
-                    // Refresh profile to trigger navigation
-                    userProfileRepository.refreshProfile()
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isComplete = true,
-                            error = if (surveyResult.isError) "Campaign saved, but failed to load surveys" else null
-                        )
-                    }
+                    // Consolidate sync of profile, sensors, and surveys
+                    userProfileRepository.syncFullStudyConfig()
+                    _uiState.update { it.copy(isLoading = false, isComplete = true) }
                 }
 
                 is Result.Error -> {

@@ -134,12 +134,9 @@ class AuthViewModel(
      * Suspending function to load user profile.
      */
     private suspend fun loadUserProfileSuspend() {
-        when (val result = userProfileRepository.refreshProfile()) {
+        when (val result = userProfileRepository.syncFullStudyConfig()) {
             is Result.Success -> {
-                val profile = result.data
-                if (profile?.campaignId == null) {
-                    campaignSensorRepository.clearCache()
-                }
+                // Success handled by state flows
             }
 
             is Result.Error -> {

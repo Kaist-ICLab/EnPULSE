@@ -40,6 +40,11 @@ interface UserProfileRepository {
     suspend fun refreshProfile(): Result<ProfileData?>
 
     /**
+     * Consolidates refresh of profile, campaign sensors, and surveys into one operation.
+     */
+    suspend fun syncFullStudyConfig(): Result<ProfileData?>
+
+    /**
      * Create profile if it doesn't exist
      * @param email User email
      * @param campaignId Optional campaign ID
