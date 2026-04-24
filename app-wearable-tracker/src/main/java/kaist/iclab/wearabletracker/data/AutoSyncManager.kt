@@ -22,8 +22,7 @@ class AutoSyncManager(
     private val controllerStateFlow: StateFlow<ControllerState>,
     private val coroutineScope: CoroutineScope
 ) {
-    companion object {
-    }
+    companion object;
 
     private var syncJob: Job? = null
 

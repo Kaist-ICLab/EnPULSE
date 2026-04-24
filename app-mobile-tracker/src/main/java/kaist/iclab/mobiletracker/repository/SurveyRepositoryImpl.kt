@@ -1,7 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
 import android.util.Log
-import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.mobiletracker.utils.SurveyConfigConverter
@@ -64,7 +63,7 @@ class SurveyRepositoryImpl(
     }
 
     private fun applyConfigs(configs: List<kaist.iclab.tracker.sensor.survey.config.SurveyConfig>) {
-        
+
         // 1. Filter and apply Phone Surveys
         val phoneConfigs = configs.filter { it.deviceType == 0 }
         val phoneSensorConfig = SurveyConfigConverter.toSurveySensorConfig(phoneConfigs)
@@ -72,10 +71,13 @@ class SurveyRepositoryImpl(
 
         // 2. Filter and apply Watch (MicroEMA) Surveys
         val watchConfigs = configs.filter { it.deviceType == 1 }
-        
+
         val validWatchConfigs = watchConfigs.filter { it.expireAfterMs != null }
         if (watchConfigs.size > validWatchConfigs.size) {
-            Log.w(TAG, "${watchConfigs.size - validWatchConfigs.size} watch surveys were skipped because 'expire_after_ms' is null")
+            Log.w(
+                TAG,
+                "${watchConfigs.size - validWatchConfigs.size} watch surveys were skipped because 'expire_after_ms' is null"
+            )
         }
 
         if (validWatchConfigs.isNotEmpty()) {

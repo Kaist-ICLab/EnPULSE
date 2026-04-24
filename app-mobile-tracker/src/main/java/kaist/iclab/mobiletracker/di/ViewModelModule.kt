@@ -72,7 +72,7 @@ val viewModelModule = module {
             phoneSensorRepository = get<PhoneSensorRepository>(),
             watchSensorRepository = get<WatchSensorRepository>(),
             timestampService = get(),
-            sensors = get(qualifier = org.koin.core.qualifier.named("phoneSensors")),
+            sensors = get(qualifier = named("phoneSensors")),
             phoneSensorUploadService = get(),
             watchSensorUploadService = get(),
             context = androidContext()

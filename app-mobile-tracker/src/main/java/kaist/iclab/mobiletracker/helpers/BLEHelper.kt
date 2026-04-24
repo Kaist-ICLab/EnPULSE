@@ -34,7 +34,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
@@ -208,7 +207,7 @@ class BLEHelper(
                 // Get dynamic configs from storage
                 val dynamicConfigs = microEmaConfigStorage.get().watchSurveyConfigs
                 val config = dynamicConfigs.values.randomOrNull()
-                
+
                 if (config == null) {
                     Log.e(
                         AppConfig.LogTags.PHONE_BLE,
@@ -220,7 +219,10 @@ class BLEHelper(
                 // Pick a random question to send
                 val question = config.questions.randomOrNull()
                 if (question == null) {
-                    Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Config (ID: ${config.surveyId}) has no questions")
+                    Log.e(
+                        AppConfig.LogTags.PHONE_BLE,
+                        "[MICRO_EMA] Config (ID: ${config.surveyId}) has no questions"
+                    )
                     return@launch
                 }
 

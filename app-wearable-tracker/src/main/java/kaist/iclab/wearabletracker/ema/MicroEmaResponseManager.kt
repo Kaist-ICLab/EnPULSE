@@ -31,7 +31,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * 4. Phone uploads to Supabase using existing [SurveyService.submitSurveyResponses]
  */
 class MicroEmaResponseManager(
-    private val context: android.content.Context,
+    private val context: Context,
     private val repository: MicroEmaRepository,
     private val dao: MicroEmaResponseDao,
     private val phoneCommunicationManager: PhoneCommunicationManager,

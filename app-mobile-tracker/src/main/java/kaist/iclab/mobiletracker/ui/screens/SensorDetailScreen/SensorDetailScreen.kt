@@ -78,7 +78,6 @@ fun SensorDetailScreen(
     val listState = rememberLazyListState()
 
     var showUploadDialog by remember { mutableStateOf(false) }
-    var showDeleteResultDialog by remember { mutableStateOf(false) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
 
     // Load more when reaching end of list

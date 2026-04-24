@@ -8,9 +8,9 @@ import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
-import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
+import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -72,8 +72,7 @@ class OnboardingViewModel(
                     val surveyResult = surveyRepository.fetchAndPersistSurveys(selectedCampaign.id)
 
                     // Fetch active sensors for the campaign
-                    val sensorResult =
-                        campaignSensorRepository.fetchActiveSensors(selectedCampaign.id.toLong())
+                    campaignSensorRepository.fetchActiveSensors(selectedCampaign.id.toLong())
 
                     // Refresh profile to trigger navigation
                     userProfileRepository.refreshProfile()

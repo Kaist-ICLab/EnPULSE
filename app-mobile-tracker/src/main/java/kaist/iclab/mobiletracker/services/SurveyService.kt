@@ -22,9 +22,6 @@ import kaist.iclab.tracker.sensor.survey.config.ScheduleType
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter as JavaDateTimeFormatter
 
 /**
  * Service for fetching survey configuration from Supabase
@@ -49,7 +46,8 @@ class SurveyService(
                 val surveys = fetchFullSurveys {
                     eq("id", surveyId)
                 }
-                surveys.firstOrNull() ?: throw NoSuchElementException("Survey with ID $surveyId not found")
+                surveys.firstOrNull()
+                    ?: throw NoSuchElementException("Survey with ID $surveyId not found")
             }
         }
     }
@@ -110,7 +108,7 @@ class SurveyService(
             .decodeList<SurveyQuestionEntity>()
 
         val questionIds = questions.map { it.id }
-        
+
         // 3. Bulk fetch all options for the identified questions
         val options = if (questionIds.isNotEmpty()) {
             supabaseClient.from(Constants.DB.TABLE_OPTION)
@@ -238,7 +236,13 @@ class SurveyService(
                     Log.d(TAG, "Successfully uploaded ${unsynced.size} MicroEMA responses")
                     Result.Success(unsynced.size)
                 }
-                is Result.Error -> Result.Error(Exception("Failed to upload: ${result.message}", result.exception))
+
+                is Result.Error -> Result.Error(
+                    Exception(
+                        "Failed to upload: ${result.message}",
+                        result.exception
+                    )
+                )
             }
         } catch (e: Exception) {
             Result.Error(Exception("Error processing MicroEMA upload: ${e.message}", e))

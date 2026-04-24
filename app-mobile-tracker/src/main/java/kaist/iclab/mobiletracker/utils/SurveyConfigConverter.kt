@@ -13,7 +13,7 @@ object SurveyConfigConverter {
      * Convert a list of SurveyConfig to SurveySensor.Config.
      */
     fun toSurveySensorConfig(configs: List<SurveyConfig>): SurveySensor.Config {
-        val surveys = configs.associate { 
+        val surveys = configs.associate {
             val survey = SurveyBuilder.build(it)
             survey.id to survey
         }

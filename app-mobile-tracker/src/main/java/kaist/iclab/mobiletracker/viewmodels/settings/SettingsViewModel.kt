@@ -22,14 +22,8 @@ import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.sensor.microema.MicroEmaBuilder
 import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
 import kaist.iclab.tracker.storage.core.StateStorage
-import kaist.iclab.tracker.trigger.ActionConfig
-import kaist.iclab.tracker.trigger.CalculationConfig
-import kaist.iclab.tracker.trigger.ConditionConfig
-import kaist.iclab.tracker.trigger.TriggerRule
-import kaist.iclab.tracker.trigger.WindowConfig
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

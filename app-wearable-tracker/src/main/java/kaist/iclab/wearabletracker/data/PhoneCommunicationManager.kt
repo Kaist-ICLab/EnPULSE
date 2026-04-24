@@ -109,7 +109,7 @@ class PhoneCommunicationManager(
                             // Fetch a page of data
                             val data = dao.getDataSince(
                                 currentSensorLastTimestamp,
-                                kaist.iclab.wearabletracker.Constants.DB.SYNC_BATCH_LIMIT
+                                Constants.DB.SYNC_BATCH_LIMIT
                             )
 
                             if (data.isEmpty()) {

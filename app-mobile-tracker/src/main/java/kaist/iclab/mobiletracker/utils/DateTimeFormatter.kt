@@ -3,10 +3,10 @@ package kaist.iclab.mobiletracker.utils
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter as JavaDateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.time.format.DateTimeFormatter as JavaDateTimeFormatter
 
 /**
  * Utility object for formatting timestamps
