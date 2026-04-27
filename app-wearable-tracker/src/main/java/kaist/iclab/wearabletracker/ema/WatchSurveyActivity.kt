@@ -14,7 +14,6 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
  * The ViewModel handles expiry, dismissal, and compliance tracking.
  */
 class WatchSurveyActivity : ComponentActivity() {
-
     private val microEmaViewModel: MicroEmaViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {

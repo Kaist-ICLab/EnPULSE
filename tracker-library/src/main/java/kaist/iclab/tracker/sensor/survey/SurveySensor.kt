@@ -36,7 +36,7 @@ class SurveySensor(
     private val context: Context,
     permissionManager: PermissionManager,
     private val configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     private val scheduleStorage: SurveyScheduleStorage,
 ): BaseSensor<SurveySensor.Config, SurveySensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class

@@ -12,7 +12,7 @@ import androidx.security.crypto.MasterKey
  * Handles storing and retrieving authentication tokens securely.
  */
 class AuthRepositoryImpl(
-    private val context: Context
+    context: Context
 ) : AuthRepository {
 
     companion object {

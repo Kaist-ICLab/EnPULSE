@@ -714,7 +714,8 @@ private fun NumberPickerInput(
         Picker(
             state = pickerState,
             modifier = Modifier.size(width = 80.dp, height = 60.dp),
-            separation = 4.dp
+            separation = 4.dp,
+            contentDescription = ""
         ) { index ->
             Text(
                 text = numberOptions[index],

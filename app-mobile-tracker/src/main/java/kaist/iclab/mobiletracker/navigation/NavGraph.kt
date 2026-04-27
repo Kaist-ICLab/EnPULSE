@@ -84,7 +84,7 @@ fun NavGraph(
     val animationDuration = try {
         val systemDuration = context.resources.getInteger(android.R.integer.config_mediumAnimTime)
         if (systemDuration > 0) systemDuration else 400
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         400 // Fallback to 300ms if system resource is unavailable
     }
 

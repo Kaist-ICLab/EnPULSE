@@ -16,7 +16,6 @@ import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,8 +29,8 @@ class AccountSettingsViewModel(
     private val campaignRepository: CampaignRepository,
     private val userProfileRepository: UserProfileRepository,
     private val surveyRepository: SurveyRepository,
-    private val campaignSensorRepository: CampaignSensorRepository,
-    private val backgroundController: BackgroundController,
+    campaignSensorRepository: CampaignSensorRepository,
+    backgroundController: BackgroundController,
     private val context: Context
 ) : ViewModel() {
 

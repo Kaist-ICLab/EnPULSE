@@ -27,7 +27,7 @@ class BluetoothScanSensor(
     context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<BluetoothScanSensor.Config, BluetoothScanSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
 ) {
@@ -72,8 +72,7 @@ class BluetoothScanSensor(
     ) {
         try {
             val deviceName = device.name
-            val deviceAlias =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) device.alias else null
+            val deviceAlias = device.alias
 
             // Only include devices that have both name and alias
             if (deviceName == null || deviceAlias == null) return

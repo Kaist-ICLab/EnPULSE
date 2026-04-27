@@ -55,7 +55,7 @@ object DateTimeFormatter {
             val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
             dateFormat.timeZone = TimeZone.getTimeZone("UTC")
             dateFormat.parse(timestampString)?.time ?: 0L
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             0L
         }
     }

@@ -56,7 +56,7 @@ object SurveyBuilder {
     private fun buildSchedule(type: String, jsonStr: String?): SurveyScheduleMethod {
         val json = try {
             jsonStr?.let { Json.parseToJsonElement(it).jsonObject }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
 
@@ -96,7 +96,7 @@ object SurveyBuilder {
             } else {
                 timeStr.toLongOrNull() ?: TimeUnit.HOURS.toMillis(12)
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -155,7 +155,7 @@ object SurveyBuilder {
 
                 else -> null
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -168,7 +168,7 @@ object SurveyBuilder {
     ): QuestionTrigger<*>? {
         val triggerJson = try {
             config.trigger?.let { Json.parseToJsonElement(it).jsonObject }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         } ?: return null
 
@@ -228,7 +228,7 @@ object SurveyBuilder {
     private fun parseRadioExpression(op: String, value: JsonElement?): Expression<Int?>? {
         val target = try {
             value?.jsonPrimitive?.content?.toDoubleOrNull()?.toInt()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
         return when (op) {
@@ -251,7 +251,7 @@ object SurveyBuilder {
                     } else if (value != null) {
                         listOf(value.jsonPrimitive.content.toDoubleOrNull()?.toInt() ?: 0)
                     } else emptyList()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     emptyList()
                 }
                 Predicate.Equal(array.toSet())

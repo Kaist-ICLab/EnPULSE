@@ -27,7 +27,7 @@ import kotlinx.serialization.json.jsonObject
  * Service for fetching survey configuration from Supabase
  */
 class SurveyService(
-    private val supabaseHelper: SupabaseHelper
+    supabaseHelper: SupabaseHelper
 ) {
     private val supabaseClient = supabaseHelper.supabaseClient
 

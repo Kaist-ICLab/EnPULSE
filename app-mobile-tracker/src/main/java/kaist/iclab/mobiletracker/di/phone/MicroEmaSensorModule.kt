@@ -69,7 +69,6 @@ val microEmaSensorModule = module {
 
     single {
         MicroEmaSensor(
-            context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
             configStorage = get(named("microEmaConfigStorage")),
             stateStorage = get(named("microEmaStateStorage")),

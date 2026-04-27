@@ -1,13 +1,11 @@
 package kaist.iclab.tracker.sensor.microema
 
 import android.content.Context
-import kaist.iclab.tracker.sensor.microema.EmaConstants
-import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
-import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.TriggerEngine
@@ -16,10 +14,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
-import kaist.iclab.tracker.sensor.survey.SurveySensor
 
 class MicroEmaSensor(
-    private val context: Context,
     permissionManager: PermissionManager,
     private val configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
@@ -40,8 +36,6 @@ class MicroEmaSensor(
             }
         }
     }
-
-
 
     override val permissions: Array<String> = emptyArray() // BLE permissions are handled centrally
     override val foregroundServiceTypes: Array<Int> = emptyArray()
