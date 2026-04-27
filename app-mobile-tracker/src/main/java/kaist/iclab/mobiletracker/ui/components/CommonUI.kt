@@ -55,7 +55,8 @@ fun AppMenuItem(
     icon: ImageVector,
     onClick: () -> Unit,
     showDivider: Boolean = true,
-    iconTint: Color = AppColors.PrimaryColor
+    iconTint: Color = AppColors.PrimaryColor,
+    trailingContent: @Composable (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
@@ -80,11 +81,15 @@ fun AppMenuItem(
             fontSize = Styles.TEXT_FONT_SIZE,
             modifier = Modifier.weight(1f)
         )
-        Icon(
-            imageVector = Icons.Filled.ChevronRight,
-            contentDescription = null,
-            tint = AppColors.TextSecondary
-        )
+        if (trailingContent != null) {
+            trailingContent()
+        } else {
+            Icon(
+                imageVector = Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = AppColors.TextSecondary
+            )
+        }
     }
     if (showDivider) {
         HorizontalDivider(

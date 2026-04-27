@@ -9,7 +9,6 @@ import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchConnectionInfo
 import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
-import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
@@ -19,11 +18,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import java.util.Calendar
 
 /**
@@ -89,19 +86,11 @@ class HomeViewModel(
     private val campaignSensorRepository: CampaignSensorRepository,
     private val surveyRepository: SurveyRepository,
 ) : ViewModel() {
- 
+
     init {
-        viewModelScope.launch {
-            userProfileRepository.profileFlow
-                .map { it?.campaignId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .collect { campaignId ->
-                    // Auto-fetch configs on startup or when campaign changes
-                    campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
-                    surveyRepository.fetchAndPersistSurveys(campaignId.toInt())
-                }
-        }
+        // Note: Full study configuration sync (profile, sensors, surveys) is handled by AuthViewModel 
+        // at startup/login and by AccountSettingsViewModel for manual reloads.
+        // HomeViewModel purely observes the resulting states.
     }
 
     private fun getStartOfDay(): Long {

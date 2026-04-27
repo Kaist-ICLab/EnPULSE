@@ -84,20 +84,18 @@ fun NavGraph(
     val animationDuration = try {
         val systemDuration = context.resources.getInteger(android.R.integer.config_mediumAnimTime)
         if (systemDuration > 0) systemDuration else 400
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         400 // Fallback to 300ms if system resource is unavailable
     }
 
     // Handle language change by recreating activity
     val onLanguageChanged: () -> Unit = {
-        if (activity != null) {
-            activity.recreate()
-        }
+        activity?.recreate()
     }
 
     // Navigate based on authentication state and profile
     LaunchedEffect(userState.isLoggedIn, userProfile) {
-        val mainTabs = listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
+        listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
         val currentRoute = navController.currentDestination?.route
 
         if (userState.isLoggedIn) {

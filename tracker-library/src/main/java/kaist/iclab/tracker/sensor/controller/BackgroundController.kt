@@ -82,14 +82,38 @@ class BackgroundController(
             var isServiceRunning = false
         }
 
-        private val stateStorage = BackgroundControllerServiceLocator.controllerStateStorage
-        private val sensors = BackgroundControllerServiceLocator.sensors
-        private val serviceNotification = BackgroundControllerServiceLocator.serviceNotification
-        private val partialSensingAllowed = BackgroundControllerServiceLocator.allowPartialSensing
+        private lateinit var stateStorage: StateStorage<ControllerState>
+        private lateinit var sensors: List<Sensor<*, *>>
+        private lateinit var serviceNotification: ServiceNotification
+        private var partialSensingAllowed: Boolean = false
+
+        override fun onCreate() {
+            super.onCreate()
+            resolveDependencies()
+        }
 
         override fun onBind(intent: Intent?): Binder? = null
         override fun onDestroy() {
             stop()
+        }
+
+        private fun resolveDependencies() {
+            val provider = application as? BackgroundControllerDependenciesProvider
+            val dependencies = provider?.provideBackgroundControllerDependencies()
+
+            if (dependencies != null) {
+                stateStorage = dependencies.controllerStateStorage
+                sensors = dependencies.sensors
+                serviceNotification = dependencies.serviceNotification
+                partialSensingAllowed = dependencies.allowPartialSensing
+                return
+            }
+
+            // Fallback for callers that still rely on the process-local locator.
+            stateStorage = BackgroundControllerServiceLocator.controllerStateStorage
+            sensors = BackgroundControllerServiceLocator.sensors
+            serviceNotification = BackgroundControllerServiceLocator.serviceNotification
+            partialSensingAllowed = BackgroundControllerServiceLocator.allowPartialSensing
         }
 
         private fun run() {
@@ -122,6 +146,9 @@ class BackgroundController(
         override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
             // CRITICAL: Call startForeground IMMEDIATELY - this must happen within 5 seconds
             try {
+                if (!::stateStorage.isInitialized || !::serviceNotification.isInitialized) {
+                    resolveDependencies()
+                }
                 val notificationProps = getNotificationProperties()
                 ensureNotificationChannel(notificationProps.channelId)
                 val notification = buildNotification(notificationProps)
@@ -314,12 +341,12 @@ class BackgroundController(
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
             )
 
             val defaultServiceType =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
-            val sensors = BackgroundControllerServiceLocator.sensors
 
             // Get all service types from enabled sensors, but filter to only allowed types
             val calculatedTypes = sensors.filter {

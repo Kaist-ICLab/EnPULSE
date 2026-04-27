@@ -23,6 +23,7 @@ sealed class Screen(val route: String) {
     object PhoneSensor : Screen("phone_sensor")
 
     object ServerSync : Screen("server_sync")
+    object MicroEma : Screen("micro_ema")
     object About : Screen("about")
 
     // Data screen sub-screens

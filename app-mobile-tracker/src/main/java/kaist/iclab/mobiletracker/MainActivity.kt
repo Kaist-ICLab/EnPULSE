@@ -39,8 +39,6 @@ class MainActivity : ComponentActivity() {
         // Bind permission manager to activity
         permissionManager.bind(this)
 
-        // Initialize BLEHelper - dependencies are injected by Koin
-        bleHelper.initialize()
 
         setContent {
             MaterialTheme {

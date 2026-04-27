@@ -133,7 +133,8 @@ val repositoryModule = module {
         SurveyRepositoryImpl(
             surveyService = get(),
             persistentStorage = get(),
-            inMemoryStorage = get(named("surveySensorConfigStorage")),
+            phoneSensorConfigStorage = get(named("surveySensorConfigStorage")),
+            microEmaConfigStorage = get(named("microEmaConfigStorage")),
             scheduleStorage = get()
         )
     }
@@ -160,11 +161,21 @@ val repositoryModule = module {
     }
 
     // UserProfileRepository for user profile management
+    single {
+        kaist.iclab.mobiletracker.storage.UserProfileStorage(
+            couchbase = get()
+        )
+    }
+
     single<UserProfileRepository> {
         UserProfileRepositoryImpl(
             profileService = get(),
-            supabaseHelper = get()
+            supabaseHelper = get(),
+            persistentStorage = get(),
+            campaignSensorRepository = get(),
+            surveyRepository = get()
         )
     }
+
 }
 

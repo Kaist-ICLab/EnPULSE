@@ -195,6 +195,7 @@ fun SettingsScreen(
                             onIntervalChange = { settingsViewModel.setAutoSyncInterval(it) }
                         )
 
+
                         availableSensors.forEach { (name, _) ->
                             SensorToggleChip(
                                 sensorId = name,

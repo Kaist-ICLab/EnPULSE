@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.data.survey
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -13,7 +14,9 @@ data class SurveyEntity(
     @SerialName("campaign_id") val campaignId: Int,
     @SerialName("schedule_method") val scheduleMethod: JsonObject? = null,
     val title: String,
-    val description: String? = null
+    val description: String? = null,
+    @SerialName("device_type") val deviceType: Int? = 0,               // 0 = phone, 1 = watch
+    @SerialName("expire_after_ms") val expireAfterMs: Long? = null      // auto-dismiss timer (ms), null = no expiry
 )
 
 /**
@@ -48,4 +51,19 @@ data class SurveyQuestionTriggerEntity(
     val id: Int,
     @SerialName("question_id") val questionId: Int,
     val expression: JsonObject
+)
+
+/**
+ * Entity for inserting survey question responses into Supabase
+ * Maps to the 'survey_question_response' table
+ */
+@Serializable
+data class SurveyQuestionResponseInsert(
+    @SerialName("question_id") val questionId: Int,
+    val uuid: String,
+    @SerialName("trigger_time") val triggerTime: String? = null,
+    @SerialName("actual_trigger_time") val actualTriggerTime: String? = null,
+    @SerialName("survey_start_time") val surveyStartTime: String? = null,
+    @SerialName("response_submission_time") val responseSubmissionTime: String? = null,
+    val response: JsonElement
 )

@@ -14,9 +14,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kaist.iclab.tracker.sensor.survey.Survey
-import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
+import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
-import kaist.iclab.tracker.sensor.survey.question.RadioQuestion
+import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
 import kotlinx.serialization.json.JsonElement
 
@@ -37,8 +37,8 @@ fun SurveyScreen(
     ) {
         items(questionList) { question ->
             when (question) {
-                is RadioQuestion -> RadioQuestion(question)
-                is CheckboxQuestion -> CheckboxQuestion(question)
+                is SingleSelectionQuestion -> RadioQuestion(question)
+                is MultipleSelectionQuestion -> CheckboxQuestion(question)
                 is TextQuestion -> TextQuestion(question)
                 is NumberQuestion -> NumberQuestion(question)
             }
@@ -62,7 +62,7 @@ fun SurveyScreen(
 
 @Composable
 fun RadioQuestion(
-    question: RadioQuestion,
+    question: SingleSelectionQuestion,
     modifier: Modifier = Modifier
 ) {
     val response = question.response.collectAsState()
@@ -98,7 +98,7 @@ fun RadioQuestion(
 
 @Composable
 fun CheckboxQuestion(
-    question: CheckboxQuestion,
+    question: MultipleSelectionQuestion,
     modifier: Modifier = Modifier
 ) {
     val response = question.response.collectAsState()

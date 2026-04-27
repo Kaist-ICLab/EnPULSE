@@ -9,17 +9,25 @@ import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.galaxywatch.AccelerometerSensor
+import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
 import kaist.iclab.tracker.sensor.galaxywatch.EDASensor
 import kaist.iclab.tracker.sensor.galaxywatch.HeartRateSensor
+import kaist.iclab.tracker.sensor.galaxywatch.IMUSensor
 import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
+import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
+import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
+import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.data.SyncAckListener
 import kaist.iclab.wearabletracker.db.TrackerRoomDB
 import kaist.iclab.wearabletracker.db.dao.BaseDao
+import kaist.iclab.wearabletracker.ema.MicroEmaRepository
+import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
+import kaist.iclab.wearabletracker.ema.MicroEmaViewModel
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
@@ -47,7 +55,7 @@ val koinModule = module {
             TrackerRoomDB::class.java,
             "wearable_tracker_db"
         )
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(false)
             .build()
     }
 
@@ -152,6 +160,87 @@ val koinModule = module {
     }
 
     single {
+        IMUSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = IMUSensor.Config(),
+                clazz = IMUSensor.Config::class.java,
+                collectionName = (IMUSensor::class.simpleName ?: "") + "config"
+            ),
+            stateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
+                clazz = SensorState::class.java,
+                collectionName = IMUSensor::class.simpleName ?: ""
+            )
+        )
+    }
+
+    single {
+        AudioSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = AudioSensor.Config(),
+                clazz = AudioSensor.Config::class.java,
+                collectionName = (AudioSensor::class.simpleName ?: "") + "config"
+            ),
+            stateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
+                clazz = SensorState::class.java,
+                collectionName = AudioSensor::class.simpleName ?: ""
+            )
+        )
+    }
+
+    single {
+        GestureSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = GestureSensor.Config(),
+                clazz = GestureSensor.Config::class.java,
+                collectionName = (GestureSensor::class.simpleName ?: "") + "config"
+            ),
+            stateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
+                clazz = SensorState::class.java,
+                collectionName = GestureSensor::class.simpleName ?: ""
+            ),
+            imuSensor = get(),
+            audioSensor = get()
+        )
+    }
+
+    single {
+        StressSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = StressSensor.Config(),
+                clazz = StressSensor.Config::class.java,
+                collectionName = (StressSensor::class.simpleName ?: "") + "config"
+            ),
+            stateStorage = CouchbaseStateStorage(
+                couchbase = get(),
+                defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
+                clazz = SensorState::class.java,
+                collectionName = StressSensor::class.simpleName ?: ""
+            ),
+            accelerometerSensor = get(),
+            ppgSensor = get(),
+            heartRateSensor = get()
+        )
+    }
+
+    single {
         LocationSensor(
             context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
@@ -185,6 +274,9 @@ val koinModule = module {
             get<HeartRateSensor>(),
             get<SkinTemperatureSensor>(),
             get<EDASensor>(),
+            get<IMUSensor>(),
+            get<GestureSensor>(),
+            get<StressSensor>(),
             get<LocationSensor>()
         )
     }
@@ -213,15 +305,19 @@ val koinModule = module {
         )
     }
 
+    single<StateStorage<ControllerState>>(named("watchControllerStateStorage")) {
+        CouchbaseStateStorage(
+            couchbase = get(),
+            defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
+            clazz = ControllerState::class.java,
+            collectionName = BackgroundController::class.simpleName ?: ""
+        )
+    }
+
     single {
         BackgroundController(
             context = androidContext(),
-            controllerStateStorage = CouchbaseStateStorage(
-                couchbase = get(),
-                defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
-                clazz = ControllerState::class.java,
-                collectionName = BackgroundController::class.simpleName ?: ""
-            ),
+            controllerStateStorage = get(named("watchControllerStateStorage")),
             sensors = get(qualifier("sensors")),
             serviceNotification = get<BackgroundController.ServiceNotification>(),
             allowPartialSensing = true
@@ -253,6 +349,7 @@ val koinModule = module {
         AutoSyncManager(
             context = androidContext(),
             phoneCommunicationManager = get(),
+            microEmaResponseManager = get<MicroEmaResponseManager>(),
             syncPreferencesHelper = get(),
             controllerStateFlow = get<BackgroundController>().controllerStateFlow,
             coroutineScope = get()
@@ -295,5 +392,32 @@ val koinModule = module {
     // process lifetime and is never cancelled, matching the Koin singleton lifecycle.
     single<kotlinx.coroutines.CoroutineScope> {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+    }
+
+    // --- MicroEMA ---
+
+    single {
+        MicroEmaRepository()
+    }
+
+    single {
+        get<TrackerRoomDB>().microEmaResponseDao()
+    }
+
+    single {
+        MicroEmaResponseManager(
+            context = androidContext(),
+            repository = get(),
+            dao = get(),
+            phoneCommunicationManager = get(),
+            coroutineScope = get()
+        )
+    }
+
+    viewModel {
+        MicroEmaViewModel(
+            repository = get(),
+            responseManager = get()
+        )
     }
 }

@@ -4,6 +4,7 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
@@ -22,6 +23,7 @@ import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kaist.iclab.tracker.sensor.survey.SurveySensor
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
+import kaist.iclab.tracker.storage.core.StateStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -51,6 +53,7 @@ val controllerModule = module {
             get<UserInteractionSensor>(),
             get<WifiScanSensor>(),
             get<SurveySensor>(),
+            get<MicroEmaSensor>(),
         )
     }
 
@@ -67,16 +70,20 @@ val controllerModule = module {
         )
     }
 
+    single<StateStorage<ControllerState>>(named("phoneControllerStateStorage")) {
+        CouchbaseStateStorage(
+            couchbase = get(),
+            defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
+            clazz = ControllerState::class.java,
+            collectionName = BackgroundController::class.simpleName ?: ""
+        )
+    }
+
     // BackgroundController
     single {
         BackgroundController(
             context = androidContext(),
-            controllerStateStorage = CouchbaseStateStorage(
-                couchbase = get(),
-                defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
-                clazz = ControllerState::class.java,
-                collectionName = BackgroundController::class.simpleName ?: ""
-            ),
+            controllerStateStorage = get(named("phoneControllerStateStorage")),
             sensors = get(named("phoneSensors")),
             serviceNotification = get<BackgroundController.ServiceNotification>(),
             allowPartialSensing = true,

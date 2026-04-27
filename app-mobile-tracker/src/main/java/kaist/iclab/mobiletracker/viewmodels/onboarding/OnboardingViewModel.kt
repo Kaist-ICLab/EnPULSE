@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.viewmodels.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
-import kaist.iclab.mobiletracker.data.survey.SurveyConfig
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
@@ -11,6 +10,7 @@ import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
+import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,23 +68,9 @@ class OnboardingViewModel(
 
             when (val result = userProfileRepository.updateCampaignId(selectedCampaign.id)) {
                 is Result.Success -> {
-                    // Fetch surveys
-                    val surveyResult = surveyRepository.fetchAndPersistSurveys(selectedCampaign.id)
-
-                    // Fetch active sensors for the campaign
-                    val sensorResult =
-                        campaignSensorRepository.fetchActiveSensors(selectedCampaign.id.toLong())
-
-                    // Refresh profile to trigger navigation
-                    userProfileRepository.refreshProfile()
-
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isComplete = true,
-                            error = if (surveyResult.isError) "Campaign saved, but failed to load surveys" else null
-                        )
-                    }
+                    // Consolidate sync of profile, sensors, and surveys
+                    userProfileRepository.syncFullStudyConfig()
+                    _uiState.update { it.copy(isLoading = false, isComplete = true) }
                 }
 
                 is Result.Error -> {

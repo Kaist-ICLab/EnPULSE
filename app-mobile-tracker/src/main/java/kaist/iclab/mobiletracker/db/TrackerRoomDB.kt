@@ -15,6 +15,7 @@ import kaist.iclab.mobiletracker.db.dao.phone.DataTrafficDao
 import kaist.iclab.mobiletracker.db.dao.phone.DeviceModeDao
 import kaist.iclab.mobiletracker.db.dao.phone.MediaDao
 import kaist.iclab.mobiletracker.db.dao.phone.MessageLogDao
+import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
 import kaist.iclab.mobiletracker.db.dao.phone.NotificationDao
 import kaist.iclab.mobiletracker.db.dao.phone.ScreenDao
 import kaist.iclab.mobiletracker.db.dao.phone.StepDao
@@ -37,6 +38,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
+import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
@@ -70,6 +72,7 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
         ScreenEntity::class,
         StepEntity::class,
         WifiScanEntity::class,
+        MicroEmaResponseEntity::class,
 
         // Watch sensor data
         WatchAccelerometerEntity::class,
@@ -101,6 +104,7 @@ abstract class TrackerRoomDB : RoomDatabase() {
     abstract fun screenDao(): ScreenDao
     abstract fun stepDao(): StepDao
     abstract fun wifiDao(): WifiScanDao
+    abstract fun microEmaResponseDao(): MicroEmaResponseDao
 
     // Watch sensor data
     abstract fun watchAccelerometerDao(): WatchAccelerometerDao

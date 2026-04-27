@@ -70,6 +70,7 @@ class SensorDataReceiver(
                     { e: SensorEntity ->
                         // Send to channel instead of immediate insert
                         eventChannel.trySend(it.id to e)
+                        Log.v(it.id, e.toString())
                         Unit
                     }
         }

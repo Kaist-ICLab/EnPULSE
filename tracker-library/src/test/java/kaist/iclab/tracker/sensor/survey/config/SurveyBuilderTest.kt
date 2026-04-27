@@ -1,9 +1,9 @@
 package kaist.iclab.tracker.sensor.survey.config
 
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
-import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
+import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
-import kaist.iclab.tracker.sensor.survey.question.RadioQuestion
+import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Assert.assertEquals
@@ -163,7 +163,7 @@ class SurveyBuilderTest {
     fun `RADIO question is built correctly with options`() {
         val survey = SurveyBuilder.build(minimalConfig(questions = listOf(radioQuestion())))
         assertEquals(1, survey.flatQuestions.size)
-        val q = survey.flatQuestions[0] as RadioQuestion
+        val q = survey.flatQuestions[0] as SingleSelectionQuestion
         assertEquals(3, q.option.size)
         assertEquals("Option A", q.option[0].displayText)
         assertFalse(q.option[0].allowFreeResponse)
@@ -174,7 +174,7 @@ class SurveyBuilderTest {
     fun `CHECKBOX question is built correctly with options`() {
         val survey = SurveyBuilder.build(minimalConfig(questions = listOf(checkboxQuestion())))
         assertEquals(1, survey.flatQuestions.size)
-        val q = survey.flatQuestions[0] as CheckboxQuestion
+        val q = survey.flatQuestions[0] as MultipleSelectionQuestion
         assertEquals(2, q.option.size)
         assertEquals("Alpha", q.option[0].displayText)
     }
@@ -217,8 +217,8 @@ class SurveyBuilderTest {
         assertEquals(4, survey.flatQuestions.size)
         assertTrue(survey.flatQuestions[0] is TextQuestion)
         assertTrue(survey.flatQuestions[1] is NumberQuestion)
-        assertTrue(survey.flatQuestions[2] is RadioQuestion)
-        assertTrue(survey.flatQuestions[3] is CheckboxQuestion)
+        assertTrue(survey.flatQuestions[2] is SingleSelectionQuestion)
+        assertTrue(survey.flatQuestions[3] is MultipleSelectionQuestion)
     }
 
     // ========== Child / Trigger Tests ==========

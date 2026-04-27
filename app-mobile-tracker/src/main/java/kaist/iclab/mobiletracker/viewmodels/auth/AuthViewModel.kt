@@ -85,23 +85,15 @@ class AuthViewModel(
                     authentication.getToken()
                 }
 
-                // When token becomes available, save it to repository and log it (only once per token)
+                // When token becomes available, save it to repository and load profile
                 if (state.isLoggedIn && currentToken != null && currentToken != lastSavedToken) {
                     authRepository.saveToken(currentToken)
                     lastSavedToken = currentToken
 
                     // Save profile to profiles table if not exists
                     saveProfileIfNotExists(state)
-                    // Then load and cache it (sequentially)
+                    // Then load and cache it
                     loadUserProfileSuspend()
-                }
-
-                // Clear profile when user logs out
-                if (!state.isLoggedIn) {
-                    userProfileRepository.clearProfile()
-                    campaignSensorRepository.clearCache()
-                    previousLoginState = false
-                    lastSavedToken = null
                 }
             }
         }
@@ -118,8 +110,14 @@ class AuthViewModel(
 
         userProfileRepository.createProfileIfNotExists(user.email, null)
             .onFailure { e ->
-                Log.e(TAG, "Error saving profile: ${e.message}", e)
-                _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))
+                // If we already have a cached profile, just show the subtle offline warning
+                if (userProfileRepository.profileFlow.value != null) {
+                    Log.d(TAG, "Network profile creation/check failed, using cached profile.")
+                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_offline_using_cache))
+                } else {
+                    Log.e(TAG, "Error saving profile: ${e.message}", e)
+                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))
+                }
             }
     }
 
@@ -136,17 +134,21 @@ class AuthViewModel(
      * Suspending function to load user profile.
      */
     private suspend fun loadUserProfileSuspend() {
-        when (val result = userProfileRepository.refreshProfile()) {
+        when (val result = userProfileRepository.syncFullStudyConfig()) {
             is Result.Success -> {
-                val profile = result.data
-                if (profile?.campaignId == null) {
-                    campaignSensorRepository.clearCache()
-                }
+                // Success handled by state flows
             }
 
             is Result.Error -> {
-                Log.e(TAG, "Error loading user profile: ${result.message}", result.exception)
-                _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))
+                // If we already have a cached profile, show a subtle "using cache" message 
+                // instead of a scary "failed" error.
+                if (userProfileRepository.profileFlow.value != null) {
+                    Log.d(TAG, "Network profile refresh failed, using cached profile.")
+                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_offline_using_cache))
+                } else {
+                    Log.e(TAG, "Error loading user profile: ${result.message}", result.exception)
+                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))
+                }
             }
         }
     }
@@ -167,6 +169,7 @@ class AuthViewModel(
             authentication.logout()
             authRepository.clearToken()
             userProfileRepository.clearProfile()
+            campaignSensorRepository.clearCache() // Ensure sensors are cleared on logout
         }
     }
 

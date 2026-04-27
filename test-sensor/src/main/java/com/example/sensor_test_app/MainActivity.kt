@@ -44,6 +44,7 @@ class MainActivity : ComponentActivity() {
         { data: SensorEntity ->
             // Debug: Log all sensor data
             Log.d(TAG, "Data Received From Sensor: ${sensor.name}, Data: $data")
+            sensorViewModel.onSensorDataReceived(sensor.name, data)
             Unit
         }
     }

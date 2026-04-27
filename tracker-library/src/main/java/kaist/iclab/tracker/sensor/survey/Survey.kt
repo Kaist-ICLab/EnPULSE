@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 class Survey(
+    val id: String,
     val scheduleMethod: SurveyScheduleMethod,
     val notificationConfig: SurveyNotificationConfig,
     vararg question: Question<*>

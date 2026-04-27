@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.di
 
+import kaist.iclab.mobiletracker.db.TrackerRoomDB
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.DataExportHelper
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
@@ -10,12 +11,14 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
 val helperModule = module {
-    // BLEHelper - injects WatchSensorRepository and SyncTimestampService
+    // BLEHelper - injects WatchSensorRepository, MicroEma config, and SyncTimestampService
     single {
         BLEHelper(
             context = androidContext(),
             watchSensorRepository = get<WatchSensorRepository>(),
-            timestampService = get()
+            timestampService = get(),
+            microEmaConfigStorage = get(org.koin.core.qualifier.named("microEmaConfigStorage")),
+            microEmaResponseDao = get<TrackerRoomDB>().microEmaResponseDao()
         )
     }
 
@@ -46,5 +49,6 @@ val helperModule = module {
             handlerRegistry = get()
         )
     }
+
 }
 

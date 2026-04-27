@@ -79,7 +79,7 @@ fun DataScreen(
     viewModel: DataViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
+    LocalContext.current
 
     var showUploadConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }

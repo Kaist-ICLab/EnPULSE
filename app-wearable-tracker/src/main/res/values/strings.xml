@@ -42,6 +42,10 @@
     <string name="sensor_skin_temperature">Skin Temperature</string>
     <string name="sensor_eda">EDA</string>
     <string name="sensor_location">Location</string>
+    <string name="sensor_imu">IMU</string>
+    <string name="sensor_audio">Audio</string>
+    <string name="sensor_gesture">Gesture</string>
+    <string name="sensor_stress">Stress</string>
     <string name="sensor_default">Sensor</string>
 
     <!-- Samsung Health Connection -->
@@ -68,4 +72,13 @@
     <string name="interval_2h">2h</string>
     <string name="interval_6h">6h</string>
     <string name="interval_12h">12h</string>
+    <!-- MicroEMA -->
+    <string name="ema_low">Low</string>
+    <string name="ema_high">High</string>
+    <string name="ema_dismiss">Dismiss</string>
+    <string name="ema_loading">Loading...</string>
+    <string name="ema_done">Response recorded</string>
+    <string name="ema_time_up">Time’s up</string>
+    <string name="ema_dismissed">Dismissed</string>
+    <string name="ema_finishing">Finishing</string>
 </resources>

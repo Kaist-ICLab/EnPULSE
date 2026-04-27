@@ -27,7 +27,7 @@ class BluetoothScanSensor(
     context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<BluetoothScanSensor.Config, BluetoothScanSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
 ) {
@@ -72,8 +72,7 @@ class BluetoothScanSensor(
     ) {
         try {
             val deviceName = device.name
-            val deviceAlias =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) device.alias else null
+            val deviceAlias = device.alias
 
             // Only include devices that have both name and alias
             if (deviceName == null || deviceAlias == null) return
@@ -126,11 +125,11 @@ class BluetoothScanSensor(
         if (adapter.isEnabled) {
             try {
                 adapter.startDiscovery()
-                adapter.bluetoothLeScanner.startScan(scanCallback)
+                adapter.bluetoothLeScanner?.startScan(scanCallback)
 
                 CoroutineScope(Dispatchers.IO).launch {
                     delay(configStateFlow.value.scanDuration) // 5 seconds delay
-                    adapter.bluetoothLeScanner.stopScan(scanCallback)
+                    adapter.bluetoothLeScanner?.stopScan(scanCallback)
                     adapter.cancelDiscovery()
                 }
             } catch (e: SecurityException) {

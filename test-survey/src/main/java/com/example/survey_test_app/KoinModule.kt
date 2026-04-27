@@ -10,12 +10,12 @@ import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
 import kaist.iclab.tracker.sensor.survey.SurveySensor
-import kaist.iclab.tracker.sensor.survey.question.CheckboxQuestion
+import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
 import kaist.iclab.tracker.sensor.survey.question.Option
 import kaist.iclab.tracker.sensor.survey.question.Predicate
 import kaist.iclab.tracker.sensor.survey.question.QuestionTrigger
-import kaist.iclab.tracker.sensor.survey.question.RadioQuestion
+import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
@@ -57,14 +57,15 @@ val koinModule = module {
                 SurveySensor.Config(
                     survey = mapOf(
                         "test" to Survey(
-                            scheduleMethod = SurveyScheduleMethod.ESM(
+                            "test",
+                            SurveyScheduleMethod.ESM(
                                 minInterval = TimeUnit.MINUTES.toMillis(30),
                                 maxInterval = TimeUnit.MINUTES.toMillis(45),
                                 startOfDay = TimeUnit.HOURS.toMillis(9),
                                 endOfDay = TimeUnit.HOURS.toMillis(25),
                                 numSurvey = 30,
                             ),
-                            notificationConfig = SurveyNotificationConfig(
+                            SurveyNotificationConfig(
                                 title = "Survey Test",
                                 description = "This is a survey test",
                                 icon = R.drawable.ic_launcher_foreground
@@ -79,7 +80,7 @@ val koinModule = module {
                                 question = "Your age?",
                                 isMandatory = false,
                             ),
-                            RadioQuestion(
+                            SingleSelectionQuestion(
                                 id = 3,
                                 question = "How are you?",
                                 isMandatory = true,
@@ -90,7 +91,7 @@ val koinModule = module {
                                     Option("Other: ", allowFreeResponse = true)
                                 )
                             ),
-                            CheckboxQuestion(
+                            MultipleSelectionQuestion(
                                 id = 4,
                                 question = "Choose all even number",
                                 isMandatory = false,
@@ -104,7 +105,7 @@ val koinModule = module {
                                     QuestionTrigger(
                                         predicate = Predicate.Equal(setOf(1, 2)),
                                         children = listOf(
-                                            RadioQuestion(
+                                            SingleSelectionQuestion(
                                                 id = 5,
                                                 question = "Is P = NP?",
                                                 isMandatory = true,
@@ -119,10 +120,11 @@ val koinModule = module {
                             )
                         ),
                         "fixedTime" to Survey(
-                            scheduleMethod = SurveyScheduleMethod.Fixed(
+                            "fixedTime",
+                            SurveyScheduleMethod.Fixed(
                                 timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
                             ),
-                            notificationConfig = SurveyNotificationConfig(
+                            SurveyNotificationConfig(
                                 title = "Survey Test",
                                 description = "This is a fixed time survey at 3PM",
                                 icon = R.drawable.ic_launcher_foreground

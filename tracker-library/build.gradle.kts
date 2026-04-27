@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
+    implementation(libs.tensorflow.lite)
 
     // Samsung Dependencies
     api(project(":samsung-health-data-api"))

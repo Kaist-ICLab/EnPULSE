@@ -23,9 +23,7 @@ class MainActivity : ComponentActivity() {
         PermissionHelper.checkNotificationPermission(this, permissionManager)
         setContent {
             WearableTrackerTheme {
-                SettingsScreen(
-                    androidPermissionManager = permissionManager
-                )
+                SettingsScreen(androidPermissionManager = permissionManager)
             }
         }
     }

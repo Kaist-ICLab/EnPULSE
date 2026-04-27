@@ -1,13 +1,9 @@
 package com.example.sensor_test_app.ui
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.provider.Settings
-import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -37,6 +31,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -54,6 +49,7 @@ fun SensorScreen(
     val isCollecting =
         mainViewModel.controllerState.collectAsState().value.flag == ControllerState.FLAG.RUNNING
     val controllerStateValue = mainViewModel.controllerState.collectAsState().value
+    val latestSensorData = mainViewModel.latestSensorData.collectAsState().value
 
     LazyColumn(
         modifier = modifier.fillMaxSize()
@@ -68,7 +64,7 @@ fun SensorScreen(
                 textAlign = TextAlign.Center
             )
             Text(
-                text = "You can see the collected data from Logcat",
+                text = "Data is also logged on logcat",
                 style = MaterialTheme.typography.titleSmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -122,9 +118,13 @@ fun SensorScreen(
             }
         }
         item {
-            DeviceModeSensorTestSection(
-                context = context,
-                isCollecting = isCollecting,
+            Text(
+                text = "Latest collected data appears below for each sensor as events arrive.",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
             )
         }
         items(
@@ -136,9 +136,7 @@ fun SensorScreen(
                 sensorStateFlow = value,
                 isControllerRunning = controllerStateValue.flag == ControllerState.FLAG.RUNNING,
                 toggleSensor = { mainViewModel.toggleSensor(key) },
-                sensorValue = if (key == "DeviceModeSensor") {
-                    "Tap 'Test Device Modes' below to verify data collection"
-                } else ""
+                sensorValue = latestSensorData[key] ?: "No data collected yet"
             )
         }
     }
@@ -159,19 +157,37 @@ fun SensorTestRow(
         (currentSensorState.flag == SensorState.FLAG.RUNNING || currentSensorState.flag == SensorState.FLAG.ENABLED)
 
     Row(
-        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .padding(15.dp)
     ) {
-        Text(sensorName)
-        Spacer(Modifier.width(10.dp))
-        SmallSquareIconButton(
-            icon = if (isSensorEnabled) Icons.Default.Check else Icons.Default.Close,
-            enabled = !isControllerRunning,
-            onClick = toggleSensor
-        )
-        Spacer(Modifier.width(15.dp))
-        Text(sensorValue)
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = sensorName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(10.dp))
+                SmallSquareIconButton(
+                    icon = if (isSensorEnabled) Icons.Default.Check else Icons.Default.Close,
+                    enabled = !isControllerRunning,
+                    onClick = toggleSensor
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = sensorValue,
+                fontSize = 11.sp,
+                lineHeight = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
@@ -198,91 +214,5 @@ fun SmallSquareIconButton(
                 .width(20.dp)
                 .height(20.dp)
         )
-    }
-}
-
-@Composable
-fun DeviceModeSensorTestSection(
-    context: android.content.Context,
-    isCollecting: Boolean,
-) {
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = "Device Mode Sensor Log Trigger Test",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            if (!isCollecting) {
-                Text(
-                    text = "To use this functionality, enable the Device Mode sensor and turn off the 'Pause sensor when minimized' option, then press 'Start Sensors'",
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.error
-                )
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            val intent =
-                                Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-                            context.startActivity(intent)
-                            Toast.makeText(
-                                context,
-                                "Change DND Permissions to Test",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        },
-                        modifier = Modifier.weight(0.6f)
-                    ) {
-                        Text("DND", fontSize = 12.sp)
-                    }
-
-                    Button(
-                        onClick = {
-                            val intent = Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
-                            context.startActivity(intent)
-                            Toast.makeText(
-                                context,
-                                "Change Power Save Mode to Test",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Power Saver", fontSize = 12.sp)
-                    }
-
-                    Button(
-                        onClick = {
-                            val intent = Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS)
-                            context.startActivity(intent)
-                            Toast.makeText(
-                                context,
-                                "Toggle Airplane Mode to Test",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        },
-                        modifier = Modifier.weight(0.8f)
-                    ) {
-                        Text("Airplane", fontSize = 12.sp)
-                    }
-                }
-            }
-        }
     }
 }

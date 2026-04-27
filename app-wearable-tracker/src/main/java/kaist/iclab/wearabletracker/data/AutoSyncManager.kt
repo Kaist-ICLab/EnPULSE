@@ -2,6 +2,7 @@ package kaist.iclab.wearabletracker.data
 
 import android.content.Context
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,12 +17,12 @@ import kotlinx.coroutines.launch
 class AutoSyncManager(
     private val context: Context,
     private val phoneCommunicationManager: PhoneCommunicationManager,
+    private val microEmaResponseManager: MicroEmaResponseManager,
     private val syncPreferencesHelper: SyncPreferencesHelper,
     private val controllerStateFlow: StateFlow<ControllerState>,
     private val coroutineScope: CoroutineScope
 ) {
-    companion object {
-    }
+    companion object;
 
     private var syncJob: Job? = null
 
@@ -61,6 +62,9 @@ class AutoSyncManager(
                 }
 
                 phoneCommunicationManager.sendDataToPhone(isSilent = true)
+
+                // Also retry any pending MicroEMA responses
+                microEmaResponseManager.retrySyncUnsynced()
             }
         }
     }

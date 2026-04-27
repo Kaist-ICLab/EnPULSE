@@ -90,6 +90,24 @@ fun SettingsScreen(
                         shape = Styles.CARD_SHAPE
                     ) {
                         AppMenuItem(
+                            title = "MicroEMA Manual Trigger",
+                            icon = Icons.Filled.PhoneAndroid,
+                            onClick = { settingsViewModel.triggerMicroEmaOnWatch() },
+                            showDivider = false,
+                            iconTint = AppColors.PrimaryColor
+                        )
+                    }
+                }
+
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Styles.CARD_CONTAINER_HORIZONTAL_PADDING),
+                        colors = CardDefaults.cardColors(containerColor = AppColors.White),
+                        shape = Styles.CARD_SHAPE
+                    ) {
+                        AppMenuItem(
                             title = context.getString(R.string.menu_account),
                             icon = Icons.Filled.AccountBox,
                             onClick = { navController.navigate(Screen.Account.route) },

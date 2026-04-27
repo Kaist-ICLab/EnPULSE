@@ -24,6 +24,7 @@ import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
 import kaist.iclab.tracker.sensor.survey.activity.SurveyActivity
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -35,7 +36,7 @@ class SurveySensor(
     private val context: Context,
     permissionManager: PermissionManager,
     private val configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     private val scheduleStorage: SurveyScheduleStorage,
 ): BaseSensor<SurveySensor.Config, SurveySensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
@@ -101,6 +102,7 @@ class SurveySensor(
         val surveyStartTime: Long? = null,
         val responseSubmissionTime: Long? = null,
         val response: JsonElement,
+        @SerialName("device_type") val deviceType: Int? = null, // 0 = phone, 1 = watch
     ): SensorEntity()
 
     override fun init() {
@@ -313,6 +315,7 @@ class SurveySensor(
                 actualTriggerTime = schedule.actualTriggerTime,
                 surveyStartTime = schedule.surveyStartTime,
                 responseSubmissionTime = responseTime,
+                deviceType = 0 // Phone
             )
         )}
     }

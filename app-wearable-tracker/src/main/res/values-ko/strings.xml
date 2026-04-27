@@ -43,6 +43,10 @@
     <string name="sensor_skin_temperature">피부 온도</string>
     <string name="sensor_eda">EDA</string>
     <string name="sensor_location">위치</string>
+    <string name="sensor_imu">IMU</string>
+    <string name="sensor_audio">오디오</string>
+    <string name="sensor_gesture">제스쳐</string>
+    <string name="sensor_stress">스트레스</string>
     <string name="sensor_default">센서</string>
 
     <!-- Samsung Health Connection -->
@@ -63,9 +67,19 @@
     <string name="auto_sync_label">자동 동기화</string>
     <string name="auto_sync_interval_label">간격</string>
     <string name="interval_none">안 함</string>
+    <string name="interval_5m">5분</string>
     <string name="interval_30m">30분</string>
     <string name="interval_1h">1시간</string>
     <string name="interval_2h">2시간</string>
     <string name="interval_6h">6시간</string>
     <string name="interval_12h">12시간</string>
+    <!-- MicroEMA -->
+    <string name="ema_low">낮음</string>
+    <string name="ema_high">높음</string>
+    <string name="ema_dismiss">무시</string>
+    <string name="ema_loading">로딩 중...</string>
+    <string name="ema_done">답변해주셔서 감사합니다</string>
+    <string name="ema_time_up">시간 종료</string>
+    <string name="ema_dismissed">무시됨</string>
+    <string name="ema_finishing">마무리 중</string>
 </resources>

@@ -10,7 +10,9 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.db.TrackerRoomDB
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
+import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
@@ -28,6 +30,7 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.qualifier.named
+import java.time.format.DateTimeFormatter
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -65,6 +68,11 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     private val phoneSensorUploadService: PhoneSensorUploadService by inject()
     private val watchSensorUploadService: WatchSensorUploadService by inject()
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
+    private val surveyService: SurveyService by inject()
+    private val db: TrackerRoomDB by inject()
+    private val microEmaResponseDao by lazy { db.microEmaResponseDao() }
+
+    private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
     private var lastSyncTime: Long = 0
 
@@ -182,7 +190,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         }
 
         val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
 
@@ -201,7 +209,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
      */
     private fun isConnected(): Boolean {
         val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
@@ -255,8 +263,13 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                 }
             }
 
+            // Launch MicroEMA responses upload
+            val microEmaJob = lifecycleScope.async(Dispatchers.IO) {
+                uploadMicroEmaResponses(successCount, failureCount, failedSensors)
+            }
+
             // Wait for all uploads to complete
-            (phoneJobs + watchJobs).awaitAll()
+            (phoneJobs + watchJobs + microEmaJob).awaitAll()
 
             val elapsed = System.currentTimeMillis() - startTime
             Log.d(
@@ -338,4 +351,27 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         Log.w(TAG, "Failure notification shown: $failureCount sensors failed")
     }
 
+    private suspend fun uploadMicroEmaResponses(
+        successCount: AtomicInteger,
+        failureCount: AtomicInteger,
+        failedSensors: MutableList<String>
+    ) {
+        when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
+            is Result.Success -> {
+                if (result.data > 0) {
+                    successCount.incrementAndGet()
+                }
+            }
+
+            is Result.Error -> {
+                Log.e(
+                    TAG,
+                    "Failed to upload MicroEMA responses: ${result.message}",
+                    result.exception
+                )
+                failureCount.incrementAndGet()
+                failedSensors.add("MicroEMA")
+            }
+        }
+    }
 }
