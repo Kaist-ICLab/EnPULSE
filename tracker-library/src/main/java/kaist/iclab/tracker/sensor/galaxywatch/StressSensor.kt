@@ -49,7 +49,7 @@ class StressSensor(
     data class Entity(
         val received: Long,
         val windowStartMs: Long,
-        val windowEndMs: Long,
+        val timestamp: Long,
         val probability: Float,
         val isHighStress: Boolean,
     ) : SensorEntity()
@@ -239,8 +239,8 @@ class StressSensor(
     ) {
         val entity = Entity(
             received = System.currentTimeMillis(),
+            timestamp = windowEndMs,
             windowStartMs = windowStartMs,
-            windowEndMs = windowEndMs,
             probability = prediction.probability,
             isHighStress = prediction.isHighStress,
         )

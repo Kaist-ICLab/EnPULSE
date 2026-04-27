@@ -53,7 +53,7 @@ class GestureSensor(
         private const val NUM_CLASSES = 27
         private const val FUSION_OUTPUT_BYTES = 1 * NUM_CLASSES * 4
 
-        private val LABELS = listOf(
+        val LABELS = listOf(
             "Alarm Clock",
             "Blender In Use",
             "Brushing Hair",
@@ -100,10 +100,9 @@ class GestureSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val classIndex: Int?,
-        val label: String?,
-        val score: Int?,
-        val probabilities: List<Int>?,
+        val classIndex: Int,
+        val score: Int,
+        val probabilities: List<Int>,
     ) : SensorEntity()
 
     override val id: String = "Gesture"
@@ -336,16 +335,15 @@ class GestureSensor(
 
     private fun emitEntity(
         timestamp: Long,
-        classIndex: Int?,
-        probabilities: List<Int>?,
+        classIndex: Int,
+        probabilities: List<Int>,
     ) {
         val received = System.currentTimeMillis()
         val entity = Entity(
             received = received,
             timestamp = timestamp,
             classIndex = classIndex,
-            label = classIndex?.let { LABELS.getOrNull(it) },
-            score = classIndex?.let { probabilities?.getOrNull(it) },
+            score = classIndex.let { probabilities.getOrElse(it) { -1 } },
             probabilities = probabilities
         )
         listeners.forEach { it.invoke(entity) }

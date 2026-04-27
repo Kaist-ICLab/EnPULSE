@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "36c7f0d64d41224a3cf150af4b745883",
+    "identityHash": "779d76c93ffd1445c738a00109e38443",
     "entities": [
       {
         "tableName": "AmbientLightEntity",
@@ -1120,6 +1120,74 @@
         }
       },
       {
+        "tableName": "micro_ema_responses_phone",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `watchId` INTEGER NOT NULL, `uuid` TEXT NOT NULL, `questionId` INTEGER NOT NULL, `triggerTime` TEXT, `actualTriggerTime` TEXT, `surveyStartTime` TEXT, `responseSubmissionTime` TEXT, `responseJson` TEXT NOT NULL, `isSynced` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "watchId",
+            "columnName": "watchId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uuid",
+            "columnName": "uuid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "questionId",
+            "columnName": "questionId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "triggerTime",
+            "columnName": "triggerTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "actualTriggerTime",
+            "columnName": "actualTriggerTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "surveyStartTime",
+            "columnName": "surveyStartTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "responseSubmissionTime",
+            "columnName": "responseSubmissionTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "responseJson",
+            "columnName": "responseJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSynced",
+            "columnName": "isSynced",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
         "tableName": "watch_accelerometer",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `eventId` TEXT NOT NULL, `uuid` TEXT NOT NULL, `received` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `x` REAL NOT NULL, `y` REAL NOT NULL, `z` REAL NOT NULL)",
         "fields": [
@@ -1440,7 +1508,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '36c7f0d64d41224a3cf150af4b745883')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '779d76c93ffd1445c738a00109e38443')"
     ]
   }
 }

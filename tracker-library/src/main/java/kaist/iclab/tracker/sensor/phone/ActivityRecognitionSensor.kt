@@ -43,14 +43,8 @@ class ActivityRecognitionSensor(
         val timestamp: Long,
         val elapsedRealtimeMillis: Long,
         val activityType: Int,
-        val confidenceInVehicle: Int,
-        val confidenceOnBicycle: Int,
-        val confidenceOnFoot: Int,
-        val confidenceRunning: Int,
-        val confidenceStill: Int,
-        val confidenceTilting: Int,
-        val confidenceUnknown: Int,
-        val confidenceWalking: Int
+        val score: Int,
+        val probabilities: List<Int>,
     ) : SensorEntity()
 
     override val permissions = listOfNotNull(
@@ -108,14 +102,17 @@ class ActivityRecognitionSensor(
                     timestamp = result.time,
                     elapsedRealtimeMillis = result.elapsedRealtimeMillis,
                     activityType = mostProbableActivity.type,
-                    confidenceInVehicle = getConfidence(result, DetectedActivity.IN_VEHICLE),
-                    confidenceOnBicycle = getConfidence(result, DetectedActivity.ON_BICYCLE),
-                    confidenceOnFoot = getConfidence(result, DetectedActivity.ON_FOOT),
-                    confidenceRunning = getConfidence(result, DetectedActivity.RUNNING),
-                    confidenceStill = getConfidence(result, DetectedActivity.STILL),
-                    confidenceTilting = getConfidence(result, DetectedActivity.TILTING),
-                    confidenceUnknown = getConfidence(result, DetectedActivity.UNKNOWN),
-                    confidenceWalking = getConfidence(result, DetectedActivity.WALKING)
+                    score = mostProbableActivity.confidence,
+                    probabilities = listOf(
+                        getConfidence(result, DetectedActivity.IN_VEHICLE),
+                        getConfidence(result, DetectedActivity.ON_BICYCLE),
+                        getConfidence(result, DetectedActivity.ON_FOOT),
+                        getConfidence(result, DetectedActivity.STILL),
+                        getConfidence(result, DetectedActivity.UNKNOWN),
+                        getConfidence(result, DetectedActivity.TILTING),
+                        getConfidence(result, DetectedActivity.WALKING),
+                        getConfidence(result, DetectedActivity.RUNNING),
+                    )
                 )
             )
         }
@@ -145,18 +142,5 @@ class ActivityRecognitionSensor(
         return result.probableActivities
             .find { it.type == activityType }
             ?.confidence ?: 0
-    }
-
-    private fun activityTypeToName(activityType: Int): String {
-        return when (activityType) {
-            DetectedActivity.IN_VEHICLE -> "IN_VEHICLE"
-            DetectedActivity.ON_BICYCLE -> "ON_BICYCLE"
-            DetectedActivity.ON_FOOT -> "ON_FOOT"
-            DetectedActivity.RUNNING -> "RUNNING"
-            DetectedActivity.STILL -> "STILL"
-            DetectedActivity.TILTING -> "TILTING"
-            DetectedActivity.WALKING -> "WALKING"
-            else -> "UNKNOWN"
-        }
     }
 }
