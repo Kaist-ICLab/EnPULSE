@@ -57,14 +57,15 @@ val koinModule = module {
                 SurveySensor.Config(
                     survey = mapOf(
                         "test" to Survey(
-                            scheduleMethod = SurveyScheduleMethod.ESM(
+                            "test",
+                            SurveyScheduleMethod.ESM(
                                 minInterval = TimeUnit.MINUTES.toMillis(30),
                                 maxInterval = TimeUnit.MINUTES.toMillis(45),
                                 startOfDay = TimeUnit.HOURS.toMillis(9),
                                 endOfDay = TimeUnit.HOURS.toMillis(25),
                                 numSurvey = 30,
                             ),
-                            notificationConfig = SurveyNotificationConfig(
+                            SurveyNotificationConfig(
                                 title = "Survey Test",
                                 description = "This is a survey test",
                                 icon = R.drawable.ic_launcher_foreground
@@ -119,10 +120,11 @@ val koinModule = module {
                             )
                         ),
                         "fixedTime" to Survey(
-                            scheduleMethod = SurveyScheduleMethod.Fixed(
+                            "fixedTime",
+                            SurveyScheduleMethod.Fixed(
                                 timeOfDay = listOf(TimeUnit.HOURS.toMillis(15)),
                             ),
-                            notificationConfig = SurveyNotificationConfig(
+                            SurveyNotificationConfig(
                                 title = "Survey Test",
                                 description = "This is a fixed time survey at 3PM",
                                 icon = R.drawable.ic_launcher_foreground

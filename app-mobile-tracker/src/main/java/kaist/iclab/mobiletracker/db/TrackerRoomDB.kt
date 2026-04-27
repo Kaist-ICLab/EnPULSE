@@ -15,12 +15,12 @@ import kaist.iclab.mobiletracker.db.dao.phone.DataTrafficDao
 import kaist.iclab.mobiletracker.db.dao.phone.DeviceModeDao
 import kaist.iclab.mobiletracker.db.dao.phone.MediaDao
 import kaist.iclab.mobiletracker.db.dao.phone.MessageLogDao
+import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
 import kaist.iclab.mobiletracker.db.dao.phone.NotificationDao
 import kaist.iclab.mobiletracker.db.dao.phone.ScreenDao
 import kaist.iclab.mobiletracker.db.dao.phone.StepDao
 import kaist.iclab.mobiletracker.db.dao.phone.UserInteractionDao
 import kaist.iclab.mobiletracker.db.dao.phone.WifiScanDao
-import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchAccelerometerDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchEDADao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchHeartRateDao
@@ -38,12 +38,12 @@ import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
+import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
-import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity

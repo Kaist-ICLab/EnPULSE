@@ -271,6 +271,7 @@
 
     <string name="toast_login_failed">Login failed. Please try again.</string>
     <string name="toast_profile_setup_failed">Could not set up your profile. Please try again later.</string>
+    <string name="toast_offline_using_cache">No internet connection. Using cached configuration.</string>
 
     <string name="toast_error_generic">An error occurred</string>
     <string name="toast_request_timeout">Request timed out. Please check your connection and try again.</string>

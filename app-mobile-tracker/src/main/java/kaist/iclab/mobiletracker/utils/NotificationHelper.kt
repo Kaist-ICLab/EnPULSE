@@ -24,7 +24,7 @@ object NotificationHelper {
         requestCode: Int = 0
     ): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
-            setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         return PendingIntent.getActivity(
             context,

@@ -10,9 +10,11 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.helpers.BLEHelper
-import kaist.iclab.mobiletracker.helpers.MicroEmaTriggerManager
+import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
+import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.services.AutoSyncService
+import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.permission.AndroidPermissionManager
@@ -20,6 +22,8 @@ import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
+import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -44,6 +48,12 @@ import kotlinx.coroutines.launch
  * @param backgroundController Controller managing sensor background collection
  * @param permissionManager Manager for Android permission requests
  * @param syncTimestampService Service for tracking sync timestamps
+ * @param campaignSensorRepository Repository for campaign-specific sensor configurations
+ * @param bleHelper Helper for BLE communication
+ * @param surveyService Service for fetching surveys from Supabase
+ * @param campaignRepository Repository for campaign information
+ * @param userProfileRepository Repository for user profile information (to get selected campaign)
+ * @param microEmaConfigStorage Storage for MicroEMA sensor configuration
  * @param context Application context
  */
 class SettingsViewModel(
@@ -52,23 +62,14 @@ class SettingsViewModel(
     private val syncTimestampService: SyncTimestampService,
     private val campaignSensorRepository: CampaignSensorRepository,
     private val bleHelper: BLEHelper,
-    private val triggerManager: MicroEmaTriggerManager,
+    private val surveyService: SurveyService,
+    private val campaignRepository: CampaignRepository,
+    private val userProfileRepository: UserProfileRepository,
+    private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
     private val context: Context
 ) : ViewModel() {
     companion object {
         private const val TAG = "SettingsViewModel"
-    }
-
-    // --- MicroEMA ---
-    val isMicroEmaTestModeEnabled = triggerManager.isTestModeEnabled
-
-    fun toggleMicroEmaTestMode(enabled: Boolean) {
-        if (enabled) {
-            // Trigger every 1 minute for testing (configurable)
-            triggerManager.startTestTimer(intervalMinutes = 1)
-        } else {
-            triggerManager.stopTestTimer()
-        }
     }
 
     fun triggerMicroEmaOnWatch() {

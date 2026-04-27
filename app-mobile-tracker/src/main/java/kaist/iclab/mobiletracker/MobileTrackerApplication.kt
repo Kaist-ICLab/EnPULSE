@@ -85,6 +85,14 @@ class MobileTrackerApplication : Application(), KoinComponent, BackgroundControl
         // Activity/ViewModel recreations (navigation, config changes, etc.).
         observeControllerStateForService()
 
+        // Initialize BLEHelper for watch communication
+        try {
+            val bleHelper = getKoin().get<kaist.iclab.mobiletracker.helpers.BLEHelper>()
+            bleHelper.initialize()
+        } catch (e: Exception) {
+            Log.e("MobileTrackerApplication", "Error initializing BLEHelper: ${e.message}")
+        }
+
         // Additional initialization can be added here:
         // - Crash reporting
         // - Analytics

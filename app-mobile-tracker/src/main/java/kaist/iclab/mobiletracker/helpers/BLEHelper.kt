@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.helpers
 
+
 import android.content.Context
 import android.util.Log
 import kaist.iclab.mobiletracker.config.AppConfig
@@ -13,13 +14,14 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
-import kaist.iclab.mobiletracker.repository.MicroEmaRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
+import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
+import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -43,7 +45,7 @@ class BLEHelper(
     private val context: Context,
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
-    private val microEmaRepository: MicroEmaRepository,
+    private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
     private val microEmaResponseDao: MicroEmaResponseDao
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
@@ -55,9 +57,17 @@ class BLEHelper(
 
     private val isoFormatter = DateTimeFormatter.ISO_INSTANT
 
+    private var isInitialized = false
+
     fun initialize() {
+        if (isInitialized) {
+            Log.d(AppConfig.LogTags.PHONE_BLE, "BLEHelper already initialized, skipping...")
+            return
+        }
         bleChannel = BLEDataChannel(context)
         setupListeners()
+        isInitialized = true
+        Log.d(AppConfig.LogTags.PHONE_BLE, "BLEHelper initialized successfully")
     }
 
     /**
@@ -140,6 +150,7 @@ class BLEHelper(
                         surveyStartTime = surveyStartTime,
                         responseSubmissionTime = responseTime,
                         responseJson = responseJson.toString(),
+                        deviceType = 1,
                         isSynced = false
                     )
                 }
@@ -187,17 +198,20 @@ class BLEHelper(
 
     /**
      * Send a remote trigger to the watch to immediately start a microEMA survey session.
-     * This uses a Just-in-Time architecture: the phone picks a question from the master config
-     * and sends the entire question data to the watch.
+     * This uses a Just-in-Time architecture: the phone picks a survey from the retrieved configs
+     * and sends a random question from it to the watch.
      */
     fun triggerMicroEmaOnWatch() {
         appScope.io.launch {
             try {
-                val config = microEmaRepository.loadConfig()
+                // Get dynamic configs from storage
+                val dynamicConfigs = microEmaConfigStorage.get().watchSurveyConfigs
+                val config = dynamicConfigs.values.randomOrNull()
+
                 if (config == null) {
                     Log.e(
                         AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] Failed to load config, cannot trigger"
+                        "[MICRO_EMA] No dynamic MicroEMA config available, cannot trigger"
                     )
                     return@launch
                 }
@@ -205,7 +219,10 @@ class BLEHelper(
                 // Pick a random question to send
                 val question = config.questions.randomOrNull()
                 if (question == null) {
-                    Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Config has no questions")
+                    Log.e(
+                        AppConfig.LogTags.PHONE_BLE,
+                        "[MICRO_EMA] Config (ID: ${config.surveyId}) has no questions"
+                    )
                     return@launch
                 }
 
@@ -217,10 +234,11 @@ class BLEHelper(
                     put("question", Json.encodeToJsonElement(question))
                 }.toString()
 
+
                 bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_TRIGGER, triggerPayload)
                 Log.d(
                     AppConfig.LogTags.PHONE_BLE,
-                    "[MICRO_EMA] Sent JIT trigger to watch: ${question.text}"
+                    "[MICRO_EMA] Sent JIT trigger to watch: ${question.text} (ID: ${config.surveyId})"
                 )
             } catch (e: Exception) {
                 Log.e(

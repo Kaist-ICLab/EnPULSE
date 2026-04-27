@@ -90,17 +90,9 @@ class HomeViewModel(
 ) : ViewModel() {
 
     init {
-        viewModelScope.launch {
-            userProfileRepository.profileFlow
-                .map { it?.campaignId }
-                .distinctUntilChanged()
-                .filterNotNull()
-                .collect { campaignId ->
-                    // Auto-fetch configs on startup or when campaign changes
-                    campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
-                    surveyRepository.fetchAndPersistSurveys(campaignId.toInt())
-                }
-        }
+        // Note: Full study configuration sync (profile, sensors, surveys) is handled by AuthViewModel 
+        // at startup/login and by AccountSettingsViewModel for manual reloads.
+        // HomeViewModel purely observes the resulting states.
     }
 
     private fun getStartOfDay(): Long {

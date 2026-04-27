@@ -17,7 +17,7 @@ import org.koin.dsl.module
 val authModule = module {
     // SupabaseHelper - singleton instance shared across all services
     single {
-        SupabaseHelper()
+        SupabaseHelper(context = androidContext())
     }
 
     // AuthRepository - bind interface to implementation

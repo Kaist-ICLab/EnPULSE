@@ -19,6 +19,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.util.concurrent.TimeUnit
 
@@ -31,39 +32,50 @@ object SurveyBuilder {
      * Build a Survey object from a configuration.
      */
     fun build(config: SurveyConfig): Survey {
-        val scheduleMethod = buildSchedule(config.schedule)
+        val scheduleMethod = buildSchedule(config.scheduleType, config.schedule)
         val notificationConfig = SurveyNotificationConfig(
-            title = config.notification.title,
-            description = config.notification.description,
-            icon = android.R.drawable.ic_menu_edit // Default icon, can be customized later if needed
+            title = config.title,
+            description = config.description ?: "",
+            icon = android.R.drawable.ic_menu_edit // Default icon
         )
 
-        val questions = config.questions.mapNotNull { buildQuestion(it) }
+        // Group questions by parentId to reconstruct the hierarchy
+        val parentIdMap = config.questions.groupBy { it.parentId }
+
+        // Start building from root questions (those with null parentId)
+        val rootQuestions = parentIdMap[null]?.mapNotNull { buildQuestion(it, parentIdMap) } ?: emptyList()
 
         return Survey(
+            id = config.id.toString(),
             scheduleMethod = scheduleMethod,
             notificationConfig = notificationConfig,
-            *questions.toTypedArray()
+            *rootQuestions.toTypedArray()
         )
     }
 
-    private fun buildSchedule(config: ScheduleConfig): SurveyScheduleMethod {
-        return when (config.type.uppercase()) {
+    private fun buildSchedule(type: String, jsonStr: String?): SurveyScheduleMethod {
+        val json = try {
+            jsonStr?.let { Json.parseToJsonElement(it).jsonObject }
+        } catch (e: Exception) {
+            null
+        }
+
+        return when (type.uppercase()) {
             "TIME_OF_DAY" -> {
-                val times = config.timeOfDay?.mapNotNull { parseTime(it) }
+                val timesArray = json?.get("timeOfDay") as? JsonArray
+                val times = timesArray?.mapNotNull { parseTime(it.jsonPrimitive.content) }
                     ?: listOf(TimeUnit.HOURS.toMillis(12))
                 SurveyScheduleMethod.Fixed(timeOfDay = times)
             }
 
             "ESM" -> {
-                val esm = config.esm
-                if (esm != null) {
+                if (json != null) {
                     SurveyScheduleMethod.ESM(
-                        minInterval = esm.minInterval,
-                        maxInterval = esm.maxInterval,
-                        startOfDay = esm.startOfDay,
-                        endOfDay = esm.endOfDay,
-                        numSurvey = esm.numSurvey
+                        minInterval = json["minInterval"]?.jsonPrimitive?.content?.toLongOrNull() ?: 3600000L,
+                        maxInterval = json["maxInterval"]?.jsonPrimitive?.content?.toLongOrNull() ?: 7200000L,
+                        startOfDay = json["startOfDay"]?.jsonPrimitive?.content?.toLongOrNull() ?: 28800000L,
+                        endOfDay = json["endOfDay"]?.jsonPrimitive?.content?.toLongOrNull() ?: 79200000L,
+                        numSurvey = json["numSurvey"]?.jsonPrimitive?.content?.toIntOrNull() ?: 3
                     )
                 } else {
                     SurveyScheduleMethod.Manual()
@@ -89,9 +101,13 @@ object SurveyBuilder {
         }
     }
 
-    private fun buildQuestion(config: QuestionConfig): Question<*>? {
-        val childrenQuestions = config.children?.mapNotNull { childConfig ->
-            buildTrigger(config.type, childConfig)
+    private fun buildQuestion(
+        config: QuestionConfig,
+        parentIdMap: Map<Int?, List<QuestionConfig>>
+    ): Question<*>? {
+        // Recursively build children questions
+        val childrenQuestions = parentIdMap[config.id]?.mapNotNull { childConfig ->
+            buildTriggeredQuestion(config.type, childConfig, parentIdMap)
         } ?: emptyList()
 
         return try {
@@ -104,14 +120,7 @@ object SurveyBuilder {
                     questionTrigger = childrenQuestions as? List<QuestionTrigger<String>>
                 )
 
-                "NUMBER" -> NumberQuestion(
-                    id = config.id,
-                    question = config.text,
-                    isMandatory = config.isMandatory,
-                    questionTrigger = childrenQuestions as? List<QuestionTrigger<Double?>>
-                )
-
-                "RADIO" -> {
+                "RADIO", "BINARY" -> {
                     val options = config.options?.map { Option(it.display, it.allowFreeResponse) }
                         ?: emptyList()
                     if (options.isEmpty()) return null
@@ -137,6 +146,13 @@ object SurveyBuilder {
                     )
                 }
 
+                "NUMBER", "NUMBERSCALE" -> NumberQuestion(
+                    id = config.id,
+                    question = config.text,
+                    isMandatory = config.isMandatory,
+                    questionTrigger = childrenQuestions as? List<QuestionTrigger<Double?>>
+                )
+
                 else -> null
             }
         } catch (e: Exception) {
@@ -145,18 +161,28 @@ object SurveyBuilder {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun buildTrigger(parentType: String, config: ChildQuestionConfig): QuestionTrigger<*>? {
-        val expression =
-            parseExpression(config.trigger.op, config.trigger.value, parentType) ?: return null
-        val questions = config.questions.mapNotNull { buildQuestion(it) }
+    private fun buildTriggeredQuestion(
+        parentType: String,
+        config: QuestionConfig,
+        parentIdMap: Map<Int?, List<QuestionConfig>>
+    ): QuestionTrigger<*>? {
+        val triggerJson = try {
+            config.trigger?.let { Json.parseToJsonElement(it).jsonObject }
+        } catch (e: Exception) {
+            null
+        } ?: return null
 
-        if (questions.isEmpty()) return null
+        val op = triggerJson["op"]?.jsonPrimitive?.content ?: return null
+        val value = triggerJson["value"]
+
+        val expression = parseExpression(op, value, parentType) ?: return null
+        val question = buildQuestion(config, parentIdMap) ?: return null
 
         return when (parentType.uppercase()) {
-            "TEXT" -> QuestionTrigger(expression as Expression<String>, questions)
-            "NUMBER" -> QuestionTrigger(expression as Expression<Double?>, questions)
-            "RADIO" -> QuestionTrigger(expression as Expression<Int?>, questions)
-            "CHECKBOX" -> QuestionTrigger(expression as Expression<Set<Int>>, questions)
+            "TEXT" -> QuestionTrigger(expression as Expression<String>, listOf(question))
+            "NUMBER", "NUMBERSCALE" -> QuestionTrigger(expression as Expression<Double?>, listOf(question))
+            "RADIO", "BINARY" -> QuestionTrigger(expression as Expression<Int?>, listOf(question))
+            "CHECKBOX" -> QuestionTrigger(expression as Expression<Set<Int>>, listOf(question))
             else -> null
         }
     }
@@ -168,8 +194,8 @@ object SurveyBuilder {
     ): Expression<*>? {
         return when (parentType.uppercase()) {
             "TEXT" -> parseTextExpression(op, value)
-            "NUMBER" -> parseNumberExpression(op, value)
-            "RADIO" -> parseRadioExpression(op, value)
+            "NUMBER", "NUMBERSCALE" -> parseNumberExpression(op, value)
+            "RADIO", "BINARY" -> parseRadioExpression(op, value)
             "CHECKBOX" -> parseCheckboxExpression(op, value)
             else -> null
         }

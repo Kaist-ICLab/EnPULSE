@@ -12,9 +12,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class ProfileData(
-    val uuid: String,
+    val uuid: String = "",
     @SerialName("campaign_id")
     val campaignId: Int? = null,
-    val email: String
+    val email: String = ""
 )
 

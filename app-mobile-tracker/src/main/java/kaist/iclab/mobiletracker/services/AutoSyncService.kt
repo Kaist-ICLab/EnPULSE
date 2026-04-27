@@ -71,7 +71,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     private val surveyService: SurveyService by inject()
     private val db: TrackerRoomDB by inject()
     private val microEmaResponseDao by lazy { db.microEmaResponseDao() }
-    
+
     private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
     private var lastSyncTime: Long = 0
@@ -362,8 +362,13 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                     successCount.incrementAndGet()
                 }
             }
+
             is Result.Error -> {
-                Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
+                Log.e(
+                    TAG,
+                    "Failed to upload MicroEMA responses: ${result.message}",
+                    result.exception
+                )
                 failureCount.incrementAndGet()
                 failedSensors.add("MicroEMA")
             }

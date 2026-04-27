@@ -15,7 +15,7 @@ data class SurveyEntity(
     @SerialName("schedule_method") val scheduleMethod: JsonObject? = null,
     val title: String,
     val description: String? = null,
-    @SerialName("device_mode") val deviceMode: String? = null,          // "phone" or "watch", null = phone
+    @SerialName("device_type") val deviceType: Int? = 0,               // 0 = phone, 1 = watch
     @SerialName("expire_after_ms") val expireAfterMs: Long? = null      // auto-dismiss timer (ms), null = no expiry
 )
 

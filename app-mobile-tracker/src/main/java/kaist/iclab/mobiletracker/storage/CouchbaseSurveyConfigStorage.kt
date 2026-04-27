@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.storage
 
-import kaist.iclab.mobiletracker.data.survey.SurveyConfigList
+import kaist.iclab.tracker.sensor.survey.config.SurveyConfigList
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 

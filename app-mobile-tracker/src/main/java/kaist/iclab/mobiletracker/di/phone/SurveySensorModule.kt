@@ -40,7 +40,7 @@ val surveySensorModule = module {
 
         val initialConfig = if (savedConfigs.isNotEmpty()) {
             try {
-                SurveyConfigConverter.toSurveySensorConfig(savedConfigs)
+                SurveyConfigConverter.toSurveySensorConfig(savedConfigs.filter { it.deviceType == 0 })
             } catch (e: Exception) {
                 Log.e(
                     "SurveySensorModule",

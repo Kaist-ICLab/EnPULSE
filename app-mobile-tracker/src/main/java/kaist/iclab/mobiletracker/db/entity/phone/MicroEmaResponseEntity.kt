@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
+
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -24,6 +25,8 @@ data class MicroEmaResponseEntity(
 
     /** The JSON string of the response payload (value and status) */
     val responseJson: String,
+
+    val deviceType: Int = 1,
 
     val isSynced: Boolean = false
 )

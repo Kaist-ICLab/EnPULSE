@@ -1,16 +1,15 @@
-package kaist.iclab.wearabletracker.ema
+package kaist.iclab.tracker.sensor.microema
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Watch-side domain models for microEMA surveys.
- * Maps to the existing Supabase schema (survey, survey_question, survey_question_option tables).
+ * Shared domain models for microEMA surveys.
+ * Used by both phone and watch modules to ensure consistent serialization.
  */
 
 /**
  * A single option for a survey question.
- * Maps to `survey_question_option` table rows.
  */
 @Serializable
 data class WatchOption(
@@ -19,13 +18,7 @@ data class WatchOption(
 )
 
 /**
- * Answer type for a question. Derived from `survey_question.answer_type`.
- * The watch UI determines the input widget based on this type + number of options:
- *   - RADIO with ≤2 options → two large tap buttons (Yes/No style)
- *   - RADIO with 3+ options → horizontal carousel or scrollable chips (Likert/Categorical)
- *   - CHECKBOX → scrollable list of toggle chips (multi-select)
- *   - NUMBER → crown-scrollable picker 0–10
- *   - TEXT → manual keyboard/handwriting entry or direct STT voice dictation
+ * Answer type for a question.
  */
 @Serializable
 enum class AnswerType {
@@ -35,16 +28,21 @@ enum class AnswerType {
     @SerialName("CHECKBOX")
     CHECKBOX,
 
+    @SerialName("NUMBERSCALE")
+    NUMBERSCALE,
+
     @SerialName("NUMBER")
     NUMBER,
 
     @SerialName("TEXT")
-    TEXT
+    TEXT,
+
+    @SerialName("BINARY")
+    BINARY
 }
 
 /**
  * A single question within a microEMA survey.
- * Maps to `survey_question` + associated `survey_question_option` rows.
  */
 @Serializable
 data class WatchQuestion(
@@ -57,8 +55,7 @@ data class WatchQuestion(
 )
 
 /**
- * Complete survey configuration for the watch.
- * Loaded from bundled JSON asset (Phase 1) or fetched from phone via MessageClient (later phase).
+ * Complete survey configuration.
  */
 @Serializable
 data class WatchSurveyConfig(
@@ -70,8 +67,8 @@ data class WatchSurveyConfig(
 
 /**
  * Tracks the compliance status of each question response.
- * Required for research validity (per R&D plan Section 6).
  */
+@Serializable
 enum class ResponseStatus {
     ANSWERED,
     EXPIRED,
@@ -81,6 +78,7 @@ enum class ResponseStatus {
 /**
  * A single question's response within a microEMA session.
  */
+@Serializable
 data class MicroEmaResponse(
     val id: Long? = null,
     val surveyId: Int,

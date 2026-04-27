@@ -95,7 +95,7 @@ fun NavGraph(
 
     // Navigate based on authentication state and profile
     LaunchedEffect(userState.isLoggedIn, userProfile) {
-        val mainTabs = listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
+        listOf(Screen.Home.route, Screen.Data.route, Screen.Setting.route)
         val currentRoute = navController.currentDestination?.route
 
         if (userState.isLoggedIn) {

@@ -1,6 +1,8 @@
 package kaist.iclab.wearabletracker.ema
 
+
 import android.util.Log
+import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 
 /**
  * Repository that holds the active microEMA survey configuration.
