@@ -126,11 +126,11 @@ class BluetoothScanSensor(
         if (adapter.isEnabled) {
             try {
                 adapter.startDiscovery()
-                adapter.bluetoothLeScanner.startScan(scanCallback)
+                adapter.bluetoothLeScanner?.startScan(scanCallback)
 
                 CoroutineScope(Dispatchers.IO).launch {
                     delay(configStateFlow.value.scanDuration) // 5 seconds delay
-                    adapter.bluetoothLeScanner.stopScan(scanCallback)
+                    adapter.bluetoothLeScanner?.stopScan(scanCallback)
                     adapter.cancelDiscovery()
                 }
             } catch (e: SecurityException) {
