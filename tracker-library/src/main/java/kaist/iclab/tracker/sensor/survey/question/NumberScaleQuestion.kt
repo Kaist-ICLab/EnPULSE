@@ -1,48 +1,33 @@
 package kaist.iclab.tracker.sensor.survey.question
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-class SingleSelectionQuestion(
+class NumberScaleQuestion(
     override val id: Int,
     override val question: String,
     override val isMandatory: Boolean,
-    val option: List<String>,
-    val allowFreeResponse: Boolean,
-    val freeResponsePrefix: String = "",
+    val min: Int,
+    val max: Int,
+    val minLabel: String,
+    val maxLabel: String,
     questionTrigger: List<QuestionTrigger<Int?>>? = null
 ) : Question<Int?>(
     id, question, isMandatory, null, questionTrigger
 ) {
-    val freeResponseIndex: Int? = if (allowFreeResponse) option.size else null
-
-    private val _otherResponse = MutableStateFlow("")
-    val otherResponse = _otherResponse.asStateFlow()
-
     override fun isAllowedResponse(response: Int?): Boolean {
-        val optionValues = option.indices + listOfNotNull(freeResponseIndex)
-        return (response === null) || (response in optionValues)
+        if (response == null) return true
+        return response >= min && response <= max
     }
 
-    override fun isEmpty(response: Int?) = (response === null)
-
-
-    fun setOtherResponse(response: String) {
-        _otherResponse.value = response
-    }
+    override fun isEmpty(response: Int?) = (response == null)
 
     override fun getResponseJson(): JsonElement {
         val jsonObject = buildJsonObject {
             put("id", id)
             put("isMandatory", isMandatory)
-            put("value", response.value)
-            if (response.value == freeResponseIndex) put(
-                "otherResponse",
-                otherResponse.value
-            )
+            put("response", response.value)
         }
 
         return jsonObject
@@ -50,7 +35,6 @@ class SingleSelectionQuestion(
 
     override fun initResponse() {
         setResponse(null)
-        _otherResponse.value = ""
     }
 
     override fun eval(expr: Expression<Int?>, value: Int?): Boolean {

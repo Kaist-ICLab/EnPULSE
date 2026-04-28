@@ -26,11 +26,31 @@ object MicroEmaBuilder {
                         AnswerType.TEXT
                     },
                     isMandatory = q.isMandatory,
-                    options = q.options?.map { opt ->
-                        WatchOption(id = opt.id, display = opt.display)
-                    } ?: emptyList()
+                    options = buildOptions(q)
                 )
             }
         )
+    }
+
+    private fun buildOptions(question: kaist.iclab.tracker.sensor.survey.config.QuestionConfig): List<WatchOption> {
+        return when (question.type.uppercase()) {
+            "BINARY" -> listOf(
+                WatchOption(id = 0, display = "Yes"),
+                WatchOption(id = 1, display = "No")
+            )
+
+            "NUMBERSCALE" -> {
+                val min = question.min ?: 0
+                val max = question.max ?: 10
+                val values = if (min <= max) min..max else max..min
+                values.mapIndexed { index, value ->
+                    WatchOption(id = index, display = value.toString())
+                }
+            }
+
+            else -> question.options?.mapIndexed { index, opt ->
+                WatchOption(id = index, display = opt)
+            } ?: emptyList()
+        }
     }
 }

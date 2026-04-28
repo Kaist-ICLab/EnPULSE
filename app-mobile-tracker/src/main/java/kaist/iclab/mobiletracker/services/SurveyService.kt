@@ -6,7 +6,6 @@ import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.data.survey.SurveyEntity
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionEntity
-import kaist.iclab.mobiletracker.data.survey.SurveyQuestionOptionEntity
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionResponseInsert
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionTriggerEntity
 import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
@@ -16,11 +15,12 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.runCatchingSuspend
 import kaist.iclab.mobiletracker.utils.DateTimeFormatter
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
-import kaist.iclab.tracker.sensor.survey.config.OptionConfig
 import kaist.iclab.tracker.sensor.survey.config.QuestionConfig
 import kaist.iclab.tracker.sensor.survey.config.ScheduleType
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 
 /**
@@ -109,14 +109,7 @@ class SurveyService(
 
         val questionIds = questions.map { it.id }
 
-        // 3. Bulk fetch all options for the identified questions
-        val options = if (questionIds.isNotEmpty()) {
-            supabaseClient.from(Constants.DB.TABLE_OPTION)
-                .select { filter { isIn("question_id", questionIds) } }
-                .decodeList<SurveyQuestionOptionEntity>()
-        } else emptyList()
-
-        // 4. Bulk fetch all conditional triggers associated with the questions
+        // 3. Bulk fetch all conditional triggers associated with the questions
         val triggerIds = questions.mapNotNull { it.triggeredBy }
         val triggers = if (triggerIds.isNotEmpty()) {
             supabaseClient.from(Constants.DB.TABLE_TRIGGER)
@@ -124,15 +117,13 @@ class SurveyService(
                 .decodeList<SurveyQuestionTriggerEntity>()
         } else emptyList()
 
-        // 5. Assemble the flat entities into a hierarchical configuration structure
+        // 4. Assemble the flat entities into a hierarchical configuration structure
         return surveys.map { survey ->
             val surveyQuestions = questions.filter { it.surveyId == survey.id }
-            val surveyQuestionIds = surveyQuestions.map { it.id }
-            val surveyOptions = options.filter { it.questionId in surveyQuestionIds }
             val surveyTriggerIds = surveyQuestions.mapNotNull { it.triggeredBy }
             val surveyTriggers = triggers.filter { it.id in surveyTriggerIds }
 
-            assembleConfig(survey, surveyQuestions, surveyOptions, surveyTriggers)
+            assembleConfig(survey, surveyQuestions, surveyTriggers)
         }
     }
 
@@ -143,7 +134,6 @@ class SurveyService(
     private fun assembleConfig(
         survey: SurveyEntity,
         questions: List<SurveyQuestionEntity>,
-        options: List<SurveyQuestionOptionEntity>,
         triggers: List<SurveyQuestionTriggerEntity>
     ): SurveyConfig {
         val triggerMap = triggers.associateBy { it.id }
@@ -158,6 +148,7 @@ class SurveyService(
             expireAfterMs = survey.expireAfterMs,
             questions = questions.map { q ->
                 val trigger = triggerMap[q.triggeredBy]
+                val config = q.config
                 QuestionConfig(
                     id = q.id,
                     parentId = trigger?.questionId,
@@ -165,22 +156,36 @@ class SurveyService(
                     text = q.question,
                     isMandatory = q.isMandatory,
                     trigger = trigger?.expression?.toString(),
-                    options = options.filter { it.questionId == q.id }
-                        .map { it.toConfig() }
-                        .ifEmpty { null }
+                    allowFreeResponse = config.boolean("allowFreeResponse") ?: false,
+                    freeResponsePrefix = config.string("freeResponsePrefix"),
+                    min = config.int("min"),
+                    max = config.int("max"),
+                    minLabel = config.string("minLabel"),
+                    maxLabel = config.string("maxLabel"),
+                    options = config.stringArray("options")
                 )
             }
         )
     }
 
-    /**
-     * Extension to convert database Option entity to UI Config model.
-     */
-    private fun SurveyQuestionOptionEntity.toConfig() = OptionConfig(
-        id = id,
-        display = display,
-        allowFreeResponse = allowFreeResponse
-    )
+    private fun JsonObject?.string(key: String): String? =
+        primitive(key)?.content?.takeIf { it.isNotBlank() }
+
+    private fun JsonObject?.int(key: String): Int? =
+        primitive(key)?.intOrNull
+
+    private fun JsonObject?.boolean(key: String): Boolean? =
+        primitive(key)?.content?.toBooleanStrictOrNull()
+
+    private fun JsonObject?.stringArray(key: String): List<String>? =
+        this?.get(key)?.let { element ->
+            element as? kotlinx.serialization.json.JsonArray
+        }?.mapNotNull { element ->
+            (element as? JsonPrimitive)?.content
+        }
+
+    private fun JsonObject?.primitive(key: String): JsonPrimitive? =
+        this?.get(key) as? JsonPrimitive
 
     /**
      * Logic to determine the Survey Schedule Type based on the JSON keys present in the schedule_method field.
@@ -217,15 +222,16 @@ class SurveyService(
             if (unsynced.isEmpty()) return Result.Success(0)
 
             val inserts = unsynced.map { entity ->
+                val fallbackTime = DateTimeFormatter.formatToIsoOffset(System.currentTimeMillis())
                 SurveyQuestionResponseInsert(
                     questionId = entity.questionId,
                     uuid = entity.uuid,
-                    triggerTime = DateTimeFormatter.formatToIsoOffset(entity.triggerTime),
-                    actualTriggerTime = DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime),
-                    surveyStartTime = DateTimeFormatter.formatToIsoOffset(entity.surveyStartTime),
+                    triggerTime = DateTimeFormatter.formatToIsoOffset(entity.triggerTime) ?: fallbackTime,
+                    actualTriggerTime = DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime) ?: fallbackTime,
+                    surveyStartTime = DateTimeFormatter.formatToIsoOffset(entity.surveyStartTime) ?: fallbackTime,
                     responseSubmissionTime = DateTimeFormatter.formatToIsoOffset(entity.responseSubmissionTime)
                         ?: DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime)
-                        ?: DateTimeFormatter.formatToIsoOffset(System.currentTimeMillis()),
+                        ?: fallbackTime,
                     response = kotlinx.serialization.json.Json.parseToJsonElement(entity.responseJson).jsonObject
                 )
             }

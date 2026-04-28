@@ -15,7 +15,7 @@ import kaist.iclab.mobiletracker.viewmodels.settings.DataSyncSettingsViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.SurveySettingsViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named

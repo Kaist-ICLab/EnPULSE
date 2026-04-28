@@ -1,11 +1,14 @@
-package kaist.iclab.tracker.sensor.microema
+package kaist.iclab.tracker.sensor.galaxywatch
 
-import android.content.Context
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.microema.EmaConstants
+import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
+import kaist.iclab.tracker.sensor.microema.MicroEmaTriggerAction
+import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.TriggerEngine
@@ -13,7 +16,9 @@ import kaist.iclab.tracker.trigger.TriggerRule
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlin.collections.forEach
 
 class MicroEmaSensor(
     permissionManager: PermissionManager,
@@ -32,7 +37,7 @@ class MicroEmaSensor(
     ) : SensorConfig {
         companion object {
             fun fromJson(jsonString: String): Config {
-                return Json.decodeFromString<Config>(jsonString)
+                return Json.Default.decodeFromString<Config>(jsonString)
             }
         }
     }
@@ -46,13 +51,13 @@ class MicroEmaSensor(
     private val responseListener: (String, JsonElement) -> Unit = { _, jsonElement ->
         try {
             val jsonString = when {
-                jsonElement is kotlinx.serialization.json.JsonPrimitive -> jsonElement.content
+                jsonElement is JsonPrimitive -> jsonElement.content
                 else -> jsonElement.toString()
             }
             val response = json.decodeFromString<MicroEmaResponse>(jsonString)
             // Convert MicroEmaResponse to a generic JsonElement for the Survey entity
             val responseJson = json.encodeToJsonElement(response)
-            
+
             // Map the MicroEMA data into the regular SurveySensor.Entity structure
             val surveyEntity = SurveySensor.Entity(
                 triggerTime = response.triggerTime,
@@ -62,7 +67,7 @@ class MicroEmaSensor(
                 response = responseJson,
                 deviceType = 1 // Watch
             )
-            
+
             // Emit the response as a standard survey sensor entity
             listeners.forEach { callback ->
                 callback(surveyEntity)
@@ -75,10 +80,10 @@ class MicroEmaSensor(
     override fun init() {
         super.init()
         val currentConfig: Config = configStorage.get()
-        
+
         // 1. Register Action Handler for MicroEMA
         triggerEngine.registerActionHandler(
-            "MICRO_EMA", 
+            "MICRO_EMA",
             MicroEmaTriggerAction(bleChannel, currentConfig.watchSurveyConfigs)
         )
 

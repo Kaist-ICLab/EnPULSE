@@ -3,16 +3,17 @@ package kaist.iclab.tracker.sensor.survey.config
 import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
-import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
+import kaist.iclab.tracker.sensor.survey.question.BinaryQuestion
 import kaist.iclab.tracker.sensor.survey.question.ComparablePredicate
 import kaist.iclab.tracker.sensor.survey.question.Expression
+import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
-import kaist.iclab.tracker.sensor.survey.question.Option
+import kaist.iclab.tracker.sensor.survey.question.NumberScaleQuestion
 import kaist.iclab.tracker.sensor.survey.question.Predicate
 import kaist.iclab.tracker.sensor.survey.question.Question
 import kaist.iclab.tracker.sensor.survey.question.QuestionTrigger
-import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.SetPredicate
+import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.StringPredicate
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
 import kotlinx.serialization.json.Json
@@ -120,38 +121,58 @@ object SurveyBuilder {
                     questionTrigger = childrenQuestions as? List<QuestionTrigger<String>>
                 )
 
-                "RADIO", "BINARY" -> {
-                    val options = config.options?.map { Option(it.display, it.allowFreeResponse) }
-                        ?: emptyList()
-                    if (options.isEmpty()) return null
+                "RADIO" -> {
                     SingleSelectionQuestion(
                         id = config.id,
                         question = config.text,
                         isMandatory = config.isMandatory,
-                        option = options,
+                        option = config.options ?: listOf(),
+                        allowFreeResponse = config.allowFreeResponse,
+                        freeResponsePrefix = config.freeResponsePrefix?.takeIf { it.isNotBlank() } ?: "Other: ",
                         questionTrigger = childrenQuestions as? List<QuestionTrigger<Int?>>
                     )
                 }
 
+                "BINARY" -> {
+                    BinaryQuestion(
+                        id = config.id,
+                        question = config.text,
+                        isMandatory = config.isMandatory,
+                        questionTrigger = childrenQuestions as? List<QuestionTrigger<Boolean?>>
+                    )
+                }
+
                 "CHECKBOX" -> {
-                    val options = config.options?.map { Option(it.display, it.allowFreeResponse) }
-                        ?: emptyList()
-                    if (options.isEmpty()) return null
                     MultipleSelectionQuestion(
                         id = config.id,
                         question = config.text,
                         isMandatory = config.isMandatory,
-                        option = options,
+                        option = config.options ?: listOf(),
+                        allowFreeResponse = config.allowFreeResponse,
+                        freeResponsePrefix = config.freeResponsePrefix?.takeIf { it.isNotBlank() } ?: "Other: ",
                         questionTrigger = childrenQuestions as? List<QuestionTrigger<Set<Int>>>
                     )
                 }
 
-                "NUMBER", "NUMBERSCALE" -> NumberQuestion(
+                "NUMBER" -> NumberQuestion(
                     id = config.id,
                     question = config.text,
                     isMandatory = config.isMandatory,
                     questionTrigger = childrenQuestions as? List<QuestionTrigger<Double?>>
                 )
+
+                "NUMBERSCALE" -> {
+                    NumberScaleQuestion(
+                        id = config.id,
+                        question = config.text,
+                        isMandatory = config.isMandatory,
+                        min = config.min ?: 0,
+                        max = config.max ?: 10,
+                        minLabel = config.minLabel!!,
+                        maxLabel = config.maxLabel!!,
+                        questionTrigger = childrenQuestions as? List<QuestionTrigger<Int?>>
+                    )
+                }
 
                 else -> null
             }

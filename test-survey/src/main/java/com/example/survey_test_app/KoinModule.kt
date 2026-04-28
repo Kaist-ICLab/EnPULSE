@@ -9,10 +9,11 @@ import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
+import kaist.iclab.tracker.sensor.survey.question.BinaryQuestion
 import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
+import kaist.iclab.tracker.sensor.survey.question.NumberScaleQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
-import kaist.iclab.tracker.sensor.survey.question.Option
 import kaist.iclab.tracker.sensor.survey.question.Predicate
 import kaist.iclab.tracker.sensor.survey.question.QuestionTrigger
 import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
@@ -84,23 +85,16 @@ val koinModule = module {
                                 id = 3,
                                 question = "How are you?",
                                 isMandatory = true,
-                                option = listOf(
-                                    Option("Good"),
-                                    Option("Bad"),
-                                    Option("Okay"),
-                                    Option("Other: ", allowFreeResponse = true)
-                                )
+                                option = listOf("Good", "Bad", "Okay"),
+                                allowFreeResponse = true,
+                                freeResponsePrefix = "Other: "
                             ),
                             MultipleSelectionQuestion(
                                 id = 4,
                                 question = "Choose all even number",
                                 isMandatory = false,
-                                option = listOf(
-                                    Option("1"),
-                                    Option("2"),
-                                    Option("4"),
-                                    Option("5")
-                                ),
+                                option = listOf("1", "2", "4", "5"),
+                                allowFreeResponse = false,
                                 questionTrigger = listOf(
                                     QuestionTrigger(
                                         predicate = Predicate.Equal(setOf(1, 2)),
@@ -109,14 +103,27 @@ val koinModule = module {
                                                 id = 5,
                                                 question = "Is P = NP?",
                                                 isMandatory = true,
-                                                option = listOf(
-                                                    Option("Hell yeah"),
-                                                    Option("Nah")
-                                                ),
+                                                option = listOf("Hell yeah", "Nah"),
+                                                allowFreeResponse = false,
                                             )
-                                        )
+                                        ),
                                     )
-                                )
+                                ),
+
+                            ),
+                            BinaryQuestion(
+                                id = 6,
+                                question = "Did you drink coffee today?",
+                                isMandatory = true,
+                            ),
+                            NumberScaleQuestion(
+                                id = 7,
+                                question = "How stressed are you right now?",
+                                isMandatory = true,
+                                min = 0,
+                                max = 7,
+                                minLabel = "Not stressed",
+                                maxLabel = "Stressed"
                             )
                         ),
                         "fixedTime" to Survey(
@@ -130,7 +137,7 @@ val koinModule = module {
                                 icon = R.drawable.ic_launcher_foreground
                             ),
                             TextQuestion(
-                                id = 6,
+                                id = 8,
                                 question = "Testing",
                                 isMandatory = true,
                             ),

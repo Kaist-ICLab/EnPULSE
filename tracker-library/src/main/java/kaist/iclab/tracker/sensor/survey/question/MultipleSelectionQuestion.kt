@@ -11,21 +11,21 @@ class MultipleSelectionQuestion(
     override val id: Int,
     override val question: String,
     override val isMandatory: Boolean,
-    val option: List<Option>,
+    val option: List<String>,
+    val allowFreeResponse: Boolean,
+    val freeResponsePrefix: String = "",
     questionTrigger: List<QuestionTrigger<Set<Int>>>? = null
 ) : Question<Set<Int>>(
     id, question, isMandatory, setOf(), questionTrigger
 ) {
-    private val _otherResponse = MutableStateFlow<Map<Int, String>>(mapOf())
+    val freeResponseIndex: Int? = if (allowFreeResponse) option.size else null
+
+    private val _otherResponse = MutableStateFlow("")
     val otherResponse = _otherResponse.asStateFlow()
 
-    init {
-        _otherResponse.value =
-            option.indices.associateWith { "" }.filter { option[it.key].allowFreeResponse }
-    }
-
     override fun isAllowedResponse(response: Set<Int>): Boolean {
-        return response.all { it in option.indices }
+        val optionValues = option.indices + listOfNotNull(freeResponseIndex)
+        return response.all { it in optionValues }
     }
 
     override fun isEmpty(response: Set<Int>) = response.isEmpty()
@@ -40,10 +40,8 @@ class MultipleSelectionQuestion(
         setResponse(newResponse)
     }
 
-    fun setOtherResponse(optionIdx: Int, response: String) {
-        _otherResponse.value = otherResponse.value.toMutableMap().apply {
-            this[optionIdx] = response
-        }
+    fun setOtherResponse(response: String) {
+        _otherResponse.value = response
     }
 
     override fun getResponseJson(): JsonElement {
@@ -54,9 +52,9 @@ class MultipleSelectionQuestion(
                 response.value.forEach {
                     add(buildJsonObject {
                         put("value", it)
-                        if (it in otherResponse.value.keys) put(
+                        if (it == freeResponseIndex) put(
                             "otherResponse",
-                            otherResponse.value[it]
+                            otherResponse.value
                         )
                     })
                 }
@@ -68,8 +66,7 @@ class MultipleSelectionQuestion(
 
     override fun initResponse() {
         setResponse(setOf())
-        _otherResponse.value =
-            option.indices.associateWith { "" }.filter { option[it.key].allowFreeResponse }
+        _otherResponse.value = ""
     }
 
     override fun eval(expr: Expression<Set<Int>>, value: Set<Int>): Boolean =

@@ -21,7 +21,7 @@ import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -223,7 +223,9 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     ): List<SurveyQuestionResponseInsert> {
         val formatter = DateTimeFormatter.ISO_INSTANT
         fun formatTimestamp(millis: Long?) =
-            millis?.let { Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC).format(formatter) }
+            Instant.ofEpochMilli(millis ?: System.currentTimeMillis())
+                .atOffset(ZoneOffset.UTC)
+                .format(formatter)
 
         val responseJson = entity.response
         if (responseJson !is kotlinx.serialization.json.JsonArray) return emptyList()

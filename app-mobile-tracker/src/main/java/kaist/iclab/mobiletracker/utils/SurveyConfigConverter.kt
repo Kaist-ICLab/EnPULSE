@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.utils
 
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.survey.config.SurveyBuilder
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 
