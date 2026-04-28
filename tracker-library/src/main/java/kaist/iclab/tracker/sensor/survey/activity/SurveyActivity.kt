@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import kaist.iclab.tracker.sensor.survey.Survey
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 

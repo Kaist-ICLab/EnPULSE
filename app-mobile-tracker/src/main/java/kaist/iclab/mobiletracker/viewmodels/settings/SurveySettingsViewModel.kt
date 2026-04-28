@@ -1,7 +1,7 @@
 package kaist.iclab.mobiletracker.viewmodels.settings
 
 import androidx.lifecycle.ViewModel
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.flow.map
 
 class SurveySettingsViewModel(

@@ -39,17 +39,13 @@ data class QuestionConfig(
     val text: String,
     val isMandatory: Boolean,
     val trigger: String? = null,  // JSON string representing the expression to show this question
-    val options: List<OptionConfig>? = null
-)
-
-/**
- * Unified Option configuration for RADIO/CHECKBOX questions.
- */
-@Serializable
-data class OptionConfig(
-    val id: Int,
-    val display: String,
-    val allowFreeResponse: Boolean = false
+    val allowFreeResponse: Boolean = false,
+    val freeResponsePrefix: String? = null,
+    val min: Int? = null,
+    val max: Int? = null,
+    val minLabel: String? = null,
+    val maxLabel: String? = null,
+    val options: List<String>? = null
 )
 
 /**

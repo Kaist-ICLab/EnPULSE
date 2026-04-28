@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfigList
 import kotlinx.coroutines.flow.StateFlow
 

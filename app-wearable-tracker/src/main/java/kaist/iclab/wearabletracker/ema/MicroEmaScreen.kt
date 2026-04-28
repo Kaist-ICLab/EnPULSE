@@ -279,6 +279,7 @@ private fun SingleQuestionView(
 
                 AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
                     NumberPickerInput(
+                        options = question.options,
                         onValueChange = { selectedNumber = it },
                         onSelect = onAnswer
                     )
@@ -694,13 +695,14 @@ private fun TapButtonsInput(
  */
 @Composable
 private fun NumberPickerInput(
+    options: List<WatchOption>,
     onValueChange: (String) -> Unit,
     onSelect: (String) -> Unit
 ) {
-    val numberOptions = (0..10).map { it.toString() }
+    val numberOptions = options.map { it.display }.ifEmpty { (0..10).map { it.toString() } }
     val pickerState = rememberPickerState(
         initialNumberOfOptions = numberOptions.size,
-        initiallySelectedOption = 5
+        initiallySelectedOption = numberOptions.lastIndex / 2
     )
 
     // Sync picker scroll → onValueChange
@@ -731,8 +733,8 @@ private fun NumberPickerInput(
             modifier = Modifier.fillMaxWidth(0.9f),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "0", fontSize = 10.sp, color = MutedGrey)
-            Text(text = "10", fontSize = 10.sp, color = MutedGrey)
+            Text(text = numberOptions.first(), fontSize = 10.sp, color = MutedGrey)
+            Text(text = numberOptions.last(), fontSize = 10.sp, color = MutedGrey)
         }
     }
 }
