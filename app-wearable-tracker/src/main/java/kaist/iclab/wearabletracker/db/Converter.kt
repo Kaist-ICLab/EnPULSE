@@ -8,5 +8,9 @@ class Converter {
     fun listToJson(value: List<Int>): String? = Gson().toJson(value)
 
     @TypeConverter
-    fun jsonToList(value: String?) = Gson().fromJson(value, Array<Int>::class.java).toList()
+    fun jsonToList(value: String?): List<Int> {
+        if (value == null) return emptyList()
+        val array = Gson().fromJson(value, Array<Int>::class.java)
+        return array?.toList() ?: emptyList()
+    }
 }

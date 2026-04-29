@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import kaist.iclab.tracker.sensor.galaxywatch.IMUSensor
-import kaist.iclab.wearabletracker.db.entity.IMUEntity
 import kaist.iclab.wearabletracker.db.entity.CsvSerializable
+import kaist.iclab.wearabletracker.db.entity.IMUEntity
 
 @Dao
 interface IMUDao : BaseDao<IMUSensor.Entity> {

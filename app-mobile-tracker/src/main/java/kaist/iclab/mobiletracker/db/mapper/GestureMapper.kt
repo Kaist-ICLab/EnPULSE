@@ -14,8 +14,7 @@ object GestureMapper {
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
             classIndex = entity.classIndex,
             score = entity.score,
-            // Convert list to single integer (max probability) to match Supabase schema
-            probabilities = entity.probabilities.maxOrNull() ?: 0
+            probabilities = entity.probabilities
         )
     }
 }

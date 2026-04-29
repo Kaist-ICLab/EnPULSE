@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
-import kaist.iclab.wearabletracker.db.entity.GestureEntity
 import kaist.iclab.wearabletracker.db.entity.CsvSerializable
+import kaist.iclab.wearabletracker.db.entity.GestureEntity
 
 @Dao
 interface GestureDao : BaseDao<GestureSensor.Entity> {

@@ -3,6 +3,13 @@ package kaist.iclab.mobiletracker.data.sensors.watch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Gesture sensor data model for BLE transport (CSV parsing from watch).
+ * Parsed by [kaist.iclab.mobiletracker.utils.SensorDataCsvParser.parseGestureCsv].
+ *
+ * Note: This class retains the full probabilities array (List<Int>).
+ * For Supabase upload, see [GestureSupabaseData] which reduces probabilities to a single Int.
+ */
 @Serializable
 data class GestureSensorData(
     @SerialName("event_id")

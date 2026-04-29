@@ -5,13 +5,13 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import kaist.iclab.wearabletracker.db.dao.AccelerometerDao
 import kaist.iclab.wearabletracker.db.dao.EDADao
+import kaist.iclab.wearabletracker.db.dao.GestureDao
 import kaist.iclab.wearabletracker.db.dao.HeartRateDao
+import kaist.iclab.wearabletracker.db.dao.IMUDao
 import kaist.iclab.wearabletracker.db.dao.LocationDao
 import kaist.iclab.wearabletracker.db.dao.MicroEmaResponseDao
 import kaist.iclab.wearabletracker.db.dao.PPGDao
 import kaist.iclab.wearabletracker.db.dao.SkinTemperatureDao
-import kaist.iclab.wearabletracker.db.dao.IMUDao
-import kaist.iclab.wearabletracker.db.dao.GestureDao
 import kaist.iclab.wearabletracker.db.dao.StressDao
 import kaist.iclab.wearabletracker.db.entity.AccelerometerEntity
 import kaist.iclab.wearabletracker.db.entity.EDAEntity

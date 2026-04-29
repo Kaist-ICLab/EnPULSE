@@ -70,7 +70,10 @@ class WatchGestureUploadHandler(
 
     override fun recordToCsvRow(record: Any): String {
         val entity = record as kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
-        val escapedProbs = entity.probabilities.joinToString(";").replace("\"", "\"\"")
-        return "${entity.eventId},${entity.uuid},${entity.deviceType},${entity.received},${entity.timestamp},${entity.classIndex},${entity.score},\"[$escapedProbs]\""
+        return "${entity.eventId},${entity.uuid},${entity.deviceType},${entity.received},${entity.timestamp},${entity.classIndex},${entity.score},${
+            entity.probabilities.joinToString(
+                ";"
+            )
+        }"
     }
 }

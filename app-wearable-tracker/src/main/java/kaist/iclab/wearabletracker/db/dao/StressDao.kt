@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
-import kaist.iclab.wearabletracker.db.entity.StressEntity
 import kaist.iclab.wearabletracker.db.entity.CsvSerializable
+import kaist.iclab.wearabletracker.db.entity.StressEntity
 
 @Dao
 interface StressDao : BaseDao<StressSensor.Entity> {

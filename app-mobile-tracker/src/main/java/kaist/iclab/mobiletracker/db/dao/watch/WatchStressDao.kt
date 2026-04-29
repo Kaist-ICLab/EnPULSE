@@ -38,9 +38,6 @@ interface WatchStressDao : BaseDao<WatchStressEntity, WatchStressEntity> {
     @Query("SELECT COUNT(*) FROM WatchStressEntity WHERE timestamp >= :afterTimestamp")
     override suspend fun getRecordCountAfterTimestamp(afterTimestamp: Long): Int
 
-    @Query("SELECT COUNT(*) FROM WatchStressEntity WHERE timestamp >= :startOfDay AND timestamp < :endOfDay")
-    suspend fun getTodayCount(startOfDay: Long, endOfDay: Long): Int
-
     @Query("SELECT * FROM WatchStressEntity WHERE timestamp >= :afterTimestamp ORDER BY CASE WHEN :isAscending = 1 THEN timestamp END ASC, CASE WHEN :isAscending = 0 THEN timestamp END DESC LIMIT :limit OFFSET :offset")
     override suspend fun getRecordsPaginated(
         afterTimestamp: Long,
