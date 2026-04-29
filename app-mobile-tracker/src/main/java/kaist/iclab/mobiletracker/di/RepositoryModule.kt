@@ -12,6 +12,8 @@ import kaist.iclab.mobiletracker.repository.HomeRepository
 import kaist.iclab.mobiletracker.repository.HomeRepositoryImpl
 import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.SurveyRepositoryImpl
+import kaist.iclab.mobiletracker.repository.TriggerRepository
+import kaist.iclab.mobiletracker.repository.TriggerRepositoryImpl
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepositoryImpl
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
@@ -42,6 +44,7 @@ import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
+import kaist.iclab.mobiletracker.storage.CouchbaseTriggerConfigStorage
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -160,6 +163,20 @@ val repositoryModule = module {
         )
     }
 
+    // TriggerRepository for campaign trigger management
+    single {
+        CouchbaseTriggerConfigStorage(
+            couchbase = get()
+        )
+    }
+
+    single<TriggerRepository> {
+        TriggerRepositoryImpl(
+            triggerService = get(),
+            persistentStorage = get()
+        )
+    }
+
     // UserProfileRepository for user profile management
     single {
         kaist.iclab.mobiletracker.storage.UserProfileStorage(
@@ -173,7 +190,8 @@ val repositoryModule = module {
             supabaseHelper = get(),
             persistentStorage = get(),
             campaignSensorRepository = get(),
-            surveyRepository = get()
+            surveyRepository = get(),
+            triggerRepository = get()
         )
     }
 

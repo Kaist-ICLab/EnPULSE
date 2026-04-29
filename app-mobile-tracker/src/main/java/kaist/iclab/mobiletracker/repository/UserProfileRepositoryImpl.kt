@@ -17,7 +17,8 @@ class UserProfileRepositoryImpl(
     private val supabaseHelper: SupabaseHelper,
     private val persistentStorage: kaist.iclab.mobiletracker.storage.UserProfileStorage,
     private val campaignSensorRepository: CampaignSensorRepository,
-    private val surveyRepository: SurveyRepository
+    private val surveyRepository: SurveyRepository,
+    private val triggerRepository: TriggerRepository
 ) : UserProfileRepository {
 
     companion object {
@@ -42,6 +43,9 @@ class UserProfileRepositoryImpl(
     override fun clearProfile() {
         _profile.value = null
         persistentStorage.set(ProfileData())
+        campaignSensorRepository.clearCache()
+        surveyRepository.clearSurveys()
+        triggerRepository.clearTriggers()
     }
 
     override suspend fun updateCampaignId(campaignId: Int): Result<Unit> {
@@ -73,14 +77,16 @@ class UserProfileRepositoryImpl(
         val profile = profileResult.getOrNull()
         val campaignId = profile?.campaignId
 
-        // 2. If we have a campaign, fetch sensors and surveys
+        // 2. If we have a campaign, fetch sensors, surveys, and triggers
         if (campaignId != null) {
             campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
             surveyRepository.fetchAndPersistSurveys(campaignId)
+            triggerRepository.fetchAndPersistTriggers(campaignId)
         } else {
             // If no campaign, clear caches to be safe
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()
+            triggerRepository.clearTriggers()
         }
 
         return profileResult
