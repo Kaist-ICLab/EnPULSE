@@ -66,6 +66,9 @@ object AppColors {
     val ColorMessage = Color(0xFFCDDC39)
     val ColorUserInteraction = Color(0xFF673AB7)
     val ColorWifi = Color(0xFF00BCD4)
+    val ColorIMU = Color(0xFF6366F1) // Indigo
+    val ColorGesture = Color(0xFF14B8A6) // Teal
+    val ColorStress = Color(0xFFF59E0B) // Amber
     val ColorDefault = Color(0xFF9E9E9E)
 
     fun getSensorColor(sensorId: String): Color {
@@ -98,6 +101,9 @@ object AppColors {
             "WatchHeartRate" -> ColorAppListChange
             "WatchPPG" -> ColorMedia
             "WatchSkinTemperature" -> ColorAmbientLight
+            "WatchIMU" -> ColorIMU
+            "WatchGesture" -> ColorGesture
+            "WatchStress" -> ColorStress
             else -> ColorDefault
         }
     }

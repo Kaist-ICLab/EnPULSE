@@ -185,6 +185,9 @@
     <string name="sensor_desc_step">걸음 수 데이터</string>
     <string name="sensor_desc_user_interaction">사용자 터치 이벤트</string>
     <string name="sensor_desc_wifi">WiFi 연결 상태</string>
+    <string name="sensor_desc_imu">워치 IMU 센서 데이터</string>
+    <string name="sensor_desc_gesture">워치 제스처 인식 데이터</string>
+    <string name="sensor_desc_stress">워치 스트레스 수준 데이터</string>
     <string name="sensor_desc_default">센서 데이터 수집</string>
 
     <!-- Notification -->
@@ -255,6 +258,9 @@
     <string name="sensor_step">걸음</string>
     <string name="sensor_user_interaction">사용자 상호작용</string>
     <string name="sensor_wifi_scan">Wifi 스캔</string>
+    <string name="sensor_imu">IMU</string>
+    <string name="sensor_gesture">제스처</string>
+    <string name="sensor_stress">스트레스</string>
 
 
     <!-- Toast Messages -->

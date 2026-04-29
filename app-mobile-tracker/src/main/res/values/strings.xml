@@ -185,6 +185,9 @@
     <string name="sensor_desc_step">Step count data</string>
     <string name="sensor_desc_user_interaction">User touch events</string>
     <string name="sensor_desc_wifi">WiFi connection status</string>
+    <string name="sensor_desc_imu">Watch IMU sensor data</string>
+    <string name="sensor_desc_gesture">Watch gesture recognition data</string>
+    <string name="sensor_desc_stress">Watch stress level data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
 
     <!-- Notification -->
@@ -255,6 +258,9 @@
     <string name="sensor_step">Step</string>
     <string name="sensor_user_interaction">User Interaction</string>
     <string name="sensor_wifi_scan">Wifi Scan</string>
+    <string name="sensor_imu">IMU</string>
+    <string name="sensor_gesture">Gesture</string>
+    <string name="sensor_stress">Stress</string>
 
 
     <!-- Toast Messages -->

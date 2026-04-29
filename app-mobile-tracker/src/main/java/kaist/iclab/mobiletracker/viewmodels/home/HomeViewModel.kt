@@ -57,6 +57,9 @@ data class HomeUiState(
     val watchEDACount: Int = 0,
     val watchPPGCount: Int = 0,
     val watchSkinTemperatureCount: Int = 0,
+    val watchIMUCount: Int = 0,
+    val watchGestureCount: Int = 0,
+    val watchStressCount: Int = 0,
     // Other
     val watchStatus: WatchConnectionStatus = WatchConnectionStatus.DISCONNECTED,
     val connectedDevices: List<String> = emptyList(),
@@ -149,6 +152,9 @@ class HomeViewModel(
                 watchEDACount = counts.watchEDACount,
                 watchPPGCount = counts.watchPPGCount,
                 watchSkinTemperatureCount = counts.watchSkinTemperatureCount,
+                watchIMUCount = counts.watchIMUCount,
+                watchGestureCount = counts.watchGestureCount,
+                watchStressCount = counts.watchStressCount,
                 userName = profile?.email?.split("@")?.firstOrNull()
                     ?.replaceFirstChar { it.uppercase() } ?: "User"
             )

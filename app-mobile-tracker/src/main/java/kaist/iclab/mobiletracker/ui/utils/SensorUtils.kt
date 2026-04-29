@@ -21,6 +21,9 @@ import androidx.compose.material.icons.filled.StayCurrentPortrait
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Waves
+import androidx.compose.material.icons.filled.BackHand
+import androidx.compose.material.icons.filled.CompassCalibration
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiTethering
 import androidx.compose.runtime.Composable
@@ -56,6 +59,9 @@ fun getSensorTitleResId(sensorId: String): Int {
         "WatchHeartRate" -> R.string.sensor_heart_rate
         "WatchPPG" -> R.string.sensor_ppg
         "WatchSkinTemperature" -> R.string.sensor_skin_temperature
+        "WatchIMU" -> R.string.sensor_imu
+        "WatchGesture" -> R.string.sensor_gesture
+        "WatchStress" -> R.string.sensor_stress
         else -> R.string.sensor_desc_default
     }
 }
@@ -83,6 +89,9 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "Step" -> R.string.sensor_desc_step
         "UserInteraction" -> R.string.sensor_desc_user_interaction
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_desc_wifi
+        "WatchIMU" -> R.string.sensor_desc_imu
+        "WatchGesture" -> R.string.sensor_desc_gesture
+        "WatchStress" -> R.string.sensor_desc_stress
         else -> R.string.sensor_desc_default
     }
 }
@@ -133,6 +142,9 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "WatchHeartRate" -> Icons.Default.FavoriteBorder
         "WatchPPG" -> Icons.Default.MonitorHeart
         "WatchSkinTemperature" -> Icons.Default.Thermostat
+        "WatchIMU" -> Icons.Default.CompassCalibration
+        "WatchGesture" -> Icons.Default.BackHand
+        "WatchStress" -> Icons.Default.Psychology
         else -> Icons.Default.DataUsage
     }
 }

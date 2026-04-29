@@ -25,8 +25,12 @@ class WatchIMUDataHandler(private val dao: WatchIMUDao) : SensorDataHandler {
                 id = entity.id,
                 timestamp = entity.timestamp,
                 fields = mapOf(
-                    "Acc (X,Y,Z)" to "(${entity.accX}, ${entity.accY}, ${entity.accZ})",
-                    "Gyro (X,Y,Z)" to "(${entity.gyroX}, ${entity.gyroY}, ${entity.gyroZ})"
+                    "Acc X" to entity.accX.toString(),
+                    "Acc Y" to entity.accY.toString(),
+                    "Acc Z" to entity.accZ.toString(),
+                    "Gyro X" to entity.gyroX.toString(),
+                    "Gyro Y" to entity.gyroY.toString(),
+                    "Gyro Z" to entity.gyroZ.toString()
                 )
             )
         }

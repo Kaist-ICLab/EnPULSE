@@ -14,7 +14,10 @@ object SensorTypeHelper {
         "WatchEDA",
         "WatchPPG",
         "WatchSkinTemperature",
-        "WatchLocation"
+        "WatchLocation",
+        "WatchIMU",
+        "WatchGesture",
+        "WatchStress"
     )
 
     /**

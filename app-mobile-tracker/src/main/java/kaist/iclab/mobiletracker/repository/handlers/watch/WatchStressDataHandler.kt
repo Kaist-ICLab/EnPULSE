@@ -26,7 +26,8 @@ class WatchStressDataHandler(private val dao: WatchStressDao) : SensorDataHandle
                 timestamp = entity.timestamp,
                 fields = mapOf(
                     "Probability" to String.format("%.2f", entity.probability),
-                    "High Stress" to entity.isHighStress.toString()
+                    "High Stress" to entity.isHighStress.toString(),
+                    "Window Start" to entity.windowStartMs.toString()
                 )
             )
         }

@@ -79,6 +79,9 @@ object Styles {
         val WATCH_EDA = Color(0xFF00BCD4)
         val WATCH_PPG = Color(0xFFFF5722)
         val WATCH_SKIN_TEMP = Color(0xFFFF9800)
+        val WATCH_IMU = Color(0xFF6366F1)
+        val WATCH_GESTURE = Color(0xFF14B8A6)
+        val WATCH_STRESS = Color(0xFFF59E0B)
 
         // Status Indicator
         val RUNNING_BG = Color(0xFFE6F4EA)

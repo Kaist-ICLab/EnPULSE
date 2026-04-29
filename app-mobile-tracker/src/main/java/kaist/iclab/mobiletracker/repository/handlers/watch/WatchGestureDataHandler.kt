@@ -26,7 +26,8 @@ class WatchGestureDataHandler(private val dao: WatchGestureDao) : SensorDataHand
                 timestamp = entity.timestamp,
                 fields = mapOf(
                     "Class Index" to entity.classIndex.toString(),
-                    "Score" to entity.score.toString()
+                    "Score" to entity.score.toString(),
+                    "Probabilities" to entity.probabilities.joinToString(", ")
                 )
             )
         }
