@@ -1,10 +1,13 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.ServiceInfo
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
@@ -50,8 +53,10 @@ class IMUSensor(
     ) : SensorEntity()
 
     override val id: String = "IMU"
-    override val permissions: Array<String> = emptyArray()
-    override val foregroundServiceTypes: Array<Int> = emptyArray()
+    override val permissions: Array<String> = arrayOf(Manifest.permission.HIGH_SAMPLING_RATE_SENSORS)
+    override val foregroundServiceTypes: Array<Int> = listOfNotNull(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH else null
+    ).toTypedArray()
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val latestAcc = AtomicReference<FloatArray?>(null)
