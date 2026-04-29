@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.services.supabase
 
-import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.config.AppConfig.SupabaseTables.LOCATION_SENSOR
 import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.Result
@@ -12,7 +12,7 @@ class LocationSensorService(
     supabaseHelper: SupabaseHelper
 ) : BaseSupabaseService<LocationSensorData>(
     supabaseHelper = supabaseHelper,
-    tableName = AppConfig.SupabaseTables.LOCATION_SENSOR,
+    tableName = LOCATION_SENSOR,
     sensorName = "location"
 ) {
 

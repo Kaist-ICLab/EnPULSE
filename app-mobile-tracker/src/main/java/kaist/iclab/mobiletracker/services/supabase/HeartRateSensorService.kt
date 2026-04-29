@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.services.supabase
 
-import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.config.AppConfig.SupabaseTables.HEART_RATE_SENSOR
 import kaist.iclab.mobiletracker.data.sensors.watch.HeartRateSensorData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.Result
@@ -12,7 +12,7 @@ class HeartRateSensorService(
     supabaseHelper: SupabaseHelper
 ) : BaseSupabaseService<HeartRateSensorData>(
     supabaseHelper = supabaseHelper,
-    tableName = AppConfig.SupabaseTables.HEART_RATE_SENSOR,
+    tableName = HEART_RATE_SENSOR,
     sensorName = "heart rate"
 ) {
 

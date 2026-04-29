@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.services.supabase
 
-import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.config.AppConfig.SupabaseTables.BATTERY_SENSOR
 import kaist.iclab.mobiletracker.data.sensors.phone.BatterySensorData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.Result
@@ -12,7 +12,7 @@ class BatterySensorService(
     supabaseHelper: SupabaseHelper
 ) : BaseSupabaseService<BatterySensorData>(
     supabaseHelper = supabaseHelper,
-    tableName = AppConfig.SupabaseTables.BATTERY_SENSOR,
+    tableName = BATTERY_SENSOR,
     sensorName = "Battery"
 ) {
 
