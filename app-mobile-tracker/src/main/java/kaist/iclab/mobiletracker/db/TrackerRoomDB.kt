@@ -23,9 +23,12 @@ import kaist.iclab.mobiletracker.db.dao.phone.UserInteractionDao
 import kaist.iclab.mobiletracker.db.dao.phone.WifiScanDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchAccelerometerDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchEDADao
+import kaist.iclab.mobiletracker.db.dao.watch.WatchGestureDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchHeartRateDao
+import kaist.iclab.mobiletracker.db.dao.watch.WatchIMUDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchPPGDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchSkinTemperatureDao
+import kaist.iclab.mobiletracker.db.dao.watch.WatchStressDao
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AmbientLightEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
@@ -46,12 +49,15 @@ import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 
 @Database(
-    version = 1,
+    version = 2,
     entities = [
 
         // Phone sensor data
@@ -80,6 +86,9 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
         WatchHeartRateEntity::class,
         WatchPPGEntity::class,
         WatchSkinTemperatureEntity::class,
+        WatchIMUEntity::class,
+        WatchGestureEntity::class,
+        WatchStressEntity::class
     ],
     exportSchema = true
 )
@@ -112,4 +121,7 @@ abstract class TrackerRoomDB : RoomDatabase() {
     abstract fun watchHeartRateDao(): WatchHeartRateDao
     abstract fun watchPPGDao(): WatchPPGDao
     abstract fun watchSkinTemperatureDao(): WatchSkinTemperatureDao
+    abstract fun watchIMUDao(): WatchIMUDao
+    abstract fun watchGestureDao(): WatchGestureDao
+    abstract fun watchStressDao(): WatchStressDao
 }

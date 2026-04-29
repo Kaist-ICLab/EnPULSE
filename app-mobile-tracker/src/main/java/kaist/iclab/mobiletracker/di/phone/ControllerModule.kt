@@ -22,8 +22,8 @@ import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kaist.iclab.tracker.sensor.survey.SurveySensor
-import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kaist.iclab.tracker.storage.core.StateStorage
+import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

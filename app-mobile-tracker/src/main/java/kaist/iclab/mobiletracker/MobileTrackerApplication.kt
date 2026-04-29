@@ -25,14 +25,15 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.component.KoinComponent
 import org.koin.core.context.GlobalContext.startKoin
-import org.koin.core.qualifier.named
 import org.koin.core.logger.Level
+import org.koin.core.qualifier.named
 
 /**
  * Application class for MobileTracker app.
  * Handles global initialization and setup that should happen when the app starts.
  */
-class MobileTrackerApplication : Application(), KoinComponent, BackgroundControllerDependenciesProvider {
+class MobileTrackerApplication : Application(), KoinComponent,
+    BackgroundControllerDependenciesProvider {
 
     override fun attachBaseContext(base: Context) {
         val context = LanguageHelper(base).attachBaseContextWithLanguage(base)

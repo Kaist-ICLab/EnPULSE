@@ -37,9 +37,12 @@ import kaist.iclab.mobiletracker.repository.handlers.phone.UserInteractionDataHa
 import kaist.iclab.mobiletracker.repository.handlers.phone.WifiScanDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchAccelerometerDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchEDADataHandler
+import kaist.iclab.mobiletracker.repository.handlers.watch.WatchGestureDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchHeartRateDataHandler
+import kaist.iclab.mobiletracker.repository.handlers.watch.WatchIMUDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchPPGDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchSkinTemperatureDataHandler
+import kaist.iclab.mobiletracker.repository.handlers.watch.WatchStressDataHandler
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
@@ -82,7 +85,10 @@ val repositoryModule = module {
                 accelerometerDao = db.watchAccelerometerDao(),
                 edaDao = db.watchEDADao(),
                 ppgDao = db.watchPPGDao(),
-                skinTemperatureDao = db.watchSkinTemperatureDao()
+                skinTemperatureDao = db.watchSkinTemperatureDao(),
+                imuDao = db.watchIMUDao(),
+                gestureDao = db.watchGestureDao(),
+                stressDao = db.watchStressDao()
             ),
             watchSensorRepository = get()
         )
@@ -115,7 +121,10 @@ val repositoryModule = module {
             WatchAccelerometerDataHandler(db.watchAccelerometerDao()),
             WatchEDADataHandler(db.watchEDADao()),
             WatchPPGDataHandler(db.watchPPGDao()),
-            WatchSkinTemperatureDataHandler(db.watchSkinTemperatureDao())
+            WatchSkinTemperatureDataHandler(db.watchSkinTemperatureDao()),
+            WatchIMUDataHandler(db.watchIMUDao()),
+            WatchGestureDataHandler(db.watchGestureDao()),
+            WatchStressDataHandler(db.watchStressDao())
         )
         SensorDataHandlerRegistry(handlers)
     }

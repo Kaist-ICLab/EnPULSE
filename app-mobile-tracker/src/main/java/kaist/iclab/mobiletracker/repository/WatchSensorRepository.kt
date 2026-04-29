@@ -3,9 +3,12 @@ package kaist.iclab.mobiletracker.repository
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -45,6 +48,21 @@ interface WatchSensorRepository {
      * Store location sensor data
      */
     suspend fun insertLocationData(entities: List<LocationEntity>): Result<Unit>
+
+    /**
+     * Store IMU sensor data
+     */
+    suspend fun insertIMUData(entities: List<WatchIMUEntity>): Result<Unit>
+
+    /**
+     * Store Gesture sensor data
+     */
+    suspend fun insertGestureData(entities: List<WatchGestureEntity>): Result<Unit>
+
+    /**
+     * Store Stress sensor data
+     */
+    suspend fun insertStressData(entities: List<WatchStressEntity>): Result<Unit>
 
     /**
      * Get latest timestamp for a watch sensor

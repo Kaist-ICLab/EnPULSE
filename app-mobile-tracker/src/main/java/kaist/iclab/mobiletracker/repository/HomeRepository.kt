@@ -29,7 +29,10 @@ data class DailySensorCounts(
     val watchAccelerometerCount: Int = 0,
     val watchEDACount: Int = 0,
     val watchPPGCount: Int = 0,
-    val watchSkinTemperatureCount: Int = 0
+    val watchSkinTemperatureCount: Int = 0,
+    val watchIMUCount: Int = 0,
+    val watchGestureCount: Int = 0,
+    val watchStressCount: Int = 0
 )
 
 /**

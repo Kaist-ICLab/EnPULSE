@@ -6,6 +6,7 @@ package kaist.iclab.mobiletracker.helpers
  * For specific data operations, use services in the services package.
  */
 import android.content.Context
+import com.russhwolf.settings.SharedPreferencesSettings
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
@@ -13,7 +14,6 @@ import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import kaist.iclab.mobiletracker.config.AppConfig
-import com.russhwolf.settings.SharedPreferencesSettings
 
 class SupabaseHelper(context: Context) {
     private val settings = SharedPreferencesSettings(

@@ -10,9 +10,12 @@ import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
@@ -321,6 +324,9 @@ class BLEHelper(
                 val heartRateDataList = SensorDataCsvParser.parseHeartRateCsv(csvData)
                 val ppgDataList = SensorDataCsvParser.parsePPGCsv(csvData)
                 val skinTemperatureDataList = SensorDataCsvParser.parseSkinTemperatureCsv(csvData)
+                val imuDataList = SensorDataCsvParser.parseIMUCsv(csvData)
+                val gestureDataList = SensorDataCsvParser.parseGestureCsv(csvData)
+                val stressDataList = SensorDataCsvParser.parseStressCsv(csvData)
 
                 // Convert Supabase data classes to Room entities and store locally
                 var totalStored = 0
@@ -514,6 +520,108 @@ class BLEHelper(
                             Log.e(
                                 AppConfig.LogTags.PHONE_BLE,
                                 "Failed to store SkinTemperature data: ${result.message}",
+                                result.exception
+                            )
+                        }
+                    }
+                }
+
+                if (imuDataList.isNotEmpty()) {
+                    hasAnyData = true
+                    val entities = imuDataList.map { data ->
+                        WatchIMUEntity(
+                            eventId = data.eventId,
+                            uuid = "",
+                            deviceType = DeviceType.WATCH.value,
+                            received = Instant.parse(data.received).toEpochMilli(),
+                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
+                            accX = data.accX,
+                            accY = data.accY,
+                            accZ = data.accZ,
+                            gyroX = data.gyroX,
+                            gyroY = data.gyroY,
+                            gyroZ = data.gyroZ
+                        )
+                    }
+                    when (val result = watchSensorRepository.insertIMUData(entities)) {
+                        is Result.Success -> {
+                            totalStored += entities.size
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} IMU entries locally"
+                            )
+                        }
+
+                        is Result.Error -> {
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store IMU data: ${result.message}",
+                                result.exception
+                            )
+                        }
+                    }
+                }
+
+                if (gestureDataList.isNotEmpty()) {
+                    hasAnyData = true
+                    val entities = gestureDataList.map { data ->
+                        WatchGestureEntity(
+                            eventId = data.eventId,
+                            uuid = "",
+                            deviceType = DeviceType.WATCH.value,
+                            received = Instant.parse(data.received).toEpochMilli(),
+                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
+                            classIndex = data.classIndex,
+                            score = data.score,
+                            probabilities = data.probabilities
+                        )
+                    }
+                    when (val result = watchSensorRepository.insertGestureData(entities)) {
+                        is Result.Success -> {
+                            totalStored += entities.size
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} Gesture entries locally"
+                            )
+                        }
+
+                        is Result.Error -> {
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store Gesture data: ${result.message}",
+                                result.exception
+                            )
+                        }
+                    }
+                }
+
+                if (stressDataList.isNotEmpty()) {
+                    hasAnyData = true
+                    val entities = stressDataList.map { data ->
+                        WatchStressEntity(
+                            eventId = data.eventId,
+                            uuid = "",
+                            deviceType = DeviceType.WATCH.value,
+                            received = Instant.parse(data.received).toEpochMilli(),
+                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
+                            windowStartMs = Instant.parse(data.windowStart).toEpochMilli(),
+                            probability = data.probability,
+                            isHighStress = data.isHighStress
+                        )
+                    }
+                    when (val result = watchSensorRepository.insertStressData(entities)) {
+                        is Result.Success -> {
+                            totalStored += entities.size
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} Stress entries locally"
+                            )
+                        }
+
+                        is Result.Error -> {
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store Stress data: ${result.message}",
                                 result.exception
                             )
                         }

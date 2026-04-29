@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.repository
 
-import kaist.iclab.mobiletracker.data.trigger.CampaignTriggerEntity
 import kaist.iclab.mobiletracker.data.trigger.CampaignTriggerList
 import kaist.iclab.mobiletracker.services.TriggerService
 import kaist.iclab.mobiletracker.storage.CouchbaseTriggerConfigStorage
@@ -47,6 +46,7 @@ class TriggerRepositoryImpl(
                     persistentStorage.set(CampaignTriggerList(triggers))
                     triggers.size
                 }
+
                 is Result.Error -> {
                     throw result.exception ?: Exception(result.message)
                 }

@@ -6,9 +6,12 @@ import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.AccelerometerSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.EDASensorData
+import kaist.iclab.mobiletracker.data.sensors.watch.GestureSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.HeartRateSensorData
+import kaist.iclab.mobiletracker.data.sensors.watch.IMUSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.PPGSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.SkinTemperatureSensorData
+import kaist.iclab.mobiletracker.data.sensors.watch.StressSensorData
 import java.time.Instant
 
 /**
@@ -212,7 +215,7 @@ object SensorDataCsvParser {
     private fun isKnownSectionHeader(line: String): Boolean {
         val knownSections = listOf(
             "Accelerometer", "PPG", "HeartRate", "SkinTemperature",
-            "EDA", "Location"
+            "EDA", "Location", "IMU", "Gesture", "Stress"
         )
         val normalizedLine = line.replace(" ", "")
         return knownSections.any { normalizedLine.equals(it, ignoreCase = true) }
@@ -387,6 +390,124 @@ object SensorDataCsvParser {
             } else null
         } catch (e: Exception) {
             Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing EDA row: ${e.message}", e)
+            null
+        }
+    }
+
+    fun parseIMUCsv(csvData: String): List<IMUSensorData> {
+        return parseSensorSection(
+            csvData = csvData,
+            sectionName = "IMU",
+            headerPattern = "eventId,received,timestamp,accX,accY,accZ,gyroX,gyroY,gyroZ",
+            rowParser = ::parseIMURow
+        )
+    }
+
+    private fun parseIMURow(row: String): IMUSensorData? {
+        return try {
+            val parts = row.split(",").map { it.trim() }
+            if (parts.size >= 9) {
+                val eventId = parts[0]
+                val received = parts[1].toLongOrNull() ?: return null
+                val timestampMillis = parts[2].toLongOrNull() ?: return null
+                val accX = parts[3].toFloatOrNull() ?: return null
+                val accY = parts[4].toFloatOrNull() ?: return null
+                val accZ = parts[5].toFloatOrNull() ?: return null
+                val gyroX = parts[6].toFloatOrNull() ?: return null
+                val gyroY = parts[7].toFloatOrNull() ?: return null
+                val gyroZ = parts[8].toFloatOrNull() ?: return null
+
+                IMUSensorData(
+                    eventId = eventId,
+                    uuid = null,
+                    deviceType = DeviceType.WATCH.value,
+                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
+                    accX = accX,
+                    accY = accY,
+                    accZ = accZ,
+                    gyroX = gyroX,
+                    gyroY = gyroY,
+                    gyroZ = gyroZ,
+                    received = Instant.ofEpochMilli(received).toString(),
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing IMU row: ${e.message}", e)
+            null
+        }
+    }
+
+    fun parseGestureCsv(csvData: String): List<GestureSensorData> {
+        return parseSensorSection(
+            csvData = csvData,
+            sectionName = "Gesture",
+            headerPattern = "eventId,received,timestamp,classIndex,score,probabilities",
+            rowParser = ::parseGestureRow
+        )
+    }
+
+    private fun parseGestureRow(row: String): GestureSensorData? {
+        return try {
+            val parts = row.split(",").map { it.trim() }
+            if (parts.size >= 6) {
+                val eventId = parts[0]
+                val received = parts[1].toLongOrNull() ?: return null
+                val timestampMillis = parts[2].toLongOrNull() ?: return null
+                val classIndex = parts[3].toIntOrNull() ?: return null
+                val score = parts[4].toIntOrNull() ?: return null
+
+                val probabilities = parts[5].split(";").mapNotNull { it.trim().toIntOrNull() }
+
+                GestureSensorData(
+                    eventId = eventId,
+                    uuid = null,
+                    deviceType = DeviceType.WATCH.value,
+                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
+                    classIndex = classIndex,
+                    score = score,
+                    probabilities = probabilities,
+                    received = Instant.ofEpochMilli(received).toString(),
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing Gesture row: ${e.message}", e)
+            null
+        }
+    }
+
+    fun parseStressCsv(csvData: String): List<StressSensorData> {
+        return parseSensorSection(
+            csvData = csvData,
+            sectionName = "Stress",
+            headerPattern = "eventId,received,timestamp,windowStartMs,probability,isHighStress",
+            rowParser = ::parseStressRow
+        )
+    }
+
+    private fun parseStressRow(row: String): StressSensorData? {
+        return try {
+            val parts = row.split(",").map { it.trim() }
+            if (parts.size >= 6) {
+                val eventId = parts[0]
+                val received = parts[1].toLongOrNull() ?: return null
+                val timestampMillis = parts[2].toLongOrNull() ?: return null
+                val windowStartMs = parts[3].toLongOrNull() ?: return null
+                val probability = parts[4].toFloatOrNull() ?: return null
+                val isHighStress = parts[5].toBooleanStrictOrNull() ?: return null
+
+                StressSensorData(
+                    eventId = eventId,
+                    uuid = null,
+                    deviceType = DeviceType.WATCH.value,
+                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
+                    windowStart = Instant.ofEpochMilli(windowStartMs).toString(),
+                    probability = probability,
+                    isHighStress = isHighStress,
+                    received = Instant.ofEpochMilli(received).toString(),
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing Stress row: ${e.message}", e)
             null
         }
     }
