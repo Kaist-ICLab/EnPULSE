@@ -6,7 +6,7 @@ import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.mobiletracker.storage.SimpleStateStorage
 import kaist.iclab.mobiletracker.utils.SurveyConfigConverter
 import kaist.iclab.tracker.permission.AndroidPermissionManager
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseSurveyScheduleStorage

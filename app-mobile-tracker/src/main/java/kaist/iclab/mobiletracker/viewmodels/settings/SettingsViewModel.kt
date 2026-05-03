@@ -22,7 +22,7 @@ import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
+import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow

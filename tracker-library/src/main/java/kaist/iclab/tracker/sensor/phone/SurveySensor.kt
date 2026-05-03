@@ -1,4 +1,4 @@
-package kaist.iclab.tracker.sensor.survey
+package kaist.iclab.tracker.sensor.phone
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -20,14 +20,20 @@ import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.sensor.survey.Survey
+import kaist.iclab.tracker.sensor.survey.SurveySchedule
+import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
 import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
 import kaist.iclab.tracker.sensor.survey.activity.SurveyActivity
+import kaist.iclab.tracker.sensor.survey.config.SurveyBuilder
+import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import java.time.Instant
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import kotlin.math.pow
@@ -86,9 +92,9 @@ class SurveySensor(
     ): SensorConfig {
         companion object {
             fun fromJson(jsonString: String): Config {
-                val surveyConfigs = Json.decodeFromString<Map<String, kaist.iclab.tracker.sensor.survey.config.SurveyConfig>>(jsonString)
+                val surveyConfigs = Json.Default.decodeFromString<Map<String, SurveyConfig>>(jsonString)
                 val surveys = surveyConfigs.mapValues { (_, config) ->
-                    kaist.iclab.tracker.sensor.survey.config.SurveyBuilder.build(config)
+                    SurveyBuilder.build(config)
                 }
                 return Config(surveys)
             }
@@ -123,7 +129,7 @@ class SurveySensor(
         }
 
 
-        SurveyActivity.initSurvey = { id: String, scheduleId: String? ->
+        SurveyActivity.Companion.initSurvey = { id: String, scheduleId: String? ->
             val requestedSurvey = configStorage.get().survey[id]!!
             if(scheduleId != null) scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
             requestedSurvey.initSurveyResponse()
@@ -170,7 +176,7 @@ class SurveySensor(
         }
 
         val zoneId = ZoneId.systemDefault()
-        val dateTime = java.time.Instant.ofEpochMilli(timestamp).atZone(zoneId)
+        val dateTime = Instant.ofEpochMilli(timestamp).atZone(zoneId)
 
         val today = dateTime.toLocalDate().atStartOfDay(zoneId).toInstant().toEpochMilli()
         val todayEnd = today + endOfDay
@@ -216,10 +222,12 @@ class SurveySensor(
         }.filter { it >= now }
 
         schedule.forEach {
-            scheduleStorage.addSchedule(SurveySchedule(
-                surveyId = surveyId,
-                triggerTime = it
-            ))
+            scheduleStorage.addSchedule(
+                SurveySchedule(
+                    surveyId = surveyId,
+                    triggerTime = it
+                )
+            )
         }
 
         // Fail-safe for endless recursion
@@ -306,7 +314,7 @@ class SurveySensor(
 
         scheduleStorage.setResponseSubmissionTime(scheduleId, responseTime)
         val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)!!
-        val resultJson = Json.decodeFromString<JsonElement>(result)
+        val resultJson = Json.Default.decodeFromString<JsonElement>(result)
 
         listeners.forEach { it.invoke(
             Entity(

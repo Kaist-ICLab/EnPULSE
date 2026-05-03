@@ -29,18 +29,8 @@ data class SurveyQuestionEntity(
     val question: String,
     @SerialName("is_mandatory") val isMandatory: Boolean,
     @SerialName("answer_type") val answerType: String,
+    val config: JsonObject? = null,
     @SerialName("triggered_by") val triggeredBy: Int? = null
-)
-
-/**
- * Supabase entity for the 'survey_question_option' table
- */
-@Serializable
-data class SurveyQuestionOptionEntity(
-    val id: Int,
-    @SerialName("question_id") val questionId: Int,
-    val display: String,
-    @SerialName("allow_free_response") val allowFreeResponse: Boolean
 )
 
 /**
@@ -61,9 +51,9 @@ data class SurveyQuestionTriggerEntity(
 data class SurveyQuestionResponseInsert(
     @SerialName("question_id") val questionId: Int,
     val uuid: String,
-    @SerialName("trigger_time") val triggerTime: String? = null,
-    @SerialName("actual_trigger_time") val actualTriggerTime: String? = null,
-    @SerialName("survey_start_time") val surveyStartTime: String? = null,
-    @SerialName("response_submission_time") val responseSubmissionTime: String? = null,
+    @SerialName("trigger_time") val triggerTime: String,
+    @SerialName("actual_trigger_time") val actualTriggerTime: String,
+    @SerialName("survey_start_time") val surveyStartTime: String,
+    @SerialName("response_submission_time") val responseSubmissionTime: String,
     val response: JsonElement
 )

@@ -23,7 +23,7 @@ import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
-import kaist.iclab.tracker.sensor.microema.MicroEmaSensor
+import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.launch

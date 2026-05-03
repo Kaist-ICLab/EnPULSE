@@ -18,7 +18,7 @@ import kaist.iclab.tracker.sensor.controller.Controller
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.sensor.survey.SurveySensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.android.ext.android.inject
@@ -185,7 +185,7 @@ class MyBackgroundController(
         private fun ensureNotificationChannel(channelId: String) {
             try {
                 val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel(channelId) == null) {
                     val channelName = try {
                         serviceNotification.channelName
@@ -256,7 +256,7 @@ class MyBackgroundController(
         private fun postEmergencyNotification() {
             try {
                 val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel("default_channel") == null) {
                     val channel = NotificationChannel(
                         "default_channel",

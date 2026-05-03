@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "779d76c93ffd1445c738a00109e38443",
+    "identityHash": "0146e1212390056aef8a28ff41a05e29",
     "entities": [
       {
         "tableName": "AmbientLightEntity",
@@ -1121,7 +1121,7 @@
       },
       {
         "tableName": "micro_ema_responses_phone",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `watchId` INTEGER NOT NULL, `uuid` TEXT NOT NULL, `questionId` INTEGER NOT NULL, `triggerTime` TEXT, `actualTriggerTime` TEXT, `surveyStartTime` TEXT, `responseSubmissionTime` TEXT, `responseJson` TEXT NOT NULL, `isSynced` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `watchId` INTEGER NOT NULL, `uuid` TEXT NOT NULL, `questionId` INTEGER NOT NULL, `triggerTime` TEXT, `actualTriggerTime` TEXT, `surveyStartTime` TEXT, `responseSubmissionTime` TEXT, `responseJson` TEXT NOT NULL, `deviceType` INTEGER NOT NULL, `isSynced` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -1171,6 +1171,12 @@
             "fieldPath": "responseJson",
             "columnName": "responseJson",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceType",
+            "columnName": "deviceType",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -1508,7 +1514,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '779d76c93ffd1445c738a00109e38443')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0146e1212390056aef8a28ff41a05e29')"
     ]
   }
 }
