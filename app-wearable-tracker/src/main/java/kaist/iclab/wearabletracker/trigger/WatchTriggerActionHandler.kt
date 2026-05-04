@@ -18,6 +18,7 @@ import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kaist.iclab.wearabletracker.ema.WatchSurveyActivity
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
+import kaist.iclab.tracker.sync.ble.BLEDataChannel
 
 /**
  * Watch-specific implementation of [TriggerActionHandler].
@@ -32,7 +33,8 @@ import kaist.iclab.wearabletracker.helpers.NotificationHelper
  */
 class WatchTriggerActionHandler(
     private val context: Context,
-    private val microEmaRepository: MicroEmaRepository
+    private val microEmaRepository: MicroEmaRepository,
+    private val bleChannel: BLEDataChannel
 ) : TriggerActionHandler {
 
     companion object {
@@ -66,9 +68,7 @@ class WatchTriggerActionHandler(
     ) {
         when (action) {
             is TriggerActionConfig.WatchEma -> handleWatchEma(trigger, action)
-            is TriggerActionConfig.Ema -> {
-                Log.d(TAG, "Phone EMA action not yet implemented (trigger: ${trigger.name})")
-            }
+            is TriggerActionConfig.Ema -> handleEma(trigger, action)
 
             is TriggerActionConfig.Broadcast -> handleBroadcast(trigger, action)
         }
@@ -106,6 +106,19 @@ class WatchTriggerActionHandler(
         }
     }
 
+    private suspend fun handleEma(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Ema
+    ) {
+        Log.d(TAG, "Triggering Phone EMA: surveyId=${action.surveyId}, trigger=${trigger.name}")
+        try {
+            bleChannel.send(Constants.BLE.KEY_PHONE_EMA_TRIGGER, action.surveyId.toString())
+            Log.d(TAG, "Sent phone EMA trigger via BLE")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send phone EMA trigger: ${e.message}", e)
+        }
+    }
+
     private fun handleWatchEma(
         trigger: ParsedCampaignTrigger,
         action: TriggerActionConfig.WatchEma
@@ -126,14 +139,14 @@ class WatchTriggerActionHandler(
         microEmaRepository.updateConfig(config)
 
         // Launch the survey activity with vibration alert
-        launchMicroEma()
+        launchMicroEma(config)
     }
 
     /**
      * Vibrate and launch the MicroEMA survey activity using a High-Priority Notification
      * with a Full-Screen Intent. This bypasses background activity launch restrictions.
      */
-    private fun launchMicroEma() {
+    private fun launchMicroEma(config: WatchSurveyConfig) {
         try {
             // Double-buzz vibration to alert the user
             val vibrator =
@@ -161,27 +174,12 @@ class WatchTriggerActionHandler(
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            NotificationHelper.ensureNotificationChannel(
-                context,
-                NotificationHelper.NotificationChannelConfig.TRIGGER
+            NotificationHelper.showSurveyTriggerNotification(
+                context = context,
+                pendingIntent = pendingIntent,
+                title = config.title,
+                text = config.description ?: ""
             )
-
-            val notification = NotificationCompat.Builder(
-                context,
-                Constants.NotificationChannel.TRIGGER_ID
-            )
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(context.getString(R.string.notification_trigger_title))
-                .setContentText(context.getString(R.string.notification_trigger_text))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
-                .setFullScreenIntent(pendingIntent, true)
-                .setAutoCancel(true)
-                .build()
-
-            val notificationManager =
-                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.notify(Constants.NotificationId.TRIGGER, notification)
 
             Log.d(TAG, "WatchSurveyActivity launched via Full-Screen Intent Notification")
         } catch (e: Exception) {

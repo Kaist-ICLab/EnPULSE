@@ -467,7 +467,8 @@ val koinModule = module {
     single {
         WatchTriggerActionHandler(
             context = androidContext(),
-            microEmaRepository = get()
+            microEmaRepository = get(),
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel()
         )
     }
 

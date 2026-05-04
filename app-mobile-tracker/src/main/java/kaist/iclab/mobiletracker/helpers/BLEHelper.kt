@@ -24,6 +24,7 @@ import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.launch
@@ -53,9 +54,9 @@ class BLEHelper(
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
-    // Injected coroutine scope
     private val appScope by inject<AppCoroutineScope>()
     private val surveyService by inject<SurveyService>()
+    private val surveySensor by inject<SurveySensor>()
     private val userProfileRepository by inject<UserProfileRepository>()
 
     private val isoFormatter = DateTimeFormatter.ISO_INSTANT
@@ -99,6 +100,16 @@ class BLEHelper(
                 else -> json.toString()
             }
             handleMicroEmaResponse(jsonString)
+        }
+
+        // Listen for phone EMA triggers from watch
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.PHONE_EMA_TRIGGER)) { _, json ->
+            val surveyId = when {
+                json is kotlinx.serialization.json.JsonPrimitive -> json.content
+                else -> json.toString()
+            }
+            Log.d(AppConfig.LogTags.PHONE_BLE, "Received PHONE_EMA_TRIGGER for surveyId=$surveyId")
+            surveySensor.triggerSurveyNotification(surveyId)
         }
     }
 

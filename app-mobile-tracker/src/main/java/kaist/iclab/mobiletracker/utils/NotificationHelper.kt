@@ -7,8 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.MainActivity
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
+import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
 
 /**
  * Reusable utility for building and showing notifications.
@@ -94,5 +97,99 @@ object NotificationHelper {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(notificationId, notification)
+    }
+
+    /**
+     * Show a notification for a scheduled survey.
+     */
+    fun showSurveyNotification(
+        context: Context,
+        surveyId: String,
+        scheduleId: String,
+        config: SurveyNotificationConfig,
+        notificationId: Int
+    ) {
+        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY}_$surveyId"
+        ensureNotificationChannel(
+            context,
+            channelId,
+            Constants.Notification.CHANNEL_NAME_SURVEY,
+            NotificationManager.IMPORTANCE_HIGH
+        )
+
+        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("id", surveyId)
+            putExtra("scheduleId", scheduleId)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            scheduleId.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = buildNotification(
+            context = context,
+            channelId = channelId,
+            title = config.title,
+            text = config.description,
+            smallIcon = config.icon,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            ongoing = true,
+            pendingIntent = pendingIntent
+        ).build()
+
+        showNotification(context, notificationId, notification)
+    }
+
+    /**
+     * Show a notification for a triggered survey (JIT).
+     * Uses Full Screen Intent to wake the device.
+     */
+    fun showSurveyTriggerNotification(
+        context: Context,
+        surveyId: String,
+        scheduleId: String,
+        config: SurveyNotificationConfig,
+        notificationId: Int
+    ) {
+        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_$surveyId"
+        ensureNotificationChannel(
+            context,
+            channelId,
+            Constants.Notification.CHANNEL_NAME_SURVEY_TRIGGER,
+            NotificationManager.IMPORTANCE_HIGH
+        )
+
+        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("id", surveyId)
+            putExtra("scheduleId", scheduleId)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            scheduleId.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = buildNotification(
+            context = context,
+            channelId = channelId,
+            title = config.title,
+            text = config.description,
+            smallIcon = config.icon,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            ongoing = true,
+            pendingIntent = pendingIntent
+        ).apply {
+            setCategory(NotificationCompat.CATEGORY_ALARM)
+            setFullScreenIntent(pendingIntent, true)
+        }.build()
+
+        showNotification(context, notificationId, notification)
     }
 }

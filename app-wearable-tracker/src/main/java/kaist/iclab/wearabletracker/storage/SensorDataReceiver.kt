@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
@@ -78,15 +79,10 @@ class SensorDataReceiver(
         override fun onBind(p0: Intent?): IBinder? = null
 
         override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-            val postNotification = NotificationCompat.Builder(
-                this,
-                serviceNotification.channelId
+            val postNotification = NotificationHelper.buildServiceNotification(
+                context = this,
+                config = serviceNotification
             )
-                .setSmallIcon(serviceNotification.icon)
-                .setContentTitle(serviceNotification.title)
-                .setContentText(serviceNotification.description)
-                .setOngoing(true)
-                .build()
 
             val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE

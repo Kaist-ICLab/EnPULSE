@@ -1,9 +1,12 @@
 package kaist.iclab.wearabletracker.helpers
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import androidx.core.app.NotificationCompat
+import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.R
 
@@ -244,6 +247,80 @@ object NotificationHelper {
             message = message,
             notificationId = notificationId
         )
+    }
+
+    /**
+     * Show a notification for a survey trigger (MicroEMA).
+     * Uses High Priority and Full Screen Intent to wake the watch.
+     */
+    fun showSurveyTriggerNotification(
+        context: Context,
+        pendingIntent: PendingIntent,
+        title: String,
+        text: String
+    ) {
+        ensureNotificationChannel(context, NotificationChannelConfig.TRIGGER)
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val notification = NotificationCompat.Builder(context, NotificationChannelConfig.TRIGGER.channelId)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setFullScreenIntent(pendingIntent, true)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(Constants.NotificationId.TRIGGER, notification)
+    }
+
+    /**
+     * Build a notification for a background service.
+     */
+    fun buildServiceNotification(
+        context: Context,
+        config: BackgroundController.ServiceNotification,
+        pendingIntent: PendingIntent? = null
+    ): Notification {
+        ensureNotificationChannel(
+            context,
+            config.channelId,
+            config.channelName,
+            NotificationManager.IMPORTANCE_LOW // Low priority for ongoing services
+        )
+
+        val builder = NotificationCompat.Builder(context, config.channelId)
+            .setSmallIcon(config.icon)
+            .setContentTitle(config.title)
+            .setContentText(config.description)
+            .setOngoing(true)
+
+        if (pendingIntent != null) {
+            builder.setContentIntent(pendingIntent)
+        }
+
+        return builder.build()
+    }
+
+    /**
+     * Ensure a notification channel exists using raw strings (for library integration).
+     */
+    fun ensureNotificationChannel(
+        context: Context,
+        channelId: String,
+        channelName: String,
+        importance: Int
+    ) {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (notificationManager.getNotificationChannel(channelId) == null) {
+            val channel = NotificationChannel(channelId, channelName, importance)
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 }
 

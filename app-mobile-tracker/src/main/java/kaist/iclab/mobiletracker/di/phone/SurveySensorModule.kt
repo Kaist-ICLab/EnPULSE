@@ -13,6 +13,9 @@ import kaist.iclab.tracker.storage.couchbase.CouchbaseSurveyScheduleStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.utils.NotificationHelper
+import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 
 /**
  * Survey sensor module - survey storage and sensor
@@ -66,6 +69,36 @@ val surveySensorModule = module {
                 collectionName = SurveySensor::class.simpleName ?: ""
             ),
             scheduleStorage = get<SurveyScheduleStorage>(),
-        )
+        ).apply {
+            notificationHandler = object : SurveySensor.NotificationHandler {
+                override fun showScheduledNotification(
+                    surveyId: String,
+                    scheduleId: String,
+                    config: SurveyNotificationConfig
+                ) {
+                    NotificationHelper.showSurveyNotification(
+                        context = androidContext(),
+                        surveyId = surveyId,
+                        scheduleId = scheduleId,
+                        config = config,
+                        notificationId = Constants.Notification.ID_SURVEY_BASE
+                    )
+                }
+
+                override fun showTriggeredNotification(
+                    surveyId: String,
+                    scheduleId: String,
+                    config: SurveyNotificationConfig
+                ) {
+                    NotificationHelper.showSurveyTriggerNotification(
+                        context = androidContext(),
+                        surveyId = surveyId,
+                        scheduleId = scheduleId,
+                        config = config,
+                        notificationId = Constants.Notification.ID_SURVEY_BASE + scheduleId.hashCode()
+                    )
+                }
+            }
+        }
     }
 }

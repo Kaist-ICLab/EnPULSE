@@ -81,6 +81,4 @@
     <string name="ema_time_up">Time’s up</string>
     <string name="ema_dismissed">Dismissed</string>
     <string name="ema_finishing">Finishing</string>
-    <string name="notification_trigger_title">New Survey</string>
-    <string name="notification_trigger_text">Tap to start</string>
 </resources>

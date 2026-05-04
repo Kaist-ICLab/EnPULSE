@@ -61,6 +61,7 @@ data class WatchQuestion(
 data class WatchSurveyConfig(
     @SerialName("surveyId") val surveyId: Int,
     val title: String,
+    val description: String? = null,
     @SerialName("expireAfterMs") val expireAfterMs: Long? = null,
     val questions: List<WatchQuestion>
 )
