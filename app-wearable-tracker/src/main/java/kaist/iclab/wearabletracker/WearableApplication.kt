@@ -26,6 +26,9 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         // Start listening for sync ACKs from the phone
         get<SyncAckListener>().startListening()
         get<MicroEmaResponseManager>().startListening()
+
+        // Initialize the Trigger Engine, Adapters, and Config Receiver
+        get<Boolean>(named("triggerInitializer"))
     }
 
     override fun provideBackgroundControllerDependencies(): BackgroundControllerDependencies {

@@ -20,6 +20,11 @@ import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
+import kaist.iclab.tracker.trigger.engine.DefaultTriggerEngine
+import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.data.SyncAckListener
@@ -32,6 +37,8 @@ import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
+import kaist.iclab.wearabletracker.trigger.TriggerConfigReceiver
+import kaist.iclab.wearabletracker.trigger.WatchTriggerActionHandler
 import kaist.iclab.wearabletracker.ui.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -422,5 +429,71 @@ val koinModule = module {
             repository = get(),
             responseManager = get()
         )
+    }
+
+    // --- Dynamic Trigger Engine ---
+
+    single {
+        DetectionStateTracker()
+    }
+
+    single {
+        StressDetectionAdapter(
+            stressSensor = get(),
+            tracker = get()
+        )
+    }
+
+    single {
+        GestureDetectionAdapter(
+            gestureSensor = get(),
+            tracker = get()
+        )
+    }
+
+    single<TriggerEngine> {
+        DefaultTriggerEngine(
+            detectionStateTracker = get(),
+            coroutineScope = get()
+        )
+    }
+
+    single {
+        WatchTriggerActionHandler(
+            context = androidContext(),
+            microEmaRepository = get()
+        )
+    }
+
+    single {
+        TriggerConfigReceiver(
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
+            triggerEngine = get(),
+            actionHandler = get()
+        )
+    }
+
+    // Wire up: set action handler on engine, start adapters, start config listener
+    single(named("triggerInitializer")) {
+        val engine = get<TriggerEngine>()
+        val actionHandler = get<WatchTriggerActionHandler>()
+        val stressAdapter = get<StressDetectionAdapter>()
+        val gestureAdapter = get<GestureDetectionAdapter>()
+        val configReceiver = get<TriggerConfigReceiver>()
+
+        // Set the action handler
+        engine.setActionHandler(actionHandler)
+
+        // Start adapters (they attach listeners to sensors)
+        stressAdapter.start()
+        gestureAdapter.start()
+
+        // Start listening for trigger config from phone
+        configReceiver.startListening()
+
+        // Start the engine (it will begin evaluating when detection states change)
+        engine.start()
+
+        true // return value to satisfy Koin
     }
 }

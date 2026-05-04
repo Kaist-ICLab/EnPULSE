@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.repository
 import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.ProfileService
+import kaist.iclab.mobiletracker.services.TriggerConfigPusher
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,8 @@ class UserProfileRepositoryImpl(
     private val persistentStorage: kaist.iclab.mobiletracker.storage.UserProfileStorage,
     private val campaignSensorRepository: CampaignSensorRepository,
     private val surveyRepository: SurveyRepository,
-    private val triggerRepository: TriggerRepository
+    private val triggerRepository: TriggerRepository,
+    private val triggerConfigPusher: TriggerConfigPusher
 ) : UserProfileRepository {
 
     companion object {
@@ -82,6 +84,13 @@ class UserProfileRepositoryImpl(
             campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
             surveyRepository.fetchAndPersistSurveys(campaignId)
             triggerRepository.fetchAndPersistTriggers(campaignId)
+
+            // 3. Push trigger config to watch via BLE
+            val triggers = triggerRepository.triggersFlow.value.triggers
+            val surveys = surveyRepository.surveysFlow.value.configs
+            if (triggers.isNotEmpty()) {
+                triggerConfigPusher.pushToWatch(triggers, surveys)
+            }
         } else {
             // If no campaign, clear caches to be safe
             campaignSensorRepository.clearCache()

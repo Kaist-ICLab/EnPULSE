@@ -16,6 +16,8 @@ import kaist.iclab.mobiletracker.repository.TriggerRepository
 import kaist.iclab.mobiletracker.repository.TriggerRepositoryImpl
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepositoryImpl
+import kaist.iclab.mobiletracker.services.TriggerConfigPusher
+import org.koin.android.ext.koin.androidContext
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.repository.handlers.phone.AmbientLightDataHandler
@@ -193,6 +195,13 @@ val repositoryModule = module {
         )
     }
 
+    // TriggerConfigPusher for sending trigger config to watch via BLE
+    single {
+        TriggerConfigPusher(
+            bleChannel = kaist.iclab.tracker.sync.ble.BLEDataChannel(androidContext())
+        )
+    }
+
     single<UserProfileRepository> {
         UserProfileRepositoryImpl(
             profileService = get(),
@@ -200,9 +209,9 @@ val repositoryModule = module {
             persistentStorage = get(),
             campaignSensorRepository = get(),
             surveyRepository = get(),
-            triggerRepository = get()
+            triggerRepository = get(),
+            triggerConfigPusher = get()
         )
     }
 
 }
-
