@@ -85,10 +85,10 @@ class MicroEmaViewModel(
         }
 
         _surveyConfig.value = config
-        
+
         // Use the repository's queue logic to get the next question in sequence
         val selectedQuestion = repository.getNextQuestion(config)
-        
+
         if (selectedQuestion == null) {
             Log.e(TAG, "Survey has no questions — finishing immediately")
             _isComplete.value = true

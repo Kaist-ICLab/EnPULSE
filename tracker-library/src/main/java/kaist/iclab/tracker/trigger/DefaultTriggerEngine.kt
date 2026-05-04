@@ -1,6 +1,9 @@
 package kaist.iclab.tracker.trigger.engine
 
+import android.content.Context
+import android.os.PowerManager
 import android.util.Log
+import kaist.iclab.tracker.trigger.TriggerConstants
 import kaist.iclab.tracker.trigger.eval.ConditionEvaluator
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
 import kaist.iclab.tracker.trigger.model.TriggerActionConfig
@@ -35,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap
  * All evaluation results are also emitted on [evaluationEvents] for programmatic access.
  */
 class DefaultTriggerEngine(
+    private val context: Context,
     private val detectionStateTracker: DetectionStateTracker,
     private val coroutineScope: CoroutineScope
 ) : TriggerEngine {
@@ -47,6 +51,7 @@ class DefaultTriggerEngine(
     private var handler: TriggerActionHandler? = null
     private val lastActionTimes = ConcurrentHashMap<String, Long>()
     private var job: Job? = null
+    private val powerManager by lazy { context.getSystemService(Context.POWER_SERVICE) as PowerManager }
 
     private val _evaluationEvents = MutableSharedFlow<TriggerEvaluationEvent>(
         extraBufferCapacity = 32
@@ -85,66 +90,80 @@ class DefaultTriggerEngine(
     }
 
     private suspend fun evaluateAllTriggers() {
-        val currentStates = detectionStateTracker.getAllStates()
-        val h = handler
+        // Acquire a WakeLock to ensure the CPU doesn't sleep during evaluation
+        val wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            TriggerConstants.WakeLock.TAG
+        )
+        // Set a timeout to prevent battery drain if something gets stuck
+        wakeLock.acquire(TriggerConstants.WakeLock.TIMEOUT_MS)
 
-        if (h == null) {
-            Log.w(TAG, "No action handler registered — skipping evaluation")
-            return
-        }
+        try {
+            val currentStates = detectionStateTracker.getAllStates()
+            val h = handler
 
-        for (trigger in triggers) {
-            val result = ConditionEvaluator.evaluate(trigger.condition, currentStates)
-            val executed = mutableListOf<String>()
-            val throttled = mutableListOf<String>()
-
-            Log.d(TAG, "Evaluating trigger \"${trigger.name}\" (id=${trigger.id})")
-            Log.d(
-                TAG,
-                "  States: ${currentStates.map { "${it.key}=${it.value.value}" }}"
-            )
-            Log.d(TAG, "  Condition result: ${if (result) "TRUE ✓" else "FALSE ✗"}")
-
-            if (result) {
-                val now = System.currentTimeMillis()
-                for ((index, action) in trigger.actions.withIndex()) {
-                    val throttleKey = "${trigger.id}_$index"
-                    val lastTime = lastActionTimes[throttleKey] ?: 0L
-                    val elapsed = now - lastTime
-                    val actionDesc = describeAction(action)
-
-                    if (elapsed >= action.minIntervalMillis) {
-                        Log.d(TAG, "  Action[$index] $actionDesc: EXECUTING")
-                        try {
-                            h.onAction(trigger, action)
-                            lastActionTimes[throttleKey] = now
-                            executed.add(actionDesc)
-                        } catch (e: Exception) {
-                            Log.e(TAG, "  Action[$index] $actionDesc: ERROR - ${e.message}", e)
-                        }
-                    } else {
-                        val elapsedSec = elapsed / 1000
-                        val minSec = action.minIntervalMillis / 1000
-                        Log.d(
-                            TAG,
-                            "  Action[$index] $actionDesc: THROTTLED (${elapsedSec}s < ${minSec}s min)"
-                        )
-                        throttled.add(actionDesc)
-                    }
-                }
+            if (h == null) {
+                Log.w(TAG, "No action handler registered — skipping evaluation")
+                return
             }
 
-            _evaluationEvents.tryEmit(
-                TriggerEvaluationEvent(
-                    triggerId = trigger.id,
-                    triggerName = trigger.name,
-                    detectionStates = currentStates.mapValues { it.value.value },
-                    conditionResult = result,
-                    actionsExecuted = executed,
-                    actionsThrottled = throttled,
-                    timestamp = System.currentTimeMillis()
+            for (trigger in triggers) {
+                val result = ConditionEvaluator.evaluate(trigger.condition, currentStates)
+                val executed = mutableListOf<String>()
+                val throttled = mutableListOf<String>()
+
+                Log.d(TAG, "Evaluating trigger \"${trigger.name}\" (id=${trigger.id})")
+                Log.d(
+                    TAG,
+                    "  States: ${currentStates.map { "${it.key}=${it.value.value}" }}"
                 )
-            )
+                Log.d(TAG, "  Condition result: ${if (result) "TRUE ✓" else "FALSE ✗"}")
+
+                if (result) {
+                    val now = System.currentTimeMillis()
+                    for ((index, action) in trigger.actions.withIndex()) {
+                        val throttleKey = "${trigger.id}_$index"
+                        val lastTime = lastActionTimes[throttleKey] ?: 0L
+                        val elapsed = now - lastTime
+                        val actionDesc = describeAction(action)
+
+                        if (elapsed >= action.minIntervalMillis) {
+                            Log.d(TAG, "  Action[$index] $actionDesc: EXECUTING")
+                            try {
+                                h.onAction(trigger, action)
+                                lastActionTimes[throttleKey] = now
+                                executed.add(actionDesc)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "  Action[$index] $actionDesc: ERROR - ${e.message}", e)
+                            }
+                        } else {
+                            val elapsedSec = elapsed / 1000
+                            val minSec = action.minIntervalMillis / 1000
+                            Log.d(
+                                TAG,
+                                "  Action[$index] $actionDesc: THROTTLED (${elapsedSec}s < ${minSec}s min)"
+                            )
+                            throttled.add(actionDesc)
+                        }
+                    }
+                }
+
+                _evaluationEvents.tryEmit(
+                    TriggerEvaluationEvent(
+                        triggerId = trigger.id,
+                        triggerName = trigger.name,
+                        detectionStates = currentStates.mapValues { it.value.value },
+                        conditionResult = result,
+                        actionsExecuted = executed,
+                        actionsThrottled = throttled,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+            }
+        } finally {
+            if (wakeLock.isHeld) {
+                wakeLock.release()
+            }
         }
     }
 

@@ -44,6 +44,10 @@ object Constants {
         const val ERROR_ID = "error_channel"
         const val ERROR_NAME = "Errors"
         const val ERROR_DESCRIPTION = "Notifications for application errors and exceptions"
+
+        const val TRIGGER_ID = "trigger_channel"
+        const val TRIGGER_NAME = "Survey Triggers"
+        const val TRIGGER_DESCRIPTION = "High-priority notifications for microEMA surveys"
     }
 
     /**
@@ -54,6 +58,7 @@ object Constants {
         const val UPLOAD_DATA_FAILURE = 1002
         const val FLUSH_DATA_SUCCESS = 1003
         const val FLUSH_DATA_FAILURE = 1004
+        const val TRIGGER = 1005
         const val ERROR = 2000 // Base ID for errors, will be incremented for multiple errors
     }
 

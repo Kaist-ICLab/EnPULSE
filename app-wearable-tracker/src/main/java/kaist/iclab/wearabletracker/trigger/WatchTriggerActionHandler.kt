@@ -1,17 +1,23 @@
 package kaist.iclab.wearabletracker.trigger
 
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.tracker.trigger.engine.TriggerActionHandler
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
 import kaist.iclab.tracker.trigger.model.TriggerActionConfig
+import kaist.iclab.wearabletracker.Constants
+import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kaist.iclab.wearabletracker.ema.WatchSurveyActivity
+import kaist.iclab.wearabletracker.helpers.NotificationHelper
 
 /**
  * Watch-specific implementation of [TriggerActionHandler].
@@ -57,15 +63,19 @@ class WatchTriggerActionHandler(
             is TriggerActionConfig.Ema -> {
                 Log.d(TAG, "Phone EMA action not yet implemented (trigger: ${trigger.name})")
             }
+
             is TriggerActionConfig.Broadcast -> handleBroadcast(trigger, action)
         }
     }
 
-    private fun handleBroadcast(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.Broadcast) {
+    private fun handleBroadcast(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Broadcast
+    ) {
         Log.d(TAG, "Triggering Broadcast: action=${action.action}, trigger=${trigger.name}")
         try {
             val intent = Intent(action.action)
-            
+
             // Note: If you want to make this an Explicit Intent in the future (targeting a specific app),
             // you can add a 'packageName' field to the Supabase payload and call intent.setPackage(packageName).
 
@@ -114,8 +124,8 @@ class WatchTriggerActionHandler(
     }
 
     /**
-     * Vibrate and launch the MicroEMA survey activity.
-     * Same behavior as [MicroEmaResponseManager.launchMicroEma].
+     * Vibrate and launch the MicroEMA survey activity using a High-Priority Notification
+     * with a Full-Screen Intent. This bypasses background activity launch restrictions.
      */
     private fun launchMicroEma() {
         try {
@@ -137,9 +147,37 @@ class WatchTriggerActionHandler(
             val intent = Intent(context, WatchSurveyActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
-            context.startActivity(intent)
 
-            Log.d(TAG, "WatchSurveyActivity launched")
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            NotificationHelper.ensureNotificationChannel(
+                context,
+                NotificationHelper.NotificationChannelConfig.TRIGGER
+            )
+
+            val notification = NotificationCompat.Builder(
+                context,
+                Constants.NotificationChannel.TRIGGER_ID
+            )
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(context.getString(R.string.notification_trigger_title))
+                .setContentText(context.getString(R.string.notification_trigger_text))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setFullScreenIntent(pendingIntent, true)
+                .setAutoCancel(true)
+                .build()
+
+            val notificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(Constants.NotificationId.TRIGGER, notification)
+
+            Log.d(TAG, "WatchSurveyActivity launched via Full-Screen Intent Notification")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch WatchSurveyActivity: ${e.message}", e)
         }

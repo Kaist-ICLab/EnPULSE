@@ -1,6 +1,8 @@
 package kaist.iclab.mobiletracker.services.upload.handlers.phone
 
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.dao.phone.MessageLogDao
+import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
 import kaist.iclab.mobiletracker.db.mapper.MessageLogMapper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
@@ -22,7 +24,7 @@ class MessageLogUploadHandler(
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
-            val batchSize = kaist.iclab.mobiletracker.Constants.Network.UPLOAD_BATCH_SIZE
+            val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var currentMaxTimestamp = lastUploadTimestamp
             var uploadedAny = false
 
@@ -71,7 +73,7 @@ class MessageLogUploadHandler(
     }
 
     override fun recordToCsvRow(record: Any): String {
-        val entity = record as kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
+        val entity = record as MessageLogEntity
         return "${entity.eventId},${entity.uuid},${entity.received},${entity.timestamp},${entity.number},${entity.messageType},${entity.contactType}"
     }
 }

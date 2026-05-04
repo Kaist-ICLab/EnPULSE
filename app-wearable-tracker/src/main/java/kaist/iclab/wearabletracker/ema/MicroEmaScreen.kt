@@ -16,6 +16,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -368,7 +369,7 @@ private fun HorizontalOptionInput(
             state = listState,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp)
+            contentPadding = PaddingValues(horizontal = 24.dp)
         ) {
             itemsIndexed(options) { index, option ->
                 val isSelected = index == selectedIndex
@@ -508,7 +509,7 @@ private fun CheckboxInput(
             .fillMaxWidth()
             .height(76.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp)
+        contentPadding = PaddingValues(horizontal = 10.dp)
     ) {
         itemsIndexed(options) { index: Int, option: WatchOption ->
             val isChecked = selectedIds.contains(option.id)

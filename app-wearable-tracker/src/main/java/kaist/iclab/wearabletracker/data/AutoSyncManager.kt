@@ -1,6 +1,7 @@
 package kaist.iclab.wearabletracker.data
 
 import android.content.Context
+import android.os.PowerManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
@@ -51,7 +52,7 @@ class AutoSyncManager(
             if (elapsedTime >= interval) {
                 // Check if device is in deep sleep (Doze mode)
                 val powerManager =
-                    context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+                    context.getSystemService(Context.POWER_SERVICE) as PowerManager
                 if (powerManager.isDeviceIdleMode) {
                     return@launch
                 }

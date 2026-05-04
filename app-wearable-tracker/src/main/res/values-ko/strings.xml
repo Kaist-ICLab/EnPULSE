@@ -82,4 +82,6 @@
     <string name="ema_time_up">시간 종료</string>
     <string name="ema_dismissed">무시됨</string>
     <string name="ema_finishing">마무리 중</string>
+    <string name="notification_trigger_title">설문 가능</string>
+    <string name="notification_trigger_text">시작하려면 탭하세요</string>
 </resources>

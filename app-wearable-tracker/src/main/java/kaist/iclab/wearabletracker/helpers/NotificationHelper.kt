@@ -18,7 +18,8 @@ object NotificationHelper {
     enum class NotificationChannelConfig(
         val channelId: String,
         val channelName: String,
-        val description: String
+        val description: String,
+        val importance: Int = NotificationManager.IMPORTANCE_DEFAULT
     ) {
         UPLOAD_DATA(
             Constants.NotificationChannel.UPLOAD_DATA_ID,
@@ -34,6 +35,12 @@ object NotificationHelper {
             Constants.NotificationChannel.ERROR_ID,
             Constants.NotificationChannel.ERROR_NAME,
             Constants.NotificationChannel.ERROR_DESCRIPTION
+        ),
+        TRIGGER(
+            Constants.NotificationChannel.TRIGGER_ID,
+            Constants.NotificationChannel.TRIGGER_NAME,
+            Constants.NotificationChannel.TRIGGER_DESCRIPTION,
+            NotificationManager.IMPORTANCE_HIGH
         )
     }
 
@@ -50,7 +57,7 @@ object NotificationHelper {
         val channel = NotificationChannel(
             config.channelId,
             config.channelName,
-            NotificationManager.IMPORTANCE_DEFAULT
+            config.importance
         ).apply {
             description = config.description
         }

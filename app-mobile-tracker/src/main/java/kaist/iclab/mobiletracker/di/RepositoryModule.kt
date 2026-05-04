@@ -16,8 +16,6 @@ import kaist.iclab.mobiletracker.repository.TriggerRepository
 import kaist.iclab.mobiletracker.repository.TriggerRepositoryImpl
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepositoryImpl
-import kaist.iclab.mobiletracker.services.TriggerConfigPusher
-import org.koin.android.ext.koin.androidContext
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.repository.handlers.phone.AmbientLightDataHandler
@@ -46,10 +44,12 @@ import kaist.iclab.mobiletracker.repository.handlers.watch.WatchPPGDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchSkinTemperatureDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchStressDataHandler
 import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.services.TriggerConfigPusher
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import kaist.iclab.mobiletracker.storage.CouchbaseTriggerConfigStorage
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 

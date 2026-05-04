@@ -33,6 +33,7 @@ import kaist.iclab.wearabletracker.db.dao.BaseDao
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.ema.MicroEmaViewModel
+import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
@@ -46,7 +47,6 @@ import org.koin.core.qualifier.named
 import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
-import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 
 val koinModule = module {
     single {
@@ -458,6 +458,7 @@ val koinModule = module {
 
     single<TriggerEngine> {
         DefaultTriggerEngine(
+            context = androidContext(),
             detectionStateTracker = get(),
             coroutineScope = get()
         )

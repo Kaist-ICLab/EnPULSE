@@ -54,7 +54,10 @@ class MicroEmaRepository(
         // 4. Update persistent storage with the new last shown ID
         prefsHelper.saveLastQuestionId(config.surveyId, nextQuestion.id)
 
-        Log.d(TAG, "Queue update for Survey ${config.surveyId}: lastId=$lastId -> nextId=${nextQuestion.id}")
+        Log.d(
+            TAG,
+            "Queue update for Survey ${config.surveyId}: lastId=$lastId -> nextId=${nextQuestion.id}"
+        )
         return nextQuestion
     }
 

@@ -1,6 +1,8 @@
 package kaist.iclab.mobiletracker.services.upload.handlers.phone
 
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.dao.phone.StepDao
+import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.mapper.StepMapper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
@@ -22,7 +24,7 @@ class StepUploadHandler(
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
-            val batchSize = kaist.iclab.mobiletracker.Constants.Network.UPLOAD_BATCH_SIZE
+            val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var currentMaxTimestamp = lastUploadTimestamp
             var uploadedAny = false
 
@@ -71,7 +73,7 @@ class StepUploadHandler(
     }
 
     override fun recordToCsvRow(record: Any): String {
-        val entity = record as kaist.iclab.mobiletracker.db.entity.phone.StepEntity
+        val entity = record as StepEntity
         return "${entity.eventId},${entity.uuid},${entity.received},${entity.timestamp},${entity.startTime},${entity.endTime},${entity.steps}"
     }
 }

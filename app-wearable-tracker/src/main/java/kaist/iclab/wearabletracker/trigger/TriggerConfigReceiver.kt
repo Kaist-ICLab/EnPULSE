@@ -2,12 +2,10 @@ package kaist.iclab.wearabletracker.trigger
 
 import android.util.Log
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
+import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.engine.TriggerEngine
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
-import kaist.iclab.tracker.trigger.model.TriggerActionConfig
-import kaist.iclab.tracker.trigger.model.ConditionNode
 import kaist.iclab.wearabletracker.Constants
-import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -68,7 +66,10 @@ class TriggerConfigReceiver(
             handleTriggerConfig(jsonElement)
         }
 
-        Log.d(TAG, "Started listening for trigger config on BLE key: ${Constants.BLE.KEY_TRIGGER_CONFIG}")
+        Log.d(
+            TAG,
+            "Started listening for trigger config on BLE key: ${Constants.BLE.KEY_TRIGGER_CONFIG}"
+        )
     }
 
     private fun handleTriggerConfig(jsonElement: JsonElement) {
@@ -80,6 +81,7 @@ class TriggerConfigReceiver(
                 is kotlinx.serialization.json.JsonPrimitive -> {
                     json.parseToJsonElement(jsonElement.content).jsonObject
                 }
+
                 else -> {
                     json.parseToJsonElement(jsonElement.toString()).jsonObject
                 }
@@ -88,7 +90,10 @@ class TriggerConfigReceiver(
             // Parse the payload
             val configPayload = json.decodeFromJsonElement<TriggerConfigPayload>(payload)
 
-            Log.d(TAG, "Parsed ${configPayload.triggers.size} trigger(s) and ${configPayload.surveyConfigs.size} survey config(s)")
+            Log.d(
+                TAG,
+                "Parsed ${configPayload.triggers.size} trigger(s) and ${configPayload.surveyConfigs.size} survey config(s)"
+            )
 
             // Update survey configs in the action handler
             actionHandler.updateSurveyConfigs(configPayload.surveyConfigs)

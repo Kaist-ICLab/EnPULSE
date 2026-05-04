@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.services.upload.handlers.watch
 
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.dao.watch.WatchHeartRateDao
+import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
 import kaist.iclab.mobiletracker.db.mapper.HeartRateMapper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
@@ -72,7 +73,7 @@ class WatchHeartRateUploadHandler(
     }
 
     override fun recordToCsvRow(record: Any): String {
-        val entity = record as kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
+        val entity = record as WatchHeartRateEntity
         val escapedIbi = entity.ibi.joinToString(",").replace("\"", "\"\"")
         val escapedIbiStatus = entity.ibiStatus.joinToString(",").replace("\"", "\"\"")
         return "${entity.eventId},${entity.uuid},${entity.received},${entity.timestamp},${entity.hr},${entity.hrStatus},\"[$escapedIbi]\",\"[$escapedIbiStatus]\""
