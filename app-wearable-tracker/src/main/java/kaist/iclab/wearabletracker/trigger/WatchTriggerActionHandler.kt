@@ -51,7 +51,13 @@ class WatchTriggerActionHandler(
      */
     fun updateSurveyConfigs(configs: Map<Int, WatchSurveyConfig>) {
         this.surveyConfigs = configs
-        Log.d(TAG, "Updated survey configs: ${configs.keys}")
+        
+        // Reset the queue progress for these surveys so they start from Q1
+        configs.keys.forEach { surveyId ->
+            microEmaRepository.resetQueueProgress(surveyId)
+        }
+        
+        Log.d(TAG, "Updated survey configs and reset queue progress: ${configs.keys}")
     }
 
     override suspend fun onAction(

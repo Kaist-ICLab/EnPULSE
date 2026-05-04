@@ -78,4 +78,11 @@ class MicroEmaRepository(
     fun clearCache() {
         activeConfig = null
     }
+
+    /**
+     * Reset the queue progress for a specific survey so it starts from the first question.
+     */
+    fun resetQueueProgress(surveyId: Int) {
+        prefsHelper.clearLastQuestionId(surveyId)
+    }
 }
