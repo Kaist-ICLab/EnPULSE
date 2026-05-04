@@ -57,9 +57,36 @@ class WatchTriggerActionHandler(
             is TriggerActionConfig.Ema -> {
                 Log.d(TAG, "Phone EMA action not yet implemented (trigger: ${trigger.name})")
             }
-            is TriggerActionConfig.Broadcast -> {
-                Log.d(TAG, "Broadcast action not yet implemented (trigger: ${trigger.name})")
+            is TriggerActionConfig.Broadcast -> handleBroadcast(trigger, action)
+        }
+    }
+
+    private fun handleBroadcast(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.Broadcast) {
+        Log.d(TAG, "Triggering Broadcast: action=${action.action}, trigger=${trigger.name}")
+        try {
+            val intent = Intent(action.action)
+            
+            // Note: If you want to make this an Explicit Intent in the future (targeting a specific app),
+            // you can add a 'packageName' field to the Supabase payload and call intent.setPackage(packageName).
+
+            // Attach all configured extras based on their specified type
+            for (extra in action.extras) {
+                when (extra.valueType.lowercase()) {
+                    "int", "integer" -> intent.putExtra(extra.key, extra.value.toIntOrNull() ?: 0)
+                    "long" -> intent.putExtra(extra.key, extra.value.toLongOrNull() ?: 0L)
+                    "float" -> intent.putExtra(extra.key, extra.value.toFloatOrNull() ?: 0f)
+                    "double" -> intent.putExtra(extra.key, extra.value.toDoubleOrNull() ?: 0.0)
+                    "bool", "boolean" -> intent.putExtra(extra.key, extra.value.toBoolean())
+                    else -> intent.putExtra(extra.key, extra.value) // Default to String
+                }
             }
+
+            // Send the broadcast to the Android system
+            context.sendBroadcast(intent)
+            Log.d(TAG, "Broadcast sent successfully: ${action.action}")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send broadcast for trigger ${trigger.name}: ${e.message}", e)
         }
     }
 

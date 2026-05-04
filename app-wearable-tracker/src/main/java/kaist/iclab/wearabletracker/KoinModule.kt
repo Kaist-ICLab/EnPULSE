@@ -46,6 +46,7 @@ import org.koin.core.qualifier.named
 import org.koin.core.qualifier.qualifier
 import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
+import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 
 val koinModule = module {
     single {
@@ -346,6 +347,10 @@ val koinModule = module {
     }
 
     single {
+        MicroEmaPreferencesHelper(context = androidContext())
+    }
+
+    single {
         PhoneCommunicationManager(
             androidContext = androidContext(),
             daos = get(named("sensorDataStorages")),
@@ -407,7 +412,7 @@ val koinModule = module {
     // --- MicroEMA ---
 
     single {
-        MicroEmaRepository()
+        MicroEmaRepository(prefsHelper = get())
     }
 
     single {
