@@ -73,12 +73,26 @@ class SettingsViewModel(
     }
 
     fun triggerDebugStatesOnWatch() {
-        bleHelper.sendDetectionStateUpdates(
-            mapOf(
-                "physical_activity" to "Walking",
-                "stress" to "High"
+        viewModelScope.launch {
+            // Reset states first to ensure a state change is detected by the watch's DetectionStateTracker
+            bleHelper.sendDetectionStateUpdates(
+                mapOf(
+                    "physical_activity" to "Unknown",
+                    "stress" to "Low"
+                )
             )
-        )
+            
+            // Small delay to ensure BLE messages are processed sequentially
+            kotlinx.coroutines.delay(100)
+
+            // Set target states
+            bleHelper.sendDetectionStateUpdates(
+                mapOf(
+                    "physical_activity" to "Walking",
+                    "stress" to "High"
+                )
+            )
+        }
     }
 
     private val sensors = backgroundController.sensors
