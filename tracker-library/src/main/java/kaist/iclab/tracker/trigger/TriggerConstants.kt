@@ -16,4 +16,11 @@ object TriggerConstants {
          */
         const val TIMEOUT_MS = 10 * 1000L
     }
+
+    /**
+     * SharedPreferences configuration for persisting trigger cooldowns.
+     */
+    object Throttling {
+        const val PREFS_NAME = "kaist.iclab.tracker.trigger_throttling"
+    }
 }

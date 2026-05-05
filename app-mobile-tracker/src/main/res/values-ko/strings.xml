@@ -301,5 +301,10 @@
     <string name="pagination_next">다음 페이지</string>
     <string name="phone_sensor_badge_description">폰 센서</string>
     <string name="watch_sensor_badge_description">워치 센서</string>
+
+    <string name="perm_fullscreen_intent_title">권한 필요</string>
+    <string name="perm_fullscreen_intent_message">화면이 잠겨 있을 때도 설문을 표시할 수 있도록 허용해 주세요.</string>
+    <string name="perm_fullscreen_intent_action">알림 허용하기</string>
+    <string name="cancel">취소</string>
 </resources>
 

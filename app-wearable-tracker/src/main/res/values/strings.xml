@@ -81,4 +81,8 @@
     <string name="ema_time_up">Time’s up</string>
     <string name="ema_dismissed">Dismissed</string>
     <string name="ema_finishing">Finishing</string>
+
+    <string name="perm_fullscreen_intent_title">Permission Needed</string>
+    <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
+    <string name="perm_fullscreen_intent_action">Allow</string>
 </resources>

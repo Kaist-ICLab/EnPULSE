@@ -82,4 +82,8 @@
     <string name="ema_time_up">시간 종료</string>
     <string name="ema_dismissed">무시됨</string>
     <string name="ema_finishing">마무리 중</string>
+
+    <string name="perm_fullscreen_intent_title">권한 필요</string>
+    <string name="perm_fullscreen_intent_message">화면이 잠겨 있을 때도 설문을 표시할 수 있도록 허용해 주세요.</string>
+    <string name="perm_fullscreen_intent_action">허용</string>
 </resources>

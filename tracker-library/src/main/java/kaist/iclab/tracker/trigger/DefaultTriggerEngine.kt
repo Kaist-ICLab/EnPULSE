@@ -49,7 +49,29 @@ class DefaultTriggerEngine(
 
     private var triggers = listOf<ParsedCampaignTrigger>()
     private var handler: TriggerActionHandler? = null
+    
+    private val prefs by lazy { 
+        context.getSharedPreferences(TriggerConstants.Throttling.PREFS_NAME, Context.MODE_PRIVATE) 
+    }
     private val lastActionTimes = ConcurrentHashMap<String, Long>()
+
+    init {
+        loadThrottlingState()
+    }
+
+    private fun loadThrottlingState() {
+        try {
+            val allEntries = prefs.all
+            for ((key, value) in allEntries) {
+                if (value is Long) {
+                    lastActionTimes[key] = value
+                }
+            }
+            Log.d(TAG, "Restored ${lastActionTimes.size} throttling cooldowns from persistent storage")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load throttling state: ${e.message}")
+        }
+    }
     private var job: Job? = null
     private val powerManager by lazy { context.getSystemService(Context.POWER_SERVICE) as PowerManager }
 
@@ -60,7 +82,6 @@ class DefaultTriggerEngine(
 
     override fun loadTriggers(triggers: List<ParsedCampaignTrigger>) {
         this.triggers = triggers
-        lastActionTimes.clear()
         Log.d(TAG, "Loaded ${triggers.size} trigger(s): ${triggers.map { it.name }}")
     }
 
@@ -132,6 +153,7 @@ class DefaultTriggerEngine(
                             try {
                                 h.onAction(trigger, action)
                                 lastActionTimes[throttleKey] = now
+                                prefs.edit().putLong(throttleKey, now).apply()
                                 executed.add(actionDesc)
                             } catch (e: Exception) {
                                 Log.e(TAG, "  Action[$index] $actionDesc: ERROR - ${e.message}", e)

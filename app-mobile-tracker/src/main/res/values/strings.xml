@@ -301,4 +301,9 @@
     <string name="pagination_next">Next Page</string>
     <string name="phone_sensor_badge_description">Phone sensor</string>
     <string name="watch_sensor_badge_description">Watch sensor</string>
+
+    <string name="perm_fullscreen_intent_title">Permission Needed</string>
+    <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
+    <string name="perm_fullscreen_intent_action">Allow Reminders</string>
+    <string name="cancel">Cancel</string>
 </resources>

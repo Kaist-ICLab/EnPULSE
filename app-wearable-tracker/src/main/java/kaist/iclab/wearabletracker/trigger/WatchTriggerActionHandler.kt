@@ -164,7 +164,7 @@ class WatchTriggerActionHandler(
             )
 
             val intent = Intent(context, WatchSurveyActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
 
             val pendingIntent = PendingIntent.getActivity(

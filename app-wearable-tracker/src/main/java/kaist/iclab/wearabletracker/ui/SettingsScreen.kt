@@ -16,24 +16,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Scaffold
+import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.data.DeviceInfo
+import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
 import kaist.iclab.wearabletracker.helpers.PermissionHelper
 import kaist.iclab.wearabletracker.ui.components.AutoSyncSettings
 import kaist.iclab.wearabletracker.ui.components.DeviceStatusInfo
 import kaist.iclab.wearabletracker.ui.components.FlushConfirmationDialog
+import kaist.iclab.wearabletracker.ui.components.FullScreenIntentPermissionDialog
 import kaist.iclab.wearabletracker.ui.components.PermissionPermanentlyDeniedDialog
 import kaist.iclab.wearabletracker.ui.components.SamsungHealthConnectionErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SdkPolicyErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SensorToggleChip
 import kaist.iclab.wearabletracker.ui.components.SettingController
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun SettingsScreen(
@@ -52,6 +58,7 @@ fun SettingsScreen(
 
     var showFlushDialog by remember { mutableStateOf(false) }
     var showPermissionPermanentlyDeniedDialog by remember { mutableStateOf(false) }
+    var showFullScreenIntentWarning by remember { mutableStateOf(false) }
 
     /**
      * Helper function to handle notification permission check and execute action if granted.
@@ -100,6 +107,11 @@ fun SettingsScreen(
         // Check notification permission at app startup (will request if needed, but won't show dialog for permanent denial)
         // The permanent denial dialog will only show when user tries to perform an action
         PermissionHelper.checkNotificationPermission(context, androidPermissionManager)
+
+        // Check full-screen intent permission (Android 14+)
+        if (!NotificationHelper.canUseFullScreenIntent(context)) {
+            showFullScreenIntentWarning = true
+        }
     }
 
     // Observe last sync timestamp
@@ -195,6 +207,26 @@ fun SettingsScreen(
                             onIntervalChange = { settingsViewModel.setAutoSyncInterval(it) }
                         )
 
+                        // DEBUG: Trigger Mechanism Test Button
+                        val tracker = koinInject<DetectionStateTracker>()
+                        Button(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            onClick = {
+                                val now = System.currentTimeMillis()
+                                // Reset to force a change
+                                tracker.updateState("physical_activity", "Unknown", now)
+                                tracker.updateState("stress", "Low", now)
+
+                                // Set to target trigger states
+                                tracker.updateState("physical_activity", "Walking", now + 1)
+                                tracker.updateState("stress", "High", now + 2)
+                            }
+                        ) {
+                            Text("Debug: High Stress + Walking", modifier = Modifier.padding(4.dp))
+                        }
+
 
                         availableSensors.forEach { (name, _) ->
                             SensorToggleChip(
@@ -231,6 +263,16 @@ fun SettingsScreen(
         onOpenSettings = {
             PermissionHelper.openNotificationSettings(context)
             showPermissionPermanentlyDeniedDialog = false
+        }
+    )
+
+    // Full Screen Intent Permission Dialog
+    FullScreenIntentPermissionDialog(
+        showDialog = showFullScreenIntentWarning,
+        onDismiss = { showFullScreenIntentWarning = false },
+        onOpenSettings = {
+            NotificationHelper.openFullScreenIntentSettings(context)
+            showFullScreenIntentWarning = false
         }
     )
 }

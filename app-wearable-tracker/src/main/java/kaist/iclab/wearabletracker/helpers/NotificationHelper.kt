@@ -5,6 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.wearabletracker.Constants
@@ -15,6 +17,31 @@ import kaist.iclab.wearabletracker.R
  * Provides reusable methods for common notification patterns.
  */
 object NotificationHelper {
+    /**
+     * Checks if the app has permission to use full-screen intents (Android 14+).
+     */
+    fun canUseFullScreenIntent(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            return notificationManager.canUseFullScreenIntent()
+        }
+        return true
+    }
+
+    /**
+     * Opens the system settings screen for full-screen intent permission.
+     */
+    fun openFullScreenIntentSettings(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val intent = Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+                data = android.net.Uri.fromParts("package", context.packageName, null)
+            }
+            if (context !is android.app.Activity) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        }
+    }
     /**
      * Notification channel configurations
      */
