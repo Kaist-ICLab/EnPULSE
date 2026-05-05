@@ -33,6 +33,35 @@ object PermissionHelper {
         }
     }
 
+    fun checkPermissions(
+        context: Context,
+        permissionManager: AndroidPermissionManager,
+        permissions: Array<String>
+    ): PermissionCheckResult {
+        if (permissions.isEmpty()) return PermissionCheckResult.Granted
+
+        permissionManager.registerPermission(permissions)
+        val permissionFlow = permissionManager.getPermissionFlow(permissions)
+        val states = permissionFlow.value
+
+        // If any permission is permanently denied, return that
+        if (permissions.any { states[it] == PermissionState.PERMANENTLY_DENIED }) {
+            return PermissionCheckResult.PermanentlyDenied
+        }
+
+        // If any permission is not granted, request them all and return Requested
+        val missingPermissions = permissions.filter { 
+            states[it] != PermissionState.GRANTED && states[it] != PermissionState.UNSUPPORTED 
+        }
+        
+        if (missingPermissions.isNotEmpty()) {
+            permissionManager.request(missingPermissions.toTypedArray())
+            return PermissionCheckResult.Requested
+        }
+
+        return PermissionCheckResult.Granted
+    }
+
     fun openNotificationSettings(context: Context) {
         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)

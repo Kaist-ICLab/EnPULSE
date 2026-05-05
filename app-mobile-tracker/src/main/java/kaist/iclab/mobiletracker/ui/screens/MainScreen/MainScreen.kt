@@ -54,12 +54,6 @@ fun MainScreen(
     val context = LocalContext.current
     var showFullScreenIntentWarning by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        if (!NotificationHelper.canUseFullScreenIntent(context)) {
-            showFullScreenIntentWarning = true
-        }
-    }
-
     // Set up loading interceptor callback
     DisposableEffect(Unit) {
         val callback: (Boolean) -> Unit = { loading ->

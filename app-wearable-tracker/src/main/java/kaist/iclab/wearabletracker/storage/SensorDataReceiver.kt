@@ -85,7 +85,16 @@ class SensorDataReceiver(
             )
 
             val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
+                val needsMicrophone = sensors.any { 
+                    (it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.ENABLED || 
+                     it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.RUNNING) && 
+                    it.permissions.contains(android.Manifest.permission.RECORD_AUDIO) 
+                }
+                if (needsMicrophone) {
+                    type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                }
+                type
             } else {
                 0
             }
