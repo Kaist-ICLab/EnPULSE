@@ -89,7 +89,7 @@ object Constants {
         const val CHANNEL_NAME_AUTO_SYNC = "Auto Sync Notifications"
         const val ID_AUTO_SYNC_SUCCESS = 1001
         const val ID_AUTO_SYNC_FAILURE = 1002
-        
+
         // Survey Notifications
         const val ID_SURVEY_BASE = 2000
         const val CHANNEL_ID_SURVEY = "survey_channel"

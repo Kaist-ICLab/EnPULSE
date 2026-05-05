@@ -476,7 +476,8 @@ val koinModule = module {
         TriggerConfigReceiver(
             bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
             triggerEngine = get(),
-            actionHandler = get()
+            actionHandler = get(),
+            backgroundController = get()
         )
     }
 

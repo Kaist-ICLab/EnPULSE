@@ -50,10 +50,10 @@ object PermissionHelper {
         }
 
         // If any permission is not granted, request them all and return Requested
-        val missingPermissions = permissions.filter { 
-            states[it] != PermissionState.GRANTED && states[it] != PermissionState.UNSUPPORTED 
+        val missingPermissions = permissions.filter {
+            states[it] != PermissionState.GRANTED && states[it] != PermissionState.UNSUPPORTED
         }
-        
+
         if (missingPermissions.isNotEmpty()) {
             permissionManager.request(missingPermissions.toTypedArray())
             return PermissionCheckResult.Requested

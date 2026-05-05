@@ -32,4 +32,7 @@ sealed class AppError(message: String, cause: Throwable? = null) : Exception(mes
 
     /** Catch-all for unexpected / unclassifiable errors. */
     class Unknown(message: String, cause: Throwable? = null) : AppError(message, cause)
+
+    /** Operation blocked because data collection is currently running. */
+    class CollectionRunning(message: String) : AppError(message)
 }

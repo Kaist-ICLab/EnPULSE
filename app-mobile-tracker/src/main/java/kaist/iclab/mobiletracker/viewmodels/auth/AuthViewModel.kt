@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
+import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.AuthRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
@@ -140,9 +141,12 @@ class AuthViewModel(
             }
 
             is Result.Error -> {
-                // If we already have a cached profile, show a subtle "using cache" message 
-                // instead of a scary "failed" error.
-                if (userProfileRepository.profileFlow.value != null) {
+                // Handle collection running error specifically
+                if (result.exception is AppError.CollectionRunning) {
+                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.turn_off_data_collection_first))
+                } else if (userProfileRepository.profileFlow.value != null) {
+                    // If we already have a cached profile, show a subtle "using cache" message 
+                    // instead of a scary "failed" error.
                     Log.d(TAG, "Network profile refresh failed, using cached profile.")
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_offline_using_cache))
                 } else {

@@ -195,7 +195,7 @@
     <string name="notification_description">Data collection is running in the background</string>
 
     <!-- Phone Sensor Screen -->
-    <string name="turn_off_data_collection_first">Please turn off the data collection first to continue</string>
+    <string name="turn_off_data_collection_first">Data collection is still running</string>
 
     <!-- Data &amp; Sync Management Screen -->
     <string name="sync_current_time">Current Time</string>

@@ -7,8 +7,6 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
@@ -17,6 +15,7 @@ import kaist.iclab.wearabletracker.Constants.DB.BUFFER_SIZE
 import kaist.iclab.wearabletracker.Constants.DB.FLUSH_INTERVAL_MS
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.db.dao.BaseDao
+import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.repository.ErrorClassifier.runClassified
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -86,10 +85,10 @@ class SensorDataReceiver(
 
             val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
-                val needsMicrophone = sensors.any { 
-                    (it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.ENABLED || 
-                     it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.RUNNING) && 
-                    it.permissions.contains(android.Manifest.permission.RECORD_AUDIO) 
+                val needsMicrophone = sensors.any {
+                    (it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.ENABLED ||
+                            it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.RUNNING) &&
+                            it.permissions.contains(android.Manifest.permission.RECORD_AUDIO)
                 }
                 if (needsMicrophone) {
                     type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE

@@ -34,8 +34,8 @@ import kaist.iclab.mobiletracker.ui.components.AppMenuItem
 import kaist.iclab.mobiletracker.ui.components.FullScreenIntentPermissionDialog
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.MainSettings.EnableTrackerCard
 import kaist.iclab.mobiletracker.ui.theme.AppColors
-import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.mobiletracker.utils.NotificationHelper
+import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import org.koin.androidx.compose.koinViewModel
 

@@ -65,8 +65,8 @@ fun SettingsScreen(
     // Check if any sensor is enabled
     val enabledSensors = sensorState.filter { (_, stateFlow) ->
         val state = stateFlow.collectAsState().value
-        state.flag == SensorState.FLAG.ENABLED || 
-        state.flag == SensorState.FLAG.RUNNING
+        state.flag == SensorState.FLAG.ENABLED ||
+                state.flag == SensorState.FLAG.RUNNING
     }
 
     /**
@@ -74,8 +74,8 @@ fun SettingsScreen(
      */
     fun handleAllPermissionsCheck(onGranted: () -> Unit) {
         // Collect all permissions needed by enabled sensors
-        val sensorPermissions = enabledSensors.flatMap { (name, _) -> 
-            sensorMap[name]?.permissions?.toList() ?: emptyList() 
+        val sensorPermissions = enabledSensors.flatMap { (name, _) ->
+            sensorMap[name]?.permissions?.toList() ?: emptyList()
         }.distinct().toTypedArray()
 
         // Combine with notification permission
@@ -90,10 +90,15 @@ fun SettingsScreen(
             return
         }
 
-        when (PermissionHelper.checkPermissions(context, androidPermissionManager, allRequiredPermissions)) {
+        when (PermissionHelper.checkPermissions(
+            context,
+            androidPermissionManager,
+            allRequiredPermissions
+        )) {
             PermissionCheckResult.Granted -> onGranted()
             PermissionCheckResult.PermanentlyDenied -> showPermissionPermanentlyDeniedDialog = true
-            PermissionCheckResult.Requested -> { /* Wait for user to grant and try again */ }
+            PermissionCheckResult.Requested -> { /* Wait for user to grant and try again */
+            }
         }
     }
 
@@ -237,6 +242,7 @@ fun SettingsScreen(
                             SensorToggleChip(
                                 sensorId = name,
                                 sensorStateFlow = sensorState[name]!!,
+                                isCollecting = isCollecting.flag == ControllerState.FLAG.RUNNING,
                                 updateStatus = { status ->
                                     if (status) {
                                         androidPermissionManager.request(sensorMap[name]!!.permissions)

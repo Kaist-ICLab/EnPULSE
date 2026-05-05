@@ -12,7 +12,6 @@ import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
 import kaist.iclab.tracker.trigger.model.TriggerActionConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 
 /**
@@ -55,7 +54,11 @@ class TriggerConfigPusher(
                 try {
                     parseTriggerEntity(entity)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to parse trigger '${entity.name}' (id=${entity.id}): ${e.message}", e)
+                    Log.e(
+                        TAG,
+                        "Failed to parse trigger '${entity.name}' (id=${entity.id}): ${e.message}",
+                        e
+                    )
                     null
                 }
             }
@@ -80,7 +83,10 @@ class TriggerConfigPusher(
             )
 
             val payloadJson = json.encodeToString(TriggerConfigPayload.serializer(), payload)
-            Log.d(TAG, "Pushing trigger config to watch: ${parsedTriggers.size} trigger(s), ${watchSurveyConfigs.size} survey config(s)")
+            Log.d(
+                TAG,
+                "Pushing trigger config to watch: ${parsedTriggers.size} trigger(s), ${watchSurveyConfigs.size} survey config(s)"
+            )
 
             bleChannel.send(
                 AppConfig.BLEKeys.TRIGGER_CONFIG,

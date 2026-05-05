@@ -226,9 +226,12 @@ class SurveyService(
                 SurveyQuestionResponseInsert(
                     questionId = entity.questionId,
                     uuid = entity.uuid,
-                    triggerTime = DateTimeFormatter.formatToIsoOffset(entity.triggerTime) ?: fallbackTime,
-                    actualTriggerTime = DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime) ?: fallbackTime,
-                    surveyStartTime = DateTimeFormatter.formatToIsoOffset(entity.surveyStartTime) ?: fallbackTime,
+                    triggerTime = DateTimeFormatter.formatToIsoOffset(entity.triggerTime)
+                        ?: fallbackTime,
+                    actualTriggerTime = DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime)
+                        ?: fallbackTime,
+                    surveyStartTime = DateTimeFormatter.formatToIsoOffset(entity.surveyStartTime)
+                        ?: fallbackTime,
                     responseSubmissionTime = DateTimeFormatter.formatToIsoOffset(entity.responseSubmissionTime)
                         ?: DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime)
                         ?: fallbackTime,

@@ -156,7 +156,8 @@ val repositoryModule = module {
     // CampaignRepository for campaign data management
     single<CampaignRepository> {
         CampaignRepositoryImpl(
-            campaignService = get()
+            campaignService = get(),
+            backgroundController = get()
         )
     }
 
@@ -210,7 +211,8 @@ val repositoryModule = module {
             campaignSensorRepository = get(),
             surveyRepository = get(),
             triggerRepository = get(),
-            triggerConfigPusher = get()
+            triggerConfigPusher = get(),
+            backgroundController = get()
         )
     }
 

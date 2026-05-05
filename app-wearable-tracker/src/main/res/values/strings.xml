@@ -85,4 +85,5 @@
     <string name="perm_fullscreen_intent_title">Permission Needed</string>
     <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
     <string name="perm_fullscreen_intent_action">Allow</string>
+    <string name="turn_off_data_collection_first">Please turn off the data collection first to continue</string>
 </resources>

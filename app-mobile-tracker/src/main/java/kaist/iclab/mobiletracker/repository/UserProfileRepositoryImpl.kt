@@ -5,6 +5,8 @@ import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.ProfileService
 import kaist.iclab.mobiletracker.services.TriggerConfigPusher
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
+import kaist.iclab.tracker.sensor.controller.BackgroundController
+import kaist.iclab.tracker.sensor.controller.ControllerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +22,8 @@ class UserProfileRepositoryImpl(
     private val campaignSensorRepository: CampaignSensorRepository,
     private val surveyRepository: SurveyRepository,
     private val triggerRepository: TriggerRepository,
-    private val triggerConfigPusher: TriggerConfigPusher
+    private val triggerConfigPusher: TriggerConfigPusher,
+    private val backgroundController: BackgroundController
 ) : UserProfileRepository {
 
     companion object {
@@ -51,12 +54,20 @@ class UserProfileRepositoryImpl(
     }
 
     override suspend fun updateCampaignId(campaignId: Int): Result<Unit> {
+        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
+            return Result.Error(AppError.CollectionRunning("Cannot update campaign while data collection is running"))
+        }
+
         val uuid = getCurrentUuid()
             ?: return Result.Error(AppError.Unknown("User not logged in"))
         return profileService.updateCampaignId(uuid, campaignId)
     }
 
     override suspend fun refreshProfile(): Result<ProfileData?> {
+        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
+            return Result.Error(AppError.CollectionRunning("Cannot refresh profile while data collection is running"))
+        }
+
         val uuid = getCurrentUuid()
             ?: return Result.Error(AppError.Unknown("User not logged in"))
 
@@ -72,6 +83,11 @@ class UserProfileRepositoryImpl(
     }
 
     override suspend fun syncFullStudyConfig(): Result<ProfileData?> {
+        // 0. Check if data collection is running
+        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
+            return Result.Error(AppError.CollectionRunning("Cannot sync config while data collection is running"))
+        }
+
         // 1. Refresh profile first to get latest campaign ID
         val profileResult = refreshProfile()
         if (profileResult is Result.Error) return profileResult

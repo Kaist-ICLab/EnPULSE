@@ -195,7 +195,7 @@
     <string name="notification_description">백그라운드 센서 컨트롤러가 실행 중입니다</string>
 
     <!-- Phone Sensor Screen -->
-    <string name="turn_off_data_collection_first">계속하려면 먼저 데이터 수집을 끄세요</string>
+    <string name="turn_off_data_collection_first">데이터 수집이 아직 진행 중입니다</string>
 
     <!-- Data &amp; Sync Management Screen -->
     <string name="sync_current_time">현재 시간</string>

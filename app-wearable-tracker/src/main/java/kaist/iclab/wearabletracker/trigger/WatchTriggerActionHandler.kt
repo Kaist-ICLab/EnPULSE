@@ -1,6 +1,5 @@
 package kaist.iclab.wearabletracker.trigger
 
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -8,17 +7,15 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
+import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.engine.TriggerActionHandler
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
 import kaist.iclab.tracker.trigger.model.TriggerActionConfig
 import kaist.iclab.wearabletracker.Constants
-import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kaist.iclab.wearabletracker.ema.WatchSurveyActivity
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
-import kaist.iclab.tracker.sync.ble.BLEDataChannel
 
 /**
  * Watch-specific implementation of [TriggerActionHandler].
@@ -53,12 +50,12 @@ class WatchTriggerActionHandler(
      */
     fun updateSurveyConfigs(configs: Map<Int, WatchSurveyConfig>) {
         this.surveyConfigs = configs
-        
+
         // Reset the queue progress for these surveys so they start from Q1
         configs.keys.forEach { surveyId ->
             microEmaRepository.resetQueueProgress(surveyId)
         }
-        
+
         Log.d(TAG, "Updated survey configs and reset queue progress: ${configs.keys}")
     }
 

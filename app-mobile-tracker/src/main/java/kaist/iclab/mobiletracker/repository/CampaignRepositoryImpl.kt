@@ -2,6 +2,8 @@ package kaist.iclab.mobiletracker.repository
 
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
 import kaist.iclab.mobiletracker.services.CampaignService
+import kaist.iclab.tracker.sensor.controller.BackgroundController
+import kaist.iclab.tracker.sensor.controller.ControllerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * Fetches campaigns from CampaignService and caches them.
  */
 class CampaignRepositoryImpl(
-    private val campaignService: CampaignService
+    private val campaignService: CampaignService,
+    private val backgroundController: BackgroundController
 ) : CampaignRepository {
     companion object {
         private const val TAG = "CampaignRepo"
@@ -21,6 +24,10 @@ class CampaignRepositoryImpl(
     override val campaignsFlow: StateFlow<List<CampaignData>> = _campaignsFlow.asStateFlow()
 
     override suspend fun fetchCampaigns(): Result<List<CampaignData>> {
+        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
+            return Result.Error(AppError.CollectionRunning("Cannot fetch campaigns while data collection is running"))
+        }
+
         return ErrorClassifier.runClassified(TAG, "fetch campaigns") {
             when (val result = campaignService.getAllCampaigns()) {
                 is Result.Success -> {

@@ -1,6 +1,8 @@
 package kaist.iclab.wearabletracker.trigger
 
 import android.util.Log
+import kaist.iclab.tracker.sensor.controller.BackgroundController
+import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.engine.TriggerEngine
@@ -39,7 +41,8 @@ import kotlinx.serialization.json.jsonObject
 class TriggerConfigReceiver(
     private val bleChannel: BLEDataChannel,
     private val triggerEngine: TriggerEngine,
-    private val actionHandler: WatchTriggerActionHandler
+    private val actionHandler: WatchTriggerActionHandler,
+    private val backgroundController: BackgroundController
 ) {
     companion object {
         private const val TAG = "TriggerConfigRcvr"
@@ -75,6 +78,15 @@ class TriggerConfigReceiver(
     private fun handleTriggerConfig(jsonElement: JsonElement) {
         try {
             Log.d(TAG, "Received trigger config payload")
+
+            // Block config application if data collection is running
+            if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
+                Log.w(
+                    TAG,
+                    "Skipping trigger config application: Data collection is currently running"
+                )
+                return
+            }
 
             val payload = when (jsonElement) {
                 is kotlinx.serialization.json.JsonObject -> jsonElement

@@ -86,8 +86,12 @@ fun CampaignDialog(
                     }
 
                     error != null -> {
+                        val displayError = when (error) {
+                            "turn_off_data_collection_first" -> context.getString(R.string.turn_off_data_collection_first)
+                            else -> error
+                        }
                         Text(
-                            text = error,
+                            text = displayError,
                             fontSize = Styles.ExperimentNameFontSize,
                             color = AppColors.TextSecondary,
                             textAlign = TextAlign.Center,

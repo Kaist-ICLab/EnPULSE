@@ -18,7 +18,7 @@ import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
  * Provides a simple API for creating notifications with common configurations.
  */
 object NotificationHelper {
-    
+
     /**
      * Checks if the app has permission to use full-screen intents (Android 14+).
      */
@@ -35,9 +35,10 @@ object NotificationHelper {
      */
     fun openFullScreenIntentSettings(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val intent = Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
-                data = android.net.Uri.fromParts("package", context.packageName, null)
-            }
+            val intent =
+                Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+                    data = android.net.Uri.fromParts("package", context.packageName, null)
+                }
             if (context !is android.app.Activity) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
