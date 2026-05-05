@@ -160,10 +160,10 @@
     <string name="record_deleted_success">기기 및 서버에서 기록이 삭제되었습니다</string>
     <string name="record_deleted_error">기록 삭제에 실패했습니다</string>
 
-    <string name="menu_reload_config">설정 다시 불러오기</string>
-    <string name="menu_reload_config_desc">서버에서 설정을 새로고침합니다</string>
-    <string name="reload_config_dialog_title">설정 다시 불러오기</string>
-    <string name="reload_config_dialog_message">설정을 다시 불러오시겠습니까? 현재 캠페인의 최신 설정 데이터를 가져옵니다.</string>
+    <string name="menu_reload_config">설정 새로고침 및 동기화</string>
+    <string name="menu_reload_config_desc">서버에서 설정을 새로고침하고 워치와 동기화합니다</string>
+    <string name="reload_config_dialog_title">설정 새로고침 및 동기화</string>
+    <string name="reload_config_dialog_message">설정을 새로고침하시겠습니까? 현재 캠페인의 최신 설정을 가져옵니다.\n\n워치가 연결되어 있고 가까이 있는지 확인해 주세요. 또한 워치의 데이터 수집을 중지해야 설정이 워치에도 올바르게 적용될 수 있습니다.</string>
     <string name="error_generic">문제가 발생했습니다. 다시 시도해 주세요.</string>
     <string name="toast_success_saved">설정을 성공적으로 불러왔습니다.</string>
 

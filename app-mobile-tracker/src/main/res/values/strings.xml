@@ -160,10 +160,10 @@
     <string name="record_deleted_success">Record deleted from device and server</string>
     <string name="record_deleted_error">Failed to delete record</string>
 
-    <string name="menu_reload_config">Reload Config</string>
-    <string name="menu_reload_config_desc">Refresh the config from server</string>
-    <string name="reload_config_dialog_title">Reload Configuration</string>
-    <string name="reload_config_dialog_message">Are you sure you want to reload? This will fetch the latest settings for your current campaign.</string>
+    <string name="menu_reload_config">Reload &amp; Sync Config</string>
+    <string name="menu_reload_config_desc">Refresh config from server and sync between phone and watch</string>
+    <string name="reload_config_dialog_title">Reload &amp; Sync Configuration</string>
+    <string name="reload_config_dialog_message">Are you sure you want to reload? This will fetch the latest settings for your current campaign.\n\nPlease make sure to connect the watch, keep it nearby, and disable data collection on the watch so the configuration can be applied to the watch as well.</string>
     <string name="error_generic">Something went wrong. Please try again.</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
