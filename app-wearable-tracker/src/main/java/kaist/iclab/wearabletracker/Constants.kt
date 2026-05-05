@@ -16,6 +16,7 @@ object Constants {
         const val KEY_MICRO_EMA_TRIGGER = "micro_ema_trigger"
         const val KEY_TRIGGER_CONFIG = "trigger_config"
         const val KEY_PHONE_EMA_TRIGGER = "phone_ema_trigger"
+        const val KEY_DETECTION_STATE_UPDATE = "detection_state_update"
     }
 
     /**

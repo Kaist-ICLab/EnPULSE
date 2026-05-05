@@ -13,7 +13,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
-
+import kotlinx.serialization.json.jsonPrimitive
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 /**
  * Receives trigger configuration from the phone via BLE and initializes
  * the trigger engine with parsed trigger rules and survey configs.
@@ -42,7 +43,8 @@ class TriggerConfigReceiver(
     private val bleChannel: BLEDataChannel,
     private val triggerEngine: TriggerEngine,
     private val actionHandler: WatchTriggerActionHandler,
-    private val backgroundController: BackgroundController
+    private val backgroundController: BackgroundController,
+    private val detectionStateTracker: DetectionStateTracker
 ) {
     companion object {
         private const val TAG = "TriggerConfigRcvr"
@@ -73,6 +75,12 @@ class TriggerConfigReceiver(
             TAG,
             "Started listening for trigger config on BLE key: ${Constants.BLE.KEY_TRIGGER_CONFIG}"
         )
+
+        bleChannel.addOnReceivedListener(
+            setOf(Constants.BLE.KEY_DETECTION_STATE_UPDATE)
+        ) { _, jsonElement ->
+            handleDetectionStateUpdate(jsonElement)
+        }
     }
 
     private fun handleTriggerConfig(jsonElement: JsonElement) {
@@ -116,6 +124,30 @@ class TriggerConfigReceiver(
             Log.d(TAG, "Trigger engine configured successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing trigger config payload: ${e.message}", e)
+        }
+    }
+
+    private fun handleDetectionStateUpdate(jsonElement: JsonElement) {
+        try {
+            val payload = when (jsonElement) {
+                is kotlinx.serialization.json.JsonObject -> jsonElement
+                is kotlinx.serialization.json.JsonPrimitive -> {
+                    json.parseToJsonElement(jsonElement.content).jsonObject
+                }
+                else -> {
+                    json.parseToJsonElement(jsonElement.toString()).jsonObject
+                }
+            }
+
+            Log.d(TAG, "Received simulated detection states: $payload")
+            val now = System.currentTimeMillis()
+            
+            payload.forEach { (key, valueElement) ->
+                val value = valueElement.jsonPrimitive.content
+                detectionStateTracker.updateState(key, value, now)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error applying detection state update: ${e.message}", e)
         }
     }
 }

@@ -477,7 +477,8 @@ val koinModule = module {
             bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
             triggerEngine = get(),
             actionHandler = get(),
-            backgroundController = get()
+            backgroundController = get(),
+            detectionStateTracker = get()
         )
     }
 

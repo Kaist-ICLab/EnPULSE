@@ -75,6 +75,7 @@ object AppConfig {
         const val MICRO_EMA_TRIGGER = "micro_ema_trigger"
         const val TRIGGER_CONFIG = "trigger_config"
         const val PHONE_EMA_TRIGGER = "phone_ema_trigger"
+        const val DETECTION_STATE_UPDATE = "detection_state_update"
     }
 
     /**

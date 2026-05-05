@@ -72,8 +72,13 @@ class SettingsViewModel(
         private const val TAG = "SettingsViewModel"
     }
 
-    fun triggerMicroEmaOnWatch() {
-        bleHelper.triggerMicroEmaOnWatch()
+    fun triggerDebugStatesOnWatch() {
+        bleHelper.sendDetectionStateUpdates(
+            mapOf(
+                "physical_activity" to "Walking",
+                "stress" to "High"
+            )
+        )
     }
 
     private val sensors = backgroundController.sensors

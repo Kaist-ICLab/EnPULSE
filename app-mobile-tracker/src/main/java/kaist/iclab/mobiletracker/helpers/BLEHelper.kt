@@ -211,53 +211,28 @@ class BLEHelper(
     }
 
     /**
-     * Send a remote trigger to the watch to immediately start a microEMA survey session.
-     * This uses a Just-in-Time architecture: the phone picks a survey from the retrieved configs
-     * and sends a random question from it to the watch.
+     * Send simulated detection state updates to the watch.
+     * This allows the phone to trigger generic evaluation rules on the watch.
      */
-    fun triggerMicroEmaOnWatch() {
+    fun sendDetectionStateUpdates(states: Map<String, String>) {
         appScope.io.launch {
             try {
-                // Get dynamic configs from storage
-                val dynamicConfigs = microEmaConfigStorage.get().watchSurveyConfigs
-                val config = dynamicConfigs.values.randomOrNull()
-
-                if (config == null) {
-                    Log.e(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] No dynamic MicroEMA config available, cannot trigger"
-                    )
-                    return@launch
-                }
-
-                // Pick a random question to send
-                val question = config.questions.randomOrNull()
-                if (question == null) {
-                    Log.e(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] Config (ID: ${config.surveyId}) has no questions"
-                    )
-                    return@launch
-                }
-
-                // Wrap in a mini-config for the watch
-                val triggerPayload = buildJsonObject {
-                    put("surveyId", config.surveyId)
-                    put("title", config.title)
-                    put("expireAfterMs", config.expireAfterMs)
-                    put("question", Json.encodeToJsonElement(question))
+                // Serialize map to JSON
+                val payload = buildJsonObject {
+                    states.forEach { (key, value) ->
+                        put(key, value)
+                    }
                 }.toString()
 
-
-                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_TRIGGER, triggerPayload)
+                bleChannel.send(AppConfig.BLEKeys.DETECTION_STATE_UPDATE, payload)
                 Log.d(
                     AppConfig.LogTags.PHONE_BLE,
-                    "[MICRO_EMA] Sent JIT trigger to watch: ${question.text} (ID: ${config.surveyId})"
+                    "[TRIGGER] Sent state updates to watch: $payload"
                 )
             } catch (e: Exception) {
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
-                    "[MICRO_EMA] Failed to send trigger: ${e.message}"
+                    "[TRIGGER] Failed to send state updates: ${e.message}"
                 )
             }
         }

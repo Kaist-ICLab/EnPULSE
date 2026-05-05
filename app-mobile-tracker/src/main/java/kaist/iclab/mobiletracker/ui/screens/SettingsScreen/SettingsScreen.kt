@@ -100,9 +100,9 @@ fun SettingsScreen(
                         shape = Styles.CARD_SHAPE
                     ) {
                         AppMenuItem(
-                            title = "MicroEMA Manual Trigger",
+                            title = "Debug: High Stress + Walking",
                             icon = Icons.Filled.PhoneAndroid,
-                            onClick = { settingsViewModel.triggerMicroEmaOnWatch() },
+                            onClick = { settingsViewModel.triggerDebugStatesOnWatch() },
                             showDivider = false,
                             iconTint = AppColors.PrimaryColor
                         )

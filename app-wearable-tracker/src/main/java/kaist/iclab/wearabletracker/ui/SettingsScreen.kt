@@ -26,7 +26,7 @@ import androidx.wear.compose.material.VignettePosition
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.trigger.state.DetectionStateTracker
+
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
@@ -39,9 +39,9 @@ import kaist.iclab.wearabletracker.ui.components.PermissionPermanentlyDeniedDial
 import kaist.iclab.wearabletracker.ui.components.SamsungHealthConnectionErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SdkPolicyErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SensorToggleChip
-import kaist.iclab.wearabletracker.ui.components.SettingController
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
+
+import kaist.iclab.wearabletracker.ui.components.SettingController
 
 @Composable
 fun SettingsScreen(
@@ -217,25 +217,7 @@ fun SettingsScreen(
                             onIntervalChange = { settingsViewModel.setAutoSyncInterval(it) }
                         )
 
-                        // DEBUG: Trigger Mechanism Test Button
-                        val tracker = koinInject<DetectionStateTracker>()
-                        Button(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            onClick = {
-                                val now = System.currentTimeMillis()
-                                // Reset to force a change
-                                tracker.updateState("physical_activity", "Unknown", now)
-                                tracker.updateState("stress", "Low", now)
 
-                                // Set to target trigger states
-                                tracker.updateState("physical_activity", "Walking", now + 1)
-                                tracker.updateState("stress", "High", now + 2)
-                            }
-                        ) {
-                            Text("Debug: High Stress + Walking", modifier = Modifier.padding(4.dp))
-                        }
 
 
                         availableSensors.forEach { (name, _) ->
