@@ -44,7 +44,8 @@ class TriggerConfigReceiver(
     private val triggerEngine: TriggerEngine,
     private val actionHandler: WatchTriggerActionHandler,
     private val backgroundController: BackgroundController,
-    private val detectionStateTracker: DetectionStateTracker
+    private val detectionStateTracker: DetectionStateTracker,
+    private val storage: TriggerConfigStorage
 ) {
     companion object {
         private const val TAG = "TriggerConfigRcvr"
@@ -121,7 +122,10 @@ class TriggerConfigReceiver(
             // Load triggers into the engine
             triggerEngine.loadTriggers(configPayload.triggers)
 
-            Log.d(TAG, "Trigger engine configured successfully")
+            // Persist for app restarts
+            storage.saveConfig(configPayload)
+
+            Log.d(TAG, "Trigger engine configured and persisted successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing trigger config payload: ${e.message}", e)
         }

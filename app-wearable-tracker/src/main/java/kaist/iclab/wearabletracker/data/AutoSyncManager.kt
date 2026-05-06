@@ -62,10 +62,23 @@ class AutoSyncManager(
                     return@launch
                 }
 
-                phoneCommunicationManager.sendDataToPhone(isSilent = true)
+                // Acquire a WakeLock to ensure the CPU doesn't sleep during sync
+                val wakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    kaist.iclab.wearabletracker.Constants.AutoSync.WAKELOCK_TAG
+                )
+                wakeLock.acquire(kaist.iclab.wearabletracker.Constants.AutoSync.WAKELOCK_TIMEOUT_MS)
 
-                // Also retry any pending MicroEMA responses
-                microEmaResponseManager.retrySyncUnsynced()
+                try {
+                    phoneCommunicationManager.sendDataToPhone(isSilent = true)
+
+                    // Also retry any pending MicroEMA responses
+                    microEmaResponseManager.retrySyncUnsynced()
+                } finally {
+                    if (wakeLock.isHeld) {
+                        wakeLock.release()
+                    }
+                }
             }
         }
     }

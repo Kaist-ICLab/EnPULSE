@@ -81,5 +81,13 @@ object Constants {
         const val FLUSH_INTERVAL_MS = 2000L
         const val SYNC_BATCH_LIMIT = 2000 // Max records per sync batch
     }
+
+    /**
+     * AutoSync Constants
+     */
+    object AutoSync {
+        const val WAKELOCK_TAG = "EnPulse:AutoSyncWakeLock"
+        const val WAKELOCK_TIMEOUT_MS = 5 * 60 * 1000L // 5 minutes
+    }
 }
 

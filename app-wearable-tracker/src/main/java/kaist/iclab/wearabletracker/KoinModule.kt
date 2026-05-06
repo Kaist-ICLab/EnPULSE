@@ -39,6 +39,7 @@ import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
 import kaist.iclab.wearabletracker.trigger.TriggerConfigReceiver
+import kaist.iclab.wearabletracker.trigger.TriggerConfigStorage
 import kaist.iclab.wearabletracker.trigger.WatchTriggerActionHandler
 import kaist.iclab.wearabletracker.ui.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -443,6 +444,10 @@ val koinModule = module {
     }
 
     single {
+        TriggerConfigStorage(context = androidContext())
+    }
+
+    single {
         StressDetectionAdapter(
             stressSensor = get(),
             tracker = get()
@@ -478,7 +483,8 @@ val koinModule = module {
             triggerEngine = get(),
             actionHandler = get(),
             backgroundController = get(),
-            detectionStateTracker = get()
+            detectionStateTracker = get(),
+            storage = get()
         )
     }
 
@@ -489,9 +495,16 @@ val koinModule = module {
         val stressAdapter = get<StressDetectionAdapter>()
         val gestureAdapter = get<GestureDetectionAdapter>()
         val configReceiver = get<TriggerConfigReceiver>()
+        val storage = get<TriggerConfigStorage>()
 
         // Set the action handler
         engine.setActionHandler(actionHandler)
+
+        // Restore persisted config if it exists
+        storage.loadConfig()?.let { payload ->
+            actionHandler.updateSurveyConfigs(payload.surveyConfigs)
+            engine.loadTriggers(payload.triggers)
+        }
 
         // Start adapters (they attach listeners to sensors)
         stressAdapter.start()
