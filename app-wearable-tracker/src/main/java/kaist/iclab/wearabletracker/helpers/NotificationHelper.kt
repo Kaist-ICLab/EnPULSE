@@ -263,6 +263,19 @@ object NotificationHelper {
     }
 
     /**
+     * Show a notification when device storage is critically low.
+     */
+    fun showLowStorageNotification(context: Context) {
+        showFailureNotification(
+            context = context,
+            channelConfig = NotificationChannelConfig.ERROR,
+            title = context.getString(R.string.notification_low_storage_title),
+            message = context.getString(R.string.notification_low_storage_message),
+            notificationId = Constants.NotificationId.ERROR + 100
+        )
+    }
+
+    /**
      * Show error/exception notification
      */
     fun showError(context: Context, title: String, message: String) {

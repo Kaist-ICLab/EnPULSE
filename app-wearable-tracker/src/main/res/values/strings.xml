@@ -86,4 +86,6 @@
     <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
     <string name="perm_fullscreen_intent_action">Allow</string>
     <string name="turn_off_data_collection_first">Data collection is still running</string>
+    <string name="notification_low_storage_title">Storage Critically Low</string>
+    <string name="notification_low_storage_message">Data collection stopped to protect device stability. Please free up space.</string>
 </resources>

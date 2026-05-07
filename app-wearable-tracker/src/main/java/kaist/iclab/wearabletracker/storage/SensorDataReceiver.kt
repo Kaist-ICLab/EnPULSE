@@ -54,6 +54,7 @@ class SensorDataReceiver(
 
         // Inject AutoSyncManager to piggyback on hardware wakeups during Doze mode
         private val autoSyncManager by inject<AutoSyncManager>()
+        private val backgroundController by inject<BackgroundController>()
 
         // Channel to receive sensor events
         private val eventChannel = Channel<Pair<String, SensorEntity>>(
@@ -166,7 +167,26 @@ class SensorDataReceiver(
             }
         }
 
+        private fun hasEnoughSpace(): Boolean {
+            return try {
+                val stat = android.os.StatFs(android.os.Environment.getDataDirectory().path)
+                val bytesAvailable = stat.availableBlocksLong * stat.blockSizeLong
+                bytesAvailable >= kaist.iclab.wearabletracker.Constants.DB.MIN_FREE_SPACE_BYTES
+            } catch (e: Exception) {
+                Log.e("SensorDataReceiver", "Failed to check storage space", e)
+                true // Default to true to avoid stopping collection on a transient error
+            }
+        }
+
         private suspend fun flushBuffer(buffer: MutableMap<String, MutableList<SensorEntity>>) {
+            // Safety check: Stop collection if storage is critically low
+            if (!hasEnoughSpace()) {
+                Log.e("SensorDataReceiver", "Stopping collection: Internal storage is low.")
+                backgroundController.stop()
+                NotificationHelper.showLowStorageNotification(this)
+                return
+            }
+
             buffer.forEach { (sensorId, entities) ->
                 if (entities.isNotEmpty()) {
                     // Make a copy to insert
@@ -183,7 +203,7 @@ class SensorDataReceiver(
                     // Only clear the buffer if the insertion was successful.
                     // If it failed (result is null), we keep the data in the list so it 
                     // will be retried in the next flush cycle.
-                    if (result == true) {
+                    if (result.isSuccess) {
                         entities.clear()
                     } else {
                         Log.w("SensorDataReceiver", "Insertion failed for $sensorId. Keeping ${entities.size} records in buffer for retry.")
