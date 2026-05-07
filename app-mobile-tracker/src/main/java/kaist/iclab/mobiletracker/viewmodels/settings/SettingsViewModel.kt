@@ -81,7 +81,7 @@ class SettingsViewModel(
                     "stress" to "Low"
                 )
             )
-            
+
             // Small delay to ensure BLE messages are processed sequentially
             kotlinx.coroutines.delay(100)
 

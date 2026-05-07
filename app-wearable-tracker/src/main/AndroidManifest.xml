@@ -55,6 +55,14 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault" />
 
+        <receiver
+            android:name=".trigger.TriggerDebugReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="kaist.iclab.wearabletracker.UPDATE_STATE" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

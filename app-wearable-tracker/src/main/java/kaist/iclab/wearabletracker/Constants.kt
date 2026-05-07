@@ -88,6 +88,7 @@ object Constants {
     object AutoSync {
         const val WAKELOCK_TAG = "EnPulse:AutoSyncWakeLock"
         const val WAKELOCK_TIMEOUT_MS = 5 * 60 * 1000L // 5 minutes
+        const val MIN_SYNC_INTERVAL_MS = 60 * 1000L // Minimum 1 minute between syncs
     }
 }
 

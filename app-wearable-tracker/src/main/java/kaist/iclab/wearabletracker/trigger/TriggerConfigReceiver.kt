@@ -88,14 +88,8 @@ class TriggerConfigReceiver(
         try {
             Log.d(TAG, "Received trigger config payload")
 
-            // Block config application if data collection is running
-            if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
-                Log.w(
-                    TAG,
-                    "Skipping trigger config application: Data collection is currently running"
-                )
-                return
-            }
+            // Clear old detection states to ensure a fresh evaluation with new rules
+            detectionStateTracker.clear()
 
             val payload = when (jsonElement) {
                 is kotlinx.serialization.json.JsonObject -> jsonElement

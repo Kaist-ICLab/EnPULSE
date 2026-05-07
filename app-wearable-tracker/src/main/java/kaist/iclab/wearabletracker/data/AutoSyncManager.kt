@@ -50,10 +50,9 @@ class AutoSyncManager(
             val elapsedTime = now - lastSyncTime
 
             if (elapsedTime >= interval) {
-                // Check if device is in deep sleep (Doze mode)
-                val powerManager =
-                    context.getSystemService(Context.POWER_SERVICE) as PowerManager
-                if (powerManager.isDeviceIdleMode) {
+                // Add a hard throttle to prevent excessive syncing when batches flush quickly
+                val lastActualSyncTime = syncPreferencesHelper.getLastSyncTimestamp() ?: 0L
+                if (now - lastActualSyncTime < kaist.iclab.wearabletracker.Constants.AutoSync.MIN_SYNC_INTERVAL_MS) {
                     return@launch
                 }
 
@@ -63,6 +62,8 @@ class AutoSyncManager(
                 }
 
                 // Acquire a WakeLock to ensure the CPU doesn't sleep during sync
+                val powerManager =
+                    context.getSystemService(Context.POWER_SERVICE) as PowerManager
                 val wakeLock = powerManager.newWakeLock(
                     PowerManager.PARTIAL_WAKE_LOCK,
                     kaist.iclab.wearabletracker.Constants.AutoSync.WAKELOCK_TAG

@@ -169,14 +169,24 @@ class SensorDataReceiver(
         private suspend fun flushBuffer(buffer: MutableMap<String, MutableList<SensorEntity>>) {
             buffer.forEach { (sensorId, entities) ->
                 if (entities.isNotEmpty()) {
-                    // Make a copy to insert and clear original list
+                    // Make a copy to insert
                     val batchToInsert = entities.toList()
-                    entities.clear()
-                    runClassified(
+                    
+                    val result = runClassified(
                         "SensorDataReceiver",
                         "flush batch for $sensorId"
                     ) {
                         sensorDataStorages[sensorId]?.insert(batchToInsert)
+                        true // Success
+                    }
+
+                    // Only clear the buffer if the insertion was successful.
+                    // If it failed (result is null), we keep the data in the list so it 
+                    // will be retried in the next flush cycle.
+                    if (result == true) {
+                        entities.clear()
+                    } else {
+                        Log.w("SensorDataReceiver", "Insertion failed for $sensorId. Keeping ${entities.size} records in buffer for retry.")
                     }
                 }
             }
