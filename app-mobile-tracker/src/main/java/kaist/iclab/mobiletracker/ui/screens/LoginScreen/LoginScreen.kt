@@ -61,7 +61,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(AppColors.Background)
     ) {
         // Language dropdown at top-right corner
         Box(
