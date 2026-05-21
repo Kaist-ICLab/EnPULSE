@@ -86,14 +86,21 @@ object NotificationHelper {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val channel = NotificationChannel(
-            config.channelId,
-            config.channelName,
-            config.importance
-        ).apply {
-            description = config.description
+        val existingChannel = notificationManager.getNotificationChannel(config.channelId)
+        if (existingChannel != null && existingChannel.importance < config.importance) {
+            notificationManager.deleteNotificationChannel(config.channelId)
         }
-        notificationManager.createNotificationChannel(channel)
+
+        if (notificationManager.getNotificationChannel(config.channelId) == null) {
+            val channel = NotificationChannel(
+                config.channelId,
+                config.channelName,
+                config.importance
+            ).apply {
+                description = config.description
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     /**
@@ -314,6 +321,7 @@ object NotificationHelper {
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(pendingIntent)
+                .setFullScreenIntent(pendingIntent, true)
                 .setAutoCancel(true)
                 .build()
 
@@ -359,6 +367,11 @@ object NotificationHelper {
     ) {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val existingChannel = notificationManager.getNotificationChannel(channelId)
+        if (existingChannel != null && existingChannel.importance < importance) {
+            notificationManager.deleteNotificationChannel(channelId)
+        }
 
         if (notificationManager.getNotificationChannel(channelId) == null) {
             val channel = NotificationChannel(channelId, channelName, importance)
