@@ -178,6 +178,10 @@ class WatchTriggerActionHandler(
                 text = config.description ?: ""
             )
 
+            // Also directly start the activity as a fallback — full-screen intents
+            // on Wear OS may only show a heads-up notification without auto-launching.
+            context.startActivity(intent)
+
             Log.d(TAG, "WatchSurveyActivity launched via Full-Screen Intent Notification")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch WatchSurveyActivity: ${e.message}", e)

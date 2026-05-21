@@ -100,7 +100,7 @@ fun SettingsScreen(
                         shape = Styles.CARD_SHAPE
                     ) {
                         AppMenuItem(
-                            title = "Debug: High Stress + Walking",
+                            title = "Debug: High Stress + Drinking",
                             icon = Icons.Filled.PhoneAndroid,
                             onClick = { settingsViewModel.triggerDebugStatesOnWatch() },
                             showDivider = false,
