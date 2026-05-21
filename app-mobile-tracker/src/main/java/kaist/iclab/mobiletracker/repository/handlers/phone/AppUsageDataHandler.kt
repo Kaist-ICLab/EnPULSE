@@ -9,7 +9,7 @@ import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
  * Handler for App Usage sensor data.
  */
 class AppUsageDataHandler(private val dao: AppUsageLogDao) : SensorDataHandler {
-    override val sensorId = "AppUsage"
+    override val sensorId = "AppUsageLog"
     override val displayName = "App Usage"
     override val isWatchSensor = false
 

@@ -136,7 +136,7 @@ fun HomeScreen(
                     Styles.Colors.APP_LIST_CHANGE
                 ),
                 SensorItem(
-                    "AppUsage",
+                    "AppUsageLog",
                     uiState.appUsageCount,
                     Icons.Default.GridView,
                     Styles.Colors.APP_USAGE
