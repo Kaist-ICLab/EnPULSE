@@ -13,6 +13,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,8 +49,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
+import androidx.compose.ui.input.rotary.onPreRotaryScrollEvent
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +81,10 @@ import kaist.iclab.tracker.sensor.microema.WatchOption
 import kaist.iclab.tracker.sensor.microema.WatchQuestion
 import kaist.iclab.wearabletracker.R
 import kotlinx.coroutines.delay
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.hypot
 
 // --- Color Palette ---
 private val AccentBlue = Color(0xFF8AB4F8)
@@ -88,6 +101,127 @@ private val TimerCritical = Color(0xFFF28B82)
  */
 private fun isLikertScale(options: List<WatchOption>): Boolean =
     options.all { it.display.toDoubleOrNull() != null }
+
+private fun Modifier.edgeSwipeInput(
+    enabled: Boolean,
+    onCounterClockwise: () -> Unit,
+    onClockwise: () -> Unit
+): Modifier {
+    if (!enabled) return this
+
+    return pointerInput(onCounterClockwise, onClockwise) {
+        val edgeWidthPx = 34.dp.toPx()
+        val triggerAngle = (PI / 6.0).toFloat()
+
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val centerX = size.width / 2f
+            val centerY = size.height / 2f
+            val outerRadius = minOf(size.width, size.height) / 2f
+            val downRadius = hypot(down.position.x - centerX, down.position.y - centerY)
+            if (downRadius < outerRadius - edgeWidthPx) return@awaitEachGesture
+
+            var previousAngle = atan2(down.position.y - centerY, down.position.x - centerX)
+            var accumulatedAngle = 0f
+            var triggered = false
+
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                if (!change.pressed) break
+
+                val position = change.position
+                val currentRadius = hypot(position.x - centerX, position.y - centerY)
+                if (currentRadius < outerRadius - edgeWidthPx * 1.6f) break
+
+                val currentAngle = atan2(position.y - centerY, position.x - centerX)
+                var delta = currentAngle - previousAngle
+                if (delta > PI) delta -= (2 * PI).toFloat()
+                if (delta < -PI) delta += (2 * PI).toFloat()
+                previousAngle = currentAngle
+                accumulatedAngle += delta
+
+                when {
+                    accumulatedAngle >= triggerAngle -> {
+                        onClockwise()
+                        accumulatedAngle = 0f
+                        triggered = true
+                        change.consume()
+                    }
+
+                    accumulatedAngle <= -triggerAngle -> {
+                        onCounterClockwise()
+                        accumulatedAngle = 0f
+                        triggered = true
+                        change.consume()
+                    }
+
+                    triggered || abs(delta) > 0.01f -> {
+                        change.consume()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun Modifier.rotarySelectionInput(
+    enabled: Boolean,
+    focusRequester: FocusRequester,
+    onCounterClockwise: () -> Unit,
+    onClockwise: () -> Unit
+): Modifier {
+    if (!enabled) return this
+
+    fun handleScroll(scrollPixels: Float): Boolean {
+        return when {
+            scrollPixels > 0f -> {
+                onClockwise()
+                true
+            }
+
+            scrollPixels < 0f -> {
+                onCounterClockwise()
+                true
+            }
+
+            else -> false
+        }
+    }
+
+    return onPreRotaryScrollEvent { event ->
+        handleScroll(event.verticalScrollPixels)
+    }
+        .onRotaryScrollEvent { event ->
+            handleScroll(event.verticalScrollPixels)
+        }
+        .focusRequester(focusRequester)
+        .focusable()
+}
+
+@Composable
+private fun rememberActiveFocusRequester(
+    enabled: Boolean,
+    key: Any?
+): FocusRequester {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(enabled, key) {
+        if (!enabled) return@LaunchedEffect
+
+        repeat(3) { attempt ->
+            delay(50L * (attempt + 1))
+            try {
+                focusRequester.requestFocus()
+                return@LaunchedEffect
+            } catch (_: IllegalStateException) {
+                // The focus target can be attached one frame later during screen transitions.
+            }
+        }
+    }
+
+    return focusRequester
+}
 
 /**
  * Main microEMA screen — displays a single question and handles the response.
@@ -182,9 +316,107 @@ private fun SingleQuestionView(
     onAnswer: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val numberOptions = remember(question) {
+        question.options.map { it.display }.ifEmpty { (0..10).map { it.toString() } }
+    }
+    val initialSelectedIndex = remember(question) {
+        if (question.options.isEmpty()) {
+            0
+        } else if (question.answerType == AnswerType.BINARY ||
+            (question.answerType == AnswerType.RADIO && question.options.size <= 2)
+        ) {
+            0
+        } else {
+            question.options.size / 2
+        }
+    }
+    var selectedIndex by remember(question) { mutableIntStateOf(initialSelectedIndex) }
+    var selectedIds by remember(question) { mutableStateOf(emptySet<Int>()) }
+    var selectedNumberIndex by remember(question) { mutableIntStateOf(numberOptions.lastIndex / 2) }
+    var enteredText by remember(question) { mutableStateOf("") }
+    val haptic = LocalHapticFeedback.current
+    val isLikert = remember(question) { isLikertScale(question.options) }
+    val edgeSwipeEnabled = when (question.answerType) {
+        AnswerType.BINARY,
+        AnswerType.RADIO,
+        AnswerType.NUMBERSCALE -> true
+
+        else -> false
+    }
+    val focusRequester = rememberActiveFocusRequester(
+        enabled = edgeSwipeEnabled,
+        key = question.id
+    )
+
+    fun selectPrevious() {
+        var didChange = false
+        when (question.answerType) {
+            AnswerType.BINARY -> {
+                val nextIndex = (selectedIndex - 1).coerceAtLeast(0)
+                didChange = nextIndex != selectedIndex
+                selectedIndex = nextIndex
+            }
+
+            AnswerType.RADIO -> {
+                val nextIndex = (selectedIndex - 1).coerceAtLeast(0)
+                didChange = nextIndex != selectedIndex
+                selectedIndex = nextIndex
+            }
+
+            AnswerType.NUMBERSCALE -> {
+                val nextIndex = (selectedNumberIndex - 1).coerceAtLeast(0)
+                didChange = nextIndex != selectedNumberIndex
+                selectedNumberIndex = nextIndex
+            }
+
+            else -> Unit
+        }
+        if (didChange) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+
+    fun selectNext() {
+        var didChange = false
+        when (question.answerType) {
+            AnswerType.BINARY -> {
+                if (question.options.isNotEmpty()) {
+                    val nextIndex = (selectedIndex + 1).coerceAtMost(question.options.lastIndex)
+                    didChange = nextIndex != selectedIndex
+                    selectedIndex = nextIndex
+                }
+            }
+
+            AnswerType.RADIO -> {
+                if (question.options.isNotEmpty()) {
+                    val nextIndex = (selectedIndex + 1).coerceAtMost(question.options.lastIndex)
+                    didChange = nextIndex != selectedIndex
+                    selectedIndex = nextIndex
+                }
+            }
+
+            AnswerType.NUMBERSCALE -> {
+                val nextIndex = (selectedNumberIndex + 1).coerceAtMost(numberOptions.lastIndex)
+                didChange = nextIndex != selectedNumberIndex
+                selectedNumberIndex = nextIndex
+            }
+
+            else -> Unit
+        }
+        if (didChange) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .rotarySelectionInput(
+                enabled = edgeSwipeEnabled,
+                focusRequester = focusRequester,
+                onCounterClockwise = ::selectPrevious,
+                onClockwise = ::selectNext
+            )
             .padding(horizontal = 24.dp)
             .padding(bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -223,13 +455,6 @@ private fun SingleQuestionView(
         }
 
         // --- SECTION 2: Middle (Interaction / Options) ---
-        var selectedIndex by remember { mutableIntStateOf(question.options.size / 2) }
-        var selectedIds by remember { mutableStateOf(emptySet<Int>()) }
-        var selectedNumber by remember { mutableStateOf("5") }
-        var enteredText by remember { mutableStateOf("") }
-
-        val isLikert = remember(question) { isLikertScale(question.options) }
-
         Box(
             modifier = Modifier.padding(vertical = 4.dp),
             contentAlignment = Alignment.Center
@@ -239,6 +464,7 @@ private fun SingleQuestionView(
                     if (question.options.size <= 2) {
                         TapButtonsInput(
                             options = question.options,
+                            selectedIndex = selectedIndex,
                             onSelect = onAnswer
                         )
                     } else if (isLikert) {
@@ -273,14 +499,16 @@ private fun SingleQuestionView(
                 AnswerType.BINARY -> {
                     TapButtonsInput(
                         options = question.options,
+                        selectedIndex = selectedIndex,
                         onSelect = onAnswer
                     )
                 }
 
                 AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
                     NumberPickerInput(
-                        options = question.options,
-                        onValueChange = { selectedNumber = it },
+                        numberOptions = numberOptions,
+                        selectedIndex = selectedNumberIndex,
+                        onIndexChanged = { selectedNumberIndex = it },
                         onSelect = onAnswer
                     )
                 }
@@ -301,8 +529,8 @@ private fun SingleQuestionView(
         ) {
             // Show confirm for Likert, Categorical, Checkbox, and Number/Text
             val showConfirm = when {
-                question.answerType == AnswerType.BINARY -> false
-                question.answerType == AnswerType.RADIO && question.options.size <= 2 -> false
+                question.answerType == AnswerType.BINARY -> true
+                question.answerType == AnswerType.RADIO && question.options.size <= 2 -> true
                 else -> true
             }
 
@@ -332,11 +560,13 @@ private fun SingleQuestionView(
                         }
 
                         AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
-                            onAnswer(selectedNumber)
+                            onAnswer(numberOptions[selectedNumberIndex])
                         }
 
                         AnswerType.BINARY -> {
-                            // Handled directly by TapButtonsInput
+                            if (question.options.isNotEmpty()) {
+                                onAnswer(question.options[selectedIndex].display)
+                            }
                         }
                     }
                 },
@@ -359,6 +589,13 @@ private fun HorizontalOptionInput(
 ) {
     val listState =
         rememberLazyListState(initialFirstVisibleItemIndex = maxOf(0, selectedIndex - 1))
+
+    LaunchedEffect(selectedIndex) {
+        if (options.isNotEmpty()) {
+            val targetIndex = maxOf(0, selectedIndex - 1).coerceAtMost(options.lastIndex)
+            listState.scrollToItem(targetIndex)
+        }
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -427,6 +664,12 @@ private fun CategoricalOptionInput(
         initialPage = selectedIndex,
         pageCount = { options.size }
     )
+
+    LaunchedEffect(selectedIndex) {
+        if (pagerState.currentPage != selectedIndex) {
+            pagerState.scrollToPage(selectedIndex)
+        }
+    }
 
     // Sync pager scroll → selectedIndex
     LaunchedEffect(pagerState.currentPage) {
@@ -660,6 +903,7 @@ private fun TextInput(
 @Composable
 private fun TapButtonsInput(
     options: List<WatchOption>,
+    selectedIndex: Int,
     onSelect: (String) -> Unit
 ) {
     Column(
@@ -670,18 +914,21 @@ private fun TapButtonsInput(
             verticalAlignment = Alignment.CenterVertically
         ) {
             options.forEachIndexed { index, option ->
+                val isSelected = index == selectedIndex
                 Button(
                     onClick = { onSelect(option.display) },
                     modifier = Modifier
                         .weight(1f)
                         .height(34.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = DarkSurface),
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = if (isSelected) AccentBlue else DarkSurface
+                    ),
                     shape = CircleShape
                 ) {
                     Text(
                         text = option.display,
                         fontSize = 14.sp,
-                        color = Color.White,
+                        color = if (isSelected) Color.Black else Color.White,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -695,19 +942,25 @@ private fun TapButtonsInput(
  */
 @Composable
 private fun NumberPickerInput(
-    options: List<WatchOption>,
-    onValueChange: (String) -> Unit,
+    numberOptions: List<String>,
+    selectedIndex: Int,
+    onIndexChanged: (Int) -> Unit,
     onSelect: (String) -> Unit
 ) {
-    val numberOptions = options.map { it.display }.ifEmpty { (0..10).map { it.toString() } }
     val pickerState = rememberPickerState(
         initialNumberOfOptions = numberOptions.size,
-        initiallySelectedOption = numberOptions.lastIndex / 2
+        initiallySelectedOption = selectedIndex
     )
+
+    LaunchedEffect(selectedIndex) {
+        if (pickerState.selectedOption != selectedIndex) {
+            pickerState.scrollToOption(selectedIndex)
+        }
+    }
 
     // Sync picker scroll → onValueChange
     LaunchedEffect(pickerState.selectedOption) {
-        onValueChange(numberOptions[pickerState.selectedOption])
+        onIndexChanged(pickerState.selectedOption)
     }
 
     Column(
