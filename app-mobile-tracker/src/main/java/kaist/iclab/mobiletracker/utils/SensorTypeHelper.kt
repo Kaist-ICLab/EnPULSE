@@ -51,5 +51,8 @@ fun String.toCampaignSensorName(): String {
     } else {
         this
     }
-    return baseName.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").lowercase() + "_sensor"
+    return baseName
+        .replace("([a-z])([A-Z]+)".toRegex(), "$1_$2")
+        .replace("([A-Z]+)([A-Z][a-z])".toRegex(), "$1_$2")
+        .lowercase() + "_sensor"
 }

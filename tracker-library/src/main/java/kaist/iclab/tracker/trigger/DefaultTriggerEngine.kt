@@ -81,6 +81,15 @@ class DefaultTriggerEngine(
     override val evaluationEvents: SharedFlow<TriggerEvaluationEvent> = _evaluationEvents
 
     override fun loadTriggers(triggers: List<ParsedCampaignTrigger>) {
+        val currentIds = this.triggers.map { it.id }.toSet()
+        val newIds = triggers.map { it.id }.toSet()
+        
+        if (currentIds.isNotEmpty() && currentIds != newIds) {
+            lastActionTimes.clear()
+            prefs.edit().clear().apply()
+            Log.d(TAG, "Trigger set changed, cleared throttle state")
+        }
+
         this.triggers = triggers
         Log.d(TAG, "Loaded ${triggers.size} trigger(s): ${triggers.map { it.name }}")
     }

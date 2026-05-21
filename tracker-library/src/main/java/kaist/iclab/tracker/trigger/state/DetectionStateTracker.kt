@@ -3,6 +3,7 @@ package kaist.iclab.tracker.trigger.state
 import kaist.iclab.tracker.trigger.model.DetectionState
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.channels.BufferOverflow
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -23,7 +24,8 @@ class DetectionStateTracker {
     private val states = ConcurrentHashMap<String, DetectionState>()
 
     private val _stateChanges = MutableSharedFlow<Pair<String, DetectionState>>(
-        extraBufferCapacity = 16
+        extraBufferCapacity = 64,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
     /**
