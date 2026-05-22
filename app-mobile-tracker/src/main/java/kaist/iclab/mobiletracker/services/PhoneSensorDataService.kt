@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionResponseInsert
+import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
@@ -21,6 +22,7 @@ import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
+import kaist.iclab.tracker.sensor.phone.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -67,6 +69,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     private val surveySensor by inject<SurveySensor>()
     private val surveyService by inject<SurveyService>()
     private val userProfileRepository by inject<UserProfileRepository>()
+    private val bleHelper by inject<BLEHelper>()
 
     // Channel for batching
     private val eventChannel = Channel<Pair<String, SensorEntity>>(
@@ -94,6 +97,28 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         val surveyEntity = entity as? SurveySensor.Entity ?: return@listener
         lifecycleScope.launch(Dispatchers.IO) {
             handleSurveyResponse(surveyEntity)
+        }
+    }
+
+    private val activityRecognitionListener: (SensorEntity) -> Unit = listener@{ entity ->
+        val activityEntity = entity as? ActivityRecognitionSensor.Entity ?: return@listener
+        
+        // Process the data locally (now successfully saves to Room DB and syncs to Supabase)
+        listener["ActivityRecognition"]?.invoke(entity)
+
+        val label = when (activityEntity.activityType) {
+            com.google.android.gms.location.DetectedActivity.STILL -> "Still"
+            com.google.android.gms.location.DetectedActivity.WALKING -> "Walking"
+            com.google.android.gms.location.DetectedActivity.RUNNING -> "Running"
+            com.google.android.gms.location.DetectedActivity.ON_FOOT -> "On Foot"
+            com.google.android.gms.location.DetectedActivity.ON_BICYCLE -> "On Bicycle"
+            com.google.android.gms.location.DetectedActivity.IN_VEHICLE -> "In Vehicle"
+            else -> "Unknown"
+        }
+
+        if (label != "Unknown") {
+            Log.d(TAG, "Phone activity detected: $label. Syncing to watch...")
+            bleHelper.sendDetectionStateUpdates(mapOf("physical_activity" to label))
         }
     }
 
@@ -141,7 +166,11 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
             val campaignSensorName = sensor.id.toCampaignSensorName()
 
             if (activeSensors.contains(campaignSensorName)) {
-                sensor.addListener(listener[sensor.id]!!)
+                if (sensor is ActivityRecognitionSensor) {
+                    sensor.addListener(activityRecognitionListener)
+                } else {
+                    sensor.addListener(listener[sensor.id]!!)
+                }
             }
         }
 

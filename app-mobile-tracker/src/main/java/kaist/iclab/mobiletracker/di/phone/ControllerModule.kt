@@ -5,6 +5,7 @@ import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
+import kaist.iclab.tracker.sensor.phone.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
@@ -35,6 +36,7 @@ val controllerModule = module {
     // Sensors list
     single(named("phoneSensors")) {
         listOf(
+            get<ActivityRecognitionSensor>(),
             get<AmbientLightSensor>(),
             get<AppListChangeSensor>(),
             get<AppUsageLogSensor>(),

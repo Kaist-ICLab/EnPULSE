@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.di.phone
 import kaist.iclab.mobiletracker.storage.CouchbaseSensorStateStorage
 import kaist.iclab.mobiletracker.storage.SimpleStateStorage
 import kaist.iclab.tracker.permission.AndroidPermissionManager
+import kaist.iclab.tracker.sensor.phone.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
@@ -18,6 +19,21 @@ import java.util.concurrent.TimeUnit
  * Activity sensors module - app usage, steps, user interaction, ambient light
  */
 val activitySensorsModule = module {
+    // Activity Recognition Sensor
+    single {
+        ActivityRecognitionSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = SimpleStateStorage(
+                ActivityRecognitionSensor.Config(intervalMillis = 10000L)
+            ),
+            stateStorage = CouchbaseSensorStateStorage(
+                couchbase = get(),
+                collectionName = ActivityRecognitionSensor::class.simpleName ?: ""
+            )
+        )
+    }
+
     // Ambient Light Sensor
     single {
         AmbientLightSensor(

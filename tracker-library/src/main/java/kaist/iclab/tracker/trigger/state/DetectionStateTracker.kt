@@ -29,17 +29,18 @@ class DetectionStateTracker {
     )
 
     /**
-     * Flow of state change events. Emits only when a sensor's detection value
-     * actually changes (not on duplicate updates with the same value).
+     * Flow of state change events. Emits every time a sensor produces a new detection,
+     * regardless of whether the value changed.
      */
     val stateChanges: SharedFlow<Pair<String, DetectionState>> = _stateChanges
 
     /**
      * Update the detection state for a sensor.
      *
-     * If the new value differs from the current value, a change event is emitted
-     * on [stateChanges]. Duplicate updates with the same value are silently ignored
-     * to avoid unnecessary trigger evaluations.
+     * This emits a change event on [stateChanges] on EVERY update.
+     * Duplicate updates with the same value are NOT ignored so that
+     * continuous triggers (e.g., repeating while "Still") work correctly.
+     * Trigger throttling is handled by the TriggerEngine.
      *
      * @param sensor The sensor name (e.g., "stress", "physical_activity").
      * @param value The detected label (e.g., "High", "Drinking").
@@ -47,10 +48,8 @@ class DetectionStateTracker {
      */
     fun updateState(sensor: String, value: String, timestamp: Long) {
         val newState = DetectionState(value, timestamp)
-        val oldState = states.put(sensor, newState)
-        if (oldState?.value != value) {
-            _stateChanges.tryEmit(sensor to newState)
-        }
+        states.put(sensor, newState)
+        _stateChanges.tryEmit(sensor to newState)
     }
 
     /**

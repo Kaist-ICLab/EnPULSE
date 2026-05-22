@@ -20,7 +20,7 @@ import kaist.iclab.tracker.trigger.state.DetectionStateTracker
  *
  * Condition JSON usage:
  * ```json
- * { "type": "detection", "sensor": "physical_activity", "value": "Drinking" }
+ * { "type": "detection", "sensor": "gesture", "value": "Drinking" }
  * ```
  */
 class GestureDetectionAdapter(
@@ -28,7 +28,7 @@ class GestureDetectionAdapter(
     private val tracker: DetectionStateTracker
 ) : SensorDetectionAdapter {
 
-    override val sensorName: String = "physical_activity"
+    override val sensorName: String = "gesture"
 
     private val listener: (GestureSensor.Entity) -> Unit = { entity ->
         val label = GestureSensor.LABELS.getOrElse(entity.classIndex) { "Other" }

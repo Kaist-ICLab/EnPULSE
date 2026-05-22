@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import kaist.iclab.mobiletracker.db.dao.common.LocationDao
+import kaist.iclab.mobiletracker.db.dao.phone.ActivityRecognitionDao
 import kaist.iclab.mobiletracker.db.dao.phone.AmbientLightDao
 import kaist.iclab.mobiletracker.db.dao.phone.AppListChangeDao
 import kaist.iclab.mobiletracker.db.dao.phone.AppUsageLogDao
@@ -30,6 +31,7 @@ import kaist.iclab.mobiletracker.db.dao.watch.WatchPPGDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchSkinTemperatureDao
 import kaist.iclab.mobiletracker.db.dao.watch.WatchStressDao
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
+import kaist.iclab.mobiletracker.db.entity.phone.ActivityRecognitionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AmbientLightEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppUsageLogEntity
@@ -57,10 +59,11 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 
 @Database(
-    version = 2,
+    version = 3,
     entities = [
 
         // Phone sensor data
+        ActivityRecognitionEntity::class,
         AmbientLightEntity::class,
         AppListChangeEntity::class,
         AppUsageLogEntity::class,
@@ -96,6 +99,7 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 abstract class TrackerRoomDB : RoomDatabase() {
 
     // Phone sensor data
+    abstract fun activityRecognitionDao(): ActivityRecognitionDao
     abstract fun ambientLightDao(): AmbientLightDao
     abstract fun appListChangeDao(): AppListChangeDao
     abstract fun appUsageLogDao(): AppUsageLogDao
