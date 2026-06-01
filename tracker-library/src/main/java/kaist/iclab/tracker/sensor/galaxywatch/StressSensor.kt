@@ -1,46 +1,57 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
 import android.content.Context
+import android.content.Intent
+import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.sensor.sigrep.StressBinaryInferencer
-import kaist.iclab.tracker.sensor.sigrep.TimestampedRingBuffer
-import kaist.iclab.tracker.sensor.sigrep.magnitude
-import kaist.iclab.tracker.sensor.sigrep.resampleAndZscore
+import kaist.iclab.tracker.storage.core.RmssdHistory
 import kaist.iclab.tracker.storage.core.StateStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 class StressSensor(
     private val context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
-    private val accelerometerSensor: AccelerometerSensor,
-    private val ppgSensor: PPGSensor,
     private val heartRateSensor: HeartRateSensor,
+    private val rmssdHistory: RmssdHistory,
 ) : BaseSensor<StressSensor.Config, StressSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
 ) {
     companion object {
-        private const val WINDOW_MS = 4_000L
+        private const val WINDOW_MS = 60_000L
+        private const val STRIDE_MS = 15_000L
 
-        private const val ACC_FS = 25
-        private const val PPG_FS = 25
-        private const val HR_FS = 1
+        // HR bounds 30–220 bpm → IBI bounds 60000/220–60000/30 ms.
+        private const val MIN_IBI_MS = 273
+        private const val MAX_IBI_MS = 2000
 
-        private const val ACC_CHANNELS = 1
-        private const val PPG_CHANNELS = 3
-        private const val HR_CHANNELS = 1
+        private const val MAD_MULTIPLIER = 3.0
+        private const val STRESS_PERCENTILE = 0.20
 
-        private const val BUFFER_SEC = 8
+        // RMSSD needs at least one successive-difference pair.
+        private const val MIN_IBIS_PER_WINDOW = 2
+
+        private const val ACTION_INFER = "kaist.iclab.tracker.StressSensor.ACTION_INFER"
+        private const val REQUEST_CODE_INFER = 0x57
     }
 
     data class Config(
-        val interpreterThreads: Int = 2,
-        val predictionStrideMs: Long = 1_000L,
+        val windowMs: Long = WINDOW_MS,
+        val strideMs: Long = STRIDE_MS,
     ) : SensorConfig
 
     override val initialConfig: Config = Config()
@@ -48,83 +59,76 @@ class StressSensor(
     @Serializable
     data class Entity(
         val received: Long,
-        val windowStartMs: Long,
         val timestamp: Long,
-        val probability: Float,
-        val isHighStress: Boolean,
+        val windowStartMs: Long,
+        val windowEndMs: Long,
+        val rmssd: Float,
+        val ibiCount: Int,
+        val threshold: Float,
+        val isStressed: Boolean,
     ) : SensorEntity()
 
     override val id: String = "Stress"
     override val permissions: Array<String> = emptyArray()
     override val foregroundServiceTypes: Array<Int> = emptyArray()
 
-    private val accBuffer = TimestampedRingBuffer(ACC_CHANNELS, ACC_FS * BUFFER_SEC + 32)
-    private val ppgBuffer = TimestampedRingBuffer(PPG_CHANNELS, PPG_FS * BUFFER_SEC + 32)
-    private val hrBuffer = TimestampedRingBuffer(HR_CHANNELS, HR_FS * BUFFER_SEC + 8)
-
     private val dataLock = Any()
-    private var inferencer: StressBinaryInferencer? = null
-    private var lastEmittedWindowEndMs = Long.MIN_VALUE
+    private val ibiTimestampsMs = ArrayDeque<Long>()
+    private val ibiValuesMs = ArrayDeque<Int>()
 
-    private var ownsAcc = false
-    private var ownsPpg = false
+    private val inferenceMutex = Mutex()
+    private var inferenceScope: CoroutineScope? = null
+
     private var ownsHr = false
-
-    private val accListener: (AccelerometerSensor.Entity) -> Unit = { handleAcc(it) }
-    private val ppgListener: (PPGSensor.Entity) -> Unit = { handlePpg(it) }
     private val hrListener: (HeartRateSensor.Entity) -> Unit = { handleHr(it) }
+
+    private var alarmListener: AlarmListener? = null
+    private val alarmCallback: (Intent?) -> Unit = {
+        inferenceScope?.launch {
+            inferenceMutex.withLock { runInference() }
+        }
+    }
 
     override fun init() {
         super.init()
-        accelerometerSensor.init()
-        ppgSensor.init()
         heartRateSensor.init()
     }
 
     override fun onStart() {
-        inferencer = StressBinaryInferencer(context, configStateFlow.value.interpreterThreads)
         synchronized(dataLock) {
-            accBuffer.clear()
-            ppgBuffer.clear()
-            hrBuffer.clear()
-            lastEmittedWindowEndMs = Long.MIN_VALUE
+            ibiTimestampsMs.clear()
+            ibiValuesMs.clear()
         }
+        inferenceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-        accelerometerSensor.addListener(accListener)
-        ppgSensor.addListener(ppgListener)
         heartRateSensor.addListener(hrListener)
-
-        ownsAcc = ensureRunning(accelerometerSensor)
-        ownsPpg = ensureRunning(ppgSensor)
         ownsHr = ensureRunning(heartRateSensor)
+
+        alarmListener = AlarmListener(
+            context = context,
+            actionName = ACTION_INFER,
+            actionCode = REQUEST_CODE_INFER,
+            actionIntervalInMilliseconds = configStateFlow.value.strideMs,
+        ).also { it.addListener(alarmCallback) }
     }
 
     override fun onStop() {
-        accelerometerSensor.removeListener(accListener)
-        ppgSensor.removeListener(ppgListener)
-        heartRateSensor.removeListener(hrListener)
+        alarmListener?.removeListener(alarmCallback)
+        alarmListener = null
 
-        if (ownsAcc && accelerometerSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
-            accelerometerSensor.stop()
-        }
-        if (ownsPpg && ppgSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
-            ppgSensor.stop()
-        }
+        heartRateSensor.removeListener(hrListener)
         if (ownsHr && heartRateSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
             heartRateSensor.stop()
         }
-        ownsAcc = false
-        ownsPpg = false
         ownsHr = false
 
+        inferenceScope?.cancel()
+        inferenceScope = null
+
         synchronized(dataLock) {
-            accBuffer.clear()
-            ppgBuffer.clear()
-            hrBuffer.clear()
-            lastEmittedWindowEndMs = Long.MIN_VALUE
+            ibiTimestampsMs.clear()
+            ibiValuesMs.clear()
         }
-        inferencer?.close()
-        inferencer = null
     }
 
     private fun ensureRunning(sensor: BaseSensor<*, *>): Boolean {
@@ -139,111 +143,93 @@ class StressSensor(
         }
     }
 
-    private fun handleAcc(entity: AccelerometerSensor.Entity) {
-        synchronized(dataLock) {
-            val ch = FloatArray(ACC_CHANNELS)
-            for (p in entity.dataPoint) {
-                ch[0] = magnitude(p.x, p.y, p.z)
-                accBuffer.append(p.timestamp, ch)
-            }
-        }
-        maybePredict()
-    }
-
-    private fun handlePpg(entity: PPGSensor.Entity) {
-        synchronized(dataLock) {
-            val ch = FloatArray(PPG_CHANNELS)
-            for (p in entity.dataPoint) {
-                ch[0] = p.green.toFloat()
-                ch[1] = p.red.toFloat()
-                ch[2] = p.ir.toFloat()
-                ppgBuffer.append(p.timestamp, ch)
-            }
-        }
-        maybePredict()
-    }
-
     private fun handleHr(entity: HeartRateSensor.Entity) {
         synchronized(dataLock) {
-            val ch = FloatArray(HR_CHANNELS)
-            for (p in entity.dataPoint) {
-                ch[0] = p.hr.toFloat()
-                hrBuffer.append(p.timestamp, ch)
+            for (point in entity.dataPoint) {
+                val ibis = point.ibi
+                val statuses = point.ibiStatus
+                val n = minOf(ibis.size, statuses.size)
+                for (i in 0 until n) {
+                    // Galaxy Watch IBI_STATUS: 0 == valid.
+                    if (statuses[i] != 0) continue
+                    val v = ibis[i]
+                    if (v <= 0) continue
+                    ibiTimestampsMs.addLast(point.timestamp)
+                    ibiValuesMs.addLast(v)
+                }
             }
         }
-        maybePredict()
     }
 
-    private class Snapshot(
-        val windowStartMs: Long,
-        val windowEndMs: Long,
-        val acc: FloatArray,
-        val ppg: FloatArray,
-        val hr: FloatArray,
-    )
+    private suspend fun runInference() {
+        val config = configStateFlow.value
+        val windowEnd = System.currentTimeMillis()
+        val windowStart = windowEnd - config.windowMs
 
-    private fun buildSnapshot(): Snapshot? = synchronized(dataLock) {
-        val accNew = accBuffer.newestTimestampMsOrNull() ?: return@synchronized null
-        val ppgNew = ppgBuffer.newestTimestampMsOrNull() ?: return@synchronized null
-        val hrNew = hrBuffer.newestTimestampMsOrNull() ?: return@synchronized null
-
-        val windowEndMs = minOf(accNew, ppgNew, hrNew)
-        val windowStartMs = windowEndMs - WINDOW_MS
-
-        val strideMs = configStateFlow.value.predictionStrideMs
-        if (lastEmittedWindowEndMs != Long.MIN_VALUE &&
-            windowEndMs - lastEmittedWindowEndMs < strideMs
-        ) return@synchronized null
-
-        if ((accBuffer.oldestTimestampMsOrNull() ?: Long.MAX_VALUE) > windowStartMs) {
-            return@synchronized null
-        }
-        if ((ppgBuffer.oldestTimestampMsOrNull() ?: Long.MAX_VALUE) > windowStartMs) {
-            return@synchronized null
-        }
-        if ((hrBuffer.oldestTimestampMsOrNull() ?: Long.MAX_VALUE) > windowStartMs) {
-            return@synchronized null
+        val ibis: IntArray = synchronized(dataLock) {
+            while (ibiTimestampsMs.isNotEmpty() && ibiTimestampsMs.first() < windowStart) {
+                ibiTimestampsMs.removeFirst()
+                ibiValuesMs.removeFirst()
+            }
+            ibiValuesMs.toIntArray()
         }
 
-        val accSnap = accBuffer.snapshot() ?: return@synchronized null
-        val ppgSnap = ppgBuffer.snapshot() ?: return@synchronized null
-        val hrSnap = hrBuffer.snapshot() ?: return@synchronized null
+        val filtered = filterIbis(ibis)
+        if (filtered.size < MIN_IBIS_PER_WINDOW) return
 
-        val accTensor = resampleAndZscore(
-            accSnap.first, accSnap.second, ACC_CHANNELS, windowStartMs, WINDOW_MS, ACC_FS
-        ) ?: return@synchronized null
-        val ppgTensor = resampleAndZscore(
-            ppgSnap.first, ppgSnap.second, PPG_CHANNELS, windowStartMs, WINDOW_MS, PPG_FS
-        ) ?: return@synchronized null
-        val hrTensor = resampleAndZscore(
-            hrSnap.first, hrSnap.second, HR_CHANNELS, windowStartMs, WINDOW_MS, HR_FS
-        ) ?: return@synchronized null
+        val rmssd = rmssd(filtered)
+        rmssdHistory.insert(windowEnd, rmssd)
+        val history = rmssdHistory.all()
+        val threshold = percentile(history, STRESS_PERCENTILE)
 
-        lastEmittedWindowEndMs = windowEndMs
-        Snapshot(windowStartMs, windowEndMs, accTensor, ppgTensor, hrTensor)
-    }
-
-    private fun maybePredict() {
-        val snapshot = buildSnapshot() ?: return
-        val inf = inferencer ?: return
-        val prediction = runCatching {
-            inf.predict(snapshot.acc, snapshot.ppg, snapshot.hr)
-        }.getOrNull() ?: return
-        emit(snapshot.windowStartMs, snapshot.windowEndMs, prediction)
-    }
-
-    private fun emit(
-        windowStartMs: Long,
-        windowEndMs: Long,
-        prediction: StressBinaryInferencer.Prediction,
-    ) {
-        val entity = Entity(
+        val emission = Entity(
             received = System.currentTimeMillis(),
-            timestamp = windowEndMs,
-            windowStartMs = windowStartMs,
-            probability = prediction.probability,
-            isHighStress = prediction.isHighStress,
+            timestamp = windowEnd,
+            windowStartMs = windowStart,
+            windowEndMs = windowEnd,
+            rmssd = rmssd,
+            ibiCount = filtered.size,
+            threshold = threshold,
+            isStressed = rmssd < threshold,
         )
-        listeners.forEach { it.invoke(entity) }
+        listeners.forEach { it.invoke(emission) }
+    }
+
+    private fun filterIbis(ibis: IntArray): IntArray {
+        val inRange = ibis.filter { it in MIN_IBI_MS..MAX_IBI_MS }.map { it.toDouble() }
+        if (inRange.isEmpty()) return IntArray(0)
+        val med = median(inRange)
+        val mad = median(inRange.map { abs(it - med) })
+        if (mad == 0.0) return inRange.map { it.toInt() }.toIntArray()
+        val low = med - MAD_MULTIPLIER * mad
+        val high = med + MAD_MULTIPLIER * mad
+        return inRange.filter { it in low..high }.map { it.toInt() }.toIntArray()
+    }
+
+    private fun rmssd(ibis: IntArray): Float {
+        var sumSq = 0.0
+        for (i in 1 until ibis.size) {
+            val d = (ibis[i] - ibis[i - 1]).toDouble()
+            sumSq += d * d
+        }
+        return sqrt(sumSq / (ibis.size - 1)).toFloat()
+    }
+
+    private fun median(values: List<Double>): Double {
+        val sorted = values.sorted()
+        val n = sorted.size
+        return if (n % 2 == 1) sorted[n / 2]
+        else (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0
+    }
+
+    private fun percentile(values: FloatArray, p: Double): Float {
+        if (values.isEmpty()) return Float.NaN
+        val sorted = values.copyOf().also { it.sort() }
+        if (sorted.size == 1) return sorted[0]
+        val rank = p * (sorted.size - 1)
+        val lo = rank.toInt()
+        val hi = (lo + 1).coerceAtMost(sorted.size - 1)
+        val frac = rank - lo
+        return (sorted[lo] * (1 - frac) + sorted[hi] * frac).toFloat()
     }
 }

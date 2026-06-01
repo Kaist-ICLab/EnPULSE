@@ -9,6 +9,7 @@ import kaist.iclab.wearabletracker.db.dao.HeartRateDao
 import kaist.iclab.wearabletracker.db.dao.LocationDao
 import kaist.iclab.wearabletracker.db.dao.MicroEmaResponseDao
 import kaist.iclab.wearabletracker.db.dao.PPGDao
+import kaist.iclab.wearabletracker.db.dao.RmssdHistoryDao
 import kaist.iclab.wearabletracker.db.dao.SkinTemperatureDao
 import kaist.iclab.wearabletracker.db.entity.AccelerometerEntity
 import kaist.iclab.wearabletracker.db.entity.EDAEntity
@@ -16,10 +17,11 @@ import kaist.iclab.wearabletracker.db.entity.HeartRateEntity
 import kaist.iclab.wearabletracker.db.entity.LocationEntity
 import kaist.iclab.wearabletracker.db.entity.MicroEmaResponseEntity
 import kaist.iclab.wearabletracker.db.entity.PPGEntity
+import kaist.iclab.wearabletracker.db.entity.RmssdHistoryEntity
 import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
 
 @Database(
-    version = 1,
+    version = 3,
     entities = [
         AccelerometerEntity::class,
         PPGEntity::class,
@@ -28,6 +30,7 @@ import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
         EDAEntity::class,
         LocationEntity::class,
         MicroEmaResponseEntity::class,
+        RmssdHistoryEntity::class,
     ],
     exportSchema = true
 )
@@ -40,4 +43,5 @@ abstract class TrackerRoomDB : RoomDatabase() {
     abstract fun edaDao(): EDADao
     abstract fun locationDao(): LocationDao
     abstract fun microEmaResponseDao(): MicroEmaResponseDao
+    abstract fun rmssdHistoryDao(): RmssdHistoryDao
 }

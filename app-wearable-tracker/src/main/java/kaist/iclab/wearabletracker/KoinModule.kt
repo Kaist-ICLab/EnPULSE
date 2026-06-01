@@ -17,6 +17,7 @@ import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
 import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
 import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
+import kaist.iclab.tracker.storage.core.RmssdHistory
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kaist.iclab.tracker.storage.core.StateStorage
@@ -31,6 +32,7 @@ import kaist.iclab.wearabletracker.ema.MicroEmaViewModel
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
+import kaist.iclab.wearabletracker.storage.RoomRmssdHistory
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
 import kaist.iclab.wearabletracker.ui.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -218,6 +220,10 @@ val koinModule = module {
         )
     }
 
+    single<RmssdHistory> {
+        RoomRmssdHistory(dao = get<TrackerRoomDB>().rmssdHistoryDao())
+    }
+
     single {
         StressSensor(
             context = androidContext(),
@@ -234,9 +240,8 @@ val koinModule = module {
                 clazz = SensorState::class.java,
                 collectionName = StressSensor::class.simpleName ?: ""
             ),
-            accelerometerSensor = get(),
-            ppgSensor = get(),
-            heartRateSensor = get()
+            heartRateSensor = get(),
+            rmssdHistory = get()
         )
     }
 

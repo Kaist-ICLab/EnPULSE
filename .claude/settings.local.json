@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(java -version)",
+      "Bash(./gradlew --version)",
+      "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-21.0.10\" ./gradlew :app-wearable-tracker:compileDebugKotlin --console=plain)"
+    ]
+  }
+}
