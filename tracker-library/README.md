@@ -52,4 +52,4 @@ below records where each sensor actually runs:
 ## Related Modules
 
 - [`app-mobile-tracker`](../app-mobile-tracker/README.md) &mdash; phone application built on this library.
-- [`app-wearable-tracker`](../app-wearable-tracker/README.md) &mdash; Galaxy Watch companion application.
+- `app-wearable-tracker` &mdash; Galaxy Watch companion application.
