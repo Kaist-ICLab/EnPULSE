@@ -47,7 +47,7 @@ import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
-import kaist.iclab.tracker.sensor.phone.BatterySensor
+import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.phone.BluetoothScanSensor
 import kaist.iclab.tracker.sensor.phone.CallLogSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
