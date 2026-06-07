@@ -36,8 +36,8 @@ class StressSensor(
         private const val STRIDE_MS = 15_000L
 
         // HR bounds 30–220 bpm → IBI bounds 60000/220–60000/30 ms.
-        private const val MIN_IBI_MS = 273
-        private const val MAX_IBI_MS = 2000
+        private const val MIN_IBI_MS = 60 * 1000 / 220
+        private const val MAX_IBI_MS = 60 * 1000 / 30
 
         private const val MAD_MULTIPLIER = 3.0
         private const val STRESS_PERCENTILE = 0.20

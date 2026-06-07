@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import kaist.iclab.mobiletracker.db.dao.common.BaseDao
 import kaist.iclab.mobiletracker.db.entity.phone.BatteryEntity
-import kaist.iclab.tracker.sensor.phone.BatterySensor
+import kaist.iclab.tracker.sensor.common.BatterySensor
 import kotlinx.coroutines.flow.Flow
 
 @Dao
