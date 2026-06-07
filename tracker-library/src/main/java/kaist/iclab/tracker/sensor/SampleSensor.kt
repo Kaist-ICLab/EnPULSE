@@ -9,6 +9,11 @@ import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.serialization.Serializable
 
+/**
+ * This is just an example that shows the general structure of Sensors,
+ * and how custom sensors should be implemented.
+ */
+
 class SampleSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
