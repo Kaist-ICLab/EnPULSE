@@ -167,6 +167,12 @@
     <string name="error_generic">Something went wrong. Please try again.</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
+    <string name="menu_leave_campaign">Leave Campaign</string>
+    <string name="menu_leave_campaign_desc">Leave your current campaign</string>
+    <string name="leave_campaign_dialog_title">Leave Campaign</string>
+    <string name="leave_campaign_dialog_message">Are you sure you want to leave? Your campaign configuration will be removed and data collection will stop. You can join a campaign again anytime.</string>
+    <string name="toast_campaign_left">You have left the campaign</string>
+
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">Light sensor data</string>
     <string name="sensor_desc_app_list_change">App installation changes</string>

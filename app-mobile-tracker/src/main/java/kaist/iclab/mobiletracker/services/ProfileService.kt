@@ -48,7 +48,7 @@ class ProfileService(
      */
     private suspend fun saveProfile(profile: ProfileData): Result<Unit> {
         return SupabaseLoadingInterceptor.withLoading {
-            ErrorClassifier.runClassified(TAG, "saveProfile(${profile.uuid})") {
+            ErrorClassifier.runClassified(TAG, "saveProfile(${profile.uuid}, ${profile.campaignId})") {
                 supabaseClient.from(tableName).upsert(profile)
                 Unit
             }
@@ -99,6 +99,36 @@ class ProfileService(
                     .decodeList<ProfileData>()
 
                 profiles.firstOrNull()
+            }
+        }
+    }
+
+    /**
+     * Leave the current campaign by clearing the profile's campaign ID.
+     *
+     * Uses an explicit UPDATE that sets campaign_id to null rather than an
+     * upsert: an upsert serializes the whole [ProfileData], and since
+     * campaignId == null equals its default it gets dropped from the JSON body,
+     * leaving the column unchanged. It is also an INSERT-on-conflict, so it
+     * would require an INSERT RLS policy. A targeted UPDATE sends an explicit
+     * `{"campaign_id": null}` and only needs an UPDATE policy.
+     *
+     * @param uuid The user UUID
+     * @return Result containing Unit on success or error
+     */
+    suspend fun leaveCampaign(uuid: String): Result<Unit> {
+        return SupabaseLoadingInterceptor.withLoading {
+            ErrorClassifier.runClassified(TAG, "leaveCampaign($uuid)") {
+                supabaseClient.from(tableName).update(
+                    {
+                        set("campaign_id", null as Int?)
+                    }
+                ) {
+                    filter {
+                        eq("uuid", uuid)
+                    }
+                }
+                Unit
             }
         }
     }

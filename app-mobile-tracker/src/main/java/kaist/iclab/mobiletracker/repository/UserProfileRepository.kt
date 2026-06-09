@@ -39,6 +39,11 @@ interface UserProfileRepository {
     suspend fun syncFullStudyConfig(): Result<ProfileData?>
 
     /**
+     * Leave the current campaign by clearing the profile's campaign ID.
+     */
+    suspend fun leaveCampaign(): Result<Unit>
+
+    /**
      * Create profile if it doesn't exist
      * @param email User email
      * @param campaignId Optional campaign ID

@@ -90,6 +90,12 @@ class UserProfileRepositoryImpl(
         return profileResult
     }
 
+    override suspend fun leaveCampaign(): Result<Unit> {
+        val uuid = getCurrentUuid()
+            ?: return Result.Error(AppError.Unknown("User not logged in"))
+        return profileService.leaveCampaign(uuid)
+    }
+
     override suspend fun createProfileIfNotExists(
         email: String,
         campaignId: Int?
