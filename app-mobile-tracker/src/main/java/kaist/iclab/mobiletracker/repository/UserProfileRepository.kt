@@ -29,12 +29,6 @@ interface UserProfileRepository {
     fun clearProfile()
 
     /**
-     * Update campaign ID for current user and refresh profile
-     * @return Result with success or failure
-     */
-    suspend fun updateCampaignId(campaignId: Int): Result<Unit>
-
-    /**
      * Refresh profile from remote source
      */
     suspend fun refreshProfile(): Result<ProfileData?>

@@ -44,12 +44,6 @@ class UserProfileRepositoryImpl(
         persistentStorage.set(ProfileData())
     }
 
-    override suspend fun updateCampaignId(campaignId: Int): Result<Unit> {
-        val uuid = getCurrentUuid()
-            ?: return Result.Error(AppError.Unknown("User not logged in"))
-        return profileService.updateCampaignId(uuid, campaignId)
-    }
-
     override suspend fun refreshProfile(): Result<ProfileData?> {
         val uuid = getCurrentUuid()
             ?: return Result.Error(AppError.Unknown("User not logged in"))
@@ -66,22 +60,32 @@ class UserProfileRepositoryImpl(
     }
 
     override suspend fun syncFullStudyConfig(): Result<ProfileData?> {
-        // 1. Refresh profile first to get latest campaign ID
-        val profileResult = refreshProfile()
+        val uuid = getCurrentUuid()
+            ?: return Result.Error(AppError.Unknown("User not logged in"))
+
+        // 1. Fetch the latest profile WITHOUT publishing it yet. Publishing the
+        //    campaign ID immediately would trigger navigation away from the
+        //    onboarding screen (NavGraph observes profileFlow.campaignId), which
+        //    cancels this scope before the sensors/surveys below finish loading.
+        val profileResult = profileService.getProfileByUuid(uuid)
         if (profileResult is Result.Error) return profileResult
 
         val profile = profileResult.getOrNull()
         val campaignId = profile?.campaignId
 
-        // 2. If we have a campaign, fetch sensors and surveys
+        // 2. If we have a campaign, fetch sensors and surveys; otherwise clear caches.
         if (campaignId != null) {
             campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
             surveyRepository.fetchAndPersistSurveys(campaignId)
         } else {
-            // If no campaign, clear caches to be safe
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()
         }
+
+        // 3. Publish the profile last, so observers (e.g. navigation reacting to
+        //    campaignId) only react once the study config is fully in place.
+        _profile.value = profile
+        profile?.let { persistentStorage.set(it) }
 
         return profileResult
     }

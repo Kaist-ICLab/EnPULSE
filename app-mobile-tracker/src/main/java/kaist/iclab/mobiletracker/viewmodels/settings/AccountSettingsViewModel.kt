@@ -109,22 +109,16 @@ class AccountSettingsViewModel(
     }
 
     private suspend fun saveCampaignToProfile(campaignId: String) {
-        val campaignIdInt = campaignId.toIntOrNull() ?: return
+        campaignId.toIntOrNull() ?: return
 
-        when (val result = userProfileRepository.updateCampaignId(campaignIdInt)) {
-            is Result.Success -> {
-                val syncResult = userProfileRepository.syncFullStudyConfig()
+        // Membership is already registered server-side by the join-campaign
+        // edge function; just sync profile, sensors, and surveys.
+        val syncResult = userProfileRepository.syncFullStudyConfig()
 
-                if (syncResult.isSuccess) {
-                    AppToast.show(context, R.string.toast_experiment_group_selected)
-                } else {
-                    AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
-                }
-            }
-
-            is Result.Error -> {
-                // Error handling handled by ErrorClassifier
-            }
+        if (syncResult.isSuccess) {
+            AppToast.show(context, R.string.toast_experiment_group_selected)
+        } else {
+            AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
         }
     }
 

@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.services
 import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
-import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.flatMap
@@ -104,19 +103,4 @@ class ProfileService(
         }
     }
 
-    /**
-     * Update campaign ID for an existing profile
-     * @param uuid The user UUID
-     * @param campaignId The campaign ID to update (can be null to clear)
-     * @return Result containing Unit on success or error
-     */
-    suspend fun updateCampaignId(uuid: String, campaignId: Int?): Result<Unit> {
-        return getProfileByUuid(uuid).flatMap { existingProfile ->
-            if (existingProfile == null) {
-                Result.Error(AppError.NotFound("Profile with UUID $uuid not found"))
-            } else {
-                saveProfile(existingProfile.copy(campaignId = campaignId))
-            }
-        }
-    }
 }
