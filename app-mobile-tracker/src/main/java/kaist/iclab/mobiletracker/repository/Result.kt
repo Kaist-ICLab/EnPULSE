@@ -1,5 +1,8 @@
 package kaist.iclab.mobiletracker.repository
 
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlin.coroutines.cancellation.CancellationException
+
 /**
  * Sealed class representing the result of a repository operation.
  * Provides type-safe error handling for repository methods.
@@ -84,6 +87,12 @@ inline fun <T> runCatching(block: () -> T): Result<T> {
 suspend inline fun <T> runCatchingSuspend(crossinline block: suspend () -> T): Result<T> {
     return try {
         Result.Success(block())
+    } catch (e: TimeoutCancellationException) {
+        // A real request timeout (from withTimeout) — surface it as a failure.
+        Result.Error(e)
+    } catch (e: CancellationException) {
+        // Propagate genuine coroutine cancellation instead of swallowing it as a failure.
+        throw e
     } catch (e: Throwable) {
         Result.Error(e)
     }

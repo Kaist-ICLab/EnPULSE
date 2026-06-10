@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.repository
 import android.util.Log
 import kotlinx.coroutines.TimeoutCancellationException
 import java.net.ConnectException
+import kotlin.coroutines.cancellation.CancellationException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
@@ -92,6 +93,16 @@ object ErrorClassifier {
     ): Result<T> {
         return try {
             Result.Success(block())
+        } catch (e: TimeoutCancellationException) {
+            // A real timeout (from withTimeout) — classify as Timeout, not cancellation.
+            val classified = classify(e, context)
+            Log.e(tag, classified.message, classified)
+            Result.Error(classified)
+        } catch (e: CancellationException) {
+            // Cooperative coroutine cancellation (e.g. the viewModelScope being
+            // cleared). Must propagate so structured concurrency works correctly,
+            // and must NOT be logged as an application error.
+            throw e
         } catch (e: Throwable) {
             val classified = classify(e, context)
             Log.e(tag, classified.message, classified)

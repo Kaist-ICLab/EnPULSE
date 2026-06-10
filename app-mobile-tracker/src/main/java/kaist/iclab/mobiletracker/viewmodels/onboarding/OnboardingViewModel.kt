@@ -61,15 +61,15 @@ class OnboardingViewModel(
     }
 
     fun confirmSelection() {
-        val selectedCampaign = _uiState.value.selectedCampaign ?: return
+        _uiState.value.selectedCampaign ?: return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            when (val result = userProfileRepository.updateCampaignId(selectedCampaign.id)) {
+            // Membership is already registered server-side by the join-campaign
+            // edge function; just sync profile, sensors, and surveys.
+            when (val result = userProfileRepository.syncFullStudyConfig()) {
                 is Result.Success -> {
-                    // Consolidate sync of profile, sensors, and surveys
-                    userProfileRepository.syncFullStudyConfig()
                     _uiState.update { it.copy(isLoading = false, isComplete = true) }
                 }
 

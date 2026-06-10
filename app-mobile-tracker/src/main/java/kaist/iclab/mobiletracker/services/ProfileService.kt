@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.services
 import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
-import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.flatMap
@@ -49,7 +48,7 @@ class ProfileService(
      */
     private suspend fun saveProfile(profile: ProfileData): Result<Unit> {
         return SupabaseLoadingInterceptor.withLoading {
-            ErrorClassifier.runClassified(TAG, "saveProfile(${profile.uuid})") {
+            ErrorClassifier.runClassified(TAG, "saveProfile(${profile.uuid}, ${profile.campaignId})") {
                 supabaseClient.from(tableName).upsert(profile)
                 Unit
             }
@@ -105,18 +104,33 @@ class ProfileService(
     }
 
     /**
-     * Update campaign ID for an existing profile
+     * Leave the current campaign by clearing the profile's campaign ID.
+     *
+     * Uses an explicit UPDATE that sets campaign_id to null rather than an
+     * upsert: an upsert serializes the whole [ProfileData], and since
+     * campaignId == null equals its default it gets dropped from the JSON body,
+     * leaving the column unchanged. It is also an INSERT-on-conflict, so it
+     * would require an INSERT RLS policy. A targeted UPDATE sends an explicit
+     * `{"campaign_id": null}` and only needs an UPDATE policy.
+     *
      * @param uuid The user UUID
-     * @param campaignId The campaign ID to update (can be null to clear)
      * @return Result containing Unit on success or error
      */
-    suspend fun updateCampaignId(uuid: String, campaignId: Int?): Result<Unit> {
-        return getProfileByUuid(uuid).flatMap { existingProfile ->
-            if (existingProfile == null) {
-                Result.Error(AppError.NotFound("Profile with UUID $uuid not found"))
-            } else {
-                saveProfile(existingProfile.copy(campaignId = campaignId))
+    suspend fun leaveCampaign(uuid: String): Result<Unit> {
+        return SupabaseLoadingInterceptor.withLoading {
+            ErrorClassifier.runClassified(TAG, "leaveCampaign($uuid)") {
+                supabaseClient.from(tableName).update(
+                    {
+                        set("campaign_id", null as Int?)
+                    }
+                ) {
+                    filter {
+                        eq("uuid", uuid)
+                    }
+                }
+                Unit
             }
         }
     }
+
 }

@@ -50,6 +50,9 @@ class AccountSettingsViewModel(
     private val _isReloadingConfig = MutableStateFlow(false)
     val isReloadingConfig: StateFlow<Boolean> = _isReloadingConfig.asStateFlow()
 
+    private val _isLeavingCampaign = MutableStateFlow(false)
+    val isLeavingCampaign: StateFlow<Boolean> = _isLeavingCampaign.asStateFlow()
+
     private val _campaignError = MutableStateFlow<String?>(null)
     val campaignError: StateFlow<String?> = _campaignError.asStateFlow()
 
@@ -109,22 +112,16 @@ class AccountSettingsViewModel(
     }
 
     private suspend fun saveCampaignToProfile(campaignId: String) {
-        val campaignIdInt = campaignId.toIntOrNull() ?: return
+        campaignId.toIntOrNull() ?: return
 
-        when (val result = userProfileRepository.updateCampaignId(campaignIdInt)) {
-            is Result.Success -> {
-                val syncResult = userProfileRepository.syncFullStudyConfig()
+        // Membership is already registered server-side by the join-campaign
+        // edge function; just sync profile, sensors, and surveys.
+        val syncResult = userProfileRepository.syncFullStudyConfig()
 
-                if (syncResult.isSuccess) {
-                    AppToast.show(context, R.string.toast_experiment_group_selected)
-                } else {
-                    AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
-                }
-            }
-
-            is Result.Error -> {
-                // Error handling handled by ErrorClassifier
-            }
+        if (syncResult.isSuccess) {
+            AppToast.show(context, R.string.toast_experiment_group_selected)
+        } else {
+            AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
         }
     }
 
@@ -132,6 +129,30 @@ class AccountSettingsViewModel(
         return when (val result = campaignRepository.joinCampaign(campaignId, password)) {
             is Result.Success<Boolean> -> result.data
             is Result.Error -> false
+        }
+    }
+
+    fun leaveCampaign() {
+        if (_isLeavingCampaign.value) return
+
+        viewModelScope.launch {
+            _isLeavingCampaign.value = true
+            try {
+                when (userProfileRepository.leaveCampaign()) {
+                    is Result.Success -> {
+                        // Clear cached sensors/surveys and refresh the profile so the
+                        // UI reflects that no campaign is joined.
+                        userProfileRepository.syncFullStudyConfig()
+                        AppToast.show(context, R.string.toast_campaign_left)
+                    }
+
+                    is Result.Error -> {
+                        AppToast.show(context, R.string.error_generic)
+                    }
+                }
+            } finally {
+                _isLeavingCampaign.value = false
+            }
         }
     }
 
