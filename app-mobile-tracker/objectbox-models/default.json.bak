@@ -1,0 +1,79 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "2:1372174416996012846",
+      "lastPropertyId": "9:290014054855779471",
+      "name": "BatteryObxEntity",
+      "properties": [
+        {
+          "id": "1:4710580102532567280",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3292838697882168004",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:6554814446267416035",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:1517786067100174933",
+          "name": "timestamp",
+          "indexId": "1:1536833225897646001",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:8902299825073652347",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "6:6962783652157657860",
+          "name": "connectedType",
+          "type": 5
+        },
+        {
+          "id": "7:6073289836132625694",
+          "name": "status",
+          "type": 5
+        },
+        {
+          "id": "8:4162795648792308924",
+          "name": "level",
+          "type": 5
+        },
+        {
+          "id": "9:290014054855779471",
+          "name": "temperature",
+          "type": 5
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "2:1372174416996012846",
+  "lastIndexId": "1:1536833225897646001",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [
+    3722652564416221773
+  ],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [
+    4041684352462927581,
+    6842310523110118988
+  ],
+  "retiredRelationUids": [],
+  "version": 1
+}

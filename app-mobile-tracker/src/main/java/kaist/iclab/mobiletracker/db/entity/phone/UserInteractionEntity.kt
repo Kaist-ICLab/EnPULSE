@@ -1,19 +1,18 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 
 @Entity
 data class UserInteractionEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String,
-    val uuid: String,
-    val received: Long,
-    val timestamp: Long,
-    val packageName: String,
-    val className: String,
-    val eventType: Int,
-    val text: String
+    @Id var id: Long = 0,
+    var eventId: String = "",
+    var uuid: String = "",
+    var received: Long = 0,
+    @Index var timestamp: Long = 0,
+    var packageName: String = "",
+    var className: String = "",
+    var eventType: Int = 0,
+    var text: String = ""
 )
-

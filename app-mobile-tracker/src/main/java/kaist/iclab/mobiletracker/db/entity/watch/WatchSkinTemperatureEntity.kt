@@ -1,7 +1,8 @@
 package kaist.iclab.mobiletracker.db.entity.watch
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 
 /**
  * Room entity for storing skin temperature sensor data received from watch.
@@ -14,15 +15,14 @@ import androidx.room.PrimaryKey
  * @property objectTemp Object (skin) temperature in degrees Celsius
  * @property status Status of the temperature measurement
  */
-@Entity(tableName = "watch_skin_temperature")
+@Entity
 data class WatchSkinTemperatureEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val eventId: String = "",
-    val uuid: String = "",
-    val received: Long,
-    val timestamp: Long,
-    val ambientTemp: Float,
-    val objectTemp: Float,
-    val status: Int
+    @Id var id: Long = 0,
+    var eventId: String = "",
+    var uuid: String = "",
+    var received: Long = 0,
+    @Index var timestamp: Long = 0,
+    var ambientTemp: Float = 0f,
+    var objectTemp: Float = 0f,
+    var status: Int = 0
 )

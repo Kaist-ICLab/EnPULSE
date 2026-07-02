@@ -1,29 +1,30 @@
 package kaist.iclab.mobiletracker.repository.handlers.phone
 
 import kaist.iclab.mobiletracker.config.AppConfig
-import kaist.iclab.mobiletracker.db.dao.phone.DataTrafficDao
+import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
+import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 
 /**
  * Handler for Data Traffic sensor data.
  */
-class DataTrafficDataHandler(private val dao: DataTrafficDao) : SensorDataHandler {
+class DataTrafficDataHandler(private val store: SensorStore<DataTrafficEntity>) : SensorDataHandler {
     override val sensorId = "DataTraffic"
     override val displayName = "Data Traffic"
     override val isWatchSensor = false
 
-    override suspend fun getRecordCount() = dao.getRecordCount()
-    override suspend fun getLatestTimestamp() = dao.getLatestTimestamp()
+    override suspend fun getRecordCount() = store.count().toInt()
+    override suspend fun getLatestTimestamp() = store.latestTimestamp()
     override suspend fun getRecordCountAfterTimestamp(timestamp: Long) =
-        dao.getRecordCountAfterTimestamp(timestamp)
+        store.countAfter(timestamp).toInt()
 
     override suspend fun getRecordsPaginated(
         afterTimestamp: Long,
         isAscending: Boolean,
         limit: Int,
         offset: Int
-    ): List<SensorRecord> = dao.getRecordsPaginated(afterTimestamp, isAscending, limit, offset)
+    ): List<SensorRecord> = store.recordsAfter(afterTimestamp, isAscending, limit, offset)
         .map { entity ->
             SensorRecord(
                 id = entity.id.toLong(),
@@ -35,8 +36,8 @@ class DataTrafficDataHandler(private val dao: DataTrafficDao) : SensorDataHandle
             )
         }
 
-    override suspend fun deleteAll() = dao.deleteAll()
-    override suspend fun deleteById(id: Long) = dao.deleteById(id)
-    override suspend fun getEventIdById(id: Long) = dao.getEventIdById(id)
+    override suspend fun deleteAll() = store.removeAll()
+    override suspend fun deleteById(id: Long) { store.removeById(id) }
+    override suspend fun getEventIdById(id: Long) = store.eventIdById(id)
     override val supabaseTableName = AppConfig.SupabaseTables.DATA_TRAFFIC_SENSOR
 }

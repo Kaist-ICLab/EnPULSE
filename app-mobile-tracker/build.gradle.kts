@@ -8,6 +8,11 @@ plugins {
 
     id("com.google.devtools.ksp")
     alias(libs.plugins.kotlinSerialization)
+
+    // ObjectBox (uses kapt; must be applied after the Android + Kotlin plugins).
+    // kapt is applied version-less because the Kotlin plugin is already on the classpath.
+    kotlin("kapt")
+    alias(libs.plugins.objectbox)
 }
 
 android {
@@ -20,11 +25,6 @@ android {
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0.0"
-
-        //noinspection WrongGradleMethod
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
 
         // Load local.properties for local development
         val localProperties = Properties()
@@ -147,11 +147,8 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
-    // RoomDB
-    implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.gson) // for converter
-    androidTestImplementation(libs.androidx.room.testing)
+    // ObjectBox (applied via the io.objectbox plugin, which adds the runtime + kapt processor)
+    implementation(libs.gson) // for AppListChange JSON mapping in PhoneEntityMappers
 
     /* Google Play Services Wearable */
     implementation(libs.android.gms.wearable)

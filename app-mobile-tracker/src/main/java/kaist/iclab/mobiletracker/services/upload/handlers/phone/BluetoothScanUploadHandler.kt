@@ -1,7 +1,8 @@
 package kaist.iclab.mobiletracker.services.upload.handlers.phone
 
-import kaist.iclab.mobiletracker.db.dao.phone.BluetoothScanDao
+import kaist.iclab.mobiletracker.db.entity.phone.BluetoothScanEntity
 import kaist.iclab.mobiletracker.db.mapper.BluetoothScanMapper
+import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.supabase.BluetoothScanSensorService
@@ -11,13 +12,13 @@ import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
  * Upload handler for Bluetooth Scan sensor data.
  */
 class BluetoothScanUploadHandler(
-    private val dao: BluetoothScanDao,
+    private val store: SensorStore<BluetoothScanEntity>,
     private val service: BluetoothScanSensorService
 ) : SensorUploadHandler {
     override val sensorId = "BluetoothScan"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        return dao.hasDataAfterTimestamp(lastUploadTimestamp)
+        return store.hasDataAfter(lastUploadTimestamp)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
@@ -27,7 +28,7 @@ class BluetoothScanUploadHandler(
             var uploadedAny = false
 
             while (true) {
-                val entities = dao.getRecordsPaginated(
+                val entities = store.recordsAfter(
                     afterTimestamp = currentMaxTimestamp + 1,
                     isAscending = true,
                     limit = batchSize,
@@ -55,15 +56,15 @@ class BluetoothScanUploadHandler(
     }
 
     override suspend fun pruneData(beforeTimestamp: Long) {
-        dao.deleteDataBefore(beforeTimestamp)
+        store.removeBefore(beforeTimestamp)
     }
 
     override suspend fun getRecordCount(): Int {
-        return dao.getRecordCount()
+        return store.count().toInt()
     }
 
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> {
-        return dao.getRecordsPaginated(0L, true, limit, offset)
+        return store.recordsAfter(0L, true, limit, offset)
     }
 
     override fun getCsvHeader(): String {

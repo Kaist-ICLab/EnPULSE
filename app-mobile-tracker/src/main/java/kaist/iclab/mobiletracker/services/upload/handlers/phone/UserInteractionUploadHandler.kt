@@ -1,7 +1,8 @@
 package kaist.iclab.mobiletracker.services.upload.handlers.phone
 
-import kaist.iclab.mobiletracker.db.dao.phone.UserInteractionDao
+import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.mapper.UserInteractionMapper
+import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.supabase.UserInteractionSensorService
@@ -11,13 +12,13 @@ import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
  * Upload handler for User Interaction sensor data.
  */
 class UserInteractionUploadHandler(
-    private val dao: UserInteractionDao,
+    private val store: SensorStore<UserInteractionEntity>,
     private val service: UserInteractionSensorService
 ) : SensorUploadHandler {
     override val sensorId = "UserInteraction"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        return dao.hasDataAfterTimestamp(lastUploadTimestamp)
+        return store.hasDataAfter(lastUploadTimestamp)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
@@ -27,7 +28,7 @@ class UserInteractionUploadHandler(
             var uploadedAny = false
 
             while (true) {
-                val entities = dao.getRecordsPaginated(
+                val entities = store.recordsAfter(
                     afterTimestamp = currentMaxTimestamp + 1,
                     isAscending = true,
                     limit = batchSize,
@@ -55,15 +56,15 @@ class UserInteractionUploadHandler(
     }
 
     override suspend fun pruneData(beforeTimestamp: Long) {
-        dao.deleteDataBefore(beforeTimestamp)
+        store.removeBefore(beforeTimestamp)
     }
 
     override suspend fun getRecordCount(): Int {
-        return dao.getRecordCount()
+        return store.count().toInt()
     }
 
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> {
-        return dao.getRecordsPaginated(0L, true, limit, offset)
+        return store.recordsAfter(0L, true, limit, offset)
     }
 
     override fun getCsvHeader(): String {

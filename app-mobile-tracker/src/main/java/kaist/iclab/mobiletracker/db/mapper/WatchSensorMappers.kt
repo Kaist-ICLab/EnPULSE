@@ -24,8 +24,8 @@ object HeartRateMapper : EntityToSupabaseMapper<WatchHeartRateEntity, HeartRateS
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
             hr = entity.hr,
             hrStatus = entity.hrStatus,
-            ibi = entity.ibi,
-            ibiStatus = entity.ibiStatus,
+            ibi = entity.ibi.toList(),
+            ibiStatus = entity.ibiStatus.toList(),
             received = Instant.ofEpochMilli(entity.received).toString()
         )
     }

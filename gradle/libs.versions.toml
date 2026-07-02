@@ -27,6 +27,7 @@ playServicesWearables = "19.0.0"
 postgrestKt = "3.2.5"
 realtimeKt = "3.2.5"
 room = "2.8.1"
+objectbox = "5.4.2"
 supabaseKt = "3.2.5"
 wearCompose = "1.5.0"
 wearInput = "1.2.0"
@@ -190,3 +191,4 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services-auth" }
+objectbox = { id = "io.objectbox", version.ref = "objectbox" }

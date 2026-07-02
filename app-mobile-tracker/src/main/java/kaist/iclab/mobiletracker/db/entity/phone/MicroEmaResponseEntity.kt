@@ -1,32 +1,34 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
-
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 
 /**
- * Room entity for locally caching microEMA survey responses on the phone.
+ * ObjectBox entity for locally caching microEMA survey responses on the phone.
  * Allows the phone to immediately ACK the watch and upload to Supabase asynchronously.
+ *
+ * This is not a sensor and does not go through [SensorStore]; it is accessed via a small
+ * dedicated store that queries on [isSynced].
  */
-@Entity(tableName = "micro_ema_responses_phone")
+@Entity
 data class MicroEmaResponseEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
+    @Id var id: Long = 0,
 
     /** The ID of the response in the watch's local database (for ACK tracking) */
-    val watchId: Long,
+    var watchId: Long = 0,
 
-    val uuid: String,
-    val questionId: Int,
-    val triggerTime: String?,
-    val actualTriggerTime: String?,
-    val surveyStartTime: String?,
-    val responseSubmissionTime: String?,
+    var uuid: String = "",
+    var questionId: Int = 0,
+    var triggerTime: String? = null,
+    var actualTriggerTime: String? = null,
+    var surveyStartTime: String? = null,
+    var responseSubmissionTime: String? = null,
 
     /** The JSON string of the response payload (value and status) */
-    val responseJson: String,
+    var responseJson: String = "",
 
-    val deviceType: Int = 1,
+    var deviceType: Int = 1,
 
-    val isSynced: Boolean = false
+    @Index var isSynced: Boolean = false
 )

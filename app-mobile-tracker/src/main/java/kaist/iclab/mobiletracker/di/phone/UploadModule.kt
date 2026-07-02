@@ -1,7 +1,8 @@
 package kaist.iclab.mobiletracker.di.phone
 
-import kaist.iclab.mobiletracker.db.TrackerRoomDB
-import kaist.iclab.mobiletracker.db.dao.common.BaseDao
+import kaist.iclab.mobiletracker.db.obx.PhoneEntityMappers
+import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
+import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepositoryImpl
 import kaist.iclab.mobiletracker.services.SensorServiceRegistry
@@ -73,34 +74,35 @@ val uploadModule = module {
         SyncTimestampService(context = androidContext())
     }
 
-    // Map of sensor IDs to DAOs for storing phone sensor data in Room database
-    single<Map<String, BaseDao<*, *>>>(named("sensorDataStorages")) {
-        val db = get<TrackerRoomDB>()
+    // Map of sensor IDs to phone stores (store + library-entity→entity mapping) for ObjectBox
+    single<Map<String, PhoneSensorStore<*>>>(named("sensorDataStorages")) {
+        val s = get<SensorStores>()
         mapOf(
-            get<AmbientLightSensor>().id to db.ambientLightDao(),
-            get<AppListChangeSensor>().id to db.appListChangeDao(),
-            get<AppUsageLogSensor>().id to db.appUsageLogDao(),
-            get<BatterySensor>().id to db.batteryDao(),
-            get<BluetoothScanSensor>().id to db.bluetoothScanDao(),
-            get<ConnectivitySensor>().id to db.connectivityDao(),
-            get<CallLogSensor>().id to db.callLogDao(),
-            get<MessageLogSensor>().id to db.messageLogDao(),
-            get<UserInteractionSensor>().id to db.userInteractionDao(),
-            get<DataTrafficSensor>().id to db.dataTrafficDao(),
-            get<DeviceModeSensor>().id to db.deviceModeDao(),
-            get<LocationSensor>().id to db.locationDao(),
-            get<ScreenSensor>().id to db.screenDao(),
-            get<MediaSensor>().id to db.mediaDao(),
-            get<NotificationSensor>().id to db.notificationDao(),
-            get<StepSensor>().id to db.stepDao(),
-            get<WifiScanSensor>().id to db.wifiDao(),
+            get<AmbientLightSensor>().id to PhoneSensorStore(s.ambientLight) { e, uuid -> PhoneEntityMappers.ambientLight(e as AmbientLightSensor.Entity, uuid) },
+            get<AppListChangeSensor>().id to PhoneSensorStore(s.appListChange) { e, uuid -> PhoneEntityMappers.appListChange(e as AppListChangeSensor.Entity, uuid) },
+            get<AppUsageLogSensor>().id to PhoneSensorStore(s.appUsageLog) { e, uuid -> PhoneEntityMappers.appUsageLog(e as AppUsageLogSensor.Entity, uuid) },
+            get<BatterySensor>().id to PhoneSensorStore(s.battery) { e, uuid -> PhoneEntityMappers.battery(e as BatterySensor.Entity, uuid) },
+            get<BluetoothScanSensor>().id to PhoneSensorStore(s.bluetoothScan) { e, uuid -> PhoneEntityMappers.bluetoothScan(e as BluetoothScanSensor.Entity, uuid) },
+            get<ConnectivitySensor>().id to PhoneSensorStore(s.connectivity) { e, uuid -> PhoneEntityMappers.connectivity(e as ConnectivitySensor.Entity, uuid) },
+            get<CallLogSensor>().id to PhoneSensorStore(s.callLog) { e, uuid -> PhoneEntityMappers.callLog(e as CallLogSensor.Entity, uuid) },
+            get<MessageLogSensor>().id to PhoneSensorStore(s.messageLog) { e, uuid -> PhoneEntityMappers.messageLog(e as MessageLogSensor.Entity, uuid) },
+            get<UserInteractionSensor>().id to PhoneSensorStore(s.userInteraction) { e, uuid -> PhoneEntityMappers.userInteraction(e as UserInteractionSensor.Entity, uuid) },
+            get<DataTrafficSensor>().id to PhoneSensorStore(s.dataTraffic) { e, uuid -> PhoneEntityMappers.dataTraffic(e as DataTrafficSensor.Entity, uuid) },
+            get<DeviceModeSensor>().id to PhoneSensorStore(s.deviceMode) { e, uuid -> PhoneEntityMappers.deviceMode(e as DeviceModeSensor.Entity, uuid) },
+            get<LocationSensor>().id to PhoneSensorStore(s.location) { e, uuid -> PhoneEntityMappers.location(e as LocationSensor.Entity, uuid) },
+            get<ScreenSensor>().id to PhoneSensorStore(s.screen) { e, uuid -> PhoneEntityMappers.screen(e as ScreenSensor.Entity, uuid) },
+            get<MediaSensor>().id to PhoneSensorStore(s.media) { e, uuid -> PhoneEntityMappers.media(e as MediaSensor.Entity, uuid) },
+            get<NotificationSensor>().id to PhoneSensorStore(s.notification) { e, uuid -> PhoneEntityMappers.notification(e as NotificationSensor.Entity, uuid) },
+            get<StepSensor>().id to PhoneSensorStore(s.step) { e, uuid -> PhoneEntityMappers.step(e as StepSensor.Entity, uuid) },
+            get<WifiScanSensor>().id to PhoneSensorStore(s.wifiScan) { e, uuid -> PhoneEntityMappers.wifiScan(e as WifiScanSensor.Entity, uuid) },
         )
     }
 
     // PhoneSensorRepository - bind interface to implementation
     single<PhoneSensorRepository> {
         PhoneSensorRepositoryImpl(
-            sensorDataStorages = get<Map<String, BaseDao<*, *>>>(named("sensorDataStorages")),
+            sensorDataStorages = get<Map<String, PhoneSensorStore<*>>>(named("sensorDataStorages")),
+            locationStore = get<SensorStores>().location,
             supabaseHelper = get(),
             appScope = get()
         )
@@ -152,53 +154,53 @@ val uploadModule = module {
 
     // SensorUploadHandlerRegistry for phone sensors
     single<SensorUploadHandlerRegistry> {
-        val db = get<TrackerRoomDB>()
+        val s = get<SensorStores>()
         val handlers = listOf(
-            LocationUploadHandler(dao = db.locationDao(), service = get<LocationSensorService>()),
-            BatteryUploadHandler(dao = db.batteryDao(), service = get<BatterySensorService>()),
-            ScreenUploadHandler(dao = db.screenDao(), service = get<ScreenSensorService>()),
-            WifiScanUploadHandler(dao = db.wifiDao(), service = get<WifiSensorService>()),
-            StepUploadHandler(dao = db.stepDao(), service = get<StepSensorService>()),
+            LocationUploadHandler(store = s.location, service = get<LocationSensorService>()),
+            BatteryUploadHandler(store = s.battery, service = get<BatterySensorService>()),
+            ScreenUploadHandler(store = s.screen, service = get<ScreenSensorService>()),
+            WifiScanUploadHandler(store = s.wifiScan, service = get<WifiSensorService>()),
+            StepUploadHandler(store = s.step, service = get<StepSensorService>()),
             AmbientLightUploadHandler(
-                dao = db.ambientLightDao(),
+                store = s.ambientLight,
                 service = get<AmbientLightSensorService>()
             ),
             AppListChangeUploadHandler(
-                dao = db.appListChangeDao(),
+                store = s.appListChange,
                 service = get<AppListChangeSensorService>()
             ),
             AppUsageLogUploadHandler(
-                dao = db.appUsageLogDao(),
+                store = s.appUsageLog,
                 service = get<AppUsageLogSensorService>()
             ),
             BluetoothScanUploadHandler(
-                dao = db.bluetoothScanDao(),
+                store = s.bluetoothScan,
                 service = get<BluetoothScanSensorService>()
             ),
-            CallLogUploadHandler(dao = db.callLogDao(), service = get<CallLogSensorService>()),
+            CallLogUploadHandler(store = s.callLog, service = get<CallLogSensorService>()),
             ConnectivityUploadHandler(
-                dao = db.connectivityDao(),
+                store = s.connectivity,
                 service = get<ConnectivitySensorService>()
             ),
             DataTrafficUploadHandler(
-                dao = db.dataTrafficDao(),
+                store = s.dataTraffic,
                 service = get<DataTrafficSensorService>()
             ),
             DeviceModeUploadHandler(
-                dao = db.deviceModeDao(),
+                store = s.deviceMode,
                 service = get<DeviceModeSensorService>()
             ),
-            MediaUploadHandler(dao = db.mediaDao(), service = get<MediaSensorService>()),
+            MediaUploadHandler(store = s.media, service = get<MediaSensorService>()),
             MessageLogUploadHandler(
-                dao = db.messageLogDao(),
+                store = s.messageLog,
                 service = get<MessageLogSensorService>()
             ),
             NotificationUploadHandler(
-                dao = db.notificationDao(),
+                store = s.notification,
                 service = get<NotificationSensorService>()
             ),
             UserInteractionUploadHandler(
-                dao = db.userInteractionDao(),
+                store = s.userInteraction,
                 service = get<UserInteractionSensorService>()
             )
         )

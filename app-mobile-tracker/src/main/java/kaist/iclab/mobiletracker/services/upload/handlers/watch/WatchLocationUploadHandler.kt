@@ -2,24 +2,24 @@ package kaist.iclab.mobiletracker.services.upload.handlers.watch
 
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.dao.common.LocationDao
 import kaist.iclab.mobiletracker.db.mapper.LocationMapper
+import kaist.iclab.mobiletracker.db.obx.LocationStore
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 
 /**
- * Upload handler for Watch Location sensor data.
+ * Upload handler for Watch Location sensor data, backed by [LocationStore].
  */
 class WatchLocationUploadHandler(
-    private val dao: LocationDao,
+    private val store: LocationStore,
     private val service: LocationSensorService
 ) : SensorUploadHandler {
     override val sensorId = "WatchLocation"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        return dao.hasDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.WATCH.value)
+        return store.hasDataAfterByDeviceType(lastUploadTimestamp, DeviceType.WATCH.value)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
@@ -29,7 +29,7 @@ class WatchLocationUploadHandler(
             var uploadedAny = false
 
             while (true) {
-                val entities = dao.getRecordsPaginatedByDeviceType(
+                val entities = store.recordsAfterByDeviceType(
                     afterTimestamp = currentMaxTimestamp + 1,
                     isAscending = true,
                     limit = batchSize,
@@ -59,21 +59,15 @@ class WatchLocationUploadHandler(
     }
 
     override suspend fun pruneData(beforeTimestamp: Long) {
-        dao.deleteDataBeforeByDeviceType(beforeTimestamp, DeviceType.WATCH.value)
+        store.removeBeforeByDeviceType(beforeTimestamp, DeviceType.WATCH.value)
     }
 
     override suspend fun getRecordCount(): Int {
-        return dao.getRecordCountByDeviceType(DeviceType.WATCH.value)
+        return store.countByDeviceType(DeviceType.WATCH.value)
     }
 
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> {
-        return dao.getRecordsPaginatedByDeviceType(
-            0L,
-            true,
-            limit,
-            offset,
-            DeviceType.WATCH.value
-        )
+        return store.recordsAfterByDeviceType(0L, true, limit, offset, DeviceType.WATCH.value)
     }
 
     override fun getCsvHeader(): String {

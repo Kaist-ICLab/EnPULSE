@@ -1,7 +1,8 @@
 package kaist.iclab.mobiletracker.db.entity.watch
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 
 /**
  * Room entity for storing EDA (Electrodermal Activity) sensor data received from watch.
@@ -13,14 +14,13 @@ import androidx.room.PrimaryKey
  * @property skinConductance Skin conductance value in microsiemens (μS)
  * @property status Status of the EDA measurement
  */
-@Entity(tableName = "watch_eda")
+@Entity
 data class WatchEDAEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val eventId: String = "",
-    val uuid: String = "",
-    val received: Long,
-    val timestamp: Long,
-    val skinConductance: Float,
-    val status: Int
+    @Id var id: Long = 0,
+    var eventId: String = "",
+    var uuid: String = "",
+    var received: Long = 0,
+    @Index var timestamp: Long = 0,
+    var skinConductance: Float = 0f,
+    var status: Int = 0
 )

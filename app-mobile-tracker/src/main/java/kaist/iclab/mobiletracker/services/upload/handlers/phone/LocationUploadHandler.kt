@@ -1,24 +1,24 @@
 package kaist.iclab.mobiletracker.services.upload.handlers.phone
 
 import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.dao.common.LocationDao
 import kaist.iclab.mobiletracker.db.mapper.PhoneLocationMapper
+import kaist.iclab.mobiletracker.db.obx.LocationStore
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 
 /**
- * Upload handler for Location sensor data (phone only).
+ * Upload handler for Location sensor data (phone only), backed by [LocationStore].
  */
 class LocationUploadHandler(
-    private val dao: LocationDao,
+    private val store: LocationStore,
     private val service: LocationSensorService
 ) : SensorUploadHandler {
     override val sensorId = "Location"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        return dao.hasDataAfterTimestampByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
+        return store.hasDataAfterByDeviceType(lastUploadTimestamp, DeviceType.PHONE.value)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
@@ -28,7 +28,7 @@ class LocationUploadHandler(
             var uploadedAny = false
 
             while (true) {
-                val entities = dao.getRecordsPaginatedByDeviceType(
+                val entities = store.recordsAfterByDeviceType(
                     afterTimestamp = currentMaxTimestamp + 1,
                     isAscending = true,
                     limit = batchSize,
@@ -58,24 +58,15 @@ class LocationUploadHandler(
     }
 
     override suspend fun pruneData(beforeTimestamp: Long) {
-        dao.deleteDataBeforeByDeviceType(beforeTimestamp, DeviceType.PHONE.value)
+        store.removeBeforeByDeviceType(beforeTimestamp, DeviceType.PHONE.value)
     }
 
     override suspend fun getRecordCount(): Int {
-        return dao.getRecordCountByDeviceType(DeviceType.PHONE.value)
+        return store.countByDeviceType(DeviceType.PHONE.value)
     }
 
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> {
-        // Note: BaseDao.getRecordsPaginated does not filter by deviceType, 
-        // but we can assume phone only for this handler's context if we use the right query.
-        // Actually, LocationDao HAS a device-specific count, but the paginated one is generic.
-        return dao.getRecordsPaginatedByDeviceType(
-            0L,
-            true,
-            limit,
-            offset,
-            DeviceType.PHONE.value
-        )
+        return store.recordsAfterByDeviceType(0L, true, limit, offset, DeviceType.PHONE.value)
     }
 
     override fun getCsvHeader(): String {

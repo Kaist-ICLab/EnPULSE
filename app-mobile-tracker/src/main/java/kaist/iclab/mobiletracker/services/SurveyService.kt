@@ -8,7 +8,7 @@ import kaist.iclab.mobiletracker.data.survey.SurveyEntity
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionEntity
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionResponseInsert
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionTriggerEntity
-import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
+import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
@@ -215,7 +215,7 @@ class SurveyService(
      * @return Result containing the count of successfully uploaded responses.
      */
     suspend fun uploadUnsyncedMicroEmaResponses(
-        microEmaResponseDao: MicroEmaResponseDao
+        microEmaResponseDao: MicroEmaResponseStore
     ): Result<Int> {
         return try {
             val unsynced = microEmaResponseDao.getUnsyncedResponses()

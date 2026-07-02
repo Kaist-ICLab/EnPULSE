@@ -10,7 +10,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.db.TrackerRoomDB
+import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.onFailure
@@ -69,8 +69,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     private val watchSensorUploadService: WatchSensorUploadService by inject()
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
     private val surveyService: SurveyService by inject()
-    private val db: TrackerRoomDB by inject()
-    private val microEmaResponseDao by lazy { db.microEmaResponseDao() }
+    private val microEmaResponseDao by inject<MicroEmaResponseStore>()
 
     private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 

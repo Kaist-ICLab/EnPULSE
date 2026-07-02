@@ -5,7 +5,7 @@ import android.content.Context
 import android.util.Log
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
+import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
@@ -46,7 +46,7 @@ class BLEHelper(
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
     private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
-    private val microEmaResponseDao: MicroEmaResponseDao
+    private val microEmaResponseStore: MicroEmaResponseStore
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
@@ -156,7 +156,7 @@ class BLEHelper(
                 }
 
                 if (responses.isNotEmpty()) {
-                    microEmaResponseDao.insertAll(responses)
+                    microEmaResponseStore.insertAll(responses)
                     Log.d(
                         AppConfig.LogTags.PHONE_BLE,
                         "[MICRO_EMA] Cached ${responses.size} responses locally on phone"
@@ -167,7 +167,7 @@ class BLEHelper(
                     // Attempt to upload immediately for real-time responsiveness
                     // We launch this in the IO dispatcher so it doesn't block BLE reception
                     appScope.io.launch {
-                        surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)
+                        surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseStore)
                     }
                 }
             } catch (e: Exception) {
@@ -432,8 +432,8 @@ class BLEHelper(
                             timestamp = Instant.parse(data.timestamp).toEpochMilli(),
                             hr = data.hr,
                             hrStatus = data.hrStatus,
-                            ibi = data.ibi,
-                            ibiStatus = data.ibiStatus
+                            ibi = data.ibi.toIntArray(),
+                            ibiStatus = data.ibiStatus.toIntArray()
                         )
                     }
                     when (val result = watchSensorRepository.insertHeartRateData(entities)) {

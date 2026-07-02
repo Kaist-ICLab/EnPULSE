@@ -1,7 +1,8 @@
 package kaist.iclab.mobiletracker.db.entity.watch
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 
 /**
  * Room entity for storing PPG (Photoplethysmography) sensor data received from watch.
@@ -17,18 +18,17 @@ import androidx.room.PrimaryKey
  * @property ir Infrared light intensity value
  * @property irStatus Status of the infrared light measurement
  */
-@Entity(tableName = "watch_ppg")
+@Entity
 data class WatchPPGEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val eventId: String = "",
-    val uuid: String = "",
-    val received: Long,
-    val timestamp: Long,
-    val green: Int,
-    val greenStatus: Int,
-    val red: Int,
-    val redStatus: Int,
-    val ir: Int,
-    val irStatus: Int
+    @Id var id: Long = 0,
+    var eventId: String = "",
+    var uuid: String = "",
+    var received: Long = 0,
+    @Index var timestamp: Long = 0,
+    var green: Int = 0,
+    var greenStatus: Int = 0,
+    var red: Int = 0,
+    var redStatus: Int = 0,
+    var ir: Int = 0,
+    var irStatus: Int = 0
 )

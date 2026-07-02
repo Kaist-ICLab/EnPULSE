@@ -1,8 +1,9 @@
 package kaist.iclab.mobiletracker.services.upload.handlers.watch
 
 import kaist.iclab.mobiletracker.Constants
-import kaist.iclab.mobiletracker.db.dao.watch.WatchSkinTemperatureDao
+import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.db.mapper.SkinTemperatureMapper
+import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.supabase.SkinTemperatureSensorService
@@ -12,13 +13,13 @@ import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
  * Upload handler for Watch Skin Temperature sensor data.
  */
 class WatchSkinTemperatureUploadHandler(
-    private val dao: WatchSkinTemperatureDao,
+    private val store: SensorStore<WatchSkinTemperatureEntity>,
     private val service: SkinTemperatureSensorService
 ) : SensorUploadHandler {
     override val sensorId = "WatchSkinTemperature"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
-        return dao.hasDataAfterTimestamp(lastUploadTimestamp)
+        return store.hasDataAfter(lastUploadTimestamp)
     }
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
@@ -28,7 +29,7 @@ class WatchSkinTemperatureUploadHandler(
             var uploadedAny = false
 
             while (true) {
-                val entities = dao.getRecordsPaginated(
+                val entities = store.recordsAfter(
                     afterTimestamp = currentMaxTimestamp + 1,
                     isAscending = true,
                     limit = batchSize,
@@ -56,15 +57,15 @@ class WatchSkinTemperatureUploadHandler(
     }
 
     override suspend fun pruneData(beforeTimestamp: Long) {
-        dao.deleteDataBefore(beforeTimestamp)
+        store.removeBefore(beforeTimestamp)
     }
 
     override suspend fun getRecordCount(): Int {
-        return dao.getRecordCount()
+        return store.count().toInt()
     }
 
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> {
-        return dao.getRecordsPaginated(0L, true, limit, offset)
+        return store.recordsAfter(0L, true, limit, offset)
     }
 
     override fun getCsvHeader(): String {

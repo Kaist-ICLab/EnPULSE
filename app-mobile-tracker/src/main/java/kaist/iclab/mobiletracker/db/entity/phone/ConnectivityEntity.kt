@@ -1,19 +1,19 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 import java.util.UUID
 
 @Entity
 data class ConnectivityEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val uuid: String,
-    val received: Long,
-    val timestamp: Long,
-    val networkType: String,
-    val isConnected: Boolean,
-    val hasInternet: Boolean,
-    val transportTypes: String
+    @Id var id: Long = 0,
+    var eventId: String = UUID.randomUUID().toString(),
+    var uuid: String = "",
+    var received: Long = 0,
+    @Index var timestamp: Long = 0,
+    var networkType: String = "",
+    var isConnected: Boolean = false,
+    var hasInternet: Boolean = false,
+    var transportTypes: String = ""
 )

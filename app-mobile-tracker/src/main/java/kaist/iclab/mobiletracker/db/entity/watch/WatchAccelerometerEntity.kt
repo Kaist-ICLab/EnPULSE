@@ -1,7 +1,8 @@
 package kaist.iclab.mobiletracker.db.entity.watch
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 
 /**
  * Room entity for storing accelerometer sensor data received from watch.
@@ -14,15 +15,14 @@ import androidx.room.PrimaryKey
  * @property y Acceleration along y-axis (m/s²)
  * @property z Acceleration along z-axis (m/s²)
  */
-@Entity(tableName = "watch_accelerometer")
+@Entity
 data class WatchAccelerometerEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val eventId: String = "",
-    val uuid: String = "",
-    val received: Long,
-    val timestamp: Long,
-    val x: Float,
-    val y: Float,
-    val z: Float
+    @Id var id: Long = 0,
+    var eventId: String = "",
+    var uuid: String = "",
+    var received: Long = 0,
+    @Index var timestamp: Long = 0,
+    var x: Float = 0f,
+    var y: Float = 0f,
+    var z: Float = 0f
 )
