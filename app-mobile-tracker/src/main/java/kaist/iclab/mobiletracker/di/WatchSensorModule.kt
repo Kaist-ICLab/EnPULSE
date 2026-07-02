@@ -12,12 +12,7 @@ import kaist.iclab.mobiletracker.services.supabase.PPGSensorService
 import kaist.iclab.mobiletracker.services.supabase.SkinTemperatureSensorService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchAccelerometerUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchEDAUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchHeartRateUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchLocationUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchPPGUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchSkinTemperatureUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.buildWatchUploadHandlers
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -58,36 +53,9 @@ val watchSensorModule = module {
         )
     }
 
-    // Watch sensor upload handler registry
+    // Watch sensor upload handler registry (registered in buildWatchUploadHandlers)
     single<SensorUploadHandlerRegistry>(named("watchUploadHandlerRegistry")) {
-        val s = get<SensorStores>()
-        val handlers = listOf(
-            WatchHeartRateUploadHandler(
-                store = s.watchHeartRate,
-                service = get<HeartRateSensorService>()
-            ),
-            WatchAccelerometerUploadHandler(
-                store = s.watchAccelerometer,
-                service = get<AccelerometerSensorService>()
-            ),
-            WatchEDAUploadHandler(
-                store = s.watchEDA,
-                service = get<EDASensorService>()
-            ),
-            WatchPPGUploadHandler(
-                store = s.watchPPG,
-                service = get<PPGSensorService>()
-            ),
-            WatchSkinTemperatureUploadHandler(
-                store = s.watchSkinTemperature,
-                service = get<SkinTemperatureSensorService>()
-            ),
-            WatchLocationUploadHandler(
-                store = s.location,
-                service = get<LocationSensorService>()
-            )
-        )
-        SensorUploadHandlerRegistry(handlers)
+        SensorUploadHandlerRegistry(buildWatchUploadHandlers(get<SensorStores>()))
     }
 
     // WatchSensorUploadService - injects handler registry

@@ -27,23 +27,7 @@ import kaist.iclab.mobiletracker.services.supabase.UserInteractionSensorService
 import kaist.iclab.mobiletracker.services.supabase.WifiSensorService
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.AmbientLightUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.AppListChangeUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.AppUsageLogUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.BatteryUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.BluetoothScanUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.CallLogUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.ConnectivityUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.DataTrafficUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.DeviceModeUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.LocationUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.MediaUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.MessageLogUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.NotificationUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.ScreenUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.StepUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.UserInteractionUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.phone.WifiScanUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.buildPhoneUploadHandlers
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
@@ -152,59 +136,9 @@ val uploadModule = module {
         )
     }
 
-    // SensorUploadHandlerRegistry for phone sensors
+    // SensorUploadHandlerRegistry for phone sensors (registered in buildPhoneUploadHandlers)
     single<SensorUploadHandlerRegistry> {
-        val s = get<SensorStores>()
-        val handlers = listOf(
-            LocationUploadHandler(store = s.location, service = get<LocationSensorService>()),
-            BatteryUploadHandler(store = s.battery, service = get<BatterySensorService>()),
-            ScreenUploadHandler(store = s.screen, service = get<ScreenSensorService>()),
-            WifiScanUploadHandler(store = s.wifiScan, service = get<WifiSensorService>()),
-            StepUploadHandler(store = s.step, service = get<StepSensorService>()),
-            AmbientLightUploadHandler(
-                store = s.ambientLight,
-                service = get<AmbientLightSensorService>()
-            ),
-            AppListChangeUploadHandler(
-                store = s.appListChange,
-                service = get<AppListChangeSensorService>()
-            ),
-            AppUsageLogUploadHandler(
-                store = s.appUsageLog,
-                service = get<AppUsageLogSensorService>()
-            ),
-            BluetoothScanUploadHandler(
-                store = s.bluetoothScan,
-                service = get<BluetoothScanSensorService>()
-            ),
-            CallLogUploadHandler(store = s.callLog, service = get<CallLogSensorService>()),
-            ConnectivityUploadHandler(
-                store = s.connectivity,
-                service = get<ConnectivitySensorService>()
-            ),
-            DataTrafficUploadHandler(
-                store = s.dataTraffic,
-                service = get<DataTrafficSensorService>()
-            ),
-            DeviceModeUploadHandler(
-                store = s.deviceMode,
-                service = get<DeviceModeSensorService>()
-            ),
-            MediaUploadHandler(store = s.media, service = get<MediaSensorService>()),
-            MessageLogUploadHandler(
-                store = s.messageLog,
-                service = get<MessageLogSensorService>()
-            ),
-            NotificationUploadHandler(
-                store = s.notification,
-                service = get<NotificationSensorService>()
-            ),
-            UserInteractionUploadHandler(
-                store = s.userInteraction,
-                service = get<UserInteractionSensorService>()
-            )
-        )
-        SensorUploadHandlerRegistry(handlers)
+        SensorUploadHandlerRegistry(buildPhoneUploadHandlers(get<SensorStores>()))
     }
 
     // PhoneSensorUploadService for handling phone sensor data uploads
