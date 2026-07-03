@@ -5,26 +5,9 @@ import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepositoryImpl
-import kaist.iclab.mobiletracker.services.SensorServiceRegistry
-import kaist.iclab.mobiletracker.services.SensorServiceRegistryImpl
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.supabase.AmbientLightSensorService
-import kaist.iclab.mobiletracker.services.supabase.AppListChangeSensorService
-import kaist.iclab.mobiletracker.services.supabase.AppUsageLogSensorService
-import kaist.iclab.mobiletracker.services.supabase.BatterySensorService
-import kaist.iclab.mobiletracker.services.supabase.BluetoothScanSensorService
-import kaist.iclab.mobiletracker.services.supabase.CallLogSensorService
-import kaist.iclab.mobiletracker.services.supabase.ConnectivitySensorService
-import kaist.iclab.mobiletracker.services.supabase.DataTrafficSensorService
-import kaist.iclab.mobiletracker.services.supabase.DeviceModeSensorService
 import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
-import kaist.iclab.mobiletracker.services.supabase.MediaSensorService
-import kaist.iclab.mobiletracker.services.supabase.MessageLogSensorService
-import kaist.iclab.mobiletracker.services.supabase.NotificationSensorService
-import kaist.iclab.mobiletracker.services.supabase.ScreenSensorService
-import kaist.iclab.mobiletracker.services.supabase.StepSensorService
-import kaist.iclab.mobiletracker.services.supabase.UserInteractionSensorService
-import kaist.iclab.mobiletracker.services.supabase.WifiSensorService
+import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kaist.iclab.mobiletracker.services.upload.handlers.buildPhoneUploadHandlers
@@ -92,49 +75,11 @@ val uploadModule = module {
         )
     }
 
-    // Sensor Services for uploading to Supabase
-    single { AmbientLightSensorService(supabaseHelper = get()) }
-    single { AppListChangeSensorService(supabaseHelper = get()) }
-    single { AppUsageLogSensorService(supabaseHelper = get()) }
-    single { BatterySensorService(supabaseHelper = get()) }
-    single { BluetoothScanSensorService(supabaseHelper = get()) }
-    single { CallLogSensorService(supabaseHelper = get()) }
-    single { ConnectivitySensorService(supabaseHelper = get()) }
-    single { DataTrafficSensorService(supabaseHelper = get()) }
-    single { DeviceModeSensorService(supabaseHelper = get()) }
+    // Location Supabase service (still used by the deviceType-special Location upload handlers)
     single { LocationSensorService(supabaseHelper = get()) }
-    single { MediaSensorService(supabaseHelper = get()) }
-    single { MessageLogSensorService(supabaseHelper = get()) }
-    single { NotificationSensorService(supabaseHelper = get()) }
-    single { ScreenSensorService(supabaseHelper = get()) }
-    single { StepSensorService(supabaseHelper = get()) }
-    single { UserInteractionSensorService(supabaseHelper = get()) }
-    single { WifiSensorService(supabaseHelper = get()) }
 
-    // Phone sensor service registry
-    single<SensorServiceRegistry>(named("phoneSensorServiceRegistry")) {
-        SensorServiceRegistryImpl(
-            mapOf(
-                get<AmbientLightSensor>().id to get<AmbientLightSensorService>(),
-                get<AppListChangeSensor>().id to get<AppListChangeSensorService>(),
-                get<AppUsageLogSensor>().id to get<AppUsageLogSensorService>(),
-                get<BatterySensor>().id to get<BatterySensorService>(),
-                get<BluetoothScanSensor>().id to get<BluetoothScanSensorService>(),
-                get<ConnectivitySensor>().id to get<ConnectivitySensorService>(),
-                get<MediaSensor>().id to get<MediaSensorService>(),
-                get<MessageLogSensor>().id to get<MessageLogSensorService>(),
-                get<NotificationSensor>().id to get<NotificationSensorService>(),
-                get<StepSensor>().id to get<StepSensorService>(),
-                get<UserInteractionSensor>().id to get<UserInteractionSensorService>(),
-                get<CallLogSensor>().id to get<CallLogSensorService>(),
-                get<DataTrafficSensor>().id to get<DataTrafficSensorService>(),
-                get<DeviceModeSensor>().id to get<DeviceModeSensorService>(),
-                get<LocationSensor>().id to get<LocationSensorService>(),
-                get<ScreenSensor>().id to get<ScreenSensorService>(),
-                get<WifiScanSensor>().id to get<WifiSensorService>(),
-            )
-        )
-    }
+    // Single generic upload service replacing the 23 per-sensor *SensorService classes
+    single { SupabaseUploadService(supabaseHelper = get()) }
 
     // SensorUploadHandlerRegistry for phone sensors (registered in buildPhoneUploadHandlers)
     single<SensorUploadHandlerRegistry> {
