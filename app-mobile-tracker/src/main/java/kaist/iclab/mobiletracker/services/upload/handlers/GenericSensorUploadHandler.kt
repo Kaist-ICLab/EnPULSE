@@ -2,25 +2,39 @@ package kaist.iclab.mobiletracker.services.upload.handlers
 
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.obx.SensorStore
+import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
+import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 
 /**
- * Generic upload handler backed by a [SensorStore]. The paginate → map → upload → track-max loop
- * and the prune/count/pagination methods were identical across every sensor; only the Supabase
- * mapping ([toSupabase]), the batch upload call ([uploadBatch]) and the CSV shape differ.
+ * Generic upload handler backed by a [SensorStore]. The stored entity now serializes directly into
+ * its Supabase row (via [serializer]), so there is no per-sensor DTO or mapper — only the table
+ * name and the CSV shape differ. `uuid` is stamped with the logged-in user's UUID at upload time,
+ * exactly as the old mappers did.
  *
- * @param T stored entity type, @param S Supabase row type.
+ * @param T stored entity type (a `@Serializable` ObjectBox entity).
  */
-class GenericSensorUploadHandler<T : Any, S : Any>(
+class GenericSensorUploadHandler<T : Any>(
     override val sensorId: String,
     private val store: SensorStore<T>,
     private val timestampOf: (T) -> Long,
-    private val toSupabase: (T, String?) -> S,
-    private val uploadBatch: suspend (List<S>) -> Result<Unit>,
+    private val serializer: KSerializer<T>,
+    private val tableName: String,
+    private val sensorName: String,
+    private val supabase: SupabaseUploadService,
     private val csvHeader: String,
     private val toCsvRow: (T) -> String
 ) : SensorUploadHandler {
+
+    private fun toSupabaseRow(entity: T, userUuid: String): JsonObject {
+        val obj = SupabaseJson.encodeToJsonElement(serializer, entity).jsonObject
+        return JsonObject(obj + ("uuid" to JsonPrimitive(userUuid)))
+    }
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean =
         store.hasDataAfter(lastUploadTimestamp)
@@ -41,7 +55,8 @@ class GenericSensorUploadHandler<T : Any, S : Any>(
 
                 if (entities.isEmpty()) break
 
-                uploadBatch(entities.map { toSupabase(it, userUuid) }).getOrElse { throw it }
+                val rows = entities.map { toSupabaseRow(it, userUuid) }
+                supabase.upsertBatch(tableName, sensorName, rows).getOrElse { throw it }
 
                 currentMaxTimestamp = entities.maxOf { timestampOf(it) }
                 uploadedAny = true

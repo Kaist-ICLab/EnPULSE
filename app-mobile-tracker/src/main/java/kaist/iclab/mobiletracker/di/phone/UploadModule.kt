@@ -6,7 +6,6 @@ import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepositoryImpl
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
@@ -75,10 +74,8 @@ val uploadModule = module {
         )
     }
 
-    // Location Supabase service (still used by the deviceType-special Location upload handlers)
-    single { LocationSensorService(supabaseHelper = get()) }
-
-    // Single generic upload service replacing the 23 per-sensor *SensorService classes
+    // Single generic upload service replacing the 23 per-sensor *SensorService classes.
+    // Every sensor (incl. the concrete Location handlers) uploads through this.
     single { SupabaseUploadService(supabaseHelper = get()) }
 
     // SensorUploadHandlerRegistry for phone sensors (registered in buildPhoneUploadHandlers)

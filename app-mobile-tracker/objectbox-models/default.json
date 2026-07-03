@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "3:5698984753876160345",
-      "lastPropertyId": "7:7480314942528857812",
+      "lastPropertyId": "8:6051261518403548466",
       "name": "AmbientLightEntity",
       "properties": [
         {
@@ -45,13 +45,18 @@
           "id": "7:7480314942528857812",
           "name": "value",
           "type": 7
+        },
+        {
+          "id": "8:6051261518403548466",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "4:988471563299188974",
-      "lastPropertyId": "7:2282551658616004655",
+      "lastPropertyId": "8:4643502001636453060",
       "name": "AppListChangeEntity",
       "properties": [
         {
@@ -91,13 +96,18 @@
           "id": "7:2282551658616004655",
           "name": "appListJson",
           "type": 9
+        },
+        {
+          "id": "8:4643502001636453060",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "5:3301120187032966153",
-      "lastPropertyId": "8:4119454608127815127",
+      "lastPropertyId": "9:8129133441187269813",
       "name": "AppUsageLogEntity",
       "properties": [
         {
@@ -142,13 +152,18 @@
           "id": "8:4119454608127815127",
           "name": "eventType",
           "type": 5
+        },
+        {
+          "id": "9:8129133441187269813",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "6:8828187759311358461",
-      "lastPropertyId": "9:5030141110110625895",
+      "lastPropertyId": "10:2607281751565163584",
       "name": "BatteryEntity",
       "properties": [
         {
@@ -198,13 +213,18 @@
           "id": "9:5030141110110625895",
           "name": "temperature",
           "type": 5
+        },
+        {
+          "id": "10:2607281751565163584",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "7:6200845409315635805",
-      "lastPropertyId": "13:7763303846495607377",
+      "lastPropertyId": "14:1250218460201199382",
       "name": "BluetoothScanEntity",
       "properties": [
         {
@@ -274,13 +294,18 @@
           "id": "13:7763303846495607377",
           "name": "isLE",
           "type": 1
+        },
+        {
+          "id": "14:1250218460201199382",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "8:1785076883434561344",
-      "lastPropertyId": "8:5561717979411248620",
+      "lastPropertyId": "9:6407932073643371224",
       "name": "CallLogEntity",
       "properties": [
         {
@@ -325,13 +350,18 @@
           "id": "8:5561717979411248620",
           "name": "type",
           "type": 5
+        },
+        {
+          "id": "9:6407932073643371224",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "9:7175851274949687730",
-      "lastPropertyId": "9:5635979916599728361",
+      "lastPropertyId": "10:2479470160903299938",
       "name": "ConnectivityEntity",
       "properties": [
         {
@@ -381,13 +411,18 @@
           "id": "9:5635979916599728361",
           "name": "transportTypes",
           "type": 9
+        },
+        {
+          "id": "10:2479470160903299938",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "10:2381002112531695548",
-      "lastPropertyId": "9:5611843608913499498",
+      "lastPropertyId": "10:6616283935548776683",
       "name": "DataTrafficEntity",
       "properties": [
         {
@@ -437,13 +472,18 @@
           "id": "9:5611843608913499498",
           "name": "mobileTx",
           "type": 6
+        },
+        {
+          "id": "10:6616283935548776683",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "11:2380015550703285233",
-      "lastPropertyId": "7:8077279123048687322",
+      "lastPropertyId": "8:9101027613034717479",
       "name": "DeviceModeEntity",
       "properties": [
         {
@@ -483,6 +523,11 @@
           "id": "7:8077279123048687322",
           "name": "value",
           "type": 9
+        },
+        {
+          "id": "8:9101027613034717479",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
@@ -557,7 +602,7 @@
     },
     {
       "id": "13:8811970869820017106",
-      "lastPropertyId": "14:7082574113315804190",
+      "lastPropertyId": "15:8444419108929843740",
       "name": "MediaEntity",
       "properties": [
         {
@@ -632,13 +677,18 @@
           "id": "14:7082574113315804190",
           "name": "dateModified",
           "type": 6
+        },
+        {
+          "id": "15:8444419108929843740",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "14:3530923314090966268",
-      "lastPropertyId": "8:925611070404114554",
+      "lastPropertyId": "9:4156073725575394587",
       "name": "MessageLogEntity",
       "properties": [
         {
@@ -682,6 +732,11 @@
         {
           "id": "8:925611070404114554",
           "name": "contactType",
+          "type": 5
+        },
+        {
+          "id": "9:4156073725575394587",
+          "name": "deviceType",
           "type": 5
         }
       ],
@@ -755,7 +810,7 @@
     },
     {
       "id": "16:1322643933676337368",
-      "lastPropertyId": "11:149211968180451614",
+      "lastPropertyId": "12:80774091095810452",
       "name": "NotificationEntity",
       "properties": [
         {
@@ -815,13 +870,18 @@
           "id": "11:149211968180451614",
           "name": "category",
           "type": 9
+        },
+        {
+          "id": "12:80774091095810452",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "17:7944774485882083295",
-      "lastPropertyId": "6:7228264024083141056",
+      "lastPropertyId": "7:3646780820845328972",
       "name": "ScreenEntity",
       "properties": [
         {
@@ -856,13 +916,18 @@
           "id": "6:7228264024083141056",
           "name": "type",
           "type": 9
+        },
+        {
+          "id": "7:3646780820845328972",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "18:3769846804306217518",
-      "lastPropertyId": "8:3560055531861427453",
+      "lastPropertyId": "9:1067664095075047901",
       "name": "StepEntity",
       "properties": [
         {
@@ -907,13 +972,18 @@
           "id": "8:3560055531861427453",
           "name": "steps",
           "type": 6
+        },
+        {
+          "id": "9:1067664095075047901",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "19:794332684568241456",
-      "lastPropertyId": "9:5003250163839999370",
+      "lastPropertyId": "10:213288686549448597",
       "name": "UserInteractionEntity",
       "properties": [
         {
@@ -963,13 +1033,18 @@
           "id": "9:5003250163839999370",
           "name": "text",
           "type": 9
+        },
+        {
+          "id": "10:213288686549448597",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "20:1499849396700115262",
-      "lastPropertyId": "8:1932423961014615269",
+      "lastPropertyId": "9:680053779170596765",
       "name": "WatchAccelerometerEntity",
       "properties": [
         {
@@ -1014,13 +1089,18 @@
           "id": "8:1932423961014615269",
           "name": "z",
           "type": 7
+        },
+        {
+          "id": "9:680053779170596765",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "21:4272409774694850988",
-      "lastPropertyId": "7:3209443447221676370",
+      "lastPropertyId": "8:8138987646519866951",
       "name": "WatchEDAEntity",
       "properties": [
         {
@@ -1060,13 +1140,18 @@
           "id": "7:3209443447221676370",
           "name": "status",
           "type": 5
+        },
+        {
+          "id": "8:8138987646519866951",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "22:3440108194311929931",
-      "lastPropertyId": "9:3181186077719299154",
+      "lastPropertyId": "10:2298504220215986442",
       "name": "WatchHeartRateEntity",
       "properties": [
         {
@@ -1116,13 +1201,18 @@
           "id": "9:3181186077719299154",
           "name": "ibiStatus",
           "type": 26
+        },
+        {
+          "id": "10:2298504220215986442",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "23:3159457988333531991",
-      "lastPropertyId": "11:1776863883934536812",
+      "lastPropertyId": "12:1364641797423117594",
       "name": "WatchPPGEntity",
       "properties": [
         {
@@ -1182,13 +1272,18 @@
           "id": "11:1776863883934536812",
           "name": "irStatus",
           "type": 5
+        },
+        {
+          "id": "12:1364641797423117594",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "24:2137456708721443071",
-      "lastPropertyId": "8:7283203588583567856",
+      "lastPropertyId": "9:6616070817844358391",
       "name": "WatchSkinTemperatureEntity",
       "properties": [
         {
@@ -1233,13 +1328,18 @@
           "id": "8:7283203588583567856",
           "name": "status",
           "type": 5
+        },
+        {
+          "id": "9:6616070817844358391",
+          "name": "deviceType",
+          "type": 5
         }
       ],
       "relations": []
     },
     {
       "id": "25:3379930148070430679",
-      "lastPropertyId": "9:8693858415304817984",
+      "lastPropertyId": "10:8702536056541084838",
       "name": "WifiScanEntity",
       "properties": [
         {
@@ -1288,6 +1388,11 @@
         {
           "id": "9:8693858415304817984",
           "name": "level",
+          "type": 5
+        },
+        {
+          "id": "10:8702536056541084838",
+          "name": "deviceType",
           "type": 5
         }
       ],
