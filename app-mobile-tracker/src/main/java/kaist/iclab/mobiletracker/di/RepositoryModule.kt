@@ -15,7 +15,6 @@ import kaist.iclab.mobiletracker.repository.SurveyRepositoryImpl
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepositoryImpl
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
-import kaist.iclab.mobiletracker.repository.handlers.buildSensorDataHandlers
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
@@ -34,11 +33,6 @@ val repositoryModule = module {
             stores = get<SensorStores>(),
             watchSensorRepository = get()
         )
-    }
-
-    // Sensor Data Handlers Registry (all sensors registered in buildSensorDataHandlers)
-    single<SensorDataHandlerRegistry> {
-        SensorDataHandlerRegistry(buildSensorDataHandlers(get<SensorStores>()))
     }
 
     // DataRepository for Data screen sensor list
