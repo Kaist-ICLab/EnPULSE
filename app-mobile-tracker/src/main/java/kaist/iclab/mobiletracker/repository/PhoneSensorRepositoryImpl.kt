@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.repository
 
-import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper

@@ -76,7 +76,7 @@ class GenericSensorUploadHandler<T : BaseEntity>(
         store.removeBefore(beforeTimestamp)
     }
 
-    override suspend fun getRecordCount(): Int = store.count().toInt()
+    override suspend fun getRecordCount(): Int = store.count()
 
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> =
         store.recordsAfter(0L, true, limit, offset)

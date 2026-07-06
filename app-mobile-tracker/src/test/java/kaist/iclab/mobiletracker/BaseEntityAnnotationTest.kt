@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker
 
-import io.objectbox.annotation.BaseEntity
 import io.objectbox.annotation.Entity
 import io.objectbox.annotation.Id
 import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
@@ -8,10 +7,6 @@ import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
