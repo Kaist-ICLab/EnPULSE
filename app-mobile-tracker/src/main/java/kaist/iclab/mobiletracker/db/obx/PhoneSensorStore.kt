@@ -1,14 +1,13 @@
 package kaist.iclab.mobiletracker.db.obx
 
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.tracker.sensor.core.SensorEntity
 
 /**
  * Binds a phone sensor's [SensorStore] to the mapping that turns an incoming library
- * [SensorEntity] into the stored ObjectBox entity. This is the small per-sensor glue that
- * replaced each Room DAO's `insert()`/`insertBatch()` body; the mapping functions themselves
- * live in [PhoneEntityMappers].
+ * [SensorEntity] into the stored ObjectBox entity.
  */
-class PhoneSensorStore<T : Any>(
+class PhoneSensorStore<T : BaseEntity>(
     val store: SensorStore<T>,
     private val fromSensorEntity: (SensorEntity, String?) -> T
 ) {

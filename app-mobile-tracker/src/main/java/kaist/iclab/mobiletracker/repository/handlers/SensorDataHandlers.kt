@@ -34,7 +34,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.ambientLight
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Value" to String.format("%.1f lux", e.value)
@@ -49,7 +49,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.appListChange
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Changed" to (e.changedAppJson?.take(50) ?: "N/A")
@@ -64,7 +64,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.appUsageLog
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Package" to e.packageName,
@@ -80,7 +80,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.bluetoothScan
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Name" to e.name,
@@ -96,7 +96,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.callLog
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Type" to e.type.toString(),
@@ -112,7 +112,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.connectivity
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Network" to e.networkType,
@@ -128,7 +128,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.dataTraffic
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Total Rx" to "${e.totalRx / 1024} KB",
@@ -144,7 +144,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.deviceMode
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Event" to e.eventType,
@@ -160,7 +160,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.location
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Latitude" to String.format("%.6f°", e.latitude),
@@ -177,7 +177,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.media
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Type" to (e.mimeType ?: "Unknown"),
@@ -193,7 +193,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.messageLog
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Type" to e.messageType,
@@ -209,7 +209,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.notification
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Package" to e.packageName,
@@ -225,7 +225,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.screen
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Type" to e.type
@@ -240,7 +240,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.step
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Steps" to e.steps.toString()
@@ -255,7 +255,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.userInteraction
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "Event" to e.eventType.toString()
@@ -270,7 +270,7 @@ fun buildSensorDataHandlers(s: SensorStores): List<SensorDataHandler> = listOf(
         store = s.wifiScan
     ) { e ->
         SensorRecord(
-            id = e.id.toLong(),
+            id = e.id,
             timestamp = e.timestamp,
             fields = mapOf(
                 "SSID" to e.ssid,

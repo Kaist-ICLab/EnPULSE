@@ -1,36 +1,38 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
 import io.objectbox.annotation.Entity
-import io.objectbox.annotation.Id
-import io.objectbox.annotation.Index
 import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.obx.JsonStringElementSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import java.util.UUID
 
 @Entity
 @Serializable
-data class AppListChangeEntity(
-    @Id
-    @Transient
-    var id: Long = 0,
-    @SerialName("event_id")
-    var eventId: String = UUID.randomUUID().toString(),
-    var uuid: String = "",
-    @Serializable(with = EpochMillisIsoSerializer::class)
-    var received: Long = 0,
-    @Index
-    @Serializable(with = EpochMillisIsoSerializer::class)
-    var timestamp: Long = 0,
-    @SerialName("device_type")
-    var deviceType: Int = DeviceType.PHONE.value,
+class AppListChangeEntity : BaseEntity {
     @SerialName("changed_app")
     @Serializable(with = JsonStringElementSerializer::class)
-    var changedAppJson: String? = null, // Serialized AppInfo as JSON
+    var changedAppJson: String? = null
+
     @SerialName("app_list")
     @Serializable(with = JsonStringElementSerializer::class)
-    var appListJson: String? = null // Serialized List<AppInfo> as JSON
-)
+    var appListJson: String? = null
+
+    constructor() : super()
+
+    constructor(
+        id: Long = 0,
+        eventId: String = UUID.randomUUID().toString(),
+        uuid: String = "",
+        received: Long = 0,
+        timestamp: Long = 0,
+        deviceType: Int = DeviceType.PHONE.value,
+        changedAppJson: String? = null,
+        appListJson: String? = null
+    ) {
+        initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
+        this.changedAppJson = changedAppJson
+        this.appListJson = appListJson
+    }
+}

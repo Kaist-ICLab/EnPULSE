@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.repository.handlers
 
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.repository.SensorRecord
 
@@ -8,7 +9,7 @@ import kaist.iclab.mobiletracker.repository.SensorRecord
  * everything except the metadata and the entity→[SensorRecord] display projection was identical
  * delegation, so a sensor now only needs to supply those via [toRecord].
  */
-class GenericSensorDataHandler<T : Any>(
+class GenericSensorDataHandler<T : BaseEntity>(
     override val sensorId: String,
     override val displayName: String,
     override val isWatchSensor: Boolean,

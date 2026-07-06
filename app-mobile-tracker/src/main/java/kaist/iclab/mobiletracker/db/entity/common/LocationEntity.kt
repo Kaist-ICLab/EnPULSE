@@ -1,12 +1,8 @@
 package kaist.iclab.mobiletracker.db.entity.common
 
 import io.objectbox.annotation.Entity
-import io.objectbox.annotation.Id
-import io.objectbox.annotation.Index
-import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
-import kotlinx.serialization.SerialName
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 /**
  * ObjectBox entity for location data from both phone and watch devices, differentiated by
@@ -16,24 +12,33 @@ import kotlinx.serialization.Transient
  */
 @Entity
 @Serializable
-data class LocationEntity(
-    @Id
-    @Transient
-    var id: Long = 0,
-    @SerialName("event_id")
-    var eventId: String = "",
-    var uuid: String = "",
-    @Index
-    @SerialName("device_type")
-    var deviceType: Int = 0,
-    @Serializable(with = EpochMillisIsoSerializer::class)
-    var received: Long = 0,
-    @Index
-    @Serializable(with = EpochMillisIsoSerializer::class)
-    var timestamp: Long = 0,
-    var latitude: Double = 0.0,
-    var longitude: Double = 0.0,
-    var altitude: Double = 0.0,
-    var speed: Float = 0f,
+class LocationEntity : BaseEntity {
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
+    var altitude: Double = 0.0
+    var speed: Float = 0f
     var accuracy: Float = 0f
-)
+
+    constructor() : super()
+
+    constructor(
+        id: Long = 0,
+        eventId: String = "",
+        uuid: String = "",
+        received: Long = 0,
+        timestamp: Long = 0,
+        deviceType: Int = 0,
+        latitude: Double = 0.0,
+        longitude: Double = 0.0,
+        altitude: Double = 0.0,
+        speed: Float = 0f,
+        accuracy: Float = 0f
+    ) {
+        initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
+        this.latitude = latitude
+        this.longitude = longitude
+        this.altitude = altitude
+        this.speed = speed
+        this.accuracy = accuracy
+    }
+}

@@ -1,7 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
 import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.obx.LocationStore
 import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
@@ -14,7 +13,6 @@ import kaist.iclab.tracker.sensor.core.SensorEntity
  */
 class PhoneSensorRepositoryImpl(
     private val sensorDataStorages: Map<String, PhoneSensorStore<*>>,
-    private val locationStore: LocationStore,
     private val supabaseHelper: SupabaseHelper,
     @Suppress("unused") private val appScope: AppCoroutineScope
 ) : PhoneSensorRepository {
@@ -65,21 +63,13 @@ class PhoneSensorRepositoryImpl(
 
     override suspend fun getLatestRecordedTimestamp(sensorId: String): Long? {
         return ErrorClassifier.runClassified(TAG, "getLatestTimestamp $sensorId") {
-            if (sensorId == LOCATION_ID) {
-                locationStore.latestTimestampByDeviceType(DeviceType.PHONE.value)
-            } else {
-                sensorDataStorages[sensorId]?.latestTimestamp()
-            }
+            sensorDataStorages[sensorId]?.latestTimestamp()
         }.getOrNull()
     }
 
     override suspend fun getRecordCount(sensorId: String): Int {
         return ErrorClassifier.runClassified(TAG, "getRecordCount $sensorId") {
-            if (sensorId == LOCATION_ID) {
-                locationStore.countByDeviceType(DeviceType.PHONE.value)
-            } else {
-                sensorDataStorages[sensorId]?.recordCount() ?: 0
-            }
+            sensorDataStorages[sensorId]?.recordCount() ?: 0
         }.getOrNull() ?: 0
     }
 }

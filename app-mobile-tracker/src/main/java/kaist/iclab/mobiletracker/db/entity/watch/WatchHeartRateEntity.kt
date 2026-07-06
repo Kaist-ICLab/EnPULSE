@@ -1,13 +1,10 @@
 package kaist.iclab.mobiletracker.db.entity.watch
 
 import io.objectbox.annotation.Entity
-import io.objectbox.annotation.Id
-import io.objectbox.annotation.Index
 import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 /**
  * ObjectBox entity for heart rate sensor data received from the watch.
@@ -18,28 +15,38 @@ import kotlinx.serialization.Transient
  */
 @Entity
 @Serializable
-data class WatchHeartRateEntity(
-    @Id
-    @Transient
-    var id: Long = 0,
-    @SerialName("event_id")
-    var eventId: String = "",
-    var uuid: String = "",
-    @Index
-    @Serializable(with = EpochMillisIsoSerializer::class)
-    var timestamp: Long = 0,
-    @Serializable(with = EpochMillisIsoSerializer::class)
-    var received: Long = 0,
-    var hr: Int = 0,
+class WatchHeartRateEntity : BaseEntity {
+    var hr: Int = 0
+
     @SerialName("hr_status")
-    var hrStatus: Int = 0,
-    var ibi: IntArray = IntArray(0),
+    var hrStatus: Int = 0
+
+    var ibi: IntArray = IntArray(0)
+
     @SerialName("ibi_status")
-    var ibiStatus: IntArray = IntArray(0),
-    @SerialName("device_type")
-    var deviceType: Int = DeviceType.WATCH.value
-) {
-    // Arrays need structural equals/hashCode; generated data-class versions use identity.
+    var ibiStatus: IntArray = IntArray(0)
+
+    constructor() : super()
+
+    constructor(
+        id: Long = 0,
+        eventId: String = "",
+        uuid: String = "",
+        received: Long = 0,
+        timestamp: Long = 0,
+        deviceType: Int = DeviceType.WATCH.value,
+        hr: Int = 0,
+        hrStatus: Int = 0,
+        ibi: IntArray = IntArray(0),
+        ibiStatus: IntArray = IntArray(0)
+    ) {
+        initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
+        this.hr = hr
+        this.hrStatus = hrStatus
+        this.ibi = ibi
+        this.ibiStatus = ibiStatus
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is WatchHeartRateEntity) return false

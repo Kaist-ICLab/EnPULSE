@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.services.upload.handlers
 
 import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AmbientLightEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppUsageLogEntity
@@ -25,7 +26,6 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.phone.LocationUploadHandler
-import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchLocationUploadHandler
 import org.koin.core.scope.Scope
 import org.koin.core.scope.get
 
@@ -41,7 +41,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "AmbientLight",
         store = s.ambientLight,
-        timestampOf = { it.timestamp },
         serializer = AmbientLightEntity.serializer(),
         tableName = AppConfig.SupabaseTables.AMBIENT_LIGHT_SENSOR,
         sensorName = "Ambient Light",
@@ -52,7 +51,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "AppListChange",
         store = s.appListChange,
-        timestampOf = { it.timestamp },
         serializer = AppListChangeEntity.serializer(),
         tableName = AppConfig.SupabaseTables.APP_LIST_CHANGE_SENSOR,
         sensorName = "App List Change",
@@ -67,7 +65,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "AppUsage",
         store = s.appUsageLog,
-        timestampOf = { it.timestamp },
         serializer = AppUsageLogEntity.serializer(),
         tableName = AppConfig.SupabaseTables.APP_USAGE_LOG_SENSOR,
         sensorName = "App Usage Log",
@@ -78,7 +75,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "Battery",
         store = s.battery,
-        timestampOf = { it.timestamp },
         serializer = BatteryEntity.serializer(),
         tableName = AppConfig.SupabaseTables.BATTERY_SENSOR,
         sensorName = "Battery",
@@ -89,7 +85,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "BluetoothScan",
         store = s.bluetoothScan,
-        timestampOf = { it.timestamp },
         serializer = BluetoothScanEntity.serializer(),
         tableName = AppConfig.SupabaseTables.BLUETOOTH_SCAN_SENSOR,
         sensorName = "Bluetooth Scan",
@@ -100,7 +95,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "CallLog",
         store = s.callLog,
-        timestampOf = { it.timestamp },
         serializer = CallLogEntity.serializer(),
         tableName = AppConfig.SupabaseTables.CALL_LOG_SENSOR,
         sensorName = "Call Log",
@@ -111,7 +105,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "Connectivity",
         store = s.connectivity,
-        timestampOf = { it.timestamp },
         serializer = ConnectivityEntity.serializer(),
         tableName = AppConfig.SupabaseTables.CONNECTIVITY_SENSOR,
         sensorName = "Connectivity",
@@ -122,7 +115,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "DataTraffic",
         store = s.dataTraffic,
-        timestampOf = { it.timestamp },
         serializer = DataTrafficEntity.serializer(),
         tableName = AppConfig.SupabaseTables.DATA_TRAFFIC_SENSOR,
         sensorName = "Data Traffic",
@@ -133,7 +125,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "DeviceMode",
         store = s.deviceMode,
-        timestampOf = { it.timestamp },
         serializer = DeviceModeEntity.serializer(),
         tableName = AppConfig.SupabaseTables.DEVICE_MODE_SENSOR,
         sensorName = "Device Mode",
@@ -141,11 +132,9 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
         csvHeader = "eventId,uuid,received,timestamp,eventType,value",
         toCsvRow = { e -> "${e.eventId},${e.uuid},${e.received},${e.timestamp},${e.eventType},${e.value}" }
     ),
-    LocationUploadHandler(store = s.location, supabase = get()),
     GenericSensorUploadHandler(
         sensorId = "Media",
         store = s.media,
-        timestampOf = { it.timestamp },
         serializer = MediaEntity.serializer(),
         tableName = AppConfig.SupabaseTables.MEDIA_SENSOR,
         sensorName = "Media",
@@ -156,7 +145,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "MessageLog",
         store = s.messageLog,
-        timestampOf = { it.timestamp },
         serializer = MessageLogEntity.serializer(),
         tableName = AppConfig.SupabaseTables.MESSAGE_LOG_SENSOR,
         sensorName = "Message Log",
@@ -167,7 +155,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "Notification",
         store = s.notification,
-        timestampOf = { it.timestamp },
         serializer = NotificationEntity.serializer(),
         tableName = AppConfig.SupabaseTables.NOTIFICATION_SENSOR,
         sensorName = "Notification",
@@ -182,7 +169,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "Screen",
         store = s.screen,
-        timestampOf = { it.timestamp },
         serializer = ScreenEntity.serializer(),
         tableName = AppConfig.SupabaseTables.SCREEN_SENSOR,
         sensorName = "Screen",
@@ -193,7 +179,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "Step",
         store = s.step,
-        timestampOf = { it.timestamp },
         serializer = StepEntity.serializer(),
         tableName = AppConfig.SupabaseTables.STEP_SENSOR,
         sensorName = "Step",
@@ -204,7 +189,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "UserInteraction",
         store = s.userInteraction,
-        timestampOf = { it.timestamp },
         serializer = UserInteractionEntity.serializer(),
         tableName = AppConfig.SupabaseTables.USER_INTERACTION_SENSOR,
         sensorName = "User Interaction",
@@ -218,7 +202,6 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "WifiScan",
         store = s.wifiScan,
-        timestampOf = { it.timestamp },
         serializer = WifiScanEntity.serializer(),
         tableName = AppConfig.SupabaseTables.WIFI_SCAN_SENSOR,
         sensorName = "Wifi",
@@ -228,6 +211,16 @@ fun Scope.buildPhoneUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
             val escapedSsid = e.ssid.replace("\"", "\"\"")
             "${e.eventId},${e.uuid},${e.received},${e.timestamp},\"$escapedSsid\",${e.bssid},${e.frequency},${e.level}"
         }
+    ),
+    GenericSensorUploadHandler(
+        sensorId = "Location",
+        store = s.location,
+        serializer = LocationEntity.serializer(),
+        tableName = AppConfig.SupabaseTables.LOCATION_SENSOR,
+        sensorName = "location",
+        supabase = get(),
+        csvHeader = "eventId,uuid,deviceType,received,timestamp,latitude,longitude,altitude,speed,accuracy",
+        toCsvRow = { e -> "${e.eventId},${e.uuid},${e.deviceType},${e.received},${e.timestamp},${e.latitude},${e.longitude},${e.altitude},${e.speed},${e.accuracy}" }
     )
 )
 
@@ -235,7 +228,6 @@ fun Scope.buildWatchUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "WatchHeartRate",
         store = s.watchHeartRate,
-        timestampOf = { it.timestamp },
         serializer = WatchHeartRateEntity.serializer(),
         tableName = AppConfig.SupabaseTables.HEART_RATE_SENSOR,
         sensorName = "heart rate",
@@ -250,7 +242,6 @@ fun Scope.buildWatchUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "WatchAccelerometer",
         store = s.watchAccelerometer,
-        timestampOf = { it.timestamp },
         serializer = WatchAccelerometerEntity.serializer(),
         tableName = AppConfig.SupabaseTables.ACCELEROMETER_SENSOR,
         sensorName = "accelerometer",
@@ -261,7 +252,6 @@ fun Scope.buildWatchUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "WatchEDA",
         store = s.watchEDA,
-        timestampOf = { it.timestamp },
         serializer = WatchEDAEntity.serializer(),
         tableName = AppConfig.SupabaseTables.EDA_SENSOR,
         sensorName = "EDA",
@@ -272,7 +262,6 @@ fun Scope.buildWatchUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "WatchPPG",
         store = s.watchPPG,
-        timestampOf = { it.timestamp },
         serializer = WatchPPGEntity.serializer(),
         tableName = AppConfig.SupabaseTables.PPG_SENSOR,
         sensorName = "PPG",
@@ -283,7 +272,6 @@ fun Scope.buildWatchUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
     GenericSensorUploadHandler(
         sensorId = "WatchSkinTemperature",
         store = s.watchSkinTemperature,
-        timestampOf = { it.timestamp },
         serializer = WatchSkinTemperatureEntity.serializer(),
         tableName = AppConfig.SupabaseTables.SKIN_TEMPERATURE_SENSOR,
         sensorName = "skin temperature",
@@ -291,5 +279,4 @@ fun Scope.buildWatchUploadHandlers(s: SensorStores): List<SensorUploadHandler> =
         csvHeader = "eventId,uuid,received,timestamp,ambientTemp,objectTemp,status",
         toCsvRow = { e -> "${e.eventId},${e.uuid},${e.received},${e.timestamp},${e.ambientTemp},${e.objectTemp},${e.status}" }
     ),
-    WatchLocationUploadHandler(store = s.location, supabase = get())
 )

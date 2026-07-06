@@ -17,8 +17,7 @@ import kaist.iclab.mobiletracker.repository.UserProfileRepositoryImpl
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.repository.handlers.buildSensorDataHandlers
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
-import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
+import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -47,8 +46,7 @@ val repositoryModule = module {
         DataRepositoryImpl(
             handlerRegistry = get<SensorDataHandlerRegistry>(),
             syncTimestampService = get<SyncTimestampService>(),
-            phoneSensorUploadService = get<PhoneSensorUploadService>(),
-            watchSensorUploadService = get<WatchSensorUploadService>(),
+            sensorUploadService = get<SensorUploadService>(),
             supabaseHelper = get<SupabaseHelper>()
         )
     }

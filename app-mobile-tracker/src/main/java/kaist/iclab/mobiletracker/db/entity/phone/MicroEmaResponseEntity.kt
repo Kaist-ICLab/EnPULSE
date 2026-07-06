@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.db.entity.phone
 import io.objectbox.annotation.Entity
 import io.objectbox.annotation.Id
 import io.objectbox.annotation.Index
+import kaist.iclab.mobiletracker.data.DeviceType
 
 /**
  * ObjectBox entity for locally caching microEMA survey responses on the phone.
@@ -28,7 +29,7 @@ data class MicroEmaResponseEntity(
     /** The JSON string of the response payload (value and status) */
     var responseJson: String = "",
 
-    var deviceType: Int = 1,
+    var deviceType: Int = DeviceType.WATCH.value,
 
     @Index var isSynced: Boolean = false
 )

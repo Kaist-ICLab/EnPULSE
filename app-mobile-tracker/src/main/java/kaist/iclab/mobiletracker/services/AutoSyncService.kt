@@ -15,8 +15,7 @@ import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
-import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
-import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
+import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.tracker.sensor.core.Sensor
@@ -34,6 +33,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.getValue
 
 /**
  * Service that handles automatic synchronization of sensor data to Supabase
@@ -65,8 +65,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     }
 
     private val syncTimestampService by inject<SyncTimestampService>()
-    private val phoneSensorUploadService: PhoneSensorUploadService by inject()
-    private val watchSensorUploadService: WatchSensorUploadService by inject()
+    private val sensorUploadService: SensorUploadService by inject()
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
     private val surveyService: SurveyService by inject()
     private val microEmaResponseDao by inject<MicroEmaResponseStore>()
@@ -228,28 +227,12 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         try {
             val startTime = System.currentTimeMillis()
 
-            // Launch all phone sensor uploads in parallel
-            val phoneJobs = sensors.map { sensor ->
+            // Launch all sensor uploads in parallel
+            val allSensorIds = sensors.map { it.id } + SensorTypeHelper.watchSensorIds
+            val sensorJobs = allSensorIds.map { sensorId ->
                 lifecycleScope.async(Dispatchers.IO) {
-                    if (phoneSensorUploadService.hasDataToUpload(sensor.id)) {
-                        phoneSensorUploadService.uploadSensorData(sensor.id)
-                            .onSuccess { successCount.incrementAndGet() }
-                            .onFailure { e ->
-                                failureCount.incrementAndGet()
-                                failedSensors.add(sensor.name)
-                                Log.e(TAG, "Upload failed for ${sensor.name}: ${e.message}", e)
-                            }
-                    } else {
-                        skippedCount.incrementAndGet()
-                    }
-                }
-            }
-
-            // Launch all watch sensor uploads in parallel
-            val watchJobs = SensorTypeHelper.watchSensorIds.map { sensorId ->
-                lifecycleScope.async(Dispatchers.IO) {
-                    if (watchSensorUploadService.hasDataToUpload(sensorId)) {
-                        watchSensorUploadService.uploadSensorData(sensorId)
+                    if (sensorUploadService.hasDataToUpload(sensorId)) {
+                        sensorUploadService.uploadSensorData(sensorId)
                             .onSuccess { successCount.incrementAndGet() }
                             .onFailure { e ->
                                 failureCount.incrementAndGet()
@@ -268,7 +251,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
             }
 
             // Wait for all uploads to complete
-            (phoneJobs + watchJobs + microEmaJob).awaitAll()
+            (sensorJobs + microEmaJob).awaitAll()
 
             val elapsed = System.currentTimeMillis() - startTime
             Log.d(

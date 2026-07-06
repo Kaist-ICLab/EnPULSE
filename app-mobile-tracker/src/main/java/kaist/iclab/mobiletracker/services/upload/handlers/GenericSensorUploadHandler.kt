@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.services.upload.handlers
 
 import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
@@ -17,12 +18,11 @@ import kotlinx.serialization.json.jsonObject
  * name and the CSV shape differ. `uuid` is stamped with the logged-in user's UUID at upload time,
  * exactly as the old mappers did.
  *
- * @param T stored entity type (a `@Serializable` ObjectBox entity).
+ * @param T stored entity type (a `@Serializable` ObjectBox entity extending [BaseEntity]).
  */
-class GenericSensorUploadHandler<T : Any>(
+class GenericSensorUploadHandler<T : BaseEntity>(
     override val sensorId: String,
     private val store: SensorStore<T>,
-    private val timestampOf: (T) -> Long,
     private val serializer: KSerializer<T>,
     private val tableName: String,
     private val sensorName: String,
@@ -58,7 +58,7 @@ class GenericSensorUploadHandler<T : Any>(
                 val rows = entities.map { toSupabaseRow(it, userUuid) }
                 supabase.upsertBatch(tableName, sensorName, rows).getOrElse { throw it }
 
-                currentMaxTimestamp = entities.maxOf { timestampOf(it) }
+                currentMaxTimestamp = entities.maxOf { it.timestamp }
                 uploadedAny = true
 
                 if (entities.size < batchSize) break

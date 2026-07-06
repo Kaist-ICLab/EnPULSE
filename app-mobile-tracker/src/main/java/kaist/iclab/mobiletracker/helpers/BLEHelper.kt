@@ -3,16 +3,11 @@ package kaist.iclab.mobiletracker.helpers
 
 import android.content.Context
 import android.util.Log
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
-import kaist.iclab.mobiletracker.data.DeviceType
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
-import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
@@ -34,8 +29,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 /**
  * Helper class for managing BLE communication with wearable devices.
@@ -54,8 +47,6 @@ class BLEHelper(
     private val appScope by inject<AppCoroutineScope>()
     private val surveyService by inject<SurveyService>()
     private val userProfileRepository by inject<UserProfileRepository>()
-
-    private val isoFormatter = DateTimeFormatter.ISO_INSTANT
 
     private var isInitialized = false
 
@@ -314,209 +305,28 @@ class BLEHelper(
 
             try {
 
-                // Parse all sensor types from CSV
-                val locationDataList = SensorDataCsvParser.parseLocationCsv(csvData)
-                val accelerometerDataList = SensorDataCsvParser.parseAccelerometerCsv(csvData)
-                val edaDataList = SensorDataCsvParser.parseEDACsv(csvData)
-                val heartRateDataList = SensorDataCsvParser.parseHeartRateCsv(csvData)
-                val ppgDataList = SensorDataCsvParser.parsePPGCsv(csvData)
-                val skinTemperatureDataList = SensorDataCsvParser.parseSkinTemperatureCsv(csvData)
+                // Parse all sensor types from CSV directly into entity objects
+                val sensorBatches: List<Pair<String, List<BaseEntity>>> = listOf(
+                    Constants.SensorId.LOCATION to SensorDataCsvParser.parseLocationCsv(csvData),
+                    Constants.SensorId.ACCELEROMETER to SensorDataCsvParser.parseAccelerometerCsv(csvData),
+                    Constants.SensorId.EDA to SensorDataCsvParser.parseEDACsv(csvData),
+                    Constants.SensorId.HEART_RATE to SensorDataCsvParser.parseHeartRateCsv(csvData),
+                    Constants.SensorId.PPG to SensorDataCsvParser.parsePPGCsv(csvData),
+                    Constants.SensorId.SKIN_TEMPERATURE to SensorDataCsvParser.parseSkinTemperatureCsv(csvData),
+                )
 
-                // Convert Supabase data classes to Room entities and store locally
                 var totalStored = 0
                 var hasAnyData = false
 
-                if (locationDataList.isNotEmpty()) {
+                for ((sensorId, entities) in sensorBatches) {
+                    if (entities.isEmpty()) continue
                     hasAnyData = true
-                    val entities = locationDataList.map { data ->
-                        // Parse timestamp from "YYYY-MM-DD HH:mm:ss" back to milliseconds
-                        LocationEntity(
-                            eventId = data.eventId,
-                            uuid = "", // Will be set by repository
-                            deviceType = DeviceType.WATCH.value,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            latitude = data.latitude,
-                            longitude = data.longitude,
-                            altitude = data.altitude,
-                            speed = data.speed,
-                            accuracy = data.accuracy
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertLocationData(entities)) {
+                    when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
                         is Result.Success -> {
                             totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} location entries locally"
-                            )
+                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} $sensorId entries locally")
                         }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store location data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (accelerometerDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = accelerometerDataList.map { data ->
-                        WatchAccelerometerEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            x = data.x,
-                            y = data.y,
-                            z = data.z
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertAccelerometerData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} accelerometer entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store accelerometer data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (edaDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = edaDataList.map { data ->
-                        WatchEDAEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            skinConductance = data.skinConductance,
-                            status = data.status
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertEDAData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} EDA entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store EDA data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (heartRateDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = heartRateDataList.map { data ->
-                        WatchHeartRateEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            hr = data.hr,
-                            hrStatus = data.hrStatus,
-                            ibi = data.ibi.toIntArray(),
-                            ibiStatus = data.ibiStatus.toIntArray()
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertHeartRateData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} HeartRate entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store HeartRate data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (ppgDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = ppgDataList.map { data ->
-                        WatchPPGEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            green = data.green,
-                            greenStatus = data.greenStatus,
-                            red = data.red,
-                            redStatus = data.redStatus,
-                            ir = data.ir,
-                            irStatus = data.irStatus
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertPPGData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} PPG entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store PPG data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (skinTemperatureDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = skinTemperatureDataList.map { data ->
-                        WatchSkinTemperatureEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            ambientTemp = data.ambientTemp,
-                            objectTemp = data.objectTemp,
-                            status = data.status
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertSkinTemperatureData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} SkinTemperature entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store SkinTemperature data: ${result.message}",
-                                result.exception
-                            )
-                        }
+                        is Result.Error -> Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store $sensorId data: ${result.message}", result.exception)
                     }
                 }
 
