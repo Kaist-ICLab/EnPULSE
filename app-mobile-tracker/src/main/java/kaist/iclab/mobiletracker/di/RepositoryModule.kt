@@ -41,7 +41,8 @@ val repositoryModule = module {
             handlerRegistry = get<SensorDataHandlerRegistry>(),
             syncTimestampService = get<SyncTimestampService>(),
             sensorUploadService = get<SensorUploadService>(),
-            supabaseHelper = get<SupabaseHelper>()
+            supabaseHelper = get<SupabaseHelper>(),
+            campaignSensorRepository = get<CampaignSensorRepository>()
         )
     }
 

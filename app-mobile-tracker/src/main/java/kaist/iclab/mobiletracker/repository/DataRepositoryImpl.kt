@@ -6,6 +6,7 @@ import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
+import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -19,7 +20,8 @@ class DataRepositoryImpl(
     private val handlerRegistry: SensorDataHandlerRegistry,
     private val syncTimestampService: SyncTimestampService,
     private val sensorUploadService: SensorUploadService,
-    private val supabaseHelper: SupabaseHelper
+    private val supabaseHelper: SupabaseHelper,
+    private val campaignSensorRepository: CampaignSensorRepository
 ) : DataRepository {
 
     companion object {
@@ -28,17 +30,24 @@ class DataRepositoryImpl(
 
     private val syncingSensors = ConcurrentHashMap<String, Boolean>()
 
+    private fun isSensorActive(sensorId: String): Boolean {
+        val activeSensorNames = campaignSensorRepository.getActiveSensors().map { it.name }
+        return activeSensorNames.contains(sensorId.toCampaignSensorName())
+    }
+
     override suspend fun getAllSensorInfo(): List<SensorInfo> =
-        handlerRegistry.getAllHandlers().map { handler ->
-            SensorInfo(
-                sensorId = handler.sensorId,
-                displayName = handler.displayName,
-                recordCount = handler.getRecordCount(),
-                lastRecordedTime = handler.getLatestTimestamp(),
-                isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
-                isPhoneSensor = handler.isPhoneSensor
-            )
-        }.sortedBy { it.displayName }
+        handlerRegistry.getAllHandlers()
+            .filter { handler -> isSensorActive(handler.sensorId) }
+            .map { handler ->
+                SensorInfo(
+                    sensorId = handler.sensorId,
+                    displayName = handler.displayName,
+                    recordCount = handler.getRecordCount(),
+                    lastRecordedTime = handler.getLatestTimestamp(),
+                    isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
+                    isPhoneSensor = handler.isPhoneSensor
+                )
+            }.sortedBy { it.displayName }
 
     override suspend fun getSensorInfo(sensorId: String): SensorInfo? =
         getAllSensorInfo().find { it.sensorId == sensorId }

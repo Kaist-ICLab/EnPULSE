@@ -8,10 +8,12 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.repository.DataRepository
 import kaist.iclab.mobiletracker.repository.SensorInfo
 import kaist.iclab.mobiletracker.utils.AppToast
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * UI state for the Data screen.
@@ -79,7 +81,7 @@ class DataViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {
-                val sensors = dataRepository.getAllSensorInfo()
+                val sensors = withContext(Dispatchers.IO) { dataRepository.getAllSensorInfo() }
                 val totalRecords = sensors.sumOf { it.recordCount }
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
