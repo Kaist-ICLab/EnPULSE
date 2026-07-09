@@ -13,14 +13,7 @@ import java.util.UUID
 @Entity
 @Serializable
 class ExerciseEntity : BaseEntity, CsvSerializable, RecordSerializable {
-    @SerialName("start_time")
-    var startTime: Long = 0
-
-    @SerialName("end_time")
-    var endTime: Long = 0
-
-    @SerialName("duration_seconds")
-    var durationSeconds: Long = 0
+    var duration: Long = 0
 
     @SerialName("exercise_type")
     var exerciseType: String = ""
@@ -80,9 +73,7 @@ class ExerciseEntity : BaseEntity, CsvSerializable, RecordSerializable {
         received: Long = 0,
         timestamp: Long = 0,
         deviceType: Int = DeviceType.PHONE.value,
-        startTime: Long = 0,
-        endTime: Long = 0,
-        durationSeconds: Long = 0,
+        duration: Long = 0,
         exerciseType: String = "",
         customTitle: String? = null,
         calories: Float = 0f,
@@ -103,9 +94,7 @@ class ExerciseEntity : BaseEntity, CsvSerializable, RecordSerializable {
         maxRpm: Float? = null
     ) {
         initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
-        this.startTime = startTime
-        this.endTime = endTime
-        this.durationSeconds = durationSeconds
+        this.duration = duration
         this.exerciseType = exerciseType
         this.customTitle = customTitle
         this.calories = calories
@@ -127,11 +116,11 @@ class ExerciseEntity : BaseEntity, CsvSerializable, RecordSerializable {
     }
 
     override fun csvHeader() =
-        "eventId,uuid,received,timestamp,startTime,endTime,durationSeconds,exerciseType,customTitle,calories,distance,count,meanHeartRate,maxHeartRate,minHeartRate,altitudeGain,altitudeLoss,meanCadence,maxCadence,meanPower,maxPower,meanSpeed,maxSpeed,meanRpm,maxRpm"
+        "eventId,uuid,received,timestamp,duration,exerciseType,customTitle,calories,distance,count,meanHeartRate,maxHeartRate,minHeartRate,altitudeGain,altitudeLoss,meanCadence,maxCadence,meanPower,maxPower,meanSpeed,maxSpeed,meanRpm,maxRpm"
 
     override fun toCsvRow(): String {
         val escapedCustomTitle = customTitle?.replace("\"", "\"\"") ?: ""
-        return "$eventId,$uuid,$received,$timestamp,$startTime,$endTime,$durationSeconds,$exerciseType,\"$escapedCustomTitle\",$calories,$distance,$count,$meanHeartRate,$maxHeartRate,$minHeartRate,$altitudeGain,$altitudeLoss,$meanCadence,$maxCadence,$meanPower,$maxPower,$meanSpeed,$maxSpeed,$meanRpm,$maxRpm"
+        return "$eventId,$uuid,$received,$timestamp,$duration,$exerciseType,\"$escapedCustomTitle\",$calories,$distance,$count,$meanHeartRate,$maxHeartRate,$minHeartRate,$altitudeGain,$altitudeLoss,$meanCadence,$maxCadence,$meanPower,$maxPower,$meanSpeed,$maxSpeed,$meanRpm,$maxRpm"
     }
 
     override fun toRecord() = SensorRecord(
@@ -139,7 +128,7 @@ class ExerciseEntity : BaseEntity, CsvSerializable, RecordSerializable {
         timestamp = timestamp,
         fields = mapOf(
             "Type" to exerciseType,
-            "Duration" to "${durationSeconds}s",
+            "Duration" to "${duration}ms",
             "Calories" to calories.toString()
         )
     )

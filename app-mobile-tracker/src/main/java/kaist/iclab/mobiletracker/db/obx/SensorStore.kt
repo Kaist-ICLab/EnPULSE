@@ -27,6 +27,13 @@ import kotlinx.coroutines.flow.flowOn
 open class SensorStore<T : BaseEntity>(
     protected val boxStore: BoxStore,
     private val entityClass: Class<T>,
+    /**
+     * When true, insert/insertBatch upsert by (timestamp, deviceType) instead of always inserting
+     * a new row. Needed for sensors (Sleep/Step/Exercise) whose source re-reads a trailing margin
+     * of already-seen data on every poll — without this they'd accumulate duplicate rows for the
+     * same session/bucket.
+     */
+    private val dedupByTimestamp: Boolean = false,
 ) {
     protected val box: Box<T> = boxStore.boxFor(entityClass)
 
@@ -36,9 +43,34 @@ open class SensorStore<T : BaseEntity>(
     @Suppress("UNCHECKED_CAST")
     private val deviceTypeProperty = metaClass.getField("deviceType").get(null) as Property<T>
 
-    fun insert(entity: T): Long = box.put(entity)
+    fun insert(entity: T): Long {
+        if (dedupByTimestamp) applyExistingIds(listOf(entity))
+        return box.put(entity)
+    }
 
-    fun insertBatch(entities: List<T>) = box.put(entities)
+    fun insertBatch(entities: List<T>) {
+        if (dedupByTimestamp) applyExistingIds(entities)
+        box.put(entities)
+    }
+
+    /**
+     * For dedup-enabled stores, mutates [entities] in place so any entity matching an existing
+     * row's (timestamp, deviceType) reuses that row's id — making the subsequent `box.put` an
+     * update instead of an insert.
+     */
+    private fun applyExistingIds(entities: List<T>) {
+        if (entities.isEmpty()) return
+        val timestamps = entities.map { it.timestamp }.distinct().toLongArray()
+        val existingByKey = box.query(timestampProperty.oneOf(timestamps))
+            .build()
+            .use { it.find() }
+            .associate { (it.timestamp to it.deviceType) to it.id }
+        entities.forEach { entity ->
+            existingByKey[entity.timestamp to entity.deviceType]?.let { existingId ->
+                entity.id = existingId
+            }
+        }
+    }
 
     fun count(deviceType: Int? = null): Int = box.query().run {
         if (deviceType != null) {

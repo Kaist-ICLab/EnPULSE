@@ -217,9 +217,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     uuid = uuid ?: "",
                     received = e.received,
                     timestamp = e.timestamp,
-                    startTime = e.startTime,
-                    endTime = e.endTime,
-                    durationSeconds = e.durationSeconds,
+                    duration = e.duration,
                     exerciseType = e.exerciseType,
                     customTitle = e.customTitle,
                     calories = e.calories,
@@ -314,9 +312,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     uuid = uuid ?: "",
                     received = e.received,
                     timestamp = e.timestamp,
-                    startTime = e.startTime,
-                    endTime = e.endTime,
-                    durationSeconds = e.durationSeconds,
+                    duration = e.duration,
                     sleepScore = e.sleepScore,
                     stagesJson = gson.toJson(e.stages)
                 )
@@ -331,7 +327,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = StepEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as StepSensor.Entity
-                StepEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, startTime = e.startTime, endTime = e.endTime, steps = e.steps)
+                StepEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, duration = e.duration, steps = e.steps)
             }
         ),
         SensorDescriptor(

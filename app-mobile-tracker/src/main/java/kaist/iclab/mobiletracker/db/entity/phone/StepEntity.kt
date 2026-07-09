@@ -13,11 +13,7 @@ import java.util.UUID
 @Entity
 @Serializable
 class StepEntity : BaseEntity, CsvSerializable, RecordSerializable {
-    @SerialName("start_time")
-    var startTime: Long = 0
-
-    @SerialName("end_time")
-    var endTime: Long = 0
+    var duration: Long = 0
 
     var steps: Long = 0
 
@@ -30,18 +26,16 @@ class StepEntity : BaseEntity, CsvSerializable, RecordSerializable {
         received: Long = 0,
         timestamp: Long = 0,
         deviceType: Int = DeviceType.PHONE.value,
-        startTime: Long = 0,
-        endTime: Long = 0,
+        duration: Long = 0,
         steps: Long = 0
     ) {
         initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
-        this.startTime = startTime
-        this.endTime = endTime
+        this.duration = duration
         this.steps = steps
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,startTime,endTime,steps"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$startTime,$endTime,$steps"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,duration,steps"
+    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$duration,$steps"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Steps" to steps.toString()))
 }
