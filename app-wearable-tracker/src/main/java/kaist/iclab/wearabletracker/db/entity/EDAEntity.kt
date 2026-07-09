@@ -12,6 +12,6 @@ class EDAEntity() : WatchBaseEntity(), CsvSerializable {
         this.skinConductance = skinConductance; this.status = status
     }
 
-    override fun toCsvHeader() = "eventId,received,timestamp,skinConductance,status"
+    override val csvHeader = "eventId,received,timestamp,skinConductance,status"
     override fun toCsvRow() = "$eventId,$received,$timestamp,$skinConductance,$status"
 }

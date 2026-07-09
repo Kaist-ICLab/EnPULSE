@@ -8,7 +8,7 @@ interface CsvSerializable {
     /**
      * Returns the CSV header row for this entity type.
      */
-    fun toCsvHeader(): String
+    val csvHeader: String
 
     /**
      * Returns a single CSV row representing this entity's data.

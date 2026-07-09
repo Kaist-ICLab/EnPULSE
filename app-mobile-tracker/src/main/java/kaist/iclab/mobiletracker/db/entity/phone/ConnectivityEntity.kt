@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.db.entity.phone
 import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.obx.CommaJoinedListSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,7 +11,7 @@ import java.util.UUID
 
 @Entity
 @Serializable
-class ConnectivityEntity : BaseEntity {
+class ConnectivityEntity : BaseEntity, CsvSerializable {
     @SerialName("network_type")
     var networkType: String = ""
 
@@ -44,4 +45,7 @@ class ConnectivityEntity : BaseEntity {
         this.hasInternet = hasInternet
         this.transportTypes = transportTypes
     }
+
+    override val csvHeader = "eventId,uuid,received,timestamp,networkType,isConnected,hasInternet,transportTypes"
+    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$networkType,$isConnected,$hasInternet,$transportTypes"
 }

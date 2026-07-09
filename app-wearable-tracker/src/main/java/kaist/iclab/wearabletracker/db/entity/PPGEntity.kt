@@ -21,6 +21,6 @@ class PPGEntity() : WatchBaseEntity(), CsvSerializable {
         this.greenStatus = greenStatus; this.redStatus = redStatus; this.irStatus = irStatus
     }
 
-    override fun toCsvHeader() = "eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
+    override val csvHeader = "eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
     override fun toCsvRow() = "$eventId,$received,$timestamp,$green,$greenStatus,$red,$redStatus,$ir,$irStatus"
 }

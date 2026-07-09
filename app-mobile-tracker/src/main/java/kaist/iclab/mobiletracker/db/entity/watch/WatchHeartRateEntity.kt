@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.db.entity.watch
 import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -15,7 +16,7 @@ import kotlinx.serialization.Serializable
  */
 @Entity
 @Serializable
-class WatchHeartRateEntity : BaseEntity {
+class WatchHeartRateEntity : BaseEntity, CsvSerializable {
     var hr: Int = 0
 
     @SerialName("hr_status")
@@ -45,6 +46,13 @@ class WatchHeartRateEntity : BaseEntity {
         this.hrStatus = hrStatus
         this.ibi = ibi
         this.ibiStatus = ibiStatus
+    }
+
+    override val csvHeader = "eventId,uuid,received,timestamp,hr,hrStatus,ibi,ibiStatus"
+    override fun toCsvRow(): String {
+        val escapedIbi = ibi.joinToString(",").replace("\"", "\"\"")
+        val escapedIbiStatus = ibiStatus.joinToString(",").replace("\"", "\"\"")
+        return "$eventId,$uuid,$received,$timestamp,$hr,$hrStatus,\"[$escapedIbi]\",\"[$escapedIbiStatus]\""
     }
 
     override fun equals(other: Any?): Boolean {

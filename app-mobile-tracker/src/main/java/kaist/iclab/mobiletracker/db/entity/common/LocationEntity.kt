@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.db.entity.common
 
 import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kotlinx.serialization.Serializable
 
 /**
@@ -12,7 +13,7 @@ import kotlinx.serialization.Serializable
  */
 @Entity
 @Serializable
-class LocationEntity : BaseEntity {
+class LocationEntity : BaseEntity, CsvSerializable {
     var latitude: Double = 0.0
     var longitude: Double = 0.0
     var altitude: Double = 0.0
@@ -41,4 +42,7 @@ class LocationEntity : BaseEntity {
         this.speed = speed
         this.accuracy = accuracy
     }
+
+    override val csvHeader = "eventId,uuid,deviceType,received,timestamp,latitude,longitude,altitude,speed,accuracy"
+    override fun toCsvRow() = "$eventId,$uuid,$deviceType,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
 }

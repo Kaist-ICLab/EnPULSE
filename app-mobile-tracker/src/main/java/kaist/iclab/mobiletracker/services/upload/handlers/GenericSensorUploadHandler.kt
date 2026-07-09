@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.services.upload.handlers
 
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
@@ -20,16 +21,14 @@ import kotlinx.serialization.json.jsonObject
  *
  * @param T stored entity type (a `@Serializable` ObjectBox entity extending [BaseEntity]).
  */
-class GenericSensorUploadHandler<T : BaseEntity>(
+class GenericSensorUploadHandler<T>(
     override val sensorId: String,
     private val store: SensorStore<T>,
     private val serializer: KSerializer<T>,
     private val tableName: String,
     private val sensorName: String,
-    private val supabase: SupabaseUploadService,
-    private val csvHeader: String,
-    private val toCsvRow: (T) -> String
-) : SensorUploadHandler {
+    private val supabase: SupabaseUploadService
+) : SensorUploadHandler where T : BaseEntity, T : CsvSerializable {
 
     private fun toSupabaseRow(entity: T, userUuid: String): JsonObject {
         val obj = SupabaseJson.encodeToJsonElement(serializer, entity).jsonObject
@@ -81,8 +80,8 @@ class GenericSensorUploadHandler<T : BaseEntity>(
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> =
         store.recordsAfter(0L, true, limit, offset)
 
-    override fun getCsvHeader(): String = csvHeader
+    override fun getCsvHeader(): String = store.newInstance().csvHeader
 
     @Suppress("UNCHECKED_CAST")
-    override fun recordToCsvRow(record: Any): String = toCsvRow(record as T)
+    override fun recordToCsvRow(record: Any): String = (record as T).toCsvRow()
 }

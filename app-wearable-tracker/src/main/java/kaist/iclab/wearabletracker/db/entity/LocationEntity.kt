@@ -20,6 +20,6 @@ class LocationEntity() : WatchBaseEntity(), CsvSerializable {
         this.speed = speed; this.accuracy = accuracy
     }
 
-    override fun toCsvHeader() = "eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy"
+    override val csvHeader = "eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy"
     override fun toCsvRow() = "$eventId,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
 }

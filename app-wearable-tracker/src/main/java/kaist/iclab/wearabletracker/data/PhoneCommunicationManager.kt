@@ -102,7 +102,7 @@ class PhoneCommunicationManager(
                             csvBuilder.append("CHUNK_END_TS:$chunkMaxTimestamp\n")
                             csvBuilder.append("---DATA---\n")
                             csvBuilder.append("$sensorId\n")
-                            csvBuilder.append(data.first().toCsvHeader() + "\n")
+                            csvBuilder.append(data.first().csvHeader + "\n")
                             data.forEach { entity -> csvBuilder.append(entity.toCsvRow() + "\n") }
                             csvBuilder.append("\n")
 

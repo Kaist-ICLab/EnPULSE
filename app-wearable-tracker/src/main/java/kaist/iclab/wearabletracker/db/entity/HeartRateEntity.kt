@@ -19,7 +19,7 @@ class HeartRateEntity() : WatchBaseEntity(), CsvSerializable {
         this.ibi = ibi; this.ibiStatus = ibiStatus
     }
 
-    override fun toCsvHeader() = "eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus"
+    override val csvHeader = "eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus"
     override fun toCsvRow(): String {
         val ibiStr = ibi.joinToString(";")
         val ibiStatusStr = ibiStatus.joinToString(";")

@@ -18,6 +18,6 @@ class SkinTemperatureEntity() : WatchBaseEntity(), CsvSerializable {
         this.status = status
     }
 
-    override fun toCsvHeader() = "eventId,received,timestamp,ambientTemp,objectTemp,status"
+    override val csvHeader = "eventId,received,timestamp,ambientTemp,objectTemp,status"
     override fun toCsvRow() = "$eventId,$received,$timestamp,$ambientTemperature,$objectTemperature,$status"
 }

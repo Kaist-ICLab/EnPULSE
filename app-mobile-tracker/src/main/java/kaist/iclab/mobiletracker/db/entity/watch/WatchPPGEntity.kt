@@ -3,12 +3,13 @@ package kaist.iclab.mobiletracker.db.entity.watch
 import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-class WatchPPGEntity : BaseEntity {
+class WatchPPGEntity : BaseEntity, CsvSerializable {
     var green: Int = 0
 
     @SerialName("green_status")
@@ -48,4 +49,7 @@ class WatchPPGEntity : BaseEntity {
         this.ir = ir
         this.irStatus = irStatus
     }
+
+    override val csvHeader = "eventId,uuid,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
+    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$green,$greenStatus,$red,$redStatus,$ir,$irStatus"
 }

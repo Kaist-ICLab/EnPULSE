@@ -83,6 +83,8 @@ open class SensorStore<T : BaseEntity>(
         return builder.build().use { it.find(offset.toLong(), limit.toLong()) }
     }
 
+    fun newInstance(): T = entityClass.getDeclaredConstructor().newInstance()
+
     fun eventIdById(id: Long): String? = box.get(id)?.eventId
 
     fun removeById(id: Long): Boolean = box.remove(id)

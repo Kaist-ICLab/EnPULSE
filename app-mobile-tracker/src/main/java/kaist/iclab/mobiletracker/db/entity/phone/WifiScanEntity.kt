@@ -3,12 +3,13 @@ package kaist.iclab.mobiletracker.db.entity.phone
 import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
 @Entity
 @Serializable
-class WifiScanEntity : BaseEntity {
+class WifiScanEntity : BaseEntity, CsvSerializable {
     var ssid: String = ""
     var bssid: String = ""
     var frequency: Int = 0
@@ -33,5 +34,11 @@ class WifiScanEntity : BaseEntity {
         this.bssid = bssid
         this.frequency = frequency
         this.level = level
+    }
+
+    override val csvHeader = "eventId,uuid,received,timestamp,ssid,bssid,frequency,level"
+    override fun toCsvRow(): String {
+        val escapedSsid = ssid.replace("\"", "\"\"")
+        return "$eventId,$uuid,$received,$timestamp,\"$escapedSsid\",$bssid,$frequency,$level"
     }
 }
