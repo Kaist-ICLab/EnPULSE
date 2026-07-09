@@ -25,6 +25,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
+import kotlin.time.toDuration
 
 class SleepSensor(
     context: Context,
@@ -60,9 +61,7 @@ class SleepSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val startTime: Long,
-        val endTime: Long,
-        val durationSeconds: Long,
+        val duration: Long,
         val sleepScore: Int?,
         val stages: List<Stage>
     ) : SensorEntity()
@@ -101,10 +100,8 @@ class SleepSensor(
                 dataPoint.getValueOrDefault(DataType.SleepType.SESSIONS, emptyList()).forEach { session ->
                     val entity = Entity(
                         timestamp,
-                        timestamp,
                         session.startTime.toEpochMilli(),
-                        session.endTime.toEpochMilli(),
-                        session.duration.seconds,
+                        session.duration.toMillis(),
                         sleepScore,
                         session.stages?.map {
                             Stage(
