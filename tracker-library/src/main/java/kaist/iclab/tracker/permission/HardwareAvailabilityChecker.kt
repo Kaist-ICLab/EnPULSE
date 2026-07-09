@@ -24,7 +24,7 @@ object HardwareAvailabilityChecker {
      */
     fun isHardwareAvailable(context: Context, permission: String): Boolean {
         return when (permission) {
-            Manifest.permission.BODY_SENSORS -> isBodySensorHardwareAvailable(context)
+//            Manifest.permission.BODY_SENSORS -> isBodySensorHardwareAvailable(context) // Always true because SDK_INT >= 30
             Manifest.permission.CAMERA -> isCameraHardwareAvailable(context)
             Manifest.permission.RECORD_AUDIO -> isMicrophoneHardwareAvailable(context)
             Manifest.permission.ACCESS_FINE_LOCATION,
@@ -47,19 +47,20 @@ object HardwareAvailabilityChecker {
         return Build.MANUFACTURER.equals("samsung", ignoreCase = true)
     }
 
-    /**
-     * Checks if body sensor hardware is available on the device.
-     * BODY_SENSORS permission uses Android's body sensor API, which is available
-     * on devices running Android 4.4W (API 20) and later.
-     *
-     * @param context The application context
-     * @return true if body sensor API is supported, false otherwise
-     */
-    private fun isBodySensorHardwareAvailable(context: Context): Boolean {
-        // BODY_SENSORS permission was introduced in Android 4.4W (API 20)
-        // If the device supports this API level, it supports body sensors
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH
-    }
+//    /**
+//     * Checks if body sensor hardware is available on the device.
+//     * BODY_SENSORS permission uses Android's body sensor API, which is available
+//     * on devices running Android 4.4W (API 20) and later.
+//     * TODO: The logic is bit weird; Should be checked later on
+//     *
+//     * @param context The application context
+//     * @return true if body sensor API is supported, false otherwise
+//     */
+//    private fun isBodySensorHardwareAvailable(context: Context): Boolean {
+//        // BODY_SENSORS permission was introduced in Android 4.4W (API 20)
+//        // If the device supports this API level, it supports body sensors
+//        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH
+//    }
 
     /**
      * Checks if camera hardware is available on the device.
@@ -71,7 +72,7 @@ object HardwareAvailabilityChecker {
         val packageManager = context.packageManager
         // Check for any camera (front or back)
         return packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) ||
-                packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA)
+                packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)
     }
 
     /**
