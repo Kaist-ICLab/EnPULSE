@@ -53,9 +53,7 @@ class ExerciseSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val startTime: Long,
-        val endTime: Long,
-        val durationSeconds: Long,
+        val duration: Long,
         val exerciseType: String,
         val customTitle: String?,
         val calories: Float,
@@ -109,10 +107,8 @@ class ExerciseSensor(
                 dataPoint.getValueOrDefault(DataType.ExerciseType.SESSIONS, emptyList()).forEach { session ->
                     val entity = Entity(
                         timestamp,
-                        timestamp,
                         session.startTime.toEpochMilli(),
-                        session.endTime.toEpochMilli(),
-                        session.duration.seconds,
+                        session.duration.toMillis(),
                         session.exerciseType.name,
                         session.customTitle,
                         session.calories,

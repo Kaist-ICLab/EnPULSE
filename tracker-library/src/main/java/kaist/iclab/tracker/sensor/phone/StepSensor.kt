@@ -60,8 +60,7 @@ class StepSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val startTime: Long,
-        val endTime: Long,
+        val duration: Long,
         val steps: Long
     ) : SensorEntity()
 
@@ -99,17 +98,18 @@ class StepSensor(
 
         CoroutineScope(Dispatchers.IO).launch {
             store.aggregateData(req).dataList.forEach {
+                val startTime = it.startTime.toEpochMilli()
+                val duration = it.endTime.toEpochMilli() - startTime
                 val entity = Entity(
                     timestamp,
-                    timestamp,
-                    it.startTime.toEpochMilli(),
-                    it.endTime.toEpochMilli(),
+                    startTime,
+                    duration,
                     it.value ?: 0
                 )
                 lastSynced = max(lastSynced, it.endTime.toEpochMilli())
 
-                listeners.forEach {
-                    it.invoke(entity)
+                listeners.forEach { l ->
+                    l.invoke(entity)
                 }
             }
         }
