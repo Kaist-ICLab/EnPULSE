@@ -4,7 +4,9 @@ plugins {
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.kotlinSerialization)
 
-    id("com.google.devtools.ksp")
+    // ObjectBox (uses kapt; must be applied after the Android + Kotlin plugins)
+    kotlin("kapt")
+    alias(libs.plugins.objectbox)
 }
 
 android {
@@ -17,9 +19,6 @@ android {
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
     }
 
     signingConfigs {
@@ -77,11 +76,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    // RoomDB
-    implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.gson) // for converter
 
     // Google Play Services
     implementation(libs.android.gms.wearable)

@@ -3,31 +3,22 @@ package kaist.iclab.wearabletracker.data
 import android.util.Log
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
-import kaist.iclab.wearabletracker.db.dao.BaseDao
+import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.ErrorClassifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 
-/**
- * Listens for sync acknowledgment (ACK) messages from the phone.
- * When an ACK is received, it confirms the sync was successful and triggers cleanup.
- */
 class SyncAckListener(
     private val bleChannel: BLEDataChannel,
-    private val daos: Map<String, BaseDao<*>>,
+    private val stores: Map<String, WatchSensorStore<*>>,
     private val syncPreferencesHelper: SyncPreferencesHelper,
     private val coroutineScope: CoroutineScope
 ) {
     private val TAG = javaClass.simpleName
 
-    /**
-     * Start listening for ACK messages from the phone.
-     * Also checks for and clears any stale pending batches from previous sessions.
-     */
     fun startListening() {
-        // Recover from stale batches left by previous app sessions
         syncPreferencesHelper.clearStaleBatchIfNeeded()
 
         bleChannel.addOnReceivedListener(setOf(Constants.BLE.KEY_SYNC_ACK)) { _, jsonElement ->
@@ -39,10 +30,6 @@ class SyncAckListener(
         }
     }
 
-    /**
-     * Handle incoming ACK message.
-     * Format: "batchId:OK" or "batchId:FAIL" or "batchId:OK:endTimestamp"
-     */
     private fun handleAck(ackData: String) {
         coroutineScope.launch {
             ErrorClassifier.runClassified(TAG, "handle sync ACK") {
@@ -62,10 +49,7 @@ class SyncAckListener(
                 }
 
                 if (pendingBatch.batchId != receivedBatchId) {
-                    Log.w(
-                        TAG,
-                        "ACK batch ID mismatch. Expected: ${pendingBatch.batchId}, Received: $receivedBatchId"
-                    )
+                    Log.w(TAG, "ACK batch ID mismatch. Expected: ${pendingBatch.batchId}, Received: $receivedBatchId")
                     return@runClassified
                 }
 
@@ -78,34 +62,18 @@ class SyncAckListener(
         }
     }
 
-    /**
-     * Called when sync is confirmed successful by the phone.
-     * Deletes synced data and updates sync timestamp.
-     * @param batch The batch information
-     * @param endTimestamp The specific timestamp to prune up to. If null, uses batch.endTimestamp.
-     */
     private suspend fun onSyncConfirmed(batch: SyncBatch, endTimestamp: Long?) {
         val pruneUntil = endTimestamp ?: batch.endTimestamp
         Log.d(TAG, "Pruning data up to: $pruneUntil (batchId=${batch.batchId})")
 
-        // Delete synced data from all DAOs
-        daos.values.forEach { dao ->
-            dao.deleteDataBefore(pruneUntil)
-        }
+        stores.values.forEach { store -> store.deleteDataBefore(pruneUntil) }
 
-        // Update last sync timestamp
         syncPreferencesHelper.saveLastSyncTimestamp(pruneUntil)
 
-        // Only clear pending batch if we synced the whole thing
         if (endTimestamp == null || endTimestamp >= batch.endTimestamp) {
             syncPreferencesHelper.clearPendingBatch()
         }
     }
 
-    /**
-     * Cleanup method - call when listener is no longer needed.
-     */
-    fun cleanup() {
-        // Handled by injected scope lifecycle
-    }
+    fun cleanup() {}
 }
