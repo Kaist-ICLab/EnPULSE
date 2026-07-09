@@ -80,7 +80,7 @@ class SensorUploadHandlerImpl<T>(
     override suspend fun getRecordsPaginated(limit: Int, offset: Int): List<Any> =
         store.recordsAfter(0L, true, limit, offset)
 
-    override fun getCsvHeader(): String = store.newInstance().csvHeader
+    override fun getCsvHeader(): String = store.newInstance().csvHeader()
 
     @Suppress("UNCHECKED_CAST")
     override fun recordToCsvRow(record: Any): String = (record as T).toCsvRow()

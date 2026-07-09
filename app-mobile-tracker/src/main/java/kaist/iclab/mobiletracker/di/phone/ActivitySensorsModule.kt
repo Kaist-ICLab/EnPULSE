@@ -7,7 +7,9 @@ import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
 import kaist.iclab.tracker.sensor.phone.DataTrafficSensor
+import kaist.iclab.tracker.sensor.phone.ExerciseSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
+import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import org.koin.android.ext.koin.androidContext
@@ -83,6 +85,46 @@ val activitySensorsModule = module {
             stateStorage = CouchbaseSensorStateStorage(
                 couchbase = get(),
                 collectionName = StepSensor::class.simpleName ?: ""
+            ),
+            samsungHealthDataInitializer = get()
+        )
+    }
+
+    // Exercise Sensor
+    single {
+        ExerciseSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = SimpleStateStorage(
+                ExerciseSensor.Config(
+                    syncPastLimitSeconds = TimeUnit.DAYS.toSeconds(7),
+                    timeMarginSeconds = TimeUnit.HOURS.toSeconds(1),
+                    readIntervalMillis = TimeUnit.SECONDS.toMillis(10)
+                )
+            ),
+            stateStorage = CouchbaseSensorStateStorage(
+                couchbase = get(),
+                collectionName = ExerciseSensor::class.simpleName ?: ""
+            ),
+            samsungHealthDataInitializer = get()
+        )
+    }
+
+    // Sleep Sensor
+    single {
+        SleepSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = SimpleStateStorage(
+                SleepSensor.Config(
+                    syncPastLimitSeconds = TimeUnit.DAYS.toSeconds(7),
+                    timeMarginSeconds = TimeUnit.HOURS.toSeconds(1),
+                    readIntervalMillis = TimeUnit.SECONDS.toMillis(10)
+                )
+            ),
+            stateStorage = CouchbaseSensorStateStorage(
+                couchbase = get(),
+                collectionName = SleepSensor::class.simpleName ?: ""
             ),
             samsungHealthDataInitializer = get()
         )

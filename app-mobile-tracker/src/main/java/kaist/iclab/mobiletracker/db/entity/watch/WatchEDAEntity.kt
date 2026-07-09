@@ -31,7 +31,7 @@ class WatchEDAEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.status = status
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,skinConductance,status"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,skinConductance,status"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$skinConductance,$status"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("EDA" to String.format("%.3f μS", skinConductance)))

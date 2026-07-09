@@ -34,7 +34,7 @@ class WatchAccelerometerEntity : BaseEntity, CsvSerializable, RecordSerializable
         this.z = z
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,x,y,z"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,x,y,z"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$x,$y,$z"
 
     override fun toRecord() = SensorRecord(

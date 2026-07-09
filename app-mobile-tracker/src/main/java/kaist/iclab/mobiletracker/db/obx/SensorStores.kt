@@ -11,10 +11,12 @@ import kaist.iclab.mobiletracker.db.entity.phone.CallLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ConnectivityEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
+import kaist.iclab.mobiletracker.db.entity.phone.ExerciseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
+import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
@@ -39,10 +41,12 @@ class SensorStores(boxStore: BoxStore) {
     val connectivity = SensorStore(boxStore, ConnectivityEntity::class.java)
     val dataTraffic = SensorStore(boxStore, DataTrafficEntity::class.java)
     val deviceMode = SensorStore(boxStore, DeviceModeEntity::class.java)
+    val exercise = SensorStore(boxStore, ExerciseEntity::class.java)
     val media = SensorStore(boxStore, MediaEntity::class.java)
     val messageLog = SensorStore(boxStore, MessageLogEntity::class.java)
     val notification = SensorStore(boxStore, NotificationEntity::class.java)
     val screen = SensorStore(boxStore, ScreenEntity::class.java)
+    val sleep = SensorStore(boxStore, SleepEntity::class.java)
     val step = SensorStore(boxStore, StepEntity::class.java)
     val userInteraction = SensorStore(boxStore, UserInteractionEntity::class.java)
     val wifiScan = SensorStore(boxStore, WifiScanEntity::class.java)

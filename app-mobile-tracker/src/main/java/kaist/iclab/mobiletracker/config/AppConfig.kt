@@ -58,6 +58,8 @@ object AppConfig {
         const val STEP_SENSOR = "step_sensor"
         const val SCREEN_SENSOR = "screen_sensor"
         const val WIFI_SCAN_SENSOR = "wifi_scan_sensor"
+        const val EXERCISE_SENSOR = "exercise_sensor"
+        const val SLEEP_SENSOR = "sleep_sensor"
     }
 
     /**

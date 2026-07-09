@@ -38,7 +38,7 @@ class WifiScanEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.level = level
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,ssid,bssid,frequency,level"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,ssid,bssid,frequency,level"
     override fun toCsvRow(): String {
         val escapedSsid = ssid.replace("\"", "\"\"")
         return "$eventId,$uuid,$received,$timestamp,\"$escapedSsid\",$bssid,$frequency,$level"

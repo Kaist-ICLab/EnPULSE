@@ -49,7 +49,7 @@ class NotificationEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.category = category
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,packageName,eventType,title,text,visibility,category"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,packageName,eventType,title,text,visibility,category"
     override fun toCsvRow(): String {
         val escapedTitle = title.replace("\"", "\"\"")
         val escapedText = text.replace("\"", "\"\"")

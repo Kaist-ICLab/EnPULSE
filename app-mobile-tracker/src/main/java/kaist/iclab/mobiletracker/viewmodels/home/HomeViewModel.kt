@@ -51,6 +51,8 @@ data class HomeUiState(
     val messageLogCount: Int = 0,
     val userInteractionCount: Int = 0,
     val wifiScanCount: Int = 0,
+    val exerciseCount: Int = 0,
+    val sleepCount: Int = 0,
     // Watch sensors
     val watchHeartRateCount: Int = 0,
     val watchAccelerometerCount: Int = 0,
@@ -143,6 +145,8 @@ class HomeViewModel(
                 messageLogCount = counts.messageLogCount,
                 userInteractionCount = counts.userInteractionCount,
                 wifiScanCount = counts.wifiScanCount,
+                exerciseCount = counts.exerciseCount,
+                sleepCount = counts.sleepCount,
                 // Watch sensors
                 watchHeartRateCount = counts.watchHeartRateCount,
                 watchAccelerometerCount = counts.watchAccelerometerCount,

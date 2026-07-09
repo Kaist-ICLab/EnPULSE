@@ -50,7 +50,7 @@ class WatchHeartRateEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.ibiStatus = ibiStatus
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,hr,hrStatus,ibi,ibiStatus"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,hr,hrStatus,ibi,ibiStatus"
     override fun toCsvRow(): String {
         val escapedIbi = ibi.joinToString(",").replace("\"", "\"\"")
         val escapedIbiStatus = ibiStatus.joinToString(",").replace("\"", "\"\"")

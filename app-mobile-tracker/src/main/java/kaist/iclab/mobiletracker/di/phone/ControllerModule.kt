@@ -14,10 +14,12 @@ import kaist.iclab.tracker.sensor.phone.CallLogSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DataTrafficSensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
+import kaist.iclab.tracker.sensor.phone.ExerciseSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
 import kaist.iclab.tracker.sensor.phone.MessageLogSensor
 import kaist.iclab.tracker.sensor.phone.NotificationSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
+import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
@@ -43,12 +45,14 @@ val controllerModule = module {
             get<CallLogSensor>(),
             get<DataTrafficSensor>(),
             get<DeviceModeSensor>(),
+            get<ExerciseSensor>(),
             get<LocationSensor>(),
             get<MediaSensor>(),
             get<MessageLogSensor>(),
             get<ConnectivitySensor>(),
             get<NotificationSensor>(),
             get<ScreenSensor>(),
+            get<SleepSensor>(),
             get<StepSensor>(),
             get<UserInteractionSensor>(),
             get<WifiScanSensor>(),

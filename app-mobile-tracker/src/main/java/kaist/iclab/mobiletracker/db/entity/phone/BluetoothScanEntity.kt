@@ -60,7 +60,7 @@ class BluetoothScanEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.isLE = isLE
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,name,alias,address,bondState,connectionType,classType,rssi,isLE"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,name,alias,address,bondState,connectionType,classType,rssi,isLE"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$name,$alias,$address,$bondState,$connectionType,$classType,$rssi,$isLE"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Name" to name, "Address" to address))

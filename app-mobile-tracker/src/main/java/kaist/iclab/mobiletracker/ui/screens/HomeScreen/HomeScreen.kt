@@ -18,10 +18,12 @@ import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DataUsage
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MonitorHeart
@@ -245,6 +247,18 @@ fun HomeScreen(
                     uiState.wifiScanCount,
                     Icons.Default.WifiTethering,
                     Styles.Colors.WIFI_SCAN
+                ),
+                SensorItem(
+                    "Exercise",
+                    uiState.exerciseCount,
+                    Icons.Default.FitnessCenter,
+                    Styles.Colors.EXERCISE
+                ),
+                SensorItem(
+                    "Sleep",
+                    uiState.sleepCount,
+                    Icons.Default.Bedtime,
+                    Styles.Colors.SLEEP
                 )
             ).filter { it.count > 0 }
         }

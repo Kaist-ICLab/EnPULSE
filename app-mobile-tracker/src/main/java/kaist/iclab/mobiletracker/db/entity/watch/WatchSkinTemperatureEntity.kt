@@ -39,7 +39,7 @@ class WatchSkinTemperatureEntity : BaseEntity, CsvSerializable, RecordSerializab
         this.status = status
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,ambientTemp,objectTemp,status"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,ambientTemp,objectTemp,status"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$ambientTemp,$objectTemp,$status"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Skin Temp" to String.format("%.1f°C", objectTemp)))

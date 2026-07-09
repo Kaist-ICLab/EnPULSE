@@ -44,7 +44,7 @@ class UserInteractionEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.text = text
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,packageName,className,eventType,text"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,packageName,className,eventType,text"
     override fun toCsvRow(): String {
         val escapedText = text.replace("\"", "\"\"")
         return "$eventId,$uuid,$received,$timestamp,$packageName,$className,$eventType,\"$escapedText\""

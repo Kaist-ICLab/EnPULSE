@@ -191,6 +191,8 @@
     <string name="sensor_desc_step">Step count data</string>
     <string name="sensor_desc_user_interaction">User touch events</string>
     <string name="sensor_desc_wifi">WiFi connection status</string>
+    <string name="sensor_desc_exercise">Exercise session data</string>
+    <string name="sensor_desc_sleep">Sleep session data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
 
     <!-- Notification -->
@@ -261,6 +263,8 @@
     <string name="sensor_step">Step</string>
     <string name="sensor_user_interaction">User Interaction</string>
     <string name="sensor_wifi_scan">Wifi Scan</string>
+    <string name="sensor_exercise">Exercise</string>
+    <string name="sensor_sleep">Sleep</string>
 
 
     <!-- Toast Messages -->

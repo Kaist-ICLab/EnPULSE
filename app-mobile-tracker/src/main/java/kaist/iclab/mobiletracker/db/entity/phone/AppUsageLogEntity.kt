@@ -40,7 +40,7 @@ class AppUsageLogEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.eventType = eventType
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,packageName,installedBy,eventType"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,packageName,installedBy,eventType"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$packageName,$installedBy,$eventType"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Package" to packageName, "Event" to eventType.toString()))

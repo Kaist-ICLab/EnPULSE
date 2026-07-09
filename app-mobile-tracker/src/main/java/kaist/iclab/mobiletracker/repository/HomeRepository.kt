@@ -24,6 +24,8 @@ data class DailySensorCounts(
     val messageLogCount: Int = 0,
     val userInteractionCount: Int = 0,
     val wifiScanCount: Int = 0,
+    val exerciseCount: Int = 0,
+    val sleepCount: Int = 0,
     // Watch sensors
     val watchHeartRateCount: Int = 0,
     val watchAccelerometerCount: Int = 0,

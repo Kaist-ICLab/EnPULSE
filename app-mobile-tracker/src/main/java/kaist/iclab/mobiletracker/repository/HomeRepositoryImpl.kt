@@ -33,7 +33,9 @@ class HomeRepositoryImpl(
             stores.media.countAfterFlow(startOfDay),
             stores.messageLog.countAfterFlow(startOfDay),
             stores.userInteraction.countAfterFlow(startOfDay),
-            stores.wifiScan.countAfterFlow(startOfDay)
+            stores.wifiScan.countAfterFlow(startOfDay),
+            stores.exercise.countAfterFlow(startOfDay),
+            stores.sleep.countAfterFlow(startOfDay)
         ) { args: Array<Int> -> args.toList() }
 
         // Combine watch sensor flows
@@ -68,6 +70,8 @@ class HomeRepositoryImpl(
                 messageLogCount = phone[14],
                 userInteractionCount = phone[15],
                 wifiScanCount = phone[16],
+                exerciseCount = phone[17],
+                sleepCount = phone[18],
                 // Watch sensors
                 watchHeartRateCount = watch[0],
                 watchAccelerometerCount = watch[1],

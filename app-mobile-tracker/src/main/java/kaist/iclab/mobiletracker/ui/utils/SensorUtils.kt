@@ -5,10 +5,12 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DataUsage
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MonitorHeart
@@ -51,6 +53,8 @@ fun getSensorTitleResId(sensorId: String): Int {
         "Step" -> R.string.sensor_step
         "UserInteraction" -> R.string.sensor_user_interaction
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_wifi_scan
+        "Exercise" -> R.string.sensor_exercise
+        "Sleep" -> R.string.sensor_sleep
         "WatchAccelerometer" -> R.string.sensor_accelerometer
         "WatchEDA" -> R.string.sensor_eda
         "WatchHeartRate" -> R.string.sensor_heart_rate
@@ -83,6 +87,8 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "Step" -> R.string.sensor_desc_step
         "UserInteraction" -> R.string.sensor_desc_user_interaction
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_desc_wifi
+        "Exercise" -> R.string.sensor_desc_exercise
+        "Sleep" -> R.string.sensor_desc_sleep
         else -> R.string.sensor_desc_default
     }
 }
@@ -128,6 +134,8 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "Step" -> Icons.AutoMirrored.Filled.DirectionsWalk
         "UserInteraction" -> Icons.Default.TouchApp
         "WifiScan", "Wifi" -> Icons.Default.WifiTethering
+        "Exercise" -> Icons.Default.FitnessCenter
+        "Sleep" -> Icons.Default.Bedtime
         "WatchAccelerometer" -> Icons.Default.Speed
         "WatchEDA" -> Icons.Default.Waves
         "WatchHeartRate" -> Icons.Default.FavoriteBorder

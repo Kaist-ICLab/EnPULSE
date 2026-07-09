@@ -40,7 +40,7 @@ class MessageLogEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.contactType = contactType
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,number,messageType,contactType"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,number,messageType,contactType"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$number,$messageType,$contactType"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Type" to messageType, "Number" to number.take(10)))

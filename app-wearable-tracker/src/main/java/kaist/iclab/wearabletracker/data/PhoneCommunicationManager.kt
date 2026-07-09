@@ -8,6 +8,7 @@ import com.google.android.gms.wearable.Wearable
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.R
+import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
@@ -102,7 +103,7 @@ class PhoneCommunicationManager(
                             csvBuilder.append("CHUNK_END_TS:$chunkMaxTimestamp\n")
                             csvBuilder.append("---DATA---\n")
                             csvBuilder.append("$sensorId\n")
-                            csvBuilder.append(data.first().csvHeader + "\n")
+                            csvBuilder.append(data.first().csvHeader() + "\n")
                             data.forEach { entity -> csvBuilder.append(entity.toCsvRow() + "\n") }
                             csvBuilder.append("\n")
 

@@ -34,7 +34,7 @@ class DeviceModeEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.value = value
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,eventType,value"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,eventType,value"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$eventType,$value"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Event" to eventType, "Value" to value))

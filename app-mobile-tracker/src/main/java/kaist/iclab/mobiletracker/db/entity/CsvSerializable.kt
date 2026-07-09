@@ -1,7 +1,6 @@
 package kaist.iclab.mobiletracker.db.entity
 
 interface CsvSerializable {
-    val csvHeader: String
+    fun csvHeader(): String
     fun toCsvRow(): String
-    val timestamp: Long
 }

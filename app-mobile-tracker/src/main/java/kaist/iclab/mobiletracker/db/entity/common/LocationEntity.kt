@@ -45,7 +45,7 @@ class LocationEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.accuracy = accuracy
     }
 
-    override val csvHeader = "eventId,uuid,deviceType,received,timestamp,latitude,longitude,altitude,speed,accuracy"
+    override fun csvHeader() = "eventId,uuid,deviceType,received,timestamp,latitude,longitude,altitude,speed,accuracy"
     override fun toCsvRow() = "$eventId,$uuid,$deviceType,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
 
     override fun toRecord() = SensorRecord(

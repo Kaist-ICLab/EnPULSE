@@ -39,7 +39,7 @@ class AppListChangeEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.appListJson = appListJson
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,changedAppJson,appListJson"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,changedAppJson,appListJson"
     override fun toCsvRow(): String {
         val escapedChangedApp = changedAppJson?.replace("\"", "\"\"") ?: ""
         val escapedAppList = appListJson?.replace("\"", "\"\"") ?: ""

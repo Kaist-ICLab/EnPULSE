@@ -13,6 +13,6 @@ class AccelerometerEntity() : WatchBaseEntity(), CsvSerializable {
         this.x = x; this.y = y; this.z = z
     }
 
-    override val csvHeader = "eventId,received,timestamp,x,y,z"
+    override fun csvHeader() = "eventId,received,timestamp,x,y,z"
     override fun toCsvRow() = "$eventId,$received,$timestamp,$x,$y,$z"
 }

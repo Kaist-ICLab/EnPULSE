@@ -66,6 +66,8 @@ object AppColors {
     val ColorMessage = Color(0xFFCDDC39)
     val ColorUserInteraction = Color(0xFF673AB7)
     val ColorWifi = Color(0xFF00BCD4)
+    val ColorExercise = Color(0xFFFF7043)
+    val ColorSleep = Color(0xFF5C6BC0)
     val ColorDefault = Color(0xFF9E9E9E)
 
     fun getSensorColor(sensorId: String): Color {
@@ -91,6 +93,8 @@ object AppColors {
             "Step" -> ColorActivity
             "UserInteraction" -> ColorUserInteraction
             "WifiScan", "Wifi", "WiFi" -> ColorWifi
+            "Exercise" -> ColorExercise
+            "Sleep" -> ColorSleep
 
             // Watch sensors
             "WatchAccelerometer" -> ColorBluetooth
@@ -110,6 +114,8 @@ object AppColors {
             "Camera", "Media Images", "Media Video", "Media Audio", "Storage", "Microphone" -> ColorMedia
             "Read Calendar", "Calendar" -> ColorAppUsage
             "Activity Recognition", "Read Steps (Samsung Health)", "Body Sensors" -> ColorActivity
+            "Read Exercise (Samsung Health)" -> ColorExercise
+            "Read Sleep (Samsung Health)" -> ColorSleep
             "Accessibility Service" -> ColorUserInteraction
             "Usage Stats" -> ColorAppUsage
             else -> ColorDefault

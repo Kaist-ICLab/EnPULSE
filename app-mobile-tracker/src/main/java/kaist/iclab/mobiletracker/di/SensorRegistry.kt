@@ -16,10 +16,12 @@ import kaist.iclab.mobiletracker.db.entity.phone.CallLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ConnectivityEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
+import kaist.iclab.mobiletracker.db.entity.phone.ExerciseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
+import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
@@ -47,10 +49,12 @@ import kaist.iclab.tracker.sensor.phone.CallLogSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DataTrafficSensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
+import kaist.iclab.tracker.sensor.phone.ExerciseSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
 import kaist.iclab.tracker.sensor.phone.MessageLogSensor
 import kaist.iclab.tracker.sensor.phone.NotificationSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
+import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
@@ -201,6 +205,43 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             }
         ),
         SensorDescriptor(
+            sensorId = "Exercise",
+            displayName = "Exercise",
+            isWatchSensor = false,
+            store = s.exercise,
+            supabaseTable = AppConfig.SupabaseTables.EXERCISE_SENSOR,
+            serializer = ExerciseEntity.serializer(),
+            fromSensorEntity = { e, uuid ->
+                e as ExerciseSensor.Entity
+                ExerciseEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    startTime = e.startTime,
+                    endTime = e.endTime,
+                    durationSeconds = e.durationSeconds,
+                    exerciseType = e.exerciseType,
+                    customTitle = e.customTitle,
+                    calories = e.calories,
+                    distance = e.distance,
+                    count = e.count,
+                    meanHeartRate = e.meanHeartRate,
+                    maxHeartRate = e.maxHeartRate,
+                    minHeartRate = e.minHeartRate,
+                    altitudeGain = e.altitudeGain,
+                    altitudeLoss = e.altitudeLoss,
+                    meanCadence = e.meanCadence,
+                    maxCadence = e.maxCadence,
+                    meanPower = e.meanPower,
+                    maxPower = e.maxPower,
+                    meanSpeed = e.meanSpeed,
+                    maxSpeed = e.maxSpeed,
+                    meanRpm = e.meanRpm,
+                    maxRpm = e.maxRpm
+                )
+            }
+        ),
+        SensorDescriptor(
             sensorId = "Location",
             displayName = "Location",
             isWatchSensor = false,
@@ -258,6 +299,27 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as ScreenSensor.Entity
                 ScreenEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, type = e.type)
+            }
+        ),
+        SensorDescriptor(
+            sensorId = "Sleep",
+            displayName = "Sleep",
+            isWatchSensor = false,
+            store = s.sleep,
+            supabaseTable = AppConfig.SupabaseTables.SLEEP_SENSOR,
+            serializer = SleepEntity.serializer(),
+            fromSensorEntity = { e, uuid ->
+                e as SleepSensor.Entity
+                SleepEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    startTime = e.startTime,
+                    endTime = e.endTime,
+                    durationSeconds = e.durationSeconds,
+                    sleepScore = e.sleepScore,
+                    stagesJson = gson.toJson(e.stages)
+                )
             }
         ),
         SensorDescriptor(

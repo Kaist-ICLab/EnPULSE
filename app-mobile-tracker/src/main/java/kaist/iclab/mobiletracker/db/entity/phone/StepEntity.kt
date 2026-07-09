@@ -40,7 +40,7 @@ class StepEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.steps = steps
     }
 
-    override val csvHeader = "eventId,uuid,received,timestamp,startTime,endTime,steps"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,startTime,endTime,steps"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$startTime,$endTime,$steps"
 
     override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Steps" to steps.toString()))
