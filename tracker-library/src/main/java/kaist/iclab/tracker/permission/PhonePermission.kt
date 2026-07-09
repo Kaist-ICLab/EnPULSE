@@ -94,6 +94,14 @@ data class Permission(
             Permission(
                 name = "Read Steps (Samsung Health)",
                 ids = arrayOf(DataTypes.STEPS.name)
+            ),
+            Permission(
+                name = "Read Sleep (Samsung Health)",
+                ids = arrayOf(DataTypes.SLEEP.name)
+            ),
+            Permission(
+                name = "Read Exercise (Samsung Health)",
+                ids = arrayOf(DataTypes.EXERCISE.name)
             )
         ).toTypedArray()
     }
