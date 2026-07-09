@@ -21,7 +21,7 @@ import kotlinx.serialization.json.jsonObject
  *
  * @param T stored entity type (a `@Serializable` ObjectBox entity extending [BaseEntity]).
  */
-class GenericSensorUploadHandler<T>(
+class SensorUploadHandlerImpl<T>(
     override val sensorId: String,
     private val store: SensorStore<T>,
     private val serializer: KSerializer<T>,

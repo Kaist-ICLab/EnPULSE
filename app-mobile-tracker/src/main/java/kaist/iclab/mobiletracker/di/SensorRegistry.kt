@@ -34,7 +34,7 @@ import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.handlers.GenericSensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
-import kaist.iclab.mobiletracker.services.upload.handlers.GenericSensorUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerImpl
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
@@ -79,7 +79,7 @@ class SensorDescriptor<T>(
         toRecord = toRecord
     )
 
-    fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler = GenericSensorUploadHandler(
+    fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler = SensorUploadHandlerImpl(
         sensorId = sensorId,
         store = store,
         serializer = serializer,

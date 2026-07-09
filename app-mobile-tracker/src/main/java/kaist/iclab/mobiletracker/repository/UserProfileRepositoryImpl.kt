@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
-import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
+import kaist.iclab.mobiletracker.data.sensors.ProfileData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.ProfileService
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
