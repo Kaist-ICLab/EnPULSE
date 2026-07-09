@@ -4,12 +4,14 @@ import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
 @Entity
 @Serializable
-class WifiScanEntity : BaseEntity, CsvSerializable {
+class WifiScanEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var ssid: String = ""
     var bssid: String = ""
     var frequency: Int = 0
@@ -41,4 +43,6 @@ class WifiScanEntity : BaseEntity, CsvSerializable {
         val escapedSsid = ssid.replace("\"", "\"\"")
         return "$eventId,$uuid,$received,$timestamp,\"$escapedSsid\",$bssid,$frequency,$level"
     }
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("SSID" to ssid, "BSSID" to bssid))
 }

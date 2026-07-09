@@ -4,12 +4,14 @@ import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
 @Entity
 @Serializable
-class CallLogEntity : BaseEntity, CsvSerializable {
+class CallLogEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var duration: Long = 0
     var number: String = ""
     var type: Int = 0
@@ -35,4 +37,6 @@ class CallLogEntity : BaseEntity, CsvSerializable {
 
     override val csvHeader = "eventId,uuid,received,timestamp,duration,number,type"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$duration,$number,$type"
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Type" to type.toString(), "Duration" to "${duration}s"))
 }

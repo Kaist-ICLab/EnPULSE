@@ -4,12 +4,14 @@ import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-class WatchPPGEntity : BaseEntity, CsvSerializable {
+class WatchPPGEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var green: Int = 0
 
     @SerialName("green_status")
@@ -52,4 +54,6 @@ class WatchPPGEntity : BaseEntity, CsvSerializable {
 
     override val csvHeader = "eventId,uuid,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$green,$greenStatus,$red,$redStatus,$ir,$irStatus"
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Green" to green.toString(), "IR" to ir.toString()))
 }

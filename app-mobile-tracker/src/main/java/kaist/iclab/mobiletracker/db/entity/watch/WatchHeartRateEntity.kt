@@ -4,6 +4,8 @@ import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -16,7 +18,7 @@ import kotlinx.serialization.Serializable
  */
 @Entity
 @Serializable
-class WatchHeartRateEntity : BaseEntity, CsvSerializable {
+class WatchHeartRateEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var hr: Int = 0
 
     @SerialName("hr_status")
@@ -54,6 +56,8 @@ class WatchHeartRateEntity : BaseEntity, CsvSerializable {
         val escapedIbiStatus = ibiStatus.joinToString(",").replace("\"", "\"\"")
         return "$eventId,$uuid,$received,$timestamp,$hr,$hrStatus,\"[$escapedIbi]\",\"[$escapedIbiStatus]\""
     }
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Heart Rate" to "$hr BPM", "Status" to hrStatus.toString()))
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

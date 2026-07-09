@@ -4,11 +4,13 @@ import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-class WatchEDAEntity : BaseEntity, CsvSerializable {
+class WatchEDAEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var skinConductance: Float = 0f
     var status: Int = 0
 
@@ -31,4 +33,6 @@ class WatchEDAEntity : BaseEntity, CsvSerializable {
 
     override val csvHeader = "eventId,uuid,received,timestamp,skinConductance,status"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$skinConductance,$status"
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("EDA" to String.format("%.3f μS", skinConductance)))
 }

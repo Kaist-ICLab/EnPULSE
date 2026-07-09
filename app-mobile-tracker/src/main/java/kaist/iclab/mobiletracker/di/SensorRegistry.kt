@@ -5,6 +5,7 @@ import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AmbientLightEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
@@ -30,7 +31,6 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
-import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.handlers.GenericSensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
@@ -67,16 +67,14 @@ class SensorDescriptor<T>(
     val store: SensorStore<T>,
     val supabaseTable: String,
     val serializer: KSerializer<T>,
-    val toRecord: (T) -> SensorRecord,
     val fromSensorEntity: ((SensorEntity, String?) -> T)? = null
-) where T : BaseEntity, T : CsvSerializable {
+) where T : BaseEntity, T : CsvSerializable, T : RecordSerializable {
     fun toDataHandler(): SensorDataHandler = GenericSensorDataHandler(
         sensorId = sensorId,
         displayName = displayName,
         isWatchSensor = isWatchSensor,
         supabaseTableName = supabaseTable,
-        store = store,
-        toRecord = toRecord
+        store = store
     )
 
     fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler = SensorUploadHandlerImpl(
@@ -101,7 +99,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.ambientLight,
             supabaseTable = AppConfig.SupabaseTables.AMBIENT_LIGHT_SENSOR,
             serializer = AmbientLightEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Value" to String.format("%.1f lux", e.value))) },
             fromSensorEntity = { e, uuid ->
                 e as AmbientLightSensor.Entity
                 AmbientLightEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, accuracy = e.accuracy, value = e.value)
@@ -114,7 +111,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.appListChange,
             supabaseTable = AppConfig.SupabaseTables.APP_LIST_CHANGE_SENSOR,
             serializer = AppListChangeEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Changed" to (e.changedAppJson?.take(50) ?: "N/A"))) },
             fromSensorEntity = { e, uuid ->
                 e as AppListChangeSensor.Entity
                 AppListChangeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, changedAppJson = e.changedApp?.let { gson.toJson(it) }, appListJson = e.appList?.let { gson.toJson(it) })
@@ -127,7 +123,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.appUsageLog,
             supabaseTable = AppConfig.SupabaseTables.APP_USAGE_LOG_SENSOR,
             serializer = AppUsageLogEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Package" to e.packageName, "Event" to e.eventType.toString())) },
             fromSensorEntity = { e, uuid ->
                 e as AppUsageLogSensor.Entity
                 AppUsageLogEntity(uuid = uuid ?: "", eventId = e.eventId, received = e.received, timestamp = e.timestamp, packageName = e.packageName, installedBy = e.installedBy, eventType = e.eventType)
@@ -140,7 +135,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.battery,
             supabaseTable = AppConfig.SupabaseTables.BATTERY_SENSOR,
             serializer = BatteryEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Level" to "${e.level}%", "Status" to e.status.toString())) },
             fromSensorEntity = { e, uuid ->
                 e as BatterySensor.Entity
                 BatteryEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, connectedType = e.connectedType, status = e.status, level = e.level, temperature = e.temperature)
@@ -153,7 +147,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.bluetoothScan,
             supabaseTable = AppConfig.SupabaseTables.BLUETOOTH_SCAN_SENSOR,
             serializer = BluetoothScanEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Name" to e.name, "Address" to e.address)) },
             fromSensorEntity = { e, uuid ->
                 e as BluetoothScanSensor.Entity
                 BluetoothScanEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, name = e.name, alias = e.alias, address = e.address, bondState = e.bondState, connectionType = e.connectionType, classType = e.classType, rssi = e.rssi, isLE = e.isLE)
@@ -166,7 +159,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.callLog,
             supabaseTable = AppConfig.SupabaseTables.CALL_LOG_SENSOR,
             serializer = CallLogEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Type" to e.type.toString(), "Duration" to "${e.duration}s")) },
             fromSensorEntity = { e, uuid ->
                 e as CallLogSensor.Entity
                 CallLogEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, duration = e.duration, number = e.number, type = e.type)
@@ -179,7 +171,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.connectivity,
             supabaseTable = AppConfig.SupabaseTables.CONNECTIVITY_SENSOR,
             serializer = ConnectivityEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Network" to e.networkType, "Connected" to e.isConnected.toString())) },
             fromSensorEntity = { e, uuid ->
                 e as ConnectivitySensor.Entity
                 ConnectivityEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, networkType = e.networkType, isConnected = e.isConnected, hasInternet = e.hasInternet, transportTypes = e.transportTypes.joinToString(","))
@@ -192,7 +183,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.dataTraffic,
             supabaseTable = AppConfig.SupabaseTables.DATA_TRAFFIC_SENSOR,
             serializer = DataTrafficEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Total Rx" to "${e.totalRx / 1024} KB", "Total Tx" to "${e.totalTx / 1024} KB")) },
             fromSensorEntity = { e, uuid ->
                 e as DataTrafficSensor.Entity
                 DataTrafficEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, totalRx = e.totalRx, totalTx = e.totalTx, mobileRx = e.mobileRx, mobileTx = e.mobileTx)
@@ -205,7 +195,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.deviceMode,
             supabaseTable = AppConfig.SupabaseTables.DEVICE_MODE_SENSOR,
             serializer = DeviceModeEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Event" to e.eventType, "Value" to e.value)) },
             fromSensorEntity = { e, uuid ->
                 e as DeviceModeSensor.Entity
                 DeviceModeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, eventType = e.eventType, value = e.value)
@@ -218,17 +207,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.location,
             supabaseTable = AppConfig.SupabaseTables.LOCATION_SENSOR,
             serializer = LocationEntity.serializer(),
-            toRecord = { e ->
-                SensorRecord(
-                    id = e.id,
-                    timestamp = e.timestamp,
-                    fields = mapOf(
-                        "Latitude" to String.format("%.6f°", e.latitude),
-                        "Longitude" to String.format("%.6f°", e.longitude),
-                        "Accuracy" to String.format("%.1f m", e.accuracy)
-                    )
-                )
-            },
             fromSensorEntity = { e, uuid ->
                 e as LocationSensor.Entity
                 LocationEntity(uuid = uuid ?: "", deviceType = DeviceType.PHONE.value, received = e.received, timestamp = e.timestamp, latitude = e.latitude, longitude = e.longitude, altitude = e.altitude, speed = e.speed, accuracy = e.accuracy)
@@ -241,7 +219,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.media,
             supabaseTable = AppConfig.SupabaseTables.MEDIA_SENSOR,
             serializer = MediaEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Type" to (e.mimeType ?: "Unknown"), "Name" to (e.fileName?.take(30) ?: "Unknown"))) },
             fromSensorEntity = { e, uuid ->
                 e as MediaSensor.Entity
                 MediaEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, operation = e.operation, mediaType = e.mediaType, storageType = e.storageType, uri = e.uri, fileName = e.fileName, mimeType = e.mimeType, size = e.size, dateAdded = e.dateAdded, dateModified = e.dateModified)
@@ -254,7 +231,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.messageLog,
             supabaseTable = AppConfig.SupabaseTables.MESSAGE_LOG_SENSOR,
             serializer = MessageLogEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Type" to e.messageType, "Number" to e.number.take(10))) },
             fromSensorEntity = { e, uuid ->
                 e as MessageLogSensor.Entity
                 MessageLogEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, number = e.number, messageType = e.messageType, contactType = e.contactType)
@@ -267,7 +243,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.notification,
             supabaseTable = AppConfig.SupabaseTables.NOTIFICATION_SENSOR,
             serializer = NotificationEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Package" to e.packageName, "Title" to e.title)) },
             fromSensorEntity = { e, uuid ->
                 e as NotificationSensor.Entity
                 NotificationEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, packageName = e.packageName, eventType = e.eventType, title = e.title, text = e.text, visibility = e.visibility, category = e.category)
@@ -280,7 +255,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.screen,
             supabaseTable = AppConfig.SupabaseTables.SCREEN_SENSOR,
             serializer = ScreenEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Type" to e.type)) },
             fromSensorEntity = { e, uuid ->
                 e as ScreenSensor.Entity
                 ScreenEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, type = e.type)
@@ -293,7 +267,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.step,
             supabaseTable = AppConfig.SupabaseTables.STEP_SENSOR,
             serializer = StepEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Steps" to e.steps.toString())) },
             fromSensorEntity = { e, uuid ->
                 e as StepSensor.Entity
                 StepEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, startTime = e.startTime, endTime = e.endTime, steps = e.steps)
@@ -306,7 +279,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.userInteraction,
             supabaseTable = AppConfig.SupabaseTables.USER_INTERACTION_SENSOR,
             serializer = UserInteractionEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Event" to e.eventType.toString())) },
             fromSensorEntity = { e, uuid ->
                 e as UserInteractionSensor.Entity
                 UserInteractionEntity(uuid = uuid ?: "", eventId = e.eventId, received = e.received, timestamp = e.timestamp, packageName = e.packageName, className = e.className, eventType = e.eventType, text = e.text)
@@ -319,7 +291,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.wifiScan,
             supabaseTable = AppConfig.SupabaseTables.WIFI_SCAN_SENSOR,
             serializer = WifiScanEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("SSID" to e.ssid, "BSSID" to e.bssid)) },
             fromSensorEntity = { e, uuid ->
                 e as WifiScanSensor.Entity
                 WifiScanEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, ssid = e.ssid, bssid = e.bssid, frequency = e.frequency, level = e.level)
@@ -332,8 +303,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchHeartRate,
             supabaseTable = AppConfig.SupabaseTables.HEART_RATE_SENSOR,
-            serializer = WatchHeartRateEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Heart Rate" to "${e.hr} BPM", "Status" to e.hrStatus.toString())) }
+            serializer = WatchHeartRateEntity.serializer()
         ),
         SensorDescriptor(
             sensorId = "WatchAccelerometer",
@@ -341,14 +311,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchAccelerometer,
             supabaseTable = AppConfig.SupabaseTables.ACCELEROMETER_SENSOR,
-            serializer = WatchAccelerometerEntity.serializer(),
-            toRecord = { e ->
-                SensorRecord(
-                    id = e.id,
-                    timestamp = e.timestamp,
-                    fields = mapOf("X" to String.format("%.3f", e.x), "Y" to String.format("%.3f", e.y), "Z" to String.format("%.3f", e.z))
-                )
-            }
+            serializer = WatchAccelerometerEntity.serializer()
         ),
         SensorDescriptor(
             sensorId = "WatchEDA",
@@ -356,8 +319,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchEDA,
             supabaseTable = AppConfig.SupabaseTables.EDA_SENSOR,
-            serializer = WatchEDAEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("EDA" to String.format("%.3f μS", e.skinConductance))) }
+            serializer = WatchEDAEntity.serializer()
         ),
         SensorDescriptor(
             sensorId = "WatchPPG",
@@ -365,8 +327,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchPPG,
             supabaseTable = AppConfig.SupabaseTables.PPG_SENSOR,
-            serializer = WatchPPGEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Green" to e.green.toString(), "IR" to e.ir.toString())) }
+            serializer = WatchPPGEntity.serializer()
         ),
         SensorDescriptor(
             sensorId = "WatchSkinTemperature",
@@ -374,8 +335,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchSkinTemperature,
             supabaseTable = AppConfig.SupabaseTables.SKIN_TEMPERATURE_SENSOR,
-            serializer = WatchSkinTemperatureEntity.serializer(),
-            toRecord = { e -> SensorRecord(id = e.id, timestamp = e.timestamp, fields = mapOf("Skin Temp" to String.format("%.1f°C", e.objectTemp))) }
+            serializer = WatchSkinTemperatureEntity.serializer()
         ),
     )
 }

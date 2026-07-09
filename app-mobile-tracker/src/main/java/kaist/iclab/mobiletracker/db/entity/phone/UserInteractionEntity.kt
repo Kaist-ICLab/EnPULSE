@@ -4,12 +4,14 @@ import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-class UserInteractionEntity : BaseEntity, CsvSerializable {
+class UserInteractionEntity : BaseEntity, CsvSerializable, RecordSerializable {
     @SerialName("package_name")
     var packageName: String = ""
 
@@ -47,4 +49,6 @@ class UserInteractionEntity : BaseEntity, CsvSerializable {
         val escapedText = text.replace("\"", "\"\"")
         return "$eventId,$uuid,$received,$timestamp,$packageName,$className,$eventType,\"$escapedText\""
     }
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Event" to eventType.toString()))
 }

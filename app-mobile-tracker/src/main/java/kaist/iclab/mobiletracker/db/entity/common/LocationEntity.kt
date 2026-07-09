@@ -3,6 +3,8 @@ package kaist.iclab.mobiletracker.db.entity.common
 import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
 
 /**
@@ -13,7 +15,7 @@ import kotlinx.serialization.Serializable
  */
 @Entity
 @Serializable
-class LocationEntity : BaseEntity, CsvSerializable {
+class LocationEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var latitude: Double = 0.0
     var longitude: Double = 0.0
     var altitude: Double = 0.0
@@ -45,4 +47,14 @@ class LocationEntity : BaseEntity, CsvSerializable {
 
     override val csvHeader = "eventId,uuid,deviceType,received,timestamp,latitude,longitude,altitude,speed,accuracy"
     override fun toCsvRow() = "$eventId,$uuid,$deviceType,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
+
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf(
+            "Latitude" to String.format("%.6f°", latitude),
+            "Longitude" to String.format("%.6f°", longitude),
+            "Accuracy" to String.format("%.1f m", accuracy)
+        )
+    )
 }

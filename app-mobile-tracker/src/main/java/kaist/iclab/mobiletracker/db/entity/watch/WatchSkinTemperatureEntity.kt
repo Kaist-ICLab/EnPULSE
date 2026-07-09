@@ -4,12 +4,14 @@ import io.objectbox.annotation.Entity
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-class WatchSkinTemperatureEntity : BaseEntity, CsvSerializable {
+class WatchSkinTemperatureEntity : BaseEntity, CsvSerializable, RecordSerializable {
     @SerialName("ambient_temperature")
     var ambientTemp: Float = 0f
 
@@ -39,4 +41,6 @@ class WatchSkinTemperatureEntity : BaseEntity, CsvSerializable {
 
     override val csvHeader = "eventId,uuid,received,timestamp,ambientTemp,objectTemp,status"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$ambientTemp,$objectTemp,$status"
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Skin Temp" to String.format("%.1f°C", objectTemp)))
 }
