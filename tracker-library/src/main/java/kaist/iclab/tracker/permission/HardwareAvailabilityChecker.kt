@@ -30,7 +30,9 @@ object HardwareAvailabilityChecker {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION -> isLocationHardwareAvailable(context)
 
-            DataTypes.STEPS.name -> isSamsungDevice() // Samsung Health requires Samsung device
+            DataTypes.STEPS.name,
+            DataTypes.SLEEP.name,
+            DataTypes.EXERCISE.name -> isSamsungDevice() // Samsung Health requires Samsung device
             else -> true // Default to true for permissions that don't require hardware checks
         }
     }
