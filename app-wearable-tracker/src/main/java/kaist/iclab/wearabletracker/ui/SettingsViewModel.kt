@@ -14,6 +14,8 @@ import com.google.android.gms.wearable.Wearable
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -41,7 +44,8 @@ class SettingsViewModel(
     private val repository: WatchSensorRepository,
     private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer,
     private val applicationContext: Context,
-    private val autoSyncManager: AutoSyncManager
+    private val autoSyncManager: AutoSyncManager,
+    private val ecgSensor: ECGSensor
 ) : ViewModel() {
     companion object {
         private val TAG = SettingsViewModel::class.simpleName
@@ -97,6 +101,14 @@ class SettingsViewModel(
     // SDK Policy Error state - true when dev mode is not enabled on Health Platform
     val sdkPolicyError: StateFlow<Boolean> = samsungHealthSensorInitializer.sdkPolicyErrorStateFlow
 
+    // ECG is on-demand only and isn't part of `sensorState` (not in watchSensorDescriptors);
+    // this drives visibility of the "Measure ECG" button.
+    val ecgAvailable: StateFlow<Boolean> = ecgSensor.sensorStateFlow
+        .map { it.flag != SensorState.FLAG.UNAVAILABLE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    val ecgPermissions: Array<String> get() = ecgSensor.permissions
+
     /**
      * Clear the SDK Policy Error and stop logging (called when user dismisses the error screen).
      */
@@ -106,6 +118,11 @@ class SettingsViewModel(
     }
 
     init {
+        // ECG is excluded from BackgroundController's managed sensor list (see KoinModule.kt),
+        // so nothing else calls init() on it — without this, its persisted state stays at the
+        // default UNAVAILABLE forever and the "Measure ECG" button never appears.
+        ecgSensor.init()
+
         viewModelScope.launch {
             repository.lastSyncTimestampFlow.collect {
                 _lastSyncTimestamp.value = it

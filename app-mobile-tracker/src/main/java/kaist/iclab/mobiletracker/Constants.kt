@@ -101,6 +101,7 @@ object Constants {
         const val PPG = "WatchPPG"
         const val SKIN_TEMPERATURE = "WatchSkinTemperature"
         const val LOCATION = "WatchLocation"
+        const val ECG = "ECG"
     }
 
     /**

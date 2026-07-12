@@ -68,6 +68,7 @@ object AppColors {
     val ColorWifi = Color(0xFF00BCD4)
     val ColorExercise = Color(0xFFFF7043)
     val ColorSleep = Color(0xFF5C6BC0)
+    val ColorECG = Color(0xFFD32F2F)
     val ColorDefault = Color(0xFF9E9E9E)
 
     fun getSensorColor(sensorId: String): Color {
@@ -102,6 +103,7 @@ object AppColors {
             "WatchHeartRate" -> ColorAppListChange
             "WatchPPG" -> ColorMedia
             "WatchSkinTemperature" -> ColorAmbientLight
+            "ECG" -> ColorECG
             else -> ColorDefault
         }
     }

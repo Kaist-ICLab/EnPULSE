@@ -46,6 +46,7 @@
     <string name="sensor_audio">Audio</string>
     <string name="sensor_gesture">Gesture</string>
     <string name="sensor_stress">Stress</string>
+    <string name="sensor_ecg">ECG</string>
     <string name="sensor_default">Sensor</string>
 
     <!-- Samsung Health Connection -->
@@ -81,4 +82,13 @@
     <string name="ema_time_up">Time’s up</string>
     <string name="ema_dismissed">Dismissed</string>
     <string name="ema_finishing">Finishing</string>
+
+    <!-- ECG (on-demand) -->
+    <string name="measure_ecg">Measure ECG</string>
+    <string name="ecg_instruction_title">Prepare for ECG</string>
+    <string name="ecg_instruction_message">Move the watch towards your elbow, and put your index finger on the home button</string>
+    <string name="ecg_running_instruction">Keep your index finger on the home button</string>
+    <string name="ecg_unavailable">ECG is not supported on this device</string>
+    <string name="ecg_needs_permission">Permission required for ECG measurement</string>
+    <string name="ecg_completed">Measurement complete</string>
 </resources>

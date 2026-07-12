@@ -5,6 +5,7 @@ import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
+import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
@@ -71,6 +72,14 @@ object SensorDataCsvParser {
             rowParser = ::parseEDARow
         )
 
+    fun parseECGCsv(csvData: String): List<ECGEntity> =
+        parseSensorSection(
+            csvData = csvData,
+            sectionName = "ECG",
+            headerPattern = "eventId,received,timestamp,ecgMv,leadOff,sequence,ppgGreen,maxThresholdMv,minThresholdMv",
+            rowParser = ::parseECGRow
+        )
+
     private fun <T> parseSensorSection(
         csvData: String,
         sectionName: String,
@@ -121,7 +130,7 @@ object SensorDataCsvParser {
     }
 
     private fun isKnownSectionHeader(line: String): Boolean {
-        val knownSections = listOf("Accelerometer", "PPG", "HeartRate", "SkinTemperature", "EDA", "Location")
+        val knownSections = listOf("Accelerometer", "PPG", "HeartRate", "SkinTemperature", "EDA", "Location", "ECG")
         val normalizedLine = line.replace(" ", "")
         return knownSections.any { normalizedLine.equals(it, ignoreCase = true) }
     }
@@ -185,6 +194,28 @@ object SensorDataCsvParser {
             } else null
         } catch (e: Exception) {
             Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing PPG row: ${e.message}", e)
+            null
+        }
+    }
+
+    private fun parseECGRow(row: String): ECGEntity? {
+        return try {
+            val parts = row.split(",").map { it.trim() }
+            if (parts.size >= 9) {
+                ECGEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    ecgMv = parts[3].toFloatOrNull() ?: return null,
+                    leadOff = parts[4].toIntOrNull() ?: return null,
+                    sequence = parts[5].toIntOrNull() ?: return null,
+                    ppgGreen = parts[6].toIntOrNull() ?: return null,
+                    maxThresholdMv = parts[7].toFloatOrNull() ?: return null,
+                    minThresholdMv = parts[8].toFloatOrNull() ?: return null
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing ECG row: ${e.message}", e)
             null
         }
     }

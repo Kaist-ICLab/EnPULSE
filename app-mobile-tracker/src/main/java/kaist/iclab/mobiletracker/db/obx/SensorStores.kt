@@ -21,6 +21,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
+import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
@@ -58,4 +59,5 @@ class SensorStores(boxStore: BoxStore) {
     val watchEDA = SensorStore(boxStore, WatchEDAEntity::class.java)
     val watchPPG = SensorStore(boxStore, WatchPPGEntity::class.java)
     val watchSkinTemperature = SensorStore(boxStore, WatchSkinTemperatureEntity::class.java)
+    val ecg = SensorStore(boxStore, ECGEntity::class.java)
 }

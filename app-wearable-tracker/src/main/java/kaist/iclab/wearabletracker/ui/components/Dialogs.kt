@@ -79,6 +79,61 @@ fun FlushConfirmationDialog(
 }
 
 @Composable
+fun EcgInstructionDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onStart: () -> Unit
+) {
+    if (showDialog) {
+        Dialog(
+            showDialog = showDialog,
+            onDismissRequest = onDismiss
+        ) {
+            Alert(
+                title = {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.ecg_instruction_title),
+                            style = AppTypography.dialogTitle,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = stringResource(R.string.ecg_instruction_message),
+                            style = AppTypography.dialogBody,
+                            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                },
+                negativeButton = {
+                    Button(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.cancel),
+                            modifier = Modifier.size(AppSizes.iconMedium)
+                        )
+                    }
+                },
+                positiveButton = {
+                    Button(
+                        onClick = onStart,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = stringResource(R.string.confirm),
+                            modifier = Modifier.size(AppSizes.iconMedium)
+                        )
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
 fun PermissionPermanentlyDeniedDialog(
     showDialog: Boolean,
     onDismiss: () -> Unit,

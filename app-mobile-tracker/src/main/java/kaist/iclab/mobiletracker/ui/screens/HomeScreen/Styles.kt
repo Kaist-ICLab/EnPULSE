@@ -81,6 +81,7 @@ object Styles {
         val WATCH_EDA = Color(0xFF00BCD4)
         val WATCH_PPG = Color(0xFFFF5722)
         val WATCH_SKIN_TEMP = Color(0xFFFF9800)
+        val ECG = Color(0xFFD32F2F)
 
         // Status Indicator
         val RUNNING_BG = Color(0xFFE6F4EA)

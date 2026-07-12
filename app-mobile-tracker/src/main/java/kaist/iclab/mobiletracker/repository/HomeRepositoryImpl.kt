@@ -44,10 +44,9 @@ class HomeRepositoryImpl(
             stores.watchAccelerometer.countAfterFlow(startOfDay),
             stores.watchEDA.countAfterFlow(startOfDay),
             stores.watchPPG.countAfterFlow(startOfDay),
-            stores.watchSkinTemperature.countAfterFlow(startOfDay)
-        ) { heartRate, accelerometer, eda, ppg, skinTemp ->
-            listOf(heartRate, accelerometer, eda, ppg, skinTemp)
-        }
+            stores.watchSkinTemperature.countAfterFlow(startOfDay),
+            stores.ecg.countAfterFlow(startOfDay)
+        ) { args: Array<Int> -> args.toList() }
 
         // Combine both flows into final result
         return combine(phoneFlow, watchFlow) { phone, watch ->
@@ -77,7 +76,8 @@ class HomeRepositoryImpl(
                 watchAccelerometerCount = watch[1],
                 watchEDACount = watch[2],
                 watchPPGCount = watch[3],
-                watchSkinTemperatureCount = watch[4]
+                watchSkinTemperatureCount = watch[4],
+                ecgCount = watch[5]
             )
         }
     }

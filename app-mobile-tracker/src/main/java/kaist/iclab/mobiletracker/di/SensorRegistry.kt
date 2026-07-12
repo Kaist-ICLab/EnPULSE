@@ -26,6 +26,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
+import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
@@ -394,6 +395,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             store = s.watchSkinTemperature,
             supabaseTable = AppConfig.SupabaseTables.SKIN_TEMPERATURE_SENSOR,
             serializer = WatchSkinTemperatureEntity.serializer()
+        ),
+        SensorDescriptor(
+            sensorId = "ECG",
+            displayName = "ECG",
+            isWatchSensor = true,
+            store = s.ecg,
+            supabaseTable = AppConfig.SupabaseTables.ECG_SENSOR,
+            serializer = ECGEntity.serializer()
         ),
     )
 }

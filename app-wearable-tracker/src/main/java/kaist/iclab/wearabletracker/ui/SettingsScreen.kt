@@ -1,11 +1,18 @@
 package kaist.iclab.wearabletracker.ui
 
+import android.content.Intent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -13,21 +20,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.Icon
+import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Scaffold
+import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.data.DeviceInfo
+import kaist.iclab.wearabletracker.ecg.EcgMeasurementActivity
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
 import kaist.iclab.wearabletracker.helpers.PermissionHelper
+import kaist.iclab.wearabletracker.theme.AppSizes
 import kaist.iclab.wearabletracker.ui.components.AutoSyncSettings
 import kaist.iclab.wearabletracker.ui.components.DeviceStatusInfo
+import kaist.iclab.wearabletracker.ui.components.EcgInstructionDialog
 import kaist.iclab.wearabletracker.ui.components.FlushConfirmationDialog
+import kaist.iclab.wearabletracker.ui.components.IconButton
 import kaist.iclab.wearabletracker.ui.components.PermissionPermanentlyDeniedDialog
 import kaist.iclab.wearabletracker.ui.components.SamsungHealthConnectionErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SdkPolicyErrorScreen
@@ -52,6 +70,8 @@ fun SettingsScreen(
 
     var showFlushDialog by remember { mutableStateOf(false) }
     var showPermissionPermanentlyDeniedDialog by remember { mutableStateOf(false) }
+    var showEcgInstructionDialog by remember { mutableStateOf(false) }
+    val ecgAvailable by settingsViewModel.ecgAvailable.collectAsState()
 
     /**
      * Helper function to handle notification permission check and execute action if granted.
@@ -187,6 +207,32 @@ fun SettingsScreen(
                             .verticalScroll(rememberScrollState())
                             .padding(bottom = 24.dp)
                     ) {
+
+                        if (ecgAvailable) {
+                            Button(
+                                onClick = { showEcgInstructionDialog = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp)
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.measure_ecg),
+                                        style = MaterialTheme.typography.button,
+                                        color = MaterialTheme.colors.onPrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        Icons.Default.Favorite,
+                                        contentDescription = "Measure ECG"
+                                    )
+                                }
+                            }
+                        }
+
                         // Auto-Sync Settings
                         AutoSyncSettings(
                             enabled = autoSyncEnabled,
@@ -231,6 +277,17 @@ fun SettingsScreen(
         onOpenSettings = {
             PermissionHelper.openNotificationSettings(context)
             showPermissionPermanentlyDeniedDialog = false
+        }
+    )
+
+    // ECG Instruction Dialog
+    EcgInstructionDialog(
+        showDialog = showEcgInstructionDialog,
+        onDismiss = { showEcgInstructionDialog = false },
+        onStart = {
+            showEcgInstructionDialog = false
+            androidPermissionManager.request(settingsViewModel.ecgPermissions)
+            context.startActivity(Intent(context, EcgMeasurementActivity::class.java))
         }
     )
 }

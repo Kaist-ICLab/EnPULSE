@@ -49,6 +49,12 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault" />
 
+        <activity
+            android:name=".ecg.EcgMeasurementActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault" />
+
     </application>
 
 </manifest>

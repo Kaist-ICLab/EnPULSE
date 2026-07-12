@@ -14,7 +14,8 @@ object SensorTypeHelper {
         "WatchEDA",
         "WatchPPG",
         "WatchSkinTemperature",
-        "WatchLocation"
+        "WatchLocation",
+        "ECG"
     )
 
     /**

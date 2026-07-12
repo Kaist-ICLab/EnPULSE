@@ -34,7 +34,8 @@ class WatchSensorRepositoryImpl(
         Constants.SensorId.EDA to stores.watchEDA,
         Constants.SensorId.PPG to stores.watchPPG,
         Constants.SensorId.SKIN_TEMPERATURE to stores.watchSkinTemperature,
-        Constants.SensorId.LOCATION to stores.location
+        Constants.SensorId.LOCATION to stores.location,
+        Constants.SensorId.ECG to stores.ecg
     )
 
     private suspend fun userUuid(): String =

@@ -383,71 +383,10 @@
         }
       ],
       "relations": []
-    },
-    {
-      "id": "9:329836795906480256",
-      "lastPropertyId": "10:110642421579569878",
-      "name": "ECGEntity",
-      "properties": [
-        {
-          "id": "1:5174188839946802470",
-          "name": "id",
-          "type": 6,
-          "flags": 1
-        },
-        {
-          "id": "2:2057185752724125984",
-          "name": "eventId",
-          "type": 9
-        },
-        {
-          "id": "3:2116919555039707837",
-          "name": "received",
-          "type": 6
-        },
-        {
-          "id": "4:4938467647277245225",
-          "name": "timestamp",
-          "indexId": "8:5718519799589138005",
-          "type": 6,
-          "flags": 8
-        },
-        {
-          "id": "5:631731645905056458",
-          "name": "ecgMv",
-          "type": 7
-        },
-        {
-          "id": "6:2018089448334611160",
-          "name": "leadOff",
-          "type": 5
-        },
-        {
-          "id": "7:7075016004369067205",
-          "name": "sequence",
-          "type": 5
-        },
-        {
-          "id": "8:3727730811706360431",
-          "name": "ppgGreen",
-          "type": 5
-        },
-        {
-          "id": "9:3443191124030911070",
-          "name": "maxThresholdMv",
-          "type": 7
-        },
-        {
-          "id": "10:110642421579569878",
-          "name": "minThresholdMv",
-          "type": 7
-        }
-      ],
-      "relations": []
     }
   ],
-  "lastEntityId": "9:329836795906480256",
-  "lastIndexId": "8:5718519799589138005",
+  "lastEntityId": "8:9122709350713816334",
+  "lastIndexId": "7:1089688838535821587",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

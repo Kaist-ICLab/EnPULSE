@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
@@ -259,6 +260,12 @@ fun HomeScreen(
                     uiState.sleepCount,
                     Icons.Default.Bedtime,
                     Styles.Colors.SLEEP
+                ),
+                SensorItem(
+                    "ECG",
+                    uiState.ecgCount,
+                    Icons.Default.Favorite,
+                    Styles.Colors.ECG
                 )
             ).filter { it.count > 0 }
         }

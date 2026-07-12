@@ -3,11 +3,13 @@ package kaist.iclab.wearabletracker.db.obx
 import io.objectbox.BoxStore
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.galaxywatch.AccelerometerSensor
+import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.EDASensor
 import kaist.iclab.tracker.sensor.galaxywatch.HeartRateSensor
 import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
 import kaist.iclab.wearabletracker.db.entity.AccelerometerEntity
+import kaist.iclab.wearabletracker.db.entity.ECGEntity
 import kaist.iclab.wearabletracker.db.entity.EDAEntity
 import kaist.iclab.wearabletracker.db.entity.HeartRateEntity
 import kaist.iclab.wearabletracker.db.entity.LocationEntity
@@ -49,5 +51,12 @@ class WatchSensorStores(boxStore: BoxStore) {
     val location = WatchSensorStore(boxStore, LocationEntity::class.java) { e ->
         e as LocationSensor.Entity
         listOf(LocationEntity(e.received, e.timestamp, e.latitude, e.longitude, e.altitude, e.speed, e.accuracy))
+    }
+
+    val ecg = WatchSensorStore(boxStore, ECGEntity::class.java) { e ->
+        e as ECGSensor.Entity
+        e.dataPoint.map {
+            ECGEntity(it.received, it.timestamp, it.ecgMv, it.leadOff, it.sequence, it.ppgGreen, it.maxThresholdMv, it.minThresholdMv)
+        }
     }
 }

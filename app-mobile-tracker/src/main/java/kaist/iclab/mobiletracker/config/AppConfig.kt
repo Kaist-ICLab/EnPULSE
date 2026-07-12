@@ -40,6 +40,7 @@ object AppConfig {
         const val HEART_RATE_SENSOR = "heart_rate_sensor"
         const val PPG_SENSOR = "ppg_sensor"
         const val SKIN_TEMPERATURE_SENSOR = "skin_temperature_sensor"
+        const val ECG_SENSOR = "ecg_sensor"
 
         // Phone sensor table names
         const val AMBIENT_LIGHT_SENSOR = "ambient_light_sensor"

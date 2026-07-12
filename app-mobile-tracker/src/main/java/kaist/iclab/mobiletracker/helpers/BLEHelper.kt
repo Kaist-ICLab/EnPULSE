@@ -313,6 +313,7 @@ class BLEHelper(
                     Constants.SensorId.HEART_RATE to SensorDataCsvParser.parseHeartRateCsv(csvData),
                     Constants.SensorId.PPG to SensorDataCsvParser.parsePPGCsv(csvData),
                     Constants.SensorId.SKIN_TEMPERATURE to SensorDataCsvParser.parseSkinTemperatureCsv(csvData),
+                    Constants.SensorId.ECG to SensorDataCsvParser.parseECGCsv(csvData),
                 )
 
                 var totalStored = 0

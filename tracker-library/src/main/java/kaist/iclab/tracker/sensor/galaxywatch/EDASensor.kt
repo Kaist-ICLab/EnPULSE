@@ -47,7 +47,6 @@ class EDASensor(
 
     @Serializable
     data class Entity(
-
         val dataPoint: List<DataPoint>
     ) : SensorEntity()
 

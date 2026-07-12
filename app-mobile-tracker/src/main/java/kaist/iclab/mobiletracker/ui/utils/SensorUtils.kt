@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
@@ -60,6 +61,7 @@ fun getSensorTitleResId(sensorId: String): Int {
         "WatchHeartRate" -> R.string.sensor_heart_rate
         "WatchPPG" -> R.string.sensor_ppg
         "WatchSkinTemperature" -> R.string.sensor_skin_temperature
+        "ECG" -> R.string.sensor_ecg
         else -> R.string.sensor_desc_default
     }
 }
@@ -89,6 +91,7 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_desc_wifi
         "Exercise" -> R.string.sensor_desc_exercise
         "Sleep" -> R.string.sensor_desc_sleep
+        "ECG" -> R.string.sensor_desc_ecg
         else -> R.string.sensor_desc_default
     }
 }
@@ -141,6 +144,7 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "WatchHeartRate" -> Icons.Default.FavoriteBorder
         "WatchPPG" -> Icons.Default.MonitorHeart
         "WatchSkinTemperature" -> Icons.Default.Thermostat
+        "ECG" -> Icons.Default.Favorite
         else -> Icons.Default.DataUsage
     }
 }
