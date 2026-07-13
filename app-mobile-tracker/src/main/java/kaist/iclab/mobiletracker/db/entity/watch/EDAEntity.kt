@@ -7,6 +7,7 @@ import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
 @Entity
 @Serializable
@@ -34,5 +35,5 @@ class EDAEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun csvHeader() = "eventId,uuid,received,timestamp,skinConductance,status"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$skinConductance,$status"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("EDA" to String.format("%.3f μS", skinConductance)))
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("EDA" to String.format(Locale.getDefault(),"%.3f μS", skinConductance)))
 }
