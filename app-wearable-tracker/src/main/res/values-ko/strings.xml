@@ -90,8 +90,8 @@
     <!-- ECG (on-demand) -->
     <string name="measure_ecg">ECG 측정</string>
     <string name="ecg_instruction_title">ECG 측정 준비</string>
-    <string name="ecg_instruction_message">워치를 팔꿈치에 가까워지도록 당겨주시고, 홈버튼에 검지손가락을 올려주세요</string>
-    <string name="ecg_running_instruction">홈버튼에 검지손가락을 올려놓은 상태로 유지해주세요</string>
+    <string name="ecg_instruction_message">워치를 팔꿈치에 가까워지도록 당겨주시고, 상단 버튼에 검지손가락을 올려주세요</string>
+    <string name="ecg_running_instruction">상단 버튼에 검지손가락을 올려놓은 상태로 유지해주세요</string>
     <string name="ecg_unavailable">ECG 측정이 지원되지 않는 기기입니다</string>
     <string name="ecg_needs_permission">ECG 측정을 위해 권한이 필요합니다</string>
     <string name="ecg_completed">측정 완료</string>

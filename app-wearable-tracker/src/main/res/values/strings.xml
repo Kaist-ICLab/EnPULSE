@@ -89,8 +89,8 @@
     <!-- ECG (on-demand) -->
     <string name="measure_ecg">Measure ECG</string>
     <string name="ecg_instruction_title">Prepare for ECG</string>
-    <string name="ecg_instruction_message">Move the watch towards your elbow, and put your index finger on the home button</string>
-    <string name="ecg_running_instruction">Keep your index finger on the home button</string>
+    <string name="ecg_instruction_message">Move the watch towards your elbow, and put your index finger on the upper button</string>
+    <string name="ecg_running_instruction">Keep your index finger on the upper button</string>
     <string name="ecg_unavailable">ECG is not supported on this device</string>
     <string name="ecg_needs_permission">Permission required for ECG measurement</string>
     <string name="ecg_completed">Measurement complete</string>

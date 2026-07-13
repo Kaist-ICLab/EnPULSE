@@ -1,6 +1,12 @@
 package kaist.iclab.wearabletracker.ecg
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -11,21 +17,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.CircularProgressIndicator
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
 import kaist.iclab.wearabletracker.R
@@ -105,6 +117,20 @@ fun EcgMeasurementScreenContent(uiState: EcgMeasurementUiState) {
                 trackColor = Color.White.copy(alpha = 0.1f),
                 strokeWidth = 3.dp
             )
+
+            // Draw the hint centered vertically at the right edge first, then rotate that whole
+            // (position + orientation) around the screen's center — this box shares the parent's
+            // exact size, so its own center coincides with the screen's center, giving a rotation
+            // pivot at the screen center rather than the icon's own center. Galaxy Watch's Home
+            // button sits on the right edge just above vertical center (above the Back button),
+            // hence the negative (counter-clockwise) angle.
+            Box(modifier = Modifier.fillMaxSize().rotate(-25f)) {
+                HomeButtonHint(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 4.dp)
+                )
+            }
         }
 
         AnimatedContent(
@@ -139,12 +165,48 @@ fun EcgMeasurementScreenContent(uiState: EcgMeasurementUiState) {
     }
 }
 
+/**
+ * Pulsing arrow at the screen's right edge pointing toward the watch's physical Home button,
+ * which the wearer must hold during the measurement to complete the ECG circuit.
+ */
+@Composable
+private fun HomeButtonHint(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "homeButtonHint")
+    val offsetX by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "homeButtonHintOffset"
+    )
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "homeButtonHintAlpha"
+    )
+
+    Icon(
+        imageVector = Icons.Rounded.ChevronRight,
+        contentDescription = null,
+        tint = Color.White.copy(alpha = alpha),
+        modifier = modifier
+            .offset { IntOffset(offsetX.dp.roundToPx(), 0) }
+            .padding(4.dp)
+    )
+}
+
 @Composable
 private fun RunningView(remainingMs: Long) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 20.dp),
+            .padding(horizontal = 30.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
