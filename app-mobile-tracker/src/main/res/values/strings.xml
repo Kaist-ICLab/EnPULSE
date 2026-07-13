@@ -195,6 +195,16 @@
     <string name="sensor_desc_sleep">Sleep session data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
     <string name="sensor_desc_ecg">On-demand electrocardiogram measurement</string>
+    <!-- Watch Sensor Descriptions -->
+    <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
+    <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>
+    <string name="sensor_desc_heart_rate">Heart rate measurement</string>
+    <string name="sensor_desc_skin_temperature">Skin temperature measurement</string>
+    <string name="sensor_desc_eda">Galvanic skin response based on sweat</string>
+    <string name="sensor_desc_imu">6-axis accelerometer and gyroscope data</string>
+    <string name="sensor_desc_audio">Audio signal</string>
+    <string name="sensor_desc_gesture">Hand activities</string>
+    <string name="sensor_desc_stress">Binary stress measurement based on HRV</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>

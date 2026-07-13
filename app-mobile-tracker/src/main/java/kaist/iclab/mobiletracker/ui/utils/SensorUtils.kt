@@ -92,6 +92,11 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "Exercise" -> R.string.sensor_desc_exercise
         "Sleep" -> R.string.sensor_desc_sleep
         "ECG" -> R.string.sensor_desc_ecg
+        "Accelerometer" -> R.string.sensor_desc_accelerometer
+        "EDA" -> R.string.sensor_desc_eda
+        "HeartRate" -> R.string.sensor_desc_heart_rate
+        "PPG" -> R.string.sensor_desc_ppg
+        "SkinTemperature" -> R.string.sensor_desc_skin_temperature
         else -> R.string.sensor_desc_default
     }
 }

@@ -118,7 +118,7 @@ fun HomeScreen(
         val sensorItems = remember(uiState) {
             listOf(
                 SensorItem(
-                    "WatchAccelerometer",
+                    "Accelerometer",
                     uiState.watchAccelerometerCount,
                     Icons.Default.Speed,
                     Styles.Colors.WATCH_ACCELEROMETER
@@ -172,13 +172,13 @@ fun HomeScreen(
                     Styles.Colors.DEVICE_MODE
                 ),
                 SensorItem(
-                    "WatchEDA",
+                    "EDA",
                     uiState.watchEDACount,
                     Icons.Default.Waves,
                     Styles.Colors.WATCH_EDA
                 ),
                 SensorItem(
-                    "WatchHeartRate",
+                    "HeartRate",
                     uiState.watchHeartRateCount,
                     Icons.Default.FavoriteBorder,
                     Styles.Colors.WATCH_HEART_RATE
@@ -220,7 +220,7 @@ fun HomeScreen(
                     Styles.Colors.ACTIVITY
                 ),
                 SensorItem(
-                    "WatchPPG",
+                    "PPG",
                     uiState.watchPPGCount,
                     Icons.Default.MonitorHeart,
                     Styles.Colors.WATCH_PPG
@@ -232,7 +232,7 @@ fun HomeScreen(
                     Styles.Colors.SCREEN
                 ),
                 SensorItem(
-                    "WatchSkinTemperature",
+                    "SkinTemperature",
                     uiState.watchSkinTemperatureCount,
                     Icons.Default.Thermostat,
                     Styles.Colors.WATCH_SKIN_TEMP

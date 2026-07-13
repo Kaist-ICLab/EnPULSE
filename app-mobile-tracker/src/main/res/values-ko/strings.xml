@@ -267,6 +267,16 @@
     <string name="sensor_wifi_scan">Wifi 스캔</string>
     <string name="sensor_exercise">운동</string>
     <string name="sensor_sleep">수면</string>
+    <!-- Watch Sensor Descriptions -->
+    <string name="sensor_desc_accelerometer">3축 가속도계 데이터</string>
+    <string name="sensor_desc_ppg">녹색, 적색, 적외선으로 측정한 혈류 펄스 데이터</string>
+    <string name="sensor_desc_heart_rate">심박수 데이터</string>
+    <string name="sensor_desc_skin_temperature">피부 온도 데이터</string>
+    <string name="sensor_desc_eda">땀 등 수분으로 인한 피부 전도도 측정</string>
+    <string name="sensor_desc_imu">6축 가속도계 및 자이로스코프 데이터</string>
+    <string name="sensor_desc_audio">소리 시그널</string>
+    <string name="sensor_desc_gesture">손 행동 데이터</string>
+    <string name="sensor_desc_stress">심박변이도 기반 스트레스 여부 탐지 데이터</string>
 
 
     <!-- Toast Messages -->
