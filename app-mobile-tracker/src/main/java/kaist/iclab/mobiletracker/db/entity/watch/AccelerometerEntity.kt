@@ -7,6 +7,7 @@ import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
 @Entity
 @Serializable
@@ -40,6 +41,6 @@ class AccelerometerEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun toRecord() = SensorRecord(
         id = id,
         timestamp = timestamp,
-        fields = mapOf("X" to String.format("%.3f", x), "Y" to String.format("%.3f", y), "Z" to String.format("%.3f", z))
+        fields = mapOf("X" to String.format(Locale.getDefault(), "%.3f", x), "Y" to String.format(Locale.getDefault(),"%.3f", y), "Z" to String.format(Locale.getDefault(),"%.3f", z))
     )
 }
