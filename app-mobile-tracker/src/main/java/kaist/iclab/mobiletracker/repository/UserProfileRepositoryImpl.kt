@@ -1,8 +1,10 @@
 package kaist.iclab.mobiletracker.repository
 
 import kaist.iclab.mobiletracker.data.sensors.ProfileData
+import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.ProfileService
+import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +19,8 @@ class UserProfileRepositoryImpl(
     private val supabaseHelper: SupabaseHelper,
     private val persistentStorage: kaist.iclab.mobiletracker.storage.UserProfileStorage,
     private val campaignSensorRepository: CampaignSensorRepository,
-    private val surveyRepository: SurveyRepository
+    private val surveyRepository: SurveyRepository,
+    private val bleHelper: BLEHelper
 ) : UserProfileRepository {
 
     companion object {
@@ -77,6 +80,7 @@ class UserProfileRepositoryImpl(
         if (campaignId != null) {
             campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
             surveyRepository.fetchAndPersistSurveys(campaignId)
+            bleHelper.sendActiveSensorConfig(SensorTypeHelper.activeWatchSensorIds(campaignSensorRepository))
         } else {
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()

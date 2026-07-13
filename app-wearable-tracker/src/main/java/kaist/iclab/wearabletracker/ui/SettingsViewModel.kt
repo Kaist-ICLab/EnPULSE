@@ -17,6 +17,7 @@ import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
 import kaist.iclab.wearabletracker.data.AutoSyncManager
+import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -45,7 +47,8 @@ class SettingsViewModel(
     private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer,
     private val applicationContext: Context,
     private val autoSyncManager: AutoSyncManager,
-    private val ecgSensor: ECGSensor
+    private val ecgSensor: ECGSensor,
+    private val campaignSensorConfigRepository: CampaignSensorConfigRepository
 ) : ViewModel() {
     companion object {
         private val TAG = SettingsViewModel::class.simpleName
@@ -102,10 +105,27 @@ class SettingsViewModel(
     val sdkPolicyError: StateFlow<Boolean> = samsungHealthSensorInitializer.sdkPolicyErrorStateFlow
 
     // ECG is on-demand only and isn't part of `sensorState` (not in watchSensorDescriptors);
-    // this drives visibility of the "Measure ECG" button.
-    val ecgAvailable: StateFlow<Boolean> = ecgSensor.sensorStateFlow
-        .map { it.flag != SensorState.FLAG.UNAVAILABLE }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    // this drives visibility of the "Measure ECG" button. Also requires ECG to be part of the
+    // wearer's campaign (a never-synced/null config fails open).
+    val ecgAvailable: StateFlow<Boolean> = combine(
+        ecgSensor.sensorStateFlow,
+        campaignSensorConfigRepository.configFlow
+    ) { sensorState, config ->
+        sensorState.flag != SensorState.FLAG.UNAVAILABLE &&
+            (config.activeSensorIds == null || ecgSensor.id in config.activeSensorIds)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    // Names (not bare ids) of sensors active for the wearer's campaign, translated via
+    // `sensorController.sensors` since `sensorState`/`sensorMap` below are keyed by `.name`
+    // (the human-readable display form, e.g. "Skin Temperature") rather than `.id`.
+    // Null means "never synced with the phone" and fails open (shows every sensor).
+    val activeCampaignSensorNames: StateFlow<Set<String>?> = campaignSensorConfigRepository.configFlow
+        .map { config ->
+            config.activeSensorIds?.let { ids ->
+                sensorController.sensors.filter { it.id in ids }.map { it.name }.toSet()
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val ecgPermissions: Array<String> get() = ecgSensor.permissions
 

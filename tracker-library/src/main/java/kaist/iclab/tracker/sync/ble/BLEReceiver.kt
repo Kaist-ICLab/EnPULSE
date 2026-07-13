@@ -107,7 +107,7 @@ internal class BLEReceiver : DataChannelReceiver() {
         ) {
             assetFd.inputStream.use { inputStream ->
                 val jsonString = String(inputStream.readBytes())
-                Log.d(TAG, "Received data for key '$key': $jsonString")
+//                Log.d(TAG, "Received data for key '$key': $jsonString")
 
                 // Try to parse as JSON, if it fails, wrap it as a JSON string
                 val jsonElement = try {

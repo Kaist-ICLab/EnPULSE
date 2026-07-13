@@ -95,11 +95,11 @@ object Constants {
      * Sensor Identifiers
      */
     object SensorId {
-        const val HEART_RATE = "WatchHeartRate"
-        const val ACCELEROMETER = "WatchAccelerometer"
-        const val EDA = "WatchEDA"
-        const val PPG = "WatchPPG"
-        const val SKIN_TEMPERATURE = "WatchSkinTemperature"
+        const val HEART_RATE = "HeartRate"
+        const val ACCELEROMETER = "Accelerometer"
+        const val EDA = "EDA"
+        const val PPG = "PPG"
+        const val SKIN_TEMPERATURE = "SkinTemperature"
         const val LOCATION = "WatchLocation"
         const val ECG = "ECG"
     }

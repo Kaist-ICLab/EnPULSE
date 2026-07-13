@@ -22,6 +22,7 @@ import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.wearabletracker.data.AutoSyncManager
+import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.data.SyncAckListener
 import kaist.iclab.wearabletracker.db.entity.MyObjectBox
@@ -292,6 +293,14 @@ val koinModule = module {
         )
     }
 
+    single {
+        CampaignSensorConfigRepository(
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
+            storage = campaignSensorConfigStorage(),
+            coroutineScope = get()
+        )
+    }
+
     single<WatchSensorRepository> {
         WatchSensorRepositoryImpl(
             sensorDataStorages = get(named("sensorDataStorages")),
@@ -308,7 +317,8 @@ val koinModule = module {
             samsungHealthSensorInitializer = get(),
             applicationContext = androidContext(),
             autoSyncManager = get(),
-            ecgSensor = get()
+            ecgSensor = get(),
+            campaignSensorConfigRepository = get()
         )
     }
 

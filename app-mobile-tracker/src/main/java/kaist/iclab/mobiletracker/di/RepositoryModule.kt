@@ -91,7 +91,8 @@ val repositoryModule = module {
             supabaseHelper = get(),
             persistentStorage = get(),
             campaignSensorRepository = get(),
-            surveyRepository = get()
+            surveyRepository = get(),
+            bleHelper = get()
         )
     }
 

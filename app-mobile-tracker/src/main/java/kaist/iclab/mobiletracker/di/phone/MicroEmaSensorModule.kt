@@ -41,7 +41,7 @@ val microEmaSensorModule = module {
             val rules = watchEmaConfigs.keys.map { surveyId ->
                 TriggerRule(
                     id = "simple_periodic_$surveyId",
-                    sourceSensorId = "WatchHeartRate",
+                    sourceSensorId = "HeartRate",
                     window = WindowConfig(type = "TUMBLING", sizeMs = 60 * 60 * 1000L),
                     calculation = CalculationConfig(type = "MEAN", dataField = "bpm"),
                     condition = ConditionConfig(operator = "GREATER_THAN", threshold = 0.0),

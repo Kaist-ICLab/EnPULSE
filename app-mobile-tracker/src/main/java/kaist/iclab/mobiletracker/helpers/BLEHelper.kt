@@ -21,6 +21,8 @@ import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
@@ -235,6 +237,31 @@ class BLEHelper(
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
                     "[MICRO_EMA] Failed to send trigger: ${e.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Push the campaign's active watch-sensor list to the watch, so it only collects/shows
+     * sensors that are actually part of the wearer's campaign.
+     */
+    fun sendActiveSensorConfig(activeSensorIds: Collection<String>) {
+        appScope.io.launch {
+            try {
+                val payload = buildJsonArray {
+                    activeSensorIds.forEach { add(it) }
+                }.toString()
+
+                bleChannel.send(AppConfig.BLEKeys.ACTIVE_SENSOR_CONFIG, payload)
+                Log.d(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "Sent active sensor config to watch: $activeSensorIds"
+                )
+            } catch (e: Exception) {
+                Log.e(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "Failed to send active sensor config: ${e.message}"
                 )
             }
         }

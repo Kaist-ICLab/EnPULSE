@@ -73,6 +73,7 @@ object AppConfig {
         const val MICRO_EMA_RESPONSE = "micro_ema_response"
         const val MICRO_EMA_ACK = "micro_ema_ack"
         const val MICRO_EMA_TRIGGER = "micro_ema_trigger"
+        const val ACTIVE_SENSOR_CONFIG = "active_sensor_config"
     }
 
     /**

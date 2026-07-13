@@ -14,6 +14,7 @@ object Constants {
         const val KEY_MICRO_EMA_RESPONSE = "micro_ema_response"
         const val KEY_MICRO_EMA_ACK = "micro_ema_ack"
         const val KEY_MICRO_EMA_TRIGGER = "micro_ema_trigger"
+        const val KEY_ACTIVE_SENSOR_CONFIG = "active_sensor_config"
     }
 
     /**

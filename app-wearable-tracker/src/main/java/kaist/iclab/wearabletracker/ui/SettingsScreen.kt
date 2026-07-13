@@ -64,8 +64,10 @@ fun SettingsScreen(
     val sensorState = settingsViewModel.sensorState
 
     val sensorStates = sensorState.mapValues { it.value.collectAsState() }
-    val availableSensors = sensorStates.filter { (_, state) ->
-        state.value.flag != SensorState.FLAG.UNAVAILABLE
+    val activeCampaignSensorNames by settingsViewModel.activeCampaignSensorNames.collectAsState()
+    val availableSensors = sensorStates.filter { (name, state) ->
+        state.value.flag != SensorState.FLAG.UNAVAILABLE &&
+            (activeCampaignSensorNames == null || name in activeCampaignSensorNames!!)
     }
 
     var showFlushDialog by remember { mutableStateOf(false) }

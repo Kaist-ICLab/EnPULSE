@@ -3,6 +3,7 @@ package kaist.iclab.wearabletracker
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
+import kaist.iclab.wearabletracker.data.CampaignSensorConfig
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import org.koin.core.scope.Scope
 import kotlin.reflect.KClass
@@ -26,4 +27,12 @@ fun Scope.sensorState(sensorClass: KClass<*>): CouchbaseStateStorage<SensorState
         defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
         clazz = SensorState::class.java,
         collectionName = sensorClass.simpleName ?: ""
+    )
+
+fun Scope.campaignSensorConfigStorage(): CouchbaseStateStorage<CampaignSensorConfig> =
+    CouchbaseStateStorage(
+        couchbase = get(),
+        defaultVal = CampaignSensorConfig(),
+        clazz = CampaignSensorConfig::class.java,
+        collectionName = "campaignSensorConfig"
     )
