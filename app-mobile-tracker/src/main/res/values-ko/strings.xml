@@ -191,7 +191,10 @@
     <string name="sensor_desc_step">걸음 수 데이터</string>
     <string name="sensor_desc_user_interaction">사용자 터치 이벤트</string>
     <string name="sensor_desc_wifi">WiFi 연결 상태</string>
+    <string name="sensor_desc_exercise">운동 세션 데이터</string>
+    <string name="sensor_desc_sleep">수면 세션 데이터</string>
     <string name="sensor_desc_default">센서 데이터 수집</string>
+    <string name="sensor_desc_ecg">수동 측정 ECG 데이터</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -244,6 +247,7 @@
     <string name="sensor_eda">EDA</string>
     <string name="sensor_ppg">PPG</string>
     <string name="sensor_skin_temperature">체표면 온도</string>
+    <string name="sensor_ecg">ECG</string>
     <string name="sensor_ambient_light">주변광</string>
     <string name="sensor_app_list_change">앱 목록 변경</string>
     <string name="sensor_app_usage">앱 사용 로그</string>
@@ -261,6 +265,8 @@
     <string name="sensor_step">걸음</string>
     <string name="sensor_user_interaction">사용자 상호작용</string>
     <string name="sensor_wifi_scan">Wifi 스캔</string>
+    <string name="sensor_exercise">운동</string>
+    <string name="sensor_sleep">수면</string>
 
 
     <!-- Toast Messages -->

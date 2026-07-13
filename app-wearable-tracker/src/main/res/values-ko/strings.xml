@@ -47,6 +47,7 @@
     <string name="sensor_audio">오디오</string>
     <string name="sensor_gesture">제스쳐</string>
     <string name="sensor_stress">스트레스</string>
+    <string name="sensor_ecg">ECG</string>
     <string name="sensor_default">센서</string>
 
     <!-- Samsung Health Connection -->
