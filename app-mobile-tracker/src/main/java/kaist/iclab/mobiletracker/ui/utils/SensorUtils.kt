@@ -56,11 +56,11 @@ fun getSensorTitleResId(sensorId: String): Int {
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_wifi_scan
         "Exercise" -> R.string.sensor_exercise
         "Sleep" -> R.string.sensor_sleep
-        "WatchAccelerometer" -> R.string.sensor_accelerometer
-        "WatchEDA" -> R.string.sensor_eda
-        "WatchHeartRate" -> R.string.sensor_heart_rate
-        "WatchPPG" -> R.string.sensor_ppg
-        "WatchSkinTemperature" -> R.string.sensor_skin_temperature
+        "Accelerometer" -> R.string.sensor_accelerometer
+        "EDA" -> R.string.sensor_eda
+        "HeartRate" -> R.string.sensor_heart_rate
+        "PPG" -> R.string.sensor_ppg
+        "SkinTemperature" -> R.string.sensor_skin_temperature
         "ECG" -> R.string.sensor_ecg
         else -> R.string.sensor_desc_default
     }
@@ -139,11 +139,11 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "WifiScan", "Wifi" -> Icons.Default.WifiTethering
         "Exercise" -> Icons.Default.FitnessCenter
         "Sleep" -> Icons.Default.Bedtime
-        "WatchAccelerometer" -> Icons.Default.Speed
-        "WatchEDA" -> Icons.Default.Waves
-        "WatchHeartRate" -> Icons.Default.FavoriteBorder
-        "WatchPPG" -> Icons.Default.MonitorHeart
-        "WatchSkinTemperature" -> Icons.Default.Thermostat
+        "Accelerometer" -> Icons.Default.Speed
+        "EDA" -> Icons.Default.Waves
+        "HeartRate" -> Icons.Default.FavoriteBorder
+        "PPG" -> Icons.Default.MonitorHeart
+        "SkinTemperature" -> Icons.Default.Thermostat
         "ECG" -> Icons.Default.Favorite
         else -> Icons.Default.DataUsage
     }

@@ -20,12 +20,12 @@ import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
+import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.EDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.HeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.PPGEntity
+import kaist.iclab.mobiletracker.db.entity.watch.SkinTemperatureEntity
 
 /**
  * Central registry of every sensor's [SensorStore]. Each store is created with just the entity
@@ -54,10 +54,10 @@ class SensorStores(boxStore: BoxStore) {
 
     val location = SensorStore(boxStore, LocationEntity::class.java)
 
-    val watchHeartRate = SensorStore(boxStore, WatchHeartRateEntity::class.java)
-    val watchAccelerometer = SensorStore(boxStore, WatchAccelerometerEntity::class.java)
-    val watchEDA = SensorStore(boxStore, WatchEDAEntity::class.java)
-    val watchPPG = SensorStore(boxStore, WatchPPGEntity::class.java)
-    val watchSkinTemperature = SensorStore(boxStore, WatchSkinTemperatureEntity::class.java)
+    val watchHeartRate = SensorStore(boxStore, HeartRateEntity::class.java)
+    val watchAccelerometer = SensorStore(boxStore, AccelerometerEntity::class.java)
+    val watchEDA = SensorStore(boxStore, EDAEntity::class.java)
+    val watchPPG = SensorStore(boxStore, PPGEntity::class.java)
+    val watchSkinTemperature = SensorStore(boxStore, SkinTemperatureEntity::class.java)
     val ecg = SensorStore(boxStore, ECGEntity::class.java)
 }

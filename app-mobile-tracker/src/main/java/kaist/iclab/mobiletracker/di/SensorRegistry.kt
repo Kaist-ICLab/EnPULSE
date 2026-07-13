@@ -25,12 +25,12 @@ import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
+import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.EDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.HeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.PPGEntity
+import kaist.iclab.mobiletracker.db.entity.watch.SkinTemperatureEntity
 import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
@@ -357,44 +357,44 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
         ),
         // Watch sensors — written via WatchSensorRepository (BLE), no phone-side store needed
         SensorDescriptor(
-            sensorId = "WatchHeartRate",
+            sensorId = "HeartRate",
             displayName = "Heart Rate",
             isWatchSensor = true,
             store = s.watchHeartRate,
             supabaseTable = AppConfig.SupabaseTables.HEART_RATE_SENSOR,
-            serializer = WatchHeartRateEntity.serializer()
+            serializer = HeartRateEntity.serializer()
         ),
         SensorDescriptor(
-            sensorId = "WatchAccelerometer",
+            sensorId = "Accelerometer",
             displayName = "Accelerometer",
             isWatchSensor = true,
             store = s.watchAccelerometer,
             supabaseTable = AppConfig.SupabaseTables.ACCELEROMETER_SENSOR,
-            serializer = WatchAccelerometerEntity.serializer()
+            serializer = AccelerometerEntity.serializer()
         ),
         SensorDescriptor(
-            sensorId = "WatchEDA",
+            sensorId = "EDA",
             displayName = "EDA",
             isWatchSensor = true,
             store = s.watchEDA,
             supabaseTable = AppConfig.SupabaseTables.EDA_SENSOR,
-            serializer = WatchEDAEntity.serializer()
+            serializer = EDAEntity.serializer()
         ),
         SensorDescriptor(
-            sensorId = "WatchPPG",
+            sensorId = "PPG",
             displayName = "PPG",
             isWatchSensor = true,
             store = s.watchPPG,
             supabaseTable = AppConfig.SupabaseTables.PPG_SENSOR,
-            serializer = WatchPPGEntity.serializer()
+            serializer = PPGEntity.serializer()
         ),
         SensorDescriptor(
-            sensorId = "WatchSkinTemperature",
+            sensorId = "SkinTemperature",
             displayName = "Skin Temperature",
             isWatchSensor = true,
             store = s.watchSkinTemperature,
             supabaseTable = AppConfig.SupabaseTables.SKIN_TEMPERATURE_SENSOR,
-            serializer = WatchSkinTemperatureEntity.serializer()
+            serializer = SkinTemperatureEntity.serializer()
         ),
         SensorDescriptor(
             sensorId = "ECG",

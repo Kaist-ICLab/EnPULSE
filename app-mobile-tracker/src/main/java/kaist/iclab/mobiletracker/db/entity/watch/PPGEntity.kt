@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 
 @Entity
 @Serializable
-class WatchPPGEntity : BaseEntity, CsvSerializable, RecordSerializable {
+class PPGEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var green: Int = 0
 
     @SerialName("green_status")

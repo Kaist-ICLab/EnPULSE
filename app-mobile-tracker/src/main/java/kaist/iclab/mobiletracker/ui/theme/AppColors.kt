@@ -98,11 +98,11 @@ object AppColors {
             "Sleep" -> ColorSleep
 
             // Watch sensors
-            "WatchAccelerometer" -> ColorBluetooth
-            "WatchEDA" -> ColorWifi
-            "WatchHeartRate" -> ColorAppListChange
-            "WatchPPG" -> ColorMedia
-            "WatchSkinTemperature" -> ColorAmbientLight
+            "Accelerometer" -> ColorBluetooth
+            "EDA" -> ColorWifi
+            "HeartRate" -> ColorAppListChange
+            "PPG" -> ColorMedia
+            "SkinTemperature" -> ColorAmbientLight
             "ECG" -> ColorECG
             else -> ColorDefault
         }

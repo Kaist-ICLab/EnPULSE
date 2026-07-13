@@ -4,12 +4,12 @@ import android.util.Log
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
+import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.EDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.HeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.PPGEntity
+import kaist.iclab.mobiletracker.db.entity.watch.SkinTemperatureEntity
 
 /**
  * Parser for sensor data in CSV format received from wearable devices.
@@ -32,7 +32,7 @@ object SensorDataCsvParser {
             rowParser = ::parseLocationRow
         )
 
-    fun parseAccelerometerCsv(csvData: String): List<WatchAccelerometerEntity> =
+    fun parseAccelerometerCsv(csvData: String): List<AccelerometerEntity> =
         parseSensorSection(
             csvData = csvData,
             sectionName = "Accelerometer",
@@ -40,7 +40,7 @@ object SensorDataCsvParser {
             rowParser = ::parseAccelerometerRow
         )
 
-    fun parsePPGCsv(csvData: String): List<WatchPPGEntity> =
+    fun parsePPGCsv(csvData: String): List<PPGEntity> =
         parseSensorSection(
             csvData = csvData,
             sectionName = "PPG",
@@ -48,7 +48,7 @@ object SensorDataCsvParser {
             rowParser = ::parsePPGRow
         )
 
-    fun parseHeartRateCsv(csvData: String): List<WatchHeartRateEntity> =
+    fun parseHeartRateCsv(csvData: String): List<HeartRateEntity> =
         parseSensorSection(
             csvData = csvData,
             sectionName = "HeartRate",
@@ -56,7 +56,7 @@ object SensorDataCsvParser {
             rowParser = ::parseHeartRateRow
         )
 
-    fun parseSkinTemperatureCsv(csvData: String): List<WatchSkinTemperatureEntity> =
+    fun parseSkinTemperatureCsv(csvData: String): List<SkinTemperatureEntity> =
         parseSensorSection(
             csvData = csvData,
             sectionName = "SkinTemperature",
@@ -64,7 +64,7 @@ object SensorDataCsvParser {
             rowParser = ::parseSkinTemperatureRow
         )
 
-    fun parseEDACsv(csvData: String): List<WatchEDAEntity> =
+    fun parseEDACsv(csvData: String): List<EDAEntity> =
         parseSensorSection(
             csvData = csvData,
             sectionName = "EDA",
@@ -157,11 +157,11 @@ object SensorDataCsvParser {
         }
     }
 
-    private fun parseAccelerometerRow(row: String): WatchAccelerometerEntity? {
+    private fun parseAccelerometerRow(row: String): AccelerometerEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 6) {
-                WatchAccelerometerEntity(
+                AccelerometerEntity(
                     eventId = parts[0],
                     received = parts[1].toLongOrNull() ?: return null,
                     timestamp = parts[2].toLongOrNull() ?: return null,
@@ -176,11 +176,11 @@ object SensorDataCsvParser {
         }
     }
 
-    private fun parsePPGRow(row: String): WatchPPGEntity? {
+    private fun parsePPGRow(row: String): PPGEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 9) {
-                WatchPPGEntity(
+                PPGEntity(
                     eventId = parts[0],
                     received = parts[1].toLongOrNull() ?: return null,
                     timestamp = parts[2].toLongOrNull() ?: return null,
@@ -220,11 +220,11 @@ object SensorDataCsvParser {
         }
     }
 
-    private fun parseHeartRateRow(row: String): WatchHeartRateEntity? {
+    private fun parseHeartRateRow(row: String): HeartRateEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 7) {
-                WatchHeartRateEntity(
+                HeartRateEntity(
                     eventId = parts[0],
                     received = parts[1].toLongOrNull() ?: return null,
                     timestamp = parts[2].toLongOrNull() ?: return null,
@@ -240,11 +240,11 @@ object SensorDataCsvParser {
         }
     }
 
-    private fun parseSkinTemperatureRow(row: String): WatchSkinTemperatureEntity? {
+    private fun parseSkinTemperatureRow(row: String): SkinTemperatureEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 6) {
-                WatchSkinTemperatureEntity(
+                SkinTemperatureEntity(
                     eventId = parts[0],
                     received = parts[1].toLongOrNull() ?: return null,
                     timestamp = parts[2].toLongOrNull() ?: return null,
@@ -259,11 +259,11 @@ object SensorDataCsvParser {
         }
     }
 
-    private fun parseEDARow(row: String): WatchEDAEntity? {
+    private fun parseEDARow(row: String): EDAEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 5) {
-                WatchEDAEntity(
+                EDAEntity(
                     eventId = parts[0],
                     received = parts[1].toLongOrNull() ?: return null,
                     timestamp = parts[2].toLongOrNull() ?: return null,

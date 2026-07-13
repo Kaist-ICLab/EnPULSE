@@ -9,12 +9,12 @@ object SensorTypeHelper {
      * List of all watch sensor IDs (matching handler sensorId values)
      */
     val watchSensorIds: List<String> = listOf(
-        "WatchHeartRate",
-        "WatchAccelerometer",
-        "WatchEDA",
-        "WatchPPG",
-        "WatchSkinTemperature",
-        "WatchLocation",
+        "HeartRate",
+        "Accelerometer",
+        "EDA",
+        "PPG",
+        "SkinTemperature",
+        "Location",
         "ECG"
     )
 

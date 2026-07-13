@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  */
 @Entity
 @Serializable
-class WatchHeartRateEntity : BaseEntity, CsvSerializable, RecordSerializable {
+class HeartRateEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var hr: Int = 0
 
     @SerialName("hr_status")
@@ -61,7 +61,7 @@ class WatchHeartRateEntity : BaseEntity, CsvSerializable, RecordSerializable {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is WatchHeartRateEntity) return false
+        if (other !is HeartRateEntity) return false
         return id == other.id && eventId == other.eventId && uuid == other.uuid &&
             timestamp == other.timestamp && received == other.received &&
             hr == other.hr && hrStatus == other.hrStatus &&
