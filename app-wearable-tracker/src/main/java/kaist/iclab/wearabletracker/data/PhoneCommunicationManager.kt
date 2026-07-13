@@ -8,7 +8,6 @@ import com.google.android.gms.wearable.Wearable
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.R
-import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper

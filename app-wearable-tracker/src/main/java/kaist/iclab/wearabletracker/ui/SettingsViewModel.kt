@@ -74,19 +74,17 @@ class SettingsViewModel(
 
     private val nodeClient by lazy { Wearable.getNodeClient(applicationContext) }
 
-    // Auto-sync settings
-    val autoSyncEnabled: StateFlow<Boolean> = repository.autoSyncEnabledFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
+    // Auto-sync settings — no separate enabled flag surfaced to the UI; see setAutoSyncInterval.
     val autoSyncInterval: StateFlow<Long> = repository.autoSyncIntervalFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
-    fun setAutoSyncEnabled(enabled: Boolean) {
-        repository.setAutoSyncEnabled(enabled)
-    }
-
+    /**
+     * Auto-sync has no separate on/off switch in the UI — picking an interval of 0 (None) is
+     * what turns it off, so enabled is derived from the interval here.
+     */
     fun setAutoSyncInterval(intervalMs: Long) {
         repository.setAutoSyncInterval(intervalMs)
+        repository.setAutoSyncEnabled(intervalMs > 0L)
     }
 
     // Battery level (0-100)

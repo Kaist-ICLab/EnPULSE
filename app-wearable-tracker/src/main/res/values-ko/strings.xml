@@ -3,7 +3,11 @@
     <string name="app_name">EnPULSE</string>
 
     <!-- Settings Screen -->
-    <string name="upload_data">데이터 업로드</string>
+    <string name="upload_data">강제 업로드</string>
+    <string name="flush_data">모두 삭제</string>
+    <string name="danger_zone_label">위험 구역</string>
+    <string name="start_collection">시작</string>
+    <string name="stop_collection">중지</string>
     <string name="start_stop_collection">수집 시작/중지</string>
     <string name="reset_icon">초기화 아이콘</string>
     <string name="last_sync_placeholder">마지막 동기화: -</string>
@@ -62,12 +66,11 @@
     <!-- Status Dashboard -->
     <string name="status_battery_format">🔋%1$d%%</string>
     <string name="status_records_format">📊%1$s</string>
-    <string name="syncing_progress_format">동기화 중... %1$d%%</string>
+    <string name="syncing_progress_format">동기화 중… %1$d%%</string>
 
     <!-- Auto Sync Settings -->
     <string name="auto_sync_label">자동 동기화</string>
-    <string name="auto_sync_interval_label">간격</string>
-    <string name="interval_none">안 함</string>
+    <string name="interval_none">꺼짐</string>
     <string name="interval_5m">5분</string>
     <string name="interval_30m">30분</string>
     <string name="interval_1h">1시간</string>
@@ -78,7 +81,7 @@
     <string name="ema_low">낮음</string>
     <string name="ema_high">높음</string>
     <string name="ema_dismiss">무시</string>
-    <string name="ema_loading">로딩 중...</string>
+    <string name="ema_loading">로딩 중…</string>
     <string name="ema_done">답변해주셔서 감사합니다</string>
     <string name="ema_time_up">시간 종료</string>
     <string name="ema_dismissed">무시됨</string>

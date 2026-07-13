@@ -22,11 +22,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Text
+import androidx.wear.tooling.preview.devices.WearDevices
 import kaist.iclab.wearabletracker.R
+import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import kotlinx.coroutines.delay
 
 private val TimerSafe = Color(0xFF81C995)
@@ -67,6 +70,15 @@ fun EcgMeasurementScreen(
         }
     }
 
+    EcgMeasurementScreenContent(uiState = uiState)
+}
+
+/**
+ * Stateless rendering of the ECG measurement screen for a given [uiState] — no ViewModel
+ * dependency, so every state can be exercised directly from @Preview.
+ */
+@Composable
+fun EcgMeasurementScreenContent(uiState: EcgMeasurementUiState) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -181,4 +193,47 @@ private fun LoadingView() {
         fontSize = 14.sp,
         color = MutedGrey
     )
+}
+
+@Preview(name = "Checking", device = WearDevices.SMALL_ROUND, showBackground = true)
+@Composable
+private fun EcgMeasurementScreenCheckingPreview() {
+    WearableTrackerTheme {
+        EcgMeasurementScreenContent(uiState = EcgMeasurementUiState.Checking)
+    }
+}
+
+@Preview(name = "Running", device = WearDevices.SMALL_ROUND, showBackground = true)
+@Preview(name = "Running - Large Round", device = WearDevices.LARGE_ROUND, showBackground = true)
+@Composable
+private fun EcgMeasurementScreenRunningPreview() {
+    WearableTrackerTheme {
+        EcgMeasurementScreenContent(
+            uiState = EcgMeasurementUiState.Running(remainingMs = 18_000L)
+        )
+    }
+}
+
+@Preview(name = "Completed", device = WearDevices.SMALL_ROUND, showBackground = true)
+@Composable
+private fun EcgMeasurementScreenCompletedPreview() {
+    WearableTrackerTheme {
+        EcgMeasurementScreenContent(uiState = EcgMeasurementUiState.Completed)
+    }
+}
+
+@Preview(name = "Unavailable", device = WearDevices.SMALL_ROUND, showBackground = true)
+@Composable
+private fun EcgMeasurementScreenUnavailablePreview() {
+    WearableTrackerTheme {
+        EcgMeasurementScreenContent(uiState = EcgMeasurementUiState.Unavailable)
+    }
+}
+
+@Preview(name = "Needs Permission", device = WearDevices.SMALL_ROUND, showBackground = true)
+@Composable
+private fun EcgMeasurementScreenNeedsPermissionPreview() {
+    WearableTrackerTheme {
+        EcgMeasurementScreenContent(uiState = EcgMeasurementUiState.NeedsPermission)
+    }
 }
