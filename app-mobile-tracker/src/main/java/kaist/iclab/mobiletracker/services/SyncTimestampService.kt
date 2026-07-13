@@ -241,6 +241,23 @@ class SyncTimestampService(private val context: Context) {
     }
 
     /**
+     * Get the verified-contiguous watch->phone BLE sync watermark for a sensor.
+     * Distinct from [getLastSuccessfulUploadTimestamp]: this tracks how far BLE receipt
+     * from the watch has been confirmed gap-free, not how far upload-to-server has progressed.
+     */
+    fun getBleContiguousTimestamp(sensorId: String): Long? {
+        val timestamp = prefs.getLong("ble_contiguous_ts_$sensorId", 0L)
+        return if (timestamp > 0) timestamp else null
+    }
+
+    /**
+     * Set the verified-contiguous watch->phone BLE sync watermark for a sensor.
+     */
+    fun setBleContiguousTimestamp(sensorId: String, timestamp: Long) {
+        prefs.edit { putLong("ble_contiguous_ts_$sensorId", timestamp) }
+    }
+
+    /**
      * Store user UUID for use in background operations
      * Called when user successfully logs in
      */

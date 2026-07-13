@@ -22,7 +22,9 @@ class AutoSyncManager(
     private val controllerStateFlow: StateFlow<ControllerState>,
     private val coroutineScope: CoroutineScope
 ) {
-    companion object;
+    companion object {
+        private const val MIN_SYNC_ATTEMPT_INTERVAL_MS = 15_000L
+    }
 
     private var syncJob: Job? = null
 
@@ -44,7 +46,15 @@ class AutoSyncManager(
                 return@launch
             }
 
+            // Fixed cooldown between sync attempts - pure bandwidth hygiene now that ACKs are
+            // idempotent/cumulative per sensor (correctness no longer depends on this), just to
+            // avoid retriggering faster than one BLE round trip.
             val now = System.currentTimeMillis()
+            val lastAttempt = syncPreferencesHelper.getLastSyncAttemptAt() ?: 0L
+            if (now - lastAttempt < MIN_SYNC_ATTEMPT_INTERVAL_MS) {
+                return@launch
+            }
+
             val lastSyncTime = lastSync ?: 0L
             val elapsedTime = now - lastSyncTime
 
@@ -61,6 +71,7 @@ class AutoSyncManager(
                     return@launch
                 }
 
+                syncPreferencesHelper.saveLastSyncAttemptAt(now)
                 phoneCommunicationManager.sendDataToPhone(isSilent = true)
 
                 // Also retry any pending MicroEMA responses

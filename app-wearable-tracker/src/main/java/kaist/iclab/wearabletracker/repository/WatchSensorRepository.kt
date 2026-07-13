@@ -24,12 +24,6 @@ interface WatchSensorRepository {
     val lastSyncTimestampFlow: Flow<Long?>
 
     /**
-     * Save the last sync timestamp.
-     * @param timestamp timestamp in milliseconds
-     */
-    fun saveLastSyncTimestamp(timestamp: Long)
-
-    /**
      * Get the total number of records across all sensors since the given timestamp.
      */
     suspend fun getRecordCountSince(timestamp: Long): Int

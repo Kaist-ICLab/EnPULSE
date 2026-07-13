@@ -13,6 +13,22 @@ import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 
 /**
+ * How a [SensorStore] resolves incoming rows that may already exist, so `insert`/`insertBatch`
+ * upsert instead of always appending a new row.
+ */
+enum class DedupStrategy {
+    /** Always insert a new row, even if an equivalent one already exists. */
+    NONE,
+
+    /** Upsert by (timestamp, deviceType) — for sensors that re-read a trailing margin on every poll. */
+    TIMESTAMP,
+
+    /** Upsert by the per-record eventId — for sensors forwarded from the watch over BLE, where
+     * resends (retries, redelivery) must not create duplicate rows. */
+    EVENT_ID,
+}
+
+/**
  * A single generic replacement for the entire per-sensor Room DAO layer.
  *
  * ObjectBox's `Box<T>` and `Property<T>` are generic, so — unlike Room, where `@Query` needs a
@@ -27,13 +43,7 @@ import kotlinx.coroutines.flow.flowOn
 open class SensorStore<T : BaseEntity>(
     protected val boxStore: BoxStore,
     private val entityClass: Class<T>,
-    /**
-     * When true, insert/insertBatch upsert by (timestamp, deviceType) instead of always inserting
-     * a new row. Needed for sensors (Sleep/Step/Exercise) whose source re-reads a trailing margin
-     * of already-seen data on every poll — without this they'd accumulate duplicate rows for the
-     * same session/bucket.
-     */
-    private val dedupByTimestamp: Boolean = false,
+    private val dedupStrategy: DedupStrategy = DedupStrategy.NONE,
 ) {
     protected val box: Box<T> = boxStore.boxFor(entityClass)
 
@@ -42,15 +52,25 @@ open class SensorStore<T : BaseEntity>(
     private val timestampProperty = metaClass.getField("timestamp").get(null) as Property<T>
     @Suppress("UNCHECKED_CAST")
     private val deviceTypeProperty = metaClass.getField("deviceType").get(null) as Property<T>
+    @Suppress("UNCHECKED_CAST")
+    private val eventIdProperty = metaClass.getField("eventId").get(null) as Property<T>
 
     fun insert(entity: T): Long {
-        if (dedupByTimestamp) applyExistingIds(listOf(entity))
+        applyDedup(listOf(entity))
         return box.put(entity)
     }
 
     fun insertBatch(entities: List<T>) {
-        if (dedupByTimestamp) applyExistingIds(entities)
+        applyDedup(entities)
         box.put(entities)
+    }
+
+    private fun applyDedup(entities: List<T>) {
+        when (dedupStrategy) {
+            DedupStrategy.NONE -> Unit
+            DedupStrategy.TIMESTAMP -> applyExistingIds(entities)
+            DedupStrategy.EVENT_ID -> applyExistingIdsByEventId(entities)
+        }
     }
 
     /**
@@ -67,6 +87,29 @@ open class SensorStore<T : BaseEntity>(
             .associate { (it.timestamp to it.deviceType) to it.id }
         entities.forEach { entity ->
             existingByKey[entity.timestamp to entity.deviceType]?.let { existingId ->
+                entity.id = existingId
+            }
+        }
+    }
+
+    /**
+     * For eventId-deduped stores, mutates [entities] in place so any entity matching an existing
+     * row's eventId reuses that row's id — making the subsequent `box.put` an update instead of an
+     * insert. Entities with a blank eventId are skipped entirely: the location store shares this
+     * code path between watch-forwarded rows (always a real UUID eventId) and phone-native GPS
+     * fixes (no eventId, defaults to ""); without this guard every phone-native fix would look
+     * like a duplicate of the last one and collapse into a single row.
+     */
+    private fun applyExistingIdsByEventId(entities: List<T>) {
+        val candidates = entities.filter { it.eventId.isNotBlank() }
+        if (candidates.isEmpty()) return
+        val eventIds = candidates.map { it.eventId }.distinct().toTypedArray()
+        val existingByEventId = box.query(eventIdProperty.oneOf(eventIds, QueryBuilder.StringOrder.CASE_SENSITIVE))
+            .build()
+            .use { it.find() }
+            .associate { it.eventId to it.id }
+        candidates.forEach { entity ->
+            existingByEventId[entity.eventId]?.let { existingId ->
                 entity.id = existingId
             }
         }

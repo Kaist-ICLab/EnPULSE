@@ -42,22 +42,25 @@ class SensorStores(boxStore: BoxStore) {
     val connectivity = SensorStore(boxStore, ConnectivityEntity::class.java)
     val dataTraffic = SensorStore(boxStore, DataTrafficEntity::class.java)
     val deviceMode = SensorStore(boxStore, DeviceModeEntity::class.java)
-    val exercise = SensorStore(boxStore, ExerciseEntity::class.java, dedupByTimestamp = true)
+    val exercise = SensorStore(boxStore, ExerciseEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
     val media = SensorStore(boxStore, MediaEntity::class.java)
     val messageLog = SensorStore(boxStore, MessageLogEntity::class.java)
     val notification = SensorStore(boxStore, NotificationEntity::class.java)
     val screen = SensorStore(boxStore, ScreenEntity::class.java)
-    val sleep = SensorStore(boxStore, SleepEntity::class.java, dedupByTimestamp = true)
-    val step = SensorStore(boxStore, StepEntity::class.java, dedupByTimestamp = true)
+    val sleep = SensorStore(boxStore, SleepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
+    val step = SensorStore(boxStore, StepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
     val userInteraction = SensorStore(boxStore, UserInteractionEntity::class.java)
     val wifiScan = SensorStore(boxStore, WifiScanEntity::class.java)
 
-    val location = SensorStore(boxStore, LocationEntity::class.java)
+    // Shared between phone-native GPS fixes (no eventId) and watch-forwarded rows (real eventId) -
+    // SensorStore.applyExistingIdsByEventId skips blank eventIds so phone-native fixes always
+    // insert fresh, only watch-forwarded rows dedup.
+    val location = SensorStore(boxStore, LocationEntity::class.java, dedupStrategy = DedupStrategy.EVENT_ID)
 
-    val watchHeartRate = SensorStore(boxStore, HeartRateEntity::class.java)
-    val watchAccelerometer = SensorStore(boxStore, AccelerometerEntity::class.java)
-    val watchEDA = SensorStore(boxStore, EDAEntity::class.java)
-    val watchPPG = SensorStore(boxStore, PPGEntity::class.java)
-    val watchSkinTemperature = SensorStore(boxStore, SkinTemperatureEntity::class.java)
-    val ecg = SensorStore(boxStore, ECGEntity::class.java)
+    val watchHeartRate = SensorStore(boxStore, HeartRateEntity::class.java, dedupStrategy = DedupStrategy.EVENT_ID)
+    val watchAccelerometer = SensorStore(boxStore, AccelerometerEntity::class.java, dedupStrategy = DedupStrategy.EVENT_ID)
+    val watchEDA = SensorStore(boxStore, EDAEntity::class.java, dedupStrategy = DedupStrategy.EVENT_ID)
+    val watchPPG = SensorStore(boxStore, PPGEntity::class.java, dedupStrategy = DedupStrategy.EVENT_ID)
+    val watchSkinTemperature = SensorStore(boxStore, SkinTemperatureEntity::class.java, dedupStrategy = DedupStrategy.EVENT_ID)
+    val ecg = SensorStore(boxStore, ECGEntity::class.java, dedupStrategy = DedupStrategy.EVENT_ID)
 }

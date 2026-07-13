@@ -15,6 +15,7 @@ abstract class BaseEntity {
     @Transient
     var id: Long = 0
 
+    @Index
     @SerialName("event_id")
     var eventId: String = ""
 

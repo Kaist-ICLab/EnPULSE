@@ -52,6 +52,16 @@ class BLEHelper(
 
     private var isInitialized = false
 
+    private val parserBySensorId: Map<String, (String) -> List<BaseEntity>> = mapOf(
+        Constants.SensorId.LOCATION to { csv -> SensorDataCsvParser.parseLocationCsv(csv) },
+        Constants.SensorId.ACCELEROMETER to { csv -> SensorDataCsvParser.parseAccelerometerCsv(csv) },
+        Constants.SensorId.EDA to { csv -> SensorDataCsvParser.parseEDACsv(csv) },
+        Constants.SensorId.HEART_RATE to { csv -> SensorDataCsvParser.parseHeartRateCsv(csv) },
+        Constants.SensorId.PPG to { csv -> SensorDataCsvParser.parsePPGCsv(csv) },
+        Constants.SensorId.SKIN_TEMPERATURE to { csv -> SensorDataCsvParser.parseSkinTemperatureCsv(csv) },
+        Constants.SensorId.ECG to { csv -> SensorDataCsvParser.parseECGCsv(csv) },
+    )
+
     fun initialize() {
         if (isInitialized) {
             Log.d(AppConfig.LogTags.PHONE_BLE, "BLEHelper already initialized, skipping...")
@@ -268,48 +278,63 @@ class BLEHelper(
     }
 
     /**
-     * Parse batch ID from the CSV header.
-     * Expected format: "BATCH:uuid-string\nSINCE:timestamp\n---DATA---\n..."
+     * Parse the sensor ID from the CSV header.
+     * Expected format: "SENSOR:sensorId\nCHUNK_START_TS:...\nCHUNK_END_TS:...\n---DATA---\n..."
      */
-    private fun parseBatchId(csvData: String): String? {
+    private fun parseSensorId(csvData: String): String? {
         val lines = csvData.lines()
         for (line in lines) {
-            if (line.startsWith("BATCH:")) {
-                return line.removePrefix("BATCH:").trim()
+            if (line.startsWith("SENSOR:")) {
+                return line.removePrefix("SENSOR:").trim()
             }
         }
         return null
     }
 
     /**
-     * Send ACK (acknowledgment) back to watch after successful data processing.
-     * Format: "batchId:status:endTimestamp"
+     * Send ACK (acknowledgment) back to watch after processing a chunk.
+     * Format: "sensorId:status:endTimestamp" - endTimestamp is the phone's verified-contiguous
+     * watermark for this sensor, not necessarily this chunk's own raw end (see
+     * parseAndStoreWatchData's gap-detection logic).
      */
-    private suspend fun sendAck(batchId: String, success: Boolean, endTimestamp: Long?) {
+    private suspend fun sendAck(sensorId: String, success: Boolean, endTimestamp: Long?) {
         try {
             val status = if (success) "OK" else "FAIL"
             val ackData = if (endTimestamp != null) {
-                "$batchId:$status:$endTimestamp"
+                "$sensorId:$status:$endTimestamp"
             } else {
-                "$batchId:$status"
+                "$sensorId:$status"
             }
             bleChannel.send(AppConfig.BLEKeys.SYNC_ACK, ackData)
             Log.d(
                 AppConfig.LogTags.PHONE_BLE,
-                "Sent ACK for batch $batchId: $status (ts=$endTimestamp)"
+                "Sent ACK for $sensorId: $status (ts=$endTimestamp)"
             )
         } catch (e: Exception) {
             Log.e(
                 AppConfig.LogTags.PHONE_BLE,
-                "Failed to send ACK for batch $batchId: ${e.message}",
+                "Failed to send ACK for $sensorId: ${e.message}",
                 e
             )
         }
     }
 
     /**
+     * Parse CHUNK_START_TS from the CSV header - the cursor the watch used to fetch this chunk.
+     */
+    private fun parseChunkStartTimestamp(csvData: String): Long? {
+        val lines = csvData.lines()
+        for (line in lines) {
+            if (line.startsWith("CHUNK_START_TS:")) {
+                return line.removePrefix("CHUNK_START_TS:").trim().toLongOrNull()
+            }
+        }
+        return null
+    }
+
+    /**
      * Parse CHUNK_END_TS from the CSV header.
-     * Expected format: "BATCH:...\nSINCE:...\nCHUNK_END_TS:123456789\n---DATA---"
+     * Expected format: "SENSOR:...\nCHUNK_START_TS:...\nCHUNK_END_TS:123456789\n---DATA---"
      */
     private fun parseChunkEndTimestamp(csvData: String): Long? {
         val lines = csvData.lines()
@@ -322,74 +347,73 @@ class BLEHelper(
     }
 
     /**
-     * Parse CSV data and extract all sensor data types, then store locally in Room database.
+     * Compute the timestamp to ACK for this sensor: only advances past this chunk's own end if
+     * the chunk is contiguous with what's already verified received (chunkStartTs <= the phone's
+     * current watermark). If there's a gap - an earlier chunk was lost or arrived out of order -
+     * re-affirms the old watermark instead of advancing past the hole, so the watch's cumulative
+     * ACK matching never prunes data the phone doesn't actually have a contiguous copy of.
+     */
+    private fun computeAckEndTimestamp(sensorId: String, chunkStartTs: Long?, chunkEndTs: Long?): Long {
+        val contiguousUpTo = timestampService.getBleContiguousTimestamp(sensorId) ?: 0L
+        return if (chunkStartTs != null && chunkStartTs <= contiguousUpTo) {
+            val advanced = maxOf(contiguousUpTo, chunkEndTs ?: contiguousUpTo)
+            timestampService.setBleContiguousTimestamp(sensorId, advanced)
+            advanced
+        } else {
+            contiguousUpTo
+        }
+    }
+
+    /**
+     * Parse a single-sensor CSV chunk and store it locally, then ACK.
      * Uses managed coroutine scope for proper lifecycle management.
      */
     private fun parseAndStoreWatchData(csvData: String) {
         appScope.io.launch {
-            // Extract batch ID for ACK (if present in new format)
-            val batchId = parseBatchId(csvData)
+            val sensorId = parseSensorId(csvData)
+            if (sensorId == null) {
+                Log.w(AppConfig.LogTags.PHONE_BLE, "No SENSOR header found in chunk, dropping")
+                return@launch
+            }
+
+            val chunkStartTs = parseChunkStartTimestamp(csvData)
+            val chunkEndTs = parseChunkEndTimestamp(csvData)
 
             try {
-
-                // Parse all sensor types from CSV directly into entity objects
-                val sensorBatches: List<Pair<String, List<BaseEntity>>> = listOf(
-                    Constants.SensorId.LOCATION to SensorDataCsvParser.parseLocationCsv(csvData),
-                    Constants.SensorId.ACCELEROMETER to SensorDataCsvParser.parseAccelerometerCsv(csvData),
-                    Constants.SensorId.EDA to SensorDataCsvParser.parseEDACsv(csvData),
-                    Constants.SensorId.HEART_RATE to SensorDataCsvParser.parseHeartRateCsv(csvData),
-                    Constants.SensorId.PPG to SensorDataCsvParser.parsePPGCsv(csvData),
-                    Constants.SensorId.SKIN_TEMPERATURE to SensorDataCsvParser.parseSkinTemperatureCsv(csvData),
-                    Constants.SensorId.ECG to SensorDataCsvParser.parseECGCsv(csvData),
-                )
-
-                var totalStored = 0
-                var hasAnyData = false
-
-                for ((sensorId, entities) in sensorBatches) {
-                    if (entities.isEmpty()) continue
-                    hasAnyData = true
-                    when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} $sensorId entries locally")
-                        }
-                        is Result.Error -> Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store $sensorId data: ${result.message}", result.exception)
-                    }
+                val parser = parserBySensorId[sensorId]
+                if (parser == null) {
+                    Log.e(AppConfig.LogTags.PHONE_BLE, "Unknown sensorId in chunk: $sensorId")
+                    sendAck(sensorId, success = false, endTimestamp = null)
+                    return@launch
                 }
 
-                if (hasAnyData && totalStored > 0) {
-                    // Track when watch data is received
-                    timestampService.updateLastWatchDataReceived()
-                    Log.d(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "Total stored: $totalStored sensor data entries locally"
-                    )
+                val entities = parser(csvData)
 
-                    // Send success ACK back to watch if batch ID is present
-                    if (batchId != null) {
-                        val chunkEndTs = parseChunkEndTimestamp(csvData)
-                        sendAck(batchId, success = true, endTimestamp = chunkEndTs)
+                if (entities.isEmpty()) {
+                    Log.w(AppConfig.LogTags.PHONE_BLE, "No rows parsed for $sensorId chunk")
+                    // Still ACK - an empty but valid chunk still needs its range confirmed.
+                    sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
+                    return@launch
+                }
+
+                when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
+                    is Result.Success -> {
+                        timestampService.updateLastWatchDataReceived()
+                        Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} $sensorId entries locally")
+                        sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
                     }
-                } else {
-                    Log.w(AppConfig.LogTags.PHONE_BLE, "No sensor data found in CSV")
-                    // Still send ACK for empty but valid batch
-                    if (batchId != null) {
-                        val chunkEndTs = parseChunkEndTimestamp(csvData)
-                        sendAck(batchId, success = true, endTimestamp = chunkEndTs)
+                    is Result.Error -> {
+                        Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store $sensorId data: ${result.message}", result.exception)
+                        sendAck(sensorId, success = false, endTimestamp = null)
                     }
                 }
             } catch (e: Exception) {
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
-                    "Error parsing or storing sensor data: ${e.message}",
+                    "Error parsing or storing $sensorId data: ${e.message}",
                     e
                 )
-                // Send failure ACK if we have a batch ID
-                if (batchId != null) {
-                    val chunkEndTs = parseChunkEndTimestamp(csvData)
-                    sendAck(batchId, success = false, endTimestamp = chunkEndTs)
-                }
+                sendAck(sensorId, success = false, endTimestamp = null)
             }
         }
     }

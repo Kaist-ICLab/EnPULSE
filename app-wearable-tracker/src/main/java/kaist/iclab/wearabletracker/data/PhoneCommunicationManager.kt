@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
-import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -62,24 +61,20 @@ class PhoneCommunicationManager(
                 return@launch
             }
             try {
-                syncPreferencesHelper.clearStaleBatchIfNeeded()
-
                 val result = ErrorClassifier.runClassified(TAG, "send data to phone") {
-                    val lastSyncTime = syncPreferencesHelper.getLastSyncTimestamp() ?: 0L
-
-                    val totalRecordsToSync = stores.values.sumOf { it.getCountSince(lastSyncTime) }
+                    val totalRecordsToSync = stores.entries.sumOf { (sensorId, store) ->
+                        store.getCountSince(syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L)
+                    }
                     if (totalRecordsToSync == 0) {
                         return@runClassified false
                     }
 
                     _syncProgress.value = 0f
                     var dataSent = false
-                    var maxTimestampSeen = lastSyncTime
                     var totalRecordsSentSoFar = 0
-                    val batchId = UUID.randomUUID().toString()
 
                     stores.forEach { (sensorId, store) ->
-                        var currentSensorLastTimestamp = lastSyncTime
+                        var currentSensorLastTimestamp = syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L
 
                         while (coroutineContext.isActive) {
                             val data = store.getDataSince(
@@ -93,13 +88,13 @@ class PhoneCommunicationManager(
                             totalRecordsSentSoFar += data.size
                             _syncProgress.value = totalRecordsSentSoFar.toFloat() / totalRecordsToSync
 
+                            val chunkStartTs = currentSensorLastTimestamp
                             val chunkMaxTimestamp = data.maxOf { it.timestamp }
-                            maxTimestampSeen = maxOf(maxTimestampSeen, chunkMaxTimestamp)
                             currentSensorLastTimestamp = chunkMaxTimestamp
 
                             val csvBuilder = StringBuilder()
-                            csvBuilder.append("BATCH:$batchId\n")
-                            csvBuilder.append("SINCE:$lastSyncTime\n")
+                            csvBuilder.append("SENSOR:$sensorId\n")
+                            csvBuilder.append("CHUNK_START_TS:$chunkStartTs\n")
                             csvBuilder.append("CHUNK_END_TS:$chunkMaxTimestamp\n")
                             csvBuilder.append("---DATA---\n")
                             csvBuilder.append("$sensorId\n")
@@ -120,20 +115,7 @@ class PhoneCommunicationManager(
                         }
                     }
 
-                    if (dataSent) {
-                        syncPreferencesHelper.savePendingBatch(
-                            SyncBatch(
-                                batchId = batchId,
-                                startTimestamp = lastSyncTime,
-                                endTimestamp = maxTimestampSeen,
-                                recordCount = totalRecordsSentSoFar,
-                                createdAt = System.currentTimeMillis()
-                            )
-                        )
-                        true
-                    } else {
-                        false
-                    }
+                    dataSent
                 }
 
                 if (!isSilent || result is Result.Error) {

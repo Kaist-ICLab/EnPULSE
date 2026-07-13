@@ -19,10 +19,6 @@ class WatchSensorRepositoryImpl(
 
     override val lastSyncTimestampFlow: Flow<Long?> = syncPreferencesHelper.lastSyncTimestampFlow
 
-    override fun saveLastSyncTimestamp(timestamp: Long) {
-        syncPreferencesHelper.saveLastSyncTimestamp(timestamp)
-    }
-
     override suspend fun getTotalRecordCount(): Int =
         sensorDataStorages.values.sumOf { it.getCount() }
 
