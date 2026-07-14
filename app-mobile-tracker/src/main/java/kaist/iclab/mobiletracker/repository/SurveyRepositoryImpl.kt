@@ -4,22 +4,21 @@ import android.util.Log
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.mobiletracker.utils.SurveyConfigConverter
-import kaist.iclab.tracker.sensor.microema.MicroEmaBuilder
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
+import kaist.iclab.tracker.sensor.microema.MicroEmaBuilder
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfigList
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
-import kaist.iclab.tracker.trigger.ActionConfig
-import kaist.iclab.tracker.trigger.CalculationConfig
-import kaist.iclab.tracker.trigger.ConditionConfig
-import kaist.iclab.tracker.trigger.TriggerRule
-import kaist.iclab.tracker.trigger.WindowConfig
 import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Implementation of SurveyRepository.
  * Manages survey configurations from Supabase and persists them to Couchbase.
+ *
+ * Note: Watch trigger rules are no longer created here. Dynamic trigger
+ * configurations are fetched separately and pushed to the watch via
+ * [TriggerConfigPusher] in [UserProfileRepositoryImpl.syncFullStudyConfig].
  */
 class SurveyRepositoryImpl(
     private val surveyService: SurveyService,
@@ -70,6 +69,7 @@ class SurveyRepositoryImpl(
         phoneSensorConfigStorage.set(phoneSensorConfig)
 
         // 2. Filter and apply Watch (MicroEMA) Surveys
+        // Build watch EMA configs for the MicroEmaSensor (response listening only)
         val watchConfigs = configs.filter { it.deviceType == 1 }
 
         val validWatchConfigs = watchConfigs.filter { it.expireAfterMs != null }
@@ -86,21 +86,9 @@ class SurveyRepositoryImpl(
                 watchConfig.surveyId to watchConfig
             }
 
-            // Create Simple Periodic Rules for each survey (every 60 mins)
-            val rules = watchEmaConfigs.keys.map { surveyId ->
-                TriggerRule(
-                    id = "simple_periodic_$surveyId",
-                    sourceSensorId = "WatchHeartRate", // DUMMY: Trigger based on HR availability
-                    window = WindowConfig(type = "TUMBLING", sizeMs = 60 * 60 * 1000L),
-                    calculation = CalculationConfig(type = "MEAN", dataField = "bpm"),
-                    condition = ConditionConfig(operator = "GREATER_THAN", threshold = 0.0),
-                    action = ActionConfig(type = "MICRO_EMA", payload = surveyId.toString())
-                )
-            }
-
+            // Store watch survey configs for response mapping (no trigger rules needed)
             microEmaConfigStorage.set(
                 MicroEmaSensor.Config(
-                    rules = rules,
                     watchSurveyConfigs = watchEmaConfigs
                 )
             )
@@ -124,4 +112,3 @@ class SurveyRepositoryImpl(
         scheduleStorage.resetSchedule()
     }
 }
-

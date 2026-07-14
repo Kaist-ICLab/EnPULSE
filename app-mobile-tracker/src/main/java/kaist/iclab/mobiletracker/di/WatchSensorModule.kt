@@ -7,18 +7,24 @@ import kaist.iclab.mobiletracker.repository.WatchSensorRepositoryImpl
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.supabase.AccelerometerSensorService
 import kaist.iclab.mobiletracker.services.supabase.EDASensorService
+import kaist.iclab.mobiletracker.services.supabase.GestureSensorService
 import kaist.iclab.mobiletracker.services.supabase.HeartRateSensorService
+import kaist.iclab.mobiletracker.services.supabase.IMUSensorService
 import kaist.iclab.mobiletracker.services.supabase.LocationSensorService
 import kaist.iclab.mobiletracker.services.supabase.PPGSensorService
 import kaist.iclab.mobiletracker.services.supabase.SkinTemperatureSensorService
+import kaist.iclab.mobiletracker.services.supabase.StressSensorService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchAccelerometerUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchEDAUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchGestureUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchHeartRateUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchIMUUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchLocationUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchPPGUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchSkinTemperatureUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.watch.WatchStressUploadHandler
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -49,6 +55,18 @@ val watchSensorModule = module {
         SkinTemperatureSensorService(supabaseHelper = get())
     }
 
+    single {
+        IMUSensorService(supabaseClient = get<kaist.iclab.mobiletracker.helpers.SupabaseHelper>().supabaseClient)
+    }
+
+    single {
+        GestureSensorService(supabaseClient = get<kaist.iclab.mobiletracker.helpers.SupabaseHelper>().supabaseClient)
+    }
+
+    single {
+        StressSensorService(supabaseClient = get<kaist.iclab.mobiletracker.helpers.SupabaseHelper>().supabaseClient)
+    }
+
     // Map of sensor IDs to DAOs for storing watch sensor data in Room database
     single<Map<String, BaseDao<*, *>>>(named("watchSensorDaos")) {
         val db = get<TrackerRoomDB>()
@@ -59,6 +77,9 @@ val watchSensorModule = module {
             "WatchPPG" to db.watchPPGDao(),
             "WatchSkinTemperature" to db.watchSkinTemperatureDao(),
             "WatchLocation" to db.locationDao(),
+            "WatchIMU" to db.watchIMUDao(),
+            "WatchGesture" to db.watchGestureDao(),
+            "WatchStress" to db.watchStressDao()
         )
     }
 
@@ -99,6 +120,18 @@ val watchSensorModule = module {
             WatchLocationUploadHandler(
                 dao = db.locationDao(),
                 service = get<LocationSensorService>()
+            ),
+            WatchIMUUploadHandler(
+                dao = db.watchIMUDao(),
+                service = get<IMUSensorService>()
+            ),
+            WatchGestureUploadHandler(
+                dao = db.watchGestureDao(),
+                service = get<GestureSensorService>()
+            ),
+            WatchStressUploadHandler(
+                dao = db.watchStressDao(),
+                service = get<StressSensorService>()
             )
         )
         SensorUploadHandlerRegistry(handlers)

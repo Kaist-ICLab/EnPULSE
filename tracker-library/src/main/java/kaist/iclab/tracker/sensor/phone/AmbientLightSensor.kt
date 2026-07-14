@@ -22,10 +22,6 @@ class AmbientLightSensor(
 ) : BaseSensor<AmbientLightSensor.Config, AmbientLightSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class
 ) {
-    companion object {
-        // Time-based sampling: record once every 60 seconds
-        private const val SAMPLING_INTERVAL_MS = 60_000L
-    }
 
     data class Config(
         val interval: Long
@@ -44,8 +40,6 @@ class AmbientLightSensor(
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
-    // Time-based sampling state
-    private var lastRecordedTimestamp: Long = 0L
 
     private val sensorEventListener = object : SensorEventListener {
         override fun onAccuracyChanged(sensor: Sensor?, p1: Int) {}
@@ -53,20 +47,15 @@ class AmbientLightSensor(
             event?.let {
                 val timestamp = System.currentTimeMillis()
 
-                // Time-based sampling: only record if interval has passed
-                if ((timestamp - lastRecordedTimestamp) >= SAMPLING_INTERVAL_MS) {
-                    lastRecordedTimestamp = timestamp
-
-                    listeners.forEach { listener ->
-                        listener.invoke(
-                            Entity(
-                                timestamp,
-                                timestamp,
-                                it.accuracy,
-                                it.values[0]
-                            )
+                listeners.forEach { listener ->
+                    listener.invoke(
+                        Entity(
+                            timestamp,
+                            timestamp,
+                            it.accuracy,
+                            it.values[0]
                         )
-                    }
+                    )
                 }
             }
         }
@@ -80,8 +69,6 @@ class AmbientLightSensor(
     }
 
     override fun onStart() {
-        // Reset sampling state - set to 0 so first reading is recorded immediately
-        lastRecordedTimestamp = 0L
 
         sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)?.let { sensor ->
             sensorManager.registerListener(

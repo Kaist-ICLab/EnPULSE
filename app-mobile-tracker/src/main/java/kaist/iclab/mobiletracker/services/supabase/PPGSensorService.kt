@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.services.supabase
 
-import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.config.AppConfig.SupabaseTables.PPG_SENSOR
 import kaist.iclab.mobiletracker.data.sensors.watch.PPGSensorData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.Result
@@ -12,7 +12,7 @@ class PPGSensorService(
     supabaseHelper: SupabaseHelper
 ) : BaseSupabaseService<PPGSensorData>(
     supabaseHelper = supabaseHelper,
-    tableName = AppConfig.SupabaseTables.PPG_SENSOR,
+    tableName = PPG_SENSOR,
     sensorName = "PPG"
 ) {
 

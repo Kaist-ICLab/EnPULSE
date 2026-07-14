@@ -4,16 +4,73 @@ import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.AccelerometerSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.EDASensorData
+import kaist.iclab.mobiletracker.data.sensors.watch.GestureSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.HeartRateSensorData
+import kaist.iclab.mobiletracker.data.sensors.watch.IMUSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.PPGSensorData
 import kaist.iclab.mobiletracker.data.sensors.watch.SkinTemperatureSensorData
+import kaist.iclab.mobiletracker.data.sensors.watch.StressSensorData
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 import java.time.Instant
+
+object IMUMapper : EntityToSupabaseMapper<WatchIMUEntity, IMUSensorData> {
+    override fun map(entity: WatchIMUEntity, userUuid: String?): IMUSensorData {
+        return IMUSensorData(
+            eventId = entity.eventId,
+            uuid = userUuid,
+            deviceType = entity.deviceType,
+            received = Instant.ofEpochMilli(entity.received).toString(),
+            timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
+            accX = entity.accX,
+            accY = entity.accY,
+            accZ = entity.accZ,
+            gyroX = entity.gyroX,
+            gyroY = entity.gyroY,
+            gyroZ = entity.gyroZ
+        )
+    }
+}
+
+object GestureMapper : EntityToSupabaseMapper<WatchGestureEntity, GestureSensorData> {
+    override fun map(entity: WatchGestureEntity, userUuid: String?): GestureSensorData {
+        return GestureSensorData(
+            eventId = entity.eventId,
+            uuid = userUuid,
+            deviceType = entity.deviceType,
+            received = Instant.ofEpochMilli(entity.received).toString(),
+            timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
+            classIndex = entity.classIndex,
+            score = entity.score,
+            probabilities = entity.probabilities
+        )
+    }
+}
+
+object StressMapper : EntityToSupabaseMapper<WatchStressEntity, StressSensorData> {
+    override fun map(entity: WatchStressEntity, userUuid: String?): StressSensorData {
+        return StressSensorData(
+            eventId = entity.eventId,
+            uuid = userUuid,
+            deviceType = entity.deviceType,
+            received = Instant.ofEpochMilli(entity.received).toString(),
+            timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
+            windowStart = Instant.ofEpochMilli(entity.windowStartMs).toString(),
+            windowEnd = Instant.ofEpochMilli(entity.windowEndMs).toString(),
+            rmssd = entity.rmssd,
+            ibiCount = entity.ibiCount,
+            threshold = entity.threshold,
+            isStressed = entity.isStressed
+        )
+    }
+}
 
 object HeartRateMapper : EntityToSupabaseMapper<WatchHeartRateEntity, HeartRateSensorData> {
     override fun map(entity: WatchHeartRateEntity, userUuid: String?): HeartRateSensorData {

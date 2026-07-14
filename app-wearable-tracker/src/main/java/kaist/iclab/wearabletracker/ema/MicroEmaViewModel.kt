@@ -73,10 +73,6 @@ class MicroEmaViewModel(
      * Call this once when the survey activity is created.
      */
     fun startSurvey() {
-        if (_surveyConfig.value != null) return // already started
-
-        triggerTime = System.currentTimeMillis()
-
         val config = repository.loadSurveyConfig()
         if (config == null) {
             Log.e(TAG, "Failed to load survey config — finishing immediately")
@@ -84,9 +80,23 @@ class MicroEmaViewModel(
             return
         }
 
+        // If the same config is already loaded and survey isn't complete, don't restart
+        if (_surveyConfig.value?.surveyId == config.surveyId && !_isComplete.value) {
+            Log.d(TAG, "Survey ${config.surveyId} already active, ignoring start")
+            return 
+        }
+
+        stopCountdown()
+        triggerTime = System.currentTimeMillis()
+        answer = null
+        responseTime = null
+        _isComplete.value = false
+        _finalStatus.value = null
         _surveyConfig.value = config
 
-        val selectedQuestion = config.questions.randomOrNull()
+        // Use the repository's queue logic to get the next question in sequence
+        val selectedQuestion = repository.getNextQuestion(config)
+
         if (selectedQuestion == null) {
             Log.e(TAG, "Survey has no questions — finishing immediately")
             _isComplete.value = true

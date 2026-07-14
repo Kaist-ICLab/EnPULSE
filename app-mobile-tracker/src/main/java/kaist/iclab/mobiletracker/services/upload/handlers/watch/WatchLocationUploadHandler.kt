@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.services.upload.handlers.watch
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.dao.common.LocationDao
+import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.mapper.LocationMapper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
@@ -81,7 +82,7 @@ class WatchLocationUploadHandler(
     }
 
     override fun recordToCsvRow(record: Any): String {
-        val entity = record as kaist.iclab.mobiletracker.db.entity.common.LocationEntity
+        val entity = record as LocationEntity
         return "${entity.eventId},${entity.uuid},${entity.deviceType},${entity.received},${entity.timestamp},${entity.latitude},${entity.longitude},${entity.altitude},${entity.speed},${entity.accuracy}"
     }
 }

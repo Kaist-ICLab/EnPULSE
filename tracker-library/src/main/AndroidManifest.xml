@@ -127,6 +127,8 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".sensor.survey.activity.DefaultSurveyActivity" />
+        <activity 
+            android:name=".sensor.survey.activity.DefaultSurveyActivity"
+            android:launchMode="singleTop" />
     </application>
 </manifest>

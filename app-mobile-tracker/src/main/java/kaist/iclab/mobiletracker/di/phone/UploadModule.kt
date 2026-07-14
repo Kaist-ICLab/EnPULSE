@@ -7,6 +7,7 @@ import kaist.iclab.mobiletracker.repository.PhoneSensorRepositoryImpl
 import kaist.iclab.mobiletracker.services.SensorServiceRegistry
 import kaist.iclab.mobiletracker.services.SensorServiceRegistryImpl
 import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.services.supabase.ActivityRecognitionSensorService
 import kaist.iclab.mobiletracker.services.supabase.AmbientLightSensorService
 import kaist.iclab.mobiletracker.services.supabase.AppListChangeSensorService
 import kaist.iclab.mobiletracker.services.supabase.AppUsageLogSensorService
@@ -26,6 +27,7 @@ import kaist.iclab.mobiletracker.services.supabase.UserInteractionSensorService
 import kaist.iclab.mobiletracker.services.supabase.WifiSensorService
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
+import kaist.iclab.mobiletracker.services.upload.handlers.phone.ActivityRecognitionUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.phone.AmbientLightUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.phone.AppListChangeUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.phone.AppUsageLogUploadHandler
@@ -44,6 +46,7 @@ import kaist.iclab.mobiletracker.services.upload.handlers.phone.StepUploadHandle
 import kaist.iclab.mobiletracker.services.upload.handlers.phone.UserInteractionUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.phone.WifiScanUploadHandler
 import kaist.iclab.tracker.sensor.common.LocationSensor
+import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
@@ -77,6 +80,7 @@ val uploadModule = module {
     single<Map<String, BaseDao<*, *>>>(named("sensorDataStorages")) {
         val db = get<TrackerRoomDB>()
         mapOf(
+            get<ActivityRecognitionSensor>().id to db.activityRecognitionDao(),
             get<AmbientLightSensor>().id to db.ambientLightDao(),
             get<AppListChangeSensor>().id to db.appListChangeDao(),
             get<AppUsageLogSensor>().id to db.appUsageLogDao(),
@@ -107,6 +111,7 @@ val uploadModule = module {
     }
 
     // Sensor Services for uploading to Supabase
+    single { ActivityRecognitionSensorService(supabaseHelper = get()) }
     single { AmbientLightSensorService(supabaseHelper = get()) }
     single { AppListChangeSensorService(supabaseHelper = get()) }
     single { AppUsageLogSensorService(supabaseHelper = get()) }
@@ -129,6 +134,7 @@ val uploadModule = module {
     single<SensorServiceRegistry>(named("phoneSensorServiceRegistry")) {
         SensorServiceRegistryImpl(
             mapOf(
+                get<ActivityRecognitionSensor>().id to get<ActivityRecognitionSensorService>(),
                 get<AmbientLightSensor>().id to get<AmbientLightSensorService>(),
                 get<AppListChangeSensor>().id to get<AppListChangeSensorService>(),
                 get<AppUsageLogSensor>().id to get<AppUsageLogSensorService>(),
@@ -159,6 +165,10 @@ val uploadModule = module {
             ScreenUploadHandler(dao = db.screenDao(), service = get<ScreenSensorService>()),
             WifiScanUploadHandler(dao = db.wifiDao(), service = get<WifiSensorService>()),
             StepUploadHandler(dao = db.stepDao(), service = get<StepSensorService>()),
+            ActivityRecognitionUploadHandler(
+                dao = db.activityRecognitionDao(),
+                service = get<ActivityRecognitionSensorService>()
+            ),
             AmbientLightUploadHandler(
                 dao = db.ambientLightDao(),
                 service = get<AmbientLightSensorService>()

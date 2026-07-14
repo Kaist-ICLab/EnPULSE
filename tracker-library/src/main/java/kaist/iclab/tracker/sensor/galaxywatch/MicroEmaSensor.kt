@@ -6,25 +6,29 @@ import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.microema.EmaConstants
 import kaist.iclab.tracker.sensor.microema.MicroEmaResponse
-import kaist.iclab.tracker.sensor.microema.MicroEmaTriggerAction
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
-import kaist.iclab.tracker.trigger.TriggerEngine
-import kaist.iclab.tracker.trigger.TriggerRule
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
-import kotlin.collections.forEach
 
+/**
+ * Phone-side sensor that listens for MicroEMA responses from the watch via BLE.
+ *
+ * This sensor bridges watch survey responses into the standard [SurveySensor.Entity]
+ * format so they can be synced to Supabase alongside phone survey responses.
+ *
+ * Note: The trigger logic has been moved to the watch-side [DynamicTriggerEngine].
+ * This sensor now only handles response reception.
+ */
 class MicroEmaSensor(
     permissionManager: PermissionManager,
     private val configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
-    private val triggerEngine: TriggerEngine,
     private val bleChannel: BLEDataChannel
 ): BaseSensor<MicroEmaSensor.Config, SurveySensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, SurveySensor.Entity::class
@@ -32,7 +36,6 @@ class MicroEmaSensor(
 
     @Serializable
     data class Config(
-        val rules: List<TriggerRule> = emptyList(),
         val watchSurveyConfigs: Map<Int, WatchSurveyConfig> = emptyMap()
     ) : SensorConfig {
         companion object {
@@ -61,7 +64,7 @@ class MicroEmaSensor(
             // Map the MicroEMA data into the regular SurveySensor.Entity structure
             val surveyEntity = SurveySensor.Entity(
                 triggerTime = response.triggerTime,
-                actualTriggerTime = response.triggerTime, // Or extract from response if available
+                actualTriggerTime = response.triggerTime,
                 surveyStartTime = response.surveyStartTime,
                 responseSubmissionTime = response.responseTime ?: System.currentTimeMillis(),
                 response = responseJson,
@@ -74,22 +77,6 @@ class MicroEmaSensor(
             }
         } catch (e: Exception) {
             e.printStackTrace()
-        }
-    }
-
-    override fun init() {
-        super.init()
-        val currentConfig: Config = configStorage.get()
-
-        // 1. Register Action Handler for MicroEMA
-        triggerEngine.registerActionHandler(
-            "MICRO_EMA",
-            MicroEmaTriggerAction(bleChannel, currentConfig.watchSurveyConfigs)
-        )
-
-        // 2. Load existing rules
-        currentConfig.rules.forEach { rule: TriggerRule ->
-            triggerEngine.addRule(rule)
         }
     }
 

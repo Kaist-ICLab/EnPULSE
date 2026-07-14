@@ -1,6 +1,8 @@
 package kaist.iclab.mobiletracker.services.upload.handlers.phone
 
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.dao.phone.BatteryDao
+import kaist.iclab.mobiletracker.db.entity.phone.BatteryEntity
 import kaist.iclab.mobiletracker.db.mapper.BatteryMapper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
@@ -22,7 +24,7 @@ class BatteryUploadHandler(
 
     override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
-            val batchSize = kaist.iclab.mobiletracker.Constants.Network.UPLOAD_BATCH_SIZE
+            val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var currentMaxTimestamp = lastUploadTimestamp
             var uploadedAny = false
 
@@ -71,7 +73,7 @@ class BatteryUploadHandler(
     }
 
     override fun recordToCsvRow(record: Any): String {
-        val entity = record as kaist.iclab.mobiletracker.db.entity.phone.BatteryEntity
+        val entity = record as BatteryEntity
         return "${entity.eventId},${entity.uuid},${entity.received},${entity.timestamp},${entity.connectedType},${entity.status},${entity.level},${entity.temperature}"
     }
 }

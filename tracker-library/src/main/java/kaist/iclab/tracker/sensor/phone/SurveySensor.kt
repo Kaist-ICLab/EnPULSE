@@ -21,6 +21,7 @@ import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.survey.Survey
+import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.sensor.survey.SurveyScheduleMethod
 import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
@@ -208,6 +209,62 @@ class SurveySensor(
         context.startActivity(intent)
     }
 
+    /**
+     * Trigger a survey by posting a High-Priority Notification.
+     * This is safe to call from the background (e.g., when receiving a BLE trigger from the watch)
+     * because it uses a Full-Screen Intent / High Priority Notification rather than launching the Activity directly.
+     */
+    fun triggerSurveyNotification(id: String) {
+        val config = configStorage.get().survey[id]
+        if (config == null) {
+            Log.e(TAG, "Cannot trigger survey notification: Survey ID $id not found in config")
+            return
+        }
+
+        val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = id, triggerTime = System.currentTimeMillis()))
+        val notificationConfig = config.notificationConfig
+
+        val handler = notificationHandler
+        if (handler != null) {
+            handler.showTriggeredNotification(id, scheduleId, notificationConfig)
+            return
+        }
+
+        // Fallback to internal notification logic if no handler is provided
+        val surveyActivityIntent = Intent(context, DefaultSurveyActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("id", id)
+            putExtra("scheduleId", scheduleId)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            scheduleId.hashCode(), // Unique request code
+            surveyActivityIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID + "_" + id)
+            .setOngoing(true)
+            .setAutoCancel(true)
+            .setContentTitle(notificationConfig.title)
+            .setContentText(notificationConfig.description)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM) // Use ALARM for triggers
+            .setSmallIcon(notificationConfig.icon)
+            .setFullScreenIntent(pendingIntent, true) // Add full screen intent to wake device
+
+        try {
+            // Use a unique notification ID based on scheduleId to ensure every trigger alerts the user
+            // even if a previous one is still active.
+            val triggerNotificationId = NOTIFICATION_ID + scheduleId.hashCode()
+            NotificationManagerCompat.from(context).notify(triggerNotificationId, builder.build())
+            Log.d(TAG, "Triggered phone survey notification (survey: $id, schedule: $scheduleId)")
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Failed to post survey notification due to SecurityException", e)
+        }
+    }
+
     private fun scheduleSurveyForDate(baseDate: Long, surveyId: String) {
         Log.d(TAG, "Schedule $surveyId using base date ${baseDate.formatLocalDateTime()}")
         val now = System.currentTimeMillis()
@@ -270,6 +327,13 @@ class SurveySensor(
 
     private val scheduleCheckCallback = { intent: Intent? -> setupNextSurveySchedule() }
 
+    interface NotificationHandler {
+        fun showScheduledNotification(surveyId: String, scheduleId: String, config: SurveyNotificationConfig)
+        fun showTriggeredNotification(surveyId: String, scheduleId: String, config: SurveyNotificationConfig)
+    }
+
+    var notificationHandler: NotificationHandler? = null
+
     private val surveyCallback = surveyCallback@{ intent: Intent? ->
         if(intent == null) return@surveyCallback
 
@@ -279,27 +343,38 @@ class SurveySensor(
 
         val notificationConfig = configStorage.get().survey[surveyId]!!.notificationConfig
 
-        val surveyActivityIntent = Intent(context, DefaultSurveyActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            putExtra("id", surveyId)
-            putExtra("scheduleId", scheduleId)
-        }
+        val handler = notificationHandler
+        if (handler != null) {
+            handler.showScheduledNotification(surveyId, scheduleId, notificationConfig)
+        } else {
+            // Fallback internal logic
+            val surveyActivityIntent = Intent(context, DefaultSurveyActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                putExtra("id", surveyId)
+                putExtra("scheduleId", scheduleId)
+            }
 
-        val pendingIntent = PendingIntent.getActivity(context, 0, surveyActivityIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                surveyActivityIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
 
-        val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID + "_" + surveyId)
-            .setOngoing(true)
-            .setAutoCancel(true)
-            .setContentTitle(notificationConfig.title)
-            .setContentText(notificationConfig.description)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
-            .setSmallIcon(notificationConfig.icon)
-            .setContentIntent(pendingIntent)
-        try {
-            NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
-        } catch (e: SecurityException) {
-            e.printStackTrace()
+            val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID + "_" + surveyId)
+                .setOngoing(true)
+                .setAutoCancel(true)
+                .setContentTitle(notificationConfig.title)
+                .setContentText(notificationConfig.description)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+                .setSmallIcon(notificationConfig.icon)
+                .setContentIntent(pendingIntent)
+            try {
+                NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, builder.build())
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            }
         }
 
         scheduleStorage.setActualTriggerTime(scheduleId, System.currentTimeMillis())

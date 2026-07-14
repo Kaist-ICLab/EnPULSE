@@ -16,10 +16,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AppRegistration
+import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CompassCalibration
 import androidx.compose.material.icons.filled.DataUsage
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.GridView
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.StayCurrentPortrait
@@ -133,7 +136,7 @@ fun HomeScreen(
                     Styles.Colors.APP_LIST_CHANGE
                 ),
                 SensorItem(
-                    "AppUsage",
+                    "AppUsageLog",
                     uiState.appUsageCount,
                     Icons.Default.GridView,
                     Styles.Colors.APP_USAGE
@@ -245,6 +248,24 @@ fun HomeScreen(
                     uiState.wifiScanCount,
                     Icons.Default.WifiTethering,
                     Styles.Colors.WIFI_SCAN
+                ),
+                SensorItem(
+                    "WatchIMU",
+                    uiState.watchIMUCount,
+                    Icons.Default.CompassCalibration,
+                    Styles.Colors.WATCH_IMU
+                ),
+                SensorItem(
+                    "WatchGesture",
+                    uiState.watchGestureCount,
+                    Icons.Default.BackHand,
+                    Styles.Colors.WATCH_GESTURE
+                ),
+                SensorItem(
+                    "WatchStress",
+                    uiState.watchStressCount,
+                    Icons.Default.Psychology,
+                    Styles.Colors.WATCH_STRESS
                 )
             ).filter { it.count > 0 }
         }

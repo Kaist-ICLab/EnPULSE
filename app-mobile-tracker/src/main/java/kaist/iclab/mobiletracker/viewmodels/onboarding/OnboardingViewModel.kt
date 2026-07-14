@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.viewmodels.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
+import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
@@ -51,7 +52,12 @@ class OnboardingViewModel(
                     _uiState.update { it.copy(campaigns = campaigns, isLoading = false) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    val errorKey = if (error is AppError.CollectionRunning) {
+                        "turn_off_data_collection_first"
+                    } else {
+                        error.message ?: "Unknown error"
+                    }
+                    _uiState.update { it.copy(isLoading = false, error = errorKey) }
                 }
         }
     }

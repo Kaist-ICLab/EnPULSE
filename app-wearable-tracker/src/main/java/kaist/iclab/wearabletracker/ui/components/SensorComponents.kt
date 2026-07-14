@@ -1,11 +1,13 @@
 package kaist.iclab.wearabletracker.ui.components
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -23,8 +25,10 @@ import kotlinx.coroutines.flow.StateFlow
 fun SensorToggleChip(
     sensorId: String,
     sensorStateFlow: StateFlow<SensorState>,
+    isCollecting: Boolean,
     updateStatus: (status: Boolean) -> Unit
 ) {
+    val context = LocalContext.current
     val sensorState = sensorStateFlow.collectAsState().value
     val isEnabled =
         (sensorState.flag == SensorState.FLAG.ENABLED || sensorState.flag == SensorState.FLAG.RUNNING)
@@ -50,7 +54,14 @@ fun SensorToggleChip(
                 },
             )
         },
-        onCheckedChange = updateStatus,
+        onCheckedChange = { status ->
+            if (isCollecting) {
+                Toast.makeText(context, R.string.turn_off_data_collection_first, Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                updateStatus(status)
+            }
+        },
         label = {
             SensorNameText(
                 text = displayName,

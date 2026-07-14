@@ -14,6 +14,7 @@ object MicroEmaBuilder {
         return WatchSurveyConfig(
             surveyId = config.id,
             title = config.title,
+            description = config.description,
             expireAfterMs = config.expireAfterMs,
             questions = config.questions.map { q ->
                 WatchQuestion(

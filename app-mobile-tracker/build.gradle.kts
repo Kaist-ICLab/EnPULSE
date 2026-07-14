@@ -86,6 +86,7 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -95,6 +96,13 @@ android {
         }
     }
     buildToolsVersion = libs.versions.buildTools.get()
+
+    applicationVariants.all {
+        outputs.all {
+            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            outputImpl.outputFileName = "EnPULSE-Mobile.apk"
+        }
+    }
 }
 
 dependencies {

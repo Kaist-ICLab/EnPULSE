@@ -1,9 +1,14 @@
 package kaist.iclab.wearabletracker.helpers
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import androidx.core.app.NotificationCompat
+import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.R
 
@@ -13,12 +18,40 @@ import kaist.iclab.wearabletracker.R
  */
 object NotificationHelper {
     /**
+     * Checks if the app has permission to use full-screen intents (Android 14+).
+     */
+    fun canUseFullScreenIntent(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val notificationManager = context.getSystemService(NotificationManager::class.java)
+            return notificationManager.canUseFullScreenIntent()
+        }
+        return true
+    }
+
+    /**
+     * Opens the system settings screen for full-screen intent permission.
+     */
+    fun openFullScreenIntentSettings(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val intent =
+                Intent(android.provider.Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+                    data = android.net.Uri.fromParts("package", context.packageName, null)
+                }
+            if (context !is android.app.Activity) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        }
+    }
+
+    /**
      * Notification channel configurations
      */
     enum class NotificationChannelConfig(
         val channelId: String,
         val channelName: String,
-        val description: String
+        val description: String,
+        val importance: Int = NotificationManager.IMPORTANCE_DEFAULT
     ) {
         UPLOAD_DATA(
             Constants.NotificationChannel.UPLOAD_DATA_ID,
@@ -34,6 +67,12 @@ object NotificationHelper {
             Constants.NotificationChannel.ERROR_ID,
             Constants.NotificationChannel.ERROR_NAME,
             Constants.NotificationChannel.ERROR_DESCRIPTION
+        ),
+        TRIGGER(
+            Constants.NotificationChannel.TRIGGER_ID,
+            Constants.NotificationChannel.TRIGGER_NAME,
+            Constants.NotificationChannel.TRIGGER_DESCRIPTION,
+            NotificationManager.IMPORTANCE_HIGH
         )
     }
 
@@ -47,14 +86,21 @@ object NotificationHelper {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        val channel = NotificationChannel(
-            config.channelId,
-            config.channelName,
-            NotificationManager.IMPORTANCE_DEFAULT
-        ).apply {
-            description = config.description
+        val existingChannel = notificationManager.getNotificationChannel(config.channelId)
+        if (existingChannel != null && existingChannel.importance < config.importance) {
+            notificationManager.deleteNotificationChannel(config.channelId)
         }
-        notificationManager.createNotificationChannel(channel)
+
+        if (notificationManager.getNotificationChannel(config.channelId) == null) {
+            val channel = NotificationChannel(
+                config.channelId,
+                config.channelName,
+                config.importance
+            ).apply {
+                description = config.description
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     /**
@@ -224,6 +270,19 @@ object NotificationHelper {
     }
 
     /**
+     * Show a notification when device storage is critically low.
+     */
+    fun showLowStorageNotification(context: Context) {
+        showFailureNotification(
+            context = context,
+            channelConfig = NotificationChannelConfig.ERROR,
+            title = context.getString(R.string.notification_low_storage_title),
+            message = context.getString(R.string.notification_low_storage_message),
+            notificationId = Constants.NotificationId.ERROR + 100
+        )
+    }
+
+    /**
      * Show error/exception notification
      */
     fun showError(context: Context, title: String, message: String) {
@@ -237,6 +296,87 @@ object NotificationHelper {
             message = message,
             notificationId = notificationId
         )
+    }
+
+    /**
+     * Show a notification for a survey trigger (MicroEMA).
+     * Uses High Priority and Full Screen Intent to wake the watch.
+     */
+    fun showSurveyTriggerNotification(
+        context: Context,
+        pendingIntent: PendingIntent,
+        title: String,
+        text: String
+    ) {
+        ensureNotificationChannel(context, NotificationChannelConfig.TRIGGER)
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val notification =
+            NotificationCompat.Builder(context, NotificationChannelConfig.TRIGGER.channelId)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(pendingIntent)
+                .setFullScreenIntent(pendingIntent, true)
+                .setAutoCancel(true)
+                .build()
+
+        notificationManager.notify(Constants.NotificationId.TRIGGER, notification)
+    }
+
+    /**
+     * Build a notification for a background service.
+     */
+    fun buildServiceNotification(
+        context: Context,
+        config: BackgroundController.ServiceNotification,
+        pendingIntent: PendingIntent? = null
+    ): Notification {
+        ensureNotificationChannel(
+            context,
+            config.channelId,
+            config.channelName,
+            NotificationManager.IMPORTANCE_LOW // Low priority for ongoing services
+        )
+
+        val builder = NotificationCompat.Builder(context, config.channelId)
+            .setSmallIcon(config.icon)
+            .setContentTitle(config.title)
+            .setContentText(config.description)
+            .setOngoing(true)
+
+        if (pendingIntent != null) {
+            builder.setContentIntent(pendingIntent)
+        }
+
+        return builder.build()
+    }
+
+    /**
+     * Ensure a notification channel exists using raw strings (for library integration).
+     */
+    fun ensureNotificationChannel(
+        context: Context,
+        channelId: String,
+        channelName: String,
+        importance: Int
+    ) {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val existingChannel = notificationManager.getNotificationChannel(channelId)
+        if (existingChannel != null && existingChannel.importance < importance) {
+            notificationManager.deleteNotificationChannel(channelId)
+        }
+
+        if (notificationManager.getNotificationChannel(channelId) == null) {
+            val channel = NotificationChannel(channelId, channelName, importance)
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 }
 

@@ -20,6 +20,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
@@ -27,8 +31,10 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.components.AppHeader
 import kaist.iclab.mobiletracker.ui.components.AppMenuItem
+import kaist.iclab.mobiletracker.ui.components.FullScreenIntentPermissionDialog
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.MainSettings.EnableTrackerCard
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import org.koin.androidx.compose.koinViewModel
@@ -45,6 +51,8 @@ fun SettingsScreen(
     val context = LocalContext.current
     val controllerState = settingsViewModel.controllerState.collectAsState().value
     val isCollecting = controllerState.flag == ControllerState.FLAG.RUNNING
+
+    var showFullScreenIntentWarning by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
@@ -69,7 +77,9 @@ fun SettingsScreen(
                         isEnabled = true,
                         onToggle = { isChecked ->
                             if (isChecked) {
-                                if (settingsViewModel.hasNotificationPermission()) {
+                                if (!NotificationHelper.canUseFullScreenIntent(context)) {
+                                    showFullScreenIntentWarning = true
+                                } else if (settingsViewModel.hasNotificationPermission()) {
                                     settingsViewModel.startLogging()
                                 } else {
                                     settingsViewModel.requestNotificationPermission()
@@ -81,23 +91,6 @@ fun SettingsScreen(
                     )
                 }
 
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Styles.CARD_CONTAINER_HORIZONTAL_PADDING),
-                        colors = CardDefaults.cardColors(containerColor = AppColors.White),
-                        shape = Styles.CARD_SHAPE
-                    ) {
-                        AppMenuItem(
-                            title = "MicroEMA Manual Trigger",
-                            icon = Icons.Filled.PhoneAndroid,
-                            onClick = { settingsViewModel.triggerMicroEmaOnWatch() },
-                            showDivider = false,
-                            iconTint = AppColors.PrimaryColor
-                        )
-                    }
-                }
 
                 item {
                     Card(
@@ -149,6 +142,15 @@ fun SettingsScreen(
                 }
             }
         }
+
+        FullScreenIntentPermissionDialog(
+            showDialog = showFullScreenIntentWarning,
+            onDismiss = { showFullScreenIntentWarning = false },
+            onConfirm = {
+                showFullScreenIntentWarning = false
+                NotificationHelper.openFullScreenIntentSettings(context)
+            }
+        )
     }
 }
 

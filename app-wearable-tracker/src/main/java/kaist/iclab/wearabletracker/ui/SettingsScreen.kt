@@ -1,5 +1,7 @@
 package kaist.iclab.wearabletracker.ui
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,24 +18,30 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Scaffold
+import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
+
 import kaist.iclab.wearabletracker.data.DeviceInfo
+import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
 import kaist.iclab.wearabletracker.helpers.PermissionHelper
 import kaist.iclab.wearabletracker.ui.components.AutoSyncSettings
 import kaist.iclab.wearabletracker.ui.components.DeviceStatusInfo
 import kaist.iclab.wearabletracker.ui.components.FlushConfirmationDialog
+import kaist.iclab.wearabletracker.ui.components.FullScreenIntentPermissionDialog
 import kaist.iclab.wearabletracker.ui.components.PermissionPermanentlyDeniedDialog
 import kaist.iclab.wearabletracker.ui.components.SamsungHealthConnectionErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SdkPolicyErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SensorToggleChip
-import kaist.iclab.wearabletracker.ui.components.SettingController
 import org.koin.androidx.compose.koinViewModel
+
+import kaist.iclab.wearabletracker.ui.components.SettingController
 
 @Composable
 fun SettingsScreen(
@@ -52,31 +60,46 @@ fun SettingsScreen(
 
     var showFlushDialog by remember { mutableStateOf(false) }
     var showPermissionPermanentlyDeniedDialog by remember { mutableStateOf(false) }
-
-    /**
-     * Helper function to handle notification permission check and execute action if granted.
-     * Reduces code duplication across different features (upload, flush, startLogging).
-     */
-    fun handleNotificationPermissionCheck(onGranted: () -> Unit) {
-        when (PermissionHelper.checkNotificationPermission(context, androidPermissionManager)) {
-            PermissionCheckResult.Granted -> {
-                onGranted()
-            }
-
-            PermissionCheckResult.PermanentlyDenied -> {
-                showPermissionPermanentlyDeniedDialog = true
-            }
-
-            PermissionCheckResult.Requested -> {
-                // Permission requested - user needs to grant it and try again
-            }
-        }
-    }
+    var showFullScreenIntentWarning by remember { mutableStateOf(false) }
 
     // Check if any sensor is enabled
-    val hasEnabledSensors = sensorState.values.any { stateFlow ->
+    val enabledSensors = sensorState.filter { (_, stateFlow) ->
         val state = stateFlow.collectAsState().value
-        state.flag == SensorState.FLAG.ENABLED || state.flag == SensorState.FLAG.RUNNING
+        state.flag == SensorState.FLAG.ENABLED ||
+                state.flag == SensorState.FLAG.RUNNING
+    }
+
+    /**
+     * Helper function to handle all required permission checks and execute action if granted.
+     */
+    fun handleAllPermissionsCheck(onGranted: () -> Unit) {
+        // Collect all permissions needed by enabled sensors
+        val sensorPermissions = enabledSensors.flatMap { (name, _) ->
+            sensorMap[name]?.permissions?.toList() ?: emptyList()
+        }.distinct().toTypedArray()
+
+        // Combine with notification permission
+        val allRequiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            (sensorPermissions + Manifest.permission.POST_NOTIFICATIONS).distinct().toTypedArray()
+        } else {
+            sensorPermissions
+        }
+
+        if (allRequiredPermissions.isEmpty()) {
+            onGranted()
+            return
+        }
+
+        when (PermissionHelper.checkPermissions(
+            context,
+            androidPermissionManager,
+            allRequiredPermissions
+        )) {
+            PermissionCheckResult.Granted -> onGranted()
+            PermissionCheckResult.PermanentlyDenied -> showPermissionPermanentlyDeniedDialog = true
+            PermissionCheckResult.Requested -> { /* Wait for user to grant and try again */
+            }
+        }
     }
 
     // Samsung Health connection state
@@ -96,10 +119,6 @@ fun SettingsScreen(
         }
         // Load last sync timestamp on startup
         settingsViewModel.refreshLastSyncTimestamp()
-
-        // Check notification permission at app startup (will request if needed, but won't show dialog for permanent denial)
-        // The permanent denial dialog will only show when user tries to perform an action
-        PermissionHelper.checkNotificationPermission(context, androidPermissionManager)
     }
 
     // Observe last sync timestamp
@@ -148,28 +167,31 @@ fun SettingsScreen(
                 ) {
                     SettingController(
                         upload = {
-                            handleNotificationPermissionCheck {
+                            handleAllPermissionsCheck {
                                 settingsViewModel.upload()
                             }
                         },
                         flush = {
-                            handleNotificationPermissionCheck {
+                            handleAllPermissionsCheck {
                                 showFlushDialog = true
                             }
                         },
                         startLogging = {
-                            handleNotificationPermissionCheck {
-                                // Check Samsung Health connection first
-                                if (!isSamsungHealthConnected) {
-                                    showConnectionError = true
-                                } else {
-                                    settingsViewModel.startLogging()
+                            if (!NotificationHelper.canUseFullScreenIntent(context)) {
+                                showFullScreenIntentWarning = true
+                            } else {
+                                handleAllPermissionsCheck {
+                                    // Check Samsung Health connection first
+                                    if (!isSamsungHealthConnected) {
+                                        showConnectionError = true
+                                    } else {
+                                        settingsViewModel.startLogging()
+                                    }
                                 }
                             }
                         },
                         stopLogging = { settingsViewModel.stopLogging() },
-                        isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING),
-                        hasEnabledSensors = hasEnabledSensors
+                        isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING)
                     )
                     DeviceStatusInfo(
                         deviceInfo = deviceInfo,
@@ -196,10 +218,13 @@ fun SettingsScreen(
                         )
 
 
+
+
                         availableSensors.forEach { (name, _) ->
                             SensorToggleChip(
                                 sensorId = name,
                                 sensorStateFlow = sensorState[name]!!,
+                                isCollecting = isCollecting.flag == ControllerState.FLAG.RUNNING,
                                 updateStatus = { status ->
                                     if (status) {
                                         androidPermissionManager.request(sensorMap[name]!!.permissions)
@@ -231,6 +256,16 @@ fun SettingsScreen(
         onOpenSettings = {
             PermissionHelper.openNotificationSettings(context)
             showPermissionPermanentlyDeniedDialog = false
+        }
+    )
+
+    // Full Screen Intent Permission Dialog
+    FullScreenIntentPermissionDialog(
+        showDialog = showFullScreenIntentWarning,
+        onDismiss = { showFullScreenIntentWarning = false },
+        onOpenSettings = {
+            NotificationHelper.openFullScreenIntentSettings(context)
+            showFullScreenIntentWarning = false
         }
     )
 }

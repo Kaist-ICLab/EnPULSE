@@ -74,6 +74,7 @@ class AndroidPermissionManager(
             ::requestBindNotificationListenerService
         )
         put(Manifest.permission.BIND_ACCESSIBILITY_SERVICE, ::requestBindAccessibilityService)
+        put(Manifest.permission.SYSTEM_ALERT_WINDOW, ::requestSystemAlertWindow)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) put(
             Manifest.permission.SCHEDULE_EXACT_ALARM,
             ::requestScheduleExactAlarm
@@ -231,6 +232,7 @@ class AndroidPermissionManager(
             Manifest.permission.PACKAGE_USAGE_STATS -> getPackageUsageStatsPermissionState()
             Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> getBindAccessibilityServicePermissionState()
             Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> getBindNotificationListenerServicePermissionState()
+            Manifest.permission.SYSTEM_ALERT_WINDOW -> getSystemAlertWindowPermissionState()
             Manifest.permission.SCHEDULE_EXACT_ALARM -> getScheduleExactAlarmPermissionState()
             else -> getRuntimePermissionState(permission)
         }
@@ -371,6 +373,10 @@ class AndroidPermissionManager(
                 )
             )
         ) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+    }
+
+    private fun getSystemAlertWindowPermissionState(): PermissionState {
+        return if (Settings.canDrawOverlays(context)) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
     }
 
     private fun getScheduleExactAlarmPermissionState(): PermissionState {
@@ -523,6 +529,15 @@ class AndroidPermissionManager(
         getActivity().startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
     }
 
+    private fun requestSystemAlertWindow() {
+        if (getSystemAlertWindowPermissionState() == PermissionState.GRANTED) return
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:${context.packageName}")
+        )
+        getActivity().startActivity(intent)
+    }
+
     private fun requestScheduleExactAlarm() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         if (getPermissionState(Manifest.permission.SCHEDULE_EXACT_ALARM) == PermissionState.GRANTED) return
@@ -570,6 +585,13 @@ class AndroidPermissionManager(
 
             Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> {
                 Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            }
+
+            Manifest.permission.SYSTEM_ALERT_WINDOW -> {
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                    data = Uri.parse("package:${context.packageName}")
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }

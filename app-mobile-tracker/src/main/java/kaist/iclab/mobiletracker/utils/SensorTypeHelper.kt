@@ -14,7 +14,10 @@ object SensorTypeHelper {
         "WatchEDA",
         "WatchPPG",
         "WatchSkinTemperature",
-        "WatchLocation"
+        "WatchLocation",
+        "WatchIMU",
+        "WatchGesture",
+        "WatchStress"
     )
 
     /**
@@ -43,5 +46,13 @@ object SensorTypeHelper {
  * e.g., "AppUsageLog" -> "app_usage_log_sensor"
  */
 fun String.toCampaignSensorName(): String {
-    return this.replace(Regex("([a-z])([A-Z]+)"), "$1_$2").lowercase() + "_sensor"
+    val baseName = if (this.startsWith("Watch")) {
+        this.removePrefix("Watch")
+    } else {
+        this
+    }
+    return baseName
+        .replace("([a-z])([A-Z]+)".toRegex(), "$1_$2")
+        .replace("([A-Z]+)([A-Z][a-z])".toRegex(), "$1_$2")
+        .lowercase() + "_sensor"
 }

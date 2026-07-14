@@ -72,9 +72,6 @@ class SettingsViewModel(
         private const val TAG = "SettingsViewModel"
     }
 
-    fun triggerMicroEmaOnWatch() {
-        bleHelper.triggerMicroEmaOnWatch()
-    }
 
     private val sensors = backgroundController.sensors
 

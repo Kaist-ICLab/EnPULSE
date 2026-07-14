@@ -14,7 +14,7 @@ class AppUsageLogUploadHandler(
     private val dao: AppUsageLogDao,
     private val service: AppUsageLogSensorService
 ) : SensorUploadHandler {
-    override val sensorId = "AppUsage"
+    override val sensorId = "AppUsageLog"
 
     override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean {
         return dao.hasDataAfterTimestamp(lastUploadTimestamp)

@@ -40,8 +40,12 @@ object AppConfig {
         const val HEART_RATE_SENSOR = "heart_rate_sensor"
         const val PPG_SENSOR = "ppg_sensor"
         const val SKIN_TEMPERATURE_SENSOR = "skin_temperature_sensor"
+        const val IMU_SENSOR = "imu_sensor"
+        const val GESTURE_SENSOR = "gesture_sensor"
+        const val STRESS_SENSOR = "stress_sensor"
 
         // Phone sensor table names
+        const val ACTIVITY_RECOGNITION_SENSOR = "activity_recognition_sensor"
         const val AMBIENT_LIGHT_SENSOR = "ambient_light_sensor"
         const val APP_LIST_CHANGE_SENSOR = "app_list_change_sensor"
         const val APP_USAGE_LOG_SENSOR = "app_usage_log_sensor"
@@ -70,6 +74,9 @@ object AppConfig {
         const val MICRO_EMA_RESPONSE = "micro_ema_response"
         const val MICRO_EMA_ACK = "micro_ema_ack"
         const val MICRO_EMA_TRIGGER = "micro_ema_trigger"
+        const val TRIGGER_CONFIG = "trigger_config"
+        const val PHONE_EMA_TRIGGER = "phone_ema_trigger"
+        const val DETECTION_STATE_UPDATE = "detection_state_update"
     }
 
     /**

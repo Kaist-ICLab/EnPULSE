@@ -71,10 +71,10 @@ fun OnboardingScreen(
     // Show toast if there's an error (like survey fetch failure)
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
-            val message = if (error == "onboarding_survey_fetch_error") {
-                context.getString(R.string.onboarding_survey_fetch_error)
-            } else {
-                error
+            val message = when (error) {
+                "onboarding_survey_fetch_error" -> context.getString(R.string.onboarding_survey_fetch_error)
+                "turn_off_data_collection_first" -> context.getString(R.string.turn_off_data_collection_first)
+                else -> error
             }
             AppToast.show(context, message)
         }

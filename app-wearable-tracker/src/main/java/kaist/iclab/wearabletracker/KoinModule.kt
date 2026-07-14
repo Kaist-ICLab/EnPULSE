@@ -11,16 +11,21 @@ import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.galaxywatch.AccelerometerSensor
 import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
 import kaist.iclab.tracker.sensor.galaxywatch.EDASensor
+import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
 import kaist.iclab.tracker.sensor.galaxywatch.HeartRateSensor
 import kaist.iclab.tracker.sensor.galaxywatch.IMUSensor
 import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
-import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
 import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
+import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.core.RmssdHistory
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
-import kaist.iclab.tracker.storage.core.StateStorage
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
+import kaist.iclab.tracker.trigger.engine.DefaultTriggerEngine
+import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.data.SyncAckListener
@@ -29,11 +34,15 @@ import kaist.iclab.wearabletracker.db.dao.BaseDao
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.ema.MicroEmaViewModel
+import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
 import kaist.iclab.wearabletracker.storage.RoomRmssdHistory
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
+import kaist.iclab.wearabletracker.trigger.TriggerConfigReceiver
+import kaist.iclab.wearabletracker.trigger.TriggerConfigStorage
+import kaist.iclab.wearabletracker.trigger.WatchTriggerActionHandler
 import kaist.iclab.wearabletracker.ui.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -57,7 +66,7 @@ val koinModule = module {
             TrackerRoomDB::class.java,
             "wearable_tracker_db"
         )
-            .fallbackToDestructiveMigration(false)
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }
 
@@ -293,7 +302,10 @@ val koinModule = module {
             get<HeartRateSensor>().id to get<TrackerRoomDB>().heartRateDao(),
             get<SkinTemperatureSensor>().id to get<TrackerRoomDB>().skinTemperatureDao(),
             get<EDASensor>().id to get<TrackerRoomDB>().edaDao(),
-            get<LocationSensor>().id to get<TrackerRoomDB>().locationDao()
+            get<LocationSensor>().id to get<TrackerRoomDB>().locationDao(),
+            get<IMUSensor>().id to get<TrackerRoomDB>().imuDao(),
+            get<GestureSensor>().id to get<TrackerRoomDB>().gestureDao(),
+            get<StressSensor>().id to get<TrackerRoomDB>().stressDao()
         )
     }
 
@@ -338,6 +350,10 @@ val koinModule = module {
     // SyncPreferencesHelper for managing sync metadata
     single {
         SyncPreferencesHelper(context = androidContext())
+    }
+
+    single {
+        MicroEmaPreferencesHelper(context = androidContext())
     }
 
     single {
@@ -402,7 +418,7 @@ val koinModule = module {
     // --- MicroEMA ---
 
     single {
-        MicroEmaRepository()
+        MicroEmaRepository(prefsHelper = get())
     }
 
     single {
@@ -424,5 +440,87 @@ val koinModule = module {
             repository = get(),
             responseManager = get()
         )
+    }
+
+    // --- Dynamic Trigger Engine ---
+
+    single {
+        DetectionStateTracker()
+    }
+
+    single {
+        TriggerConfigStorage(context = androidContext())
+    }
+
+    single {
+        StressDetectionAdapter(
+            stressSensor = get(),
+            tracker = get()
+        )
+    }
+
+    single {
+        GestureDetectionAdapter(
+            gestureSensor = get(),
+            tracker = get()
+        )
+    }
+
+    single<TriggerEngine> {
+        DefaultTriggerEngine(
+            context = androidContext(),
+            detectionStateTracker = get(),
+            coroutineScope = get()
+        )
+    }
+
+    single {
+        WatchTriggerActionHandler(
+            context = androidContext(),
+            microEmaRepository = get(),
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel()
+        )
+    }
+
+    single {
+        TriggerConfigReceiver(
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
+            triggerEngine = get(),
+            actionHandler = get(),
+            backgroundController = get(),
+            detectionStateTracker = get(),
+            storage = get()
+        )
+    }
+
+    // Wire up: set action handler on engine, start adapters, start config listener
+    single(named("triggerInitializer")) {
+        val engine = get<TriggerEngine>()
+        val actionHandler = get<WatchTriggerActionHandler>()
+        val stressAdapter = get<StressDetectionAdapter>()
+        val gestureAdapter = get<GestureDetectionAdapter>()
+        val configReceiver = get<TriggerConfigReceiver>()
+        val storage = get<TriggerConfigStorage>()
+
+        // Set the action handler
+        engine.setActionHandler(actionHandler)
+
+        // Restore persisted config if it exists
+        storage.loadConfig()?.let { payload ->
+            actionHandler.updateSurveyConfigs(payload.surveyConfigs)
+            engine.loadTriggers(payload.triggers)
+        }
+
+        // Start adapters (they attach listeners to sensors)
+        stressAdapter.start()
+        gestureAdapter.start()
+
+        // Start listening for trigger config from phone
+        configReceiver.startListening()
+
+        // Start the engine (it will begin evaluating when detection states change)
+        engine.start()
+
+        true // return value to satisfy Koin
     }
 }

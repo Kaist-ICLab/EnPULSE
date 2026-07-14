@@ -20,6 +20,7 @@ data class EDASensorData(
     val eventId: String,
     val uuid: String? = null,
     val timestamp: String,
+    @SerialName("skin_conductance")
     val skinConductance: Float,
     val status: Int,
     val received: String,

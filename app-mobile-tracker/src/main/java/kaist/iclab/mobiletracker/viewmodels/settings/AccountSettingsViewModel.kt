@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
 import kaist.iclab.mobiletracker.data.sensors.phone.CampaignTableData
+import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
@@ -100,7 +101,12 @@ class AccountSettingsViewModel(
             campaignRepository.fetchCampaigns()
                 .onSuccess { _isLoadingCampaigns.value = false }
                 .onFailure {
-                    _campaignError.value = it.message
+                    val errorKey = if (it is AppError.CollectionRunning) {
+                        "turn_off_data_collection_first"
+                    } else {
+                        it.message ?: "Unknown error"
+                    }
+                    _campaignError.value = errorKey
                     _isLoadingCampaigns.value = false
                 }
         }
@@ -121,7 +127,12 @@ class AccountSettingsViewModel(
         if (syncResult.isSuccess) {
             AppToast.show(context, R.string.toast_experiment_group_selected)
         } else {
-            AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
+            val exception = (syncResult as? Result.Error)?.exception
+            if (exception is AppError.CollectionRunning) {
+                AppToast.show(context, R.string.turn_off_data_collection_first)
+            } else {
+                AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
+            }
         }
     }
 
@@ -167,7 +178,12 @@ class AccountSettingsViewModel(
                 if (result.isSuccess) {
                     AppToast.show(context, R.string.toast_success_saved)
                 } else {
-                    AppToast.show(context, R.string.error_generic)
+                    val exception = (result as? Result.Error)?.exception
+                    if (exception is AppError.CollectionRunning) {
+                        AppToast.show(context, R.string.turn_off_data_collection_first)
+                    } else {
+                        AppToast.show(context, R.string.error_generic)
+                    }
                 }
             } finally {
                 _isReloadingConfig.value = false

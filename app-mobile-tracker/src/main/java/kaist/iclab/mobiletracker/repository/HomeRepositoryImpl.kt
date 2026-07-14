@@ -45,7 +45,10 @@ class HomeRepositoryImpl(
         val accelerometerDao: kaist.iclab.mobiletracker.db.dao.watch.WatchAccelerometerDao,
         val edaDao: kaist.iclab.mobiletracker.db.dao.watch.WatchEDADao,
         val ppgDao: kaist.iclab.mobiletracker.db.dao.watch.WatchPPGDao,
-        val skinTemperatureDao: kaist.iclab.mobiletracker.db.dao.watch.WatchSkinTemperatureDao
+        val skinTemperatureDao: kaist.iclab.mobiletracker.db.dao.watch.WatchSkinTemperatureDao,
+        val imuDao: kaist.iclab.mobiletracker.db.dao.watch.WatchIMUDao,
+        val gestureDao: kaist.iclab.mobiletracker.db.dao.watch.WatchGestureDao,
+        val stressDao: kaist.iclab.mobiletracker.db.dao.watch.WatchStressDao
     )
 
     override fun getDailySensorCounts(startOfDay: Long): Flow<DailySensorCounts> {
@@ -76,10 +79,11 @@ class HomeRepositoryImpl(
             watchSensorDaos.accelerometerDao.getDailyAccelerometerCount(startOfDay),
             watchSensorDaos.edaDao.getDailyEDACount(startOfDay),
             watchSensorDaos.ppgDao.getDailyPPGCount(startOfDay),
-            watchSensorDaos.skinTemperatureDao.getDailySkinTemperatureCount(startOfDay)
-        ) { heartRate, accelerometer, eda, ppg, skinTemp ->
-            listOf(heartRate, accelerometer, eda, ppg, skinTemp)
-        }
+            watchSensorDaos.skinTemperatureDao.getDailySkinTemperatureCount(startOfDay),
+            watchSensorDaos.imuDao.getDailyIMUCount(startOfDay),
+            watchSensorDaos.gestureDao.getDailyGestureCount(startOfDay),
+            watchSensorDaos.stressDao.getDailyStressCount(startOfDay)
+        ) { args: Array<Int> -> args.toList() }
 
         // Combine both flows into final result
         return combine(phoneFlow, watchFlow) { phone, watch ->
@@ -107,7 +111,10 @@ class HomeRepositoryImpl(
                 watchAccelerometerCount = watch[1],
                 watchEDACount = watch[2],
                 watchPPGCount = watch[3],
-                watchSkinTemperatureCount = watch[4]
+                watchSkinTemperatureCount = watch[4],
+                watchIMUCount = watch[5],
+                watchGestureCount = watch[6],
+                watchStressCount = watch[7]
             )
         }
     }

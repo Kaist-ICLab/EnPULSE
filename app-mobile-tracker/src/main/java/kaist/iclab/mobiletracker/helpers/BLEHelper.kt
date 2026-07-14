@@ -10,9 +10,12 @@ import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
@@ -21,13 +24,13 @@ import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -50,9 +53,9 @@ class BLEHelper(
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
-    // Injected coroutine scope
     private val appScope by inject<AppCoroutineScope>()
     private val surveyService by inject<SurveyService>()
+    private val surveySensor by inject<SurveySensor>()
     private val userProfileRepository by inject<UserProfileRepository>()
 
     private val isoFormatter = DateTimeFormatter.ISO_INSTANT
@@ -96,6 +99,16 @@ class BLEHelper(
                 else -> json.toString()
             }
             handleMicroEmaResponse(jsonString)
+        }
+
+        // Listen for phone EMA triggers from watch
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.PHONE_EMA_TRIGGER)) { _, json ->
+            val surveyId = when {
+                json is kotlinx.serialization.json.JsonPrimitive -> json.content
+                else -> json.toString()
+            }
+            Log.d(AppConfig.LogTags.PHONE_BLE, "Received PHONE_EMA_TRIGGER for surveyId=$surveyId")
+            surveySensor.triggerSurveyNotification(surveyId)
         }
     }
 
@@ -197,53 +210,28 @@ class BLEHelper(
     }
 
     /**
-     * Send a remote trigger to the watch to immediately start a microEMA survey session.
-     * This uses a Just-in-Time architecture: the phone picks a survey from the retrieved configs
-     * and sends a random question from it to the watch.
+     * Send simulated detection state updates to the watch.
+     * This allows the phone to trigger generic evaluation rules on the watch.
      */
-    fun triggerMicroEmaOnWatch() {
+    fun sendDetectionStateUpdates(states: Map<String, String>) {
         appScope.io.launch {
             try {
-                // Get dynamic configs from storage
-                val dynamicConfigs = microEmaConfigStorage.get().watchSurveyConfigs
-                val config = dynamicConfigs.values.randomOrNull()
-
-                if (config == null) {
-                    Log.e(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] No dynamic MicroEMA config available, cannot trigger"
-                    )
-                    return@launch
-                }
-
-                // Pick a random question to send
-                val question = config.questions.randomOrNull()
-                if (question == null) {
-                    Log.e(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] Config (ID: ${config.surveyId}) has no questions"
-                    )
-                    return@launch
-                }
-
-                // Wrap in a mini-config for the watch
-                val triggerPayload = buildJsonObject {
-                    put("surveyId", config.surveyId)
-                    put("title", config.title)
-                    put("expireAfterMs", config.expireAfterMs)
-                    put("question", Json.encodeToJsonElement(question))
+                // Serialize map to JSON
+                val payload = buildJsonObject {
+                    states.forEach { (key, value) ->
+                        put(key, value)
+                    }
                 }.toString()
 
-
-                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_TRIGGER, triggerPayload)
+                bleChannel.send(AppConfig.BLEKeys.DETECTION_STATE_UPDATE, payload)
                 Log.d(
                     AppConfig.LogTags.PHONE_BLE,
-                    "[MICRO_EMA] Sent JIT trigger to watch: ${question.text} (ID: ${config.surveyId})"
+                    "[TRIGGER] Sent state updates to watch: $payload"
                 )
             } catch (e: Exception) {
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
-                    "[MICRO_EMA] Failed to send trigger: ${e.message}"
+                    "[TRIGGER] Failed to send state updates: ${e.message}"
                 )
             }
         }
@@ -321,6 +309,9 @@ class BLEHelper(
                 val heartRateDataList = SensorDataCsvParser.parseHeartRateCsv(csvData)
                 val ppgDataList = SensorDataCsvParser.parsePPGCsv(csvData)
                 val skinTemperatureDataList = SensorDataCsvParser.parseSkinTemperatureCsv(csvData)
+                val imuDataList = SensorDataCsvParser.parseIMUCsv(csvData)
+                val gestureDataList = SensorDataCsvParser.parseGestureCsv(csvData)
+                val stressDataList = SensorDataCsvParser.parseStressCsv(csvData)
 
                 // Convert Supabase data classes to Room entities and store locally
                 var totalStored = 0
@@ -514,6 +505,111 @@ class BLEHelper(
                             Log.e(
                                 AppConfig.LogTags.PHONE_BLE,
                                 "Failed to store SkinTemperature data: ${result.message}",
+                                result.exception
+                            )
+                        }
+                    }
+                }
+
+                if (imuDataList.isNotEmpty()) {
+                    hasAnyData = true
+                    val entities = imuDataList.map { data ->
+                        WatchIMUEntity(
+                            eventId = data.eventId,
+                            uuid = "",
+                            deviceType = DeviceType.WATCH.value,
+                            received = Instant.parse(data.received).toEpochMilli(),
+                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
+                            accX = data.accX,
+                            accY = data.accY,
+                            accZ = data.accZ,
+                            gyroX = data.gyroX,
+                            gyroY = data.gyroY,
+                            gyroZ = data.gyroZ
+                        )
+                    }
+                    when (val result = watchSensorRepository.insertIMUData(entities)) {
+                        is Result.Success -> {
+                            totalStored += entities.size
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} IMU entries locally"
+                            )
+                        }
+
+                        is Result.Error -> {
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store IMU data: ${result.message}",
+                                result.exception
+                            )
+                        }
+                    }
+                }
+
+                if (gestureDataList.isNotEmpty()) {
+                    hasAnyData = true
+                    val entities = gestureDataList.map { data ->
+                        WatchGestureEntity(
+                            eventId = data.eventId,
+                            uuid = "",
+                            deviceType = DeviceType.WATCH.value,
+                            received = Instant.parse(data.received).toEpochMilli(),
+                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
+                            classIndex = data.classIndex,
+                            score = data.score,
+                            probabilities = data.probabilities
+                        )
+                    }
+                    when (val result = watchSensorRepository.insertGestureData(entities)) {
+                        is Result.Success -> {
+                            totalStored += entities.size
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} Gesture entries locally"
+                            )
+                        }
+
+                        is Result.Error -> {
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store Gesture data: ${result.message}",
+                                result.exception
+                            )
+                        }
+                    }
+                }
+
+                if (stressDataList.isNotEmpty()) {
+                    hasAnyData = true
+                    val entities = stressDataList.map { data ->
+                        WatchStressEntity(
+                            eventId = data.eventId,
+                            uuid = "",
+                            deviceType = DeviceType.WATCH.value,
+                            received = Instant.parse(data.received).toEpochMilli(),
+                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
+                            windowStartMs = Instant.parse(data.windowStart).toEpochMilli(),
+                            windowEndMs = Instant.parse(data.windowEnd).toEpochMilli(),
+                            rmssd = data.rmssd,
+                            ibiCount = data.ibiCount,
+                            threshold = data.threshold,
+                            isStressed = data.isStressed
+                        )
+                    }
+                    when (val result = watchSensorRepository.insertStressData(entities)) {
+                        is Result.Success -> {
+                            totalStored += entities.size
+                            Log.d(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Stored ${entities.size} Stress entries locally"
+                            )
+                        }
+
+                        is Result.Error -> {
+                            Log.e(
+                                AppConfig.LogTags.PHONE_BLE,
+                                "Failed to store Stress data: ${result.message}",
                                 result.exception
                             )
                         }

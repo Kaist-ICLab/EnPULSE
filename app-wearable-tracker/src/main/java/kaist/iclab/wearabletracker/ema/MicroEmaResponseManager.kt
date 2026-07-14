@@ -2,6 +2,8 @@ package kaist.iclab.wearabletracker.ema
 
 
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -17,6 +19,8 @@ import kaist.iclab.wearabletracker.db.entity.MicroEmaResponseEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -58,7 +62,7 @@ class MicroEmaResponseManager(
             setOf(Constants.BLE.KEY_MICRO_EMA_ACK)
         ) { _, jsonElement ->
             val ackData = when (jsonElement) {
-                is kotlinx.serialization.json.JsonPrimitive -> jsonElement.content
+                is JsonPrimitive -> jsonElement.content
                 else -> jsonElement.toString().trim('"')
             }
             handleAck(ackData)
@@ -72,8 +76,8 @@ class MicroEmaResponseManager(
                 Log.d(TAG, "Received JIT trigger payload: $jsonElement")
 
                 val triggerObj = when (jsonElement) {
-                    is kotlinx.serialization.json.JsonObject -> jsonElement
-                    is kotlinx.serialization.json.JsonPrimitive -> {
+                    is JsonObject -> jsonElement
+                    is JsonPrimitive -> {
                         // It's a string, parse it
                         json.parseToJsonElement(jsonElement.content).jsonObject
                     }
@@ -117,7 +121,7 @@ class MicroEmaResponseManager(
         try {
             // Trigger a double-buzz vibration to physically alert the user
             val vibrator =
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val vibratorManager =
                         context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                     vibratorManager.defaultVibrator
@@ -127,9 +131,9 @@ class MicroEmaResponseManager(
                 }
             vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 200, 100, 200), -1))
 
-            val intent = android.content.Intent(context, WatchSurveyActivity::class.java).apply {
-                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
-                        android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            val intent = Intent(context, WatchSurveyActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             context.startActivity(intent)
         } catch (e: Exception) {

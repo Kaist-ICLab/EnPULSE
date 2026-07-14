@@ -11,9 +11,12 @@ import kaist.iclab.mobiletracker.db.dao.common.LocationDao
 import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kotlinx.coroutines.channels.awaitClose
@@ -136,6 +139,57 @@ class WatchSensorRepositoryImpl(
                         watchSensorDaos[Constants.SensorId.LOCATION] as? LocationDao
                             ?: throw IllegalStateException("No DAO found for Location sensor")
                     dao.insertLocationEntities(entitiesWithUuid)
+                }
+            }
+        }
+    }
+
+    override suspend fun insertIMUData(entities: List<WatchIMUEntity>): Result<Unit> {
+        return ErrorClassifier.runClassified(TAG, "insert IMU") {
+            if (entities.isNotEmpty()) {
+                val userUuid =
+                    SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient) ?: ""
+                val entitiesWithUuid = entities.map { it.copy(uuid = userUuid) }
+                db.withTransaction {
+                    @Suppress("UNCHECKED_CAST")
+                    val dao =
+                        watchSensorDaos["WatchIMU"] as? BaseDao<WatchIMUEntity, *>
+                            ?: throw IllegalStateException("No DAO found for IMU sensor")
+                    dao.insertBatch(entitiesWithUuid, userUuid)
+                }
+            }
+        }
+    }
+
+    override suspend fun insertGestureData(entities: List<WatchGestureEntity>): Result<Unit> {
+        return ErrorClassifier.runClassified(TAG, "insert Gesture") {
+            if (entities.isNotEmpty()) {
+                val userUuid =
+                    SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient) ?: ""
+                val entitiesWithUuid = entities.map { it.copy(uuid = userUuid) }
+                db.withTransaction {
+                    @Suppress("UNCHECKED_CAST")
+                    val dao =
+                        watchSensorDaos["WatchGesture"] as? BaseDao<WatchGestureEntity, *>
+                            ?: throw IllegalStateException("No DAO found for Gesture sensor")
+                    dao.insertBatch(entitiesWithUuid, userUuid)
+                }
+            }
+        }
+    }
+
+    override suspend fun insertStressData(entities: List<WatchStressEntity>): Result<Unit> {
+        return ErrorClassifier.runClassified(TAG, "insert Stress") {
+            if (entities.isNotEmpty()) {
+                val userUuid =
+                    SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient) ?: ""
+                val entitiesWithUuid = entities.map { it.copy(uuid = userUuid) }
+                db.withTransaction {
+                    @Suppress("UNCHECKED_CAST")
+                    val dao =
+                        watchSensorDaos["WatchStress"] as? BaseDao<WatchStressEntity, *>
+                            ?: throw IllegalStateException("No DAO found for Stress sensor")
+                    dao.insertBatch(entitiesWithUuid, userUuid)
                 }
             }
         }

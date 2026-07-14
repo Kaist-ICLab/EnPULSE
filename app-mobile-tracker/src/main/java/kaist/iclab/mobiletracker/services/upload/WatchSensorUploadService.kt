@@ -38,7 +38,10 @@ class WatchSensorUploadService(
      * @return Result indicating success or failure
      */
     suspend fun uploadSensorData(sensorId: String): Result<Unit> {
-        if (!isSensorActive(sensorId)) return Result.Success(Unit)
+        if (!isSensorActive(sensorId)) {
+            Log.d(TAG, "uploadSensorData: $sensorId is NOT active")
+            return Result.Success(Unit)
+        }
 
         val handler = handlerRegistry.getHandler(sensorId)
         if (handler == null) {
@@ -77,13 +80,25 @@ class WatchSensorUploadService(
      * Check if there is data available to upload for a specific sensor.
      */
     suspend fun hasDataToUpload(sensorId: String): Boolean {
-        if (!isSensorActive(sensorId)) return false
+        if (!isSensorActive(sensorId)) {
+            Log.d(TAG, "hasDataToUpload: $sensorId is NOT active")
+            return false
+        }
 
         return try {
-            val handler = handlerRegistry.getHandler(sensorId) ?: return false
+            val handler = handlerRegistry.getHandler(sensorId)
+            if (handler == null) {
+                Log.d(TAG, "hasDataToUpload: No handler for $sensorId")
+                return false
+            }
             val lastUploadTimestamp =
                 syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
-            handler.hasDataToUpload(lastUploadTimestamp)
+            val hasData = handler.hasDataToUpload(lastUploadTimestamp)
+            Log.d(
+                TAG,
+                "hasDataToUpload: $sensorId hasData=$hasData (lastUpload=$lastUploadTimestamp)"
+            )
+            hasData
         } catch (e: Exception) {
             Log.e(
                 TAG,

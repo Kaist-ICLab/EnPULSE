@@ -12,6 +12,8 @@ import kaist.iclab.mobiletracker.repository.HomeRepository
 import kaist.iclab.mobiletracker.repository.HomeRepositoryImpl
 import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.SurveyRepositoryImpl
+import kaist.iclab.mobiletracker.repository.TriggerRepository
+import kaist.iclab.mobiletracker.repository.TriggerRepositoryImpl
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepositoryImpl
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
@@ -35,13 +37,19 @@ import kaist.iclab.mobiletracker.repository.handlers.phone.UserInteractionDataHa
 import kaist.iclab.mobiletracker.repository.handlers.phone.WifiScanDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchAccelerometerDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchEDADataHandler
+import kaist.iclab.mobiletracker.repository.handlers.watch.WatchGestureDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchHeartRateDataHandler
+import kaist.iclab.mobiletracker.repository.handlers.watch.WatchIMUDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchPPGDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.watch.WatchSkinTemperatureDataHandler
+import kaist.iclab.mobiletracker.repository.handlers.watch.WatchStressDataHandler
 import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.services.TriggerConfigPusher
 import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
 import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
+import kaist.iclab.mobiletracker.storage.CouchbaseTriggerConfigStorage
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -79,7 +87,10 @@ val repositoryModule = module {
                 accelerometerDao = db.watchAccelerometerDao(),
                 edaDao = db.watchEDADao(),
                 ppgDao = db.watchPPGDao(),
-                skinTemperatureDao = db.watchSkinTemperatureDao()
+                skinTemperatureDao = db.watchSkinTemperatureDao(),
+                imuDao = db.watchIMUDao(),
+                gestureDao = db.watchGestureDao(),
+                stressDao = db.watchStressDao()
             ),
             watchSensorRepository = get()
         )
@@ -112,7 +123,10 @@ val repositoryModule = module {
             WatchAccelerometerDataHandler(db.watchAccelerometerDao()),
             WatchEDADataHandler(db.watchEDADao()),
             WatchPPGDataHandler(db.watchPPGDao()),
-            WatchSkinTemperatureDataHandler(db.watchSkinTemperatureDao())
+            WatchSkinTemperatureDataHandler(db.watchSkinTemperatureDao()),
+            WatchIMUDataHandler(db.watchIMUDao()),
+            WatchGestureDataHandler(db.watchGestureDao()),
+            WatchStressDataHandler(db.watchStressDao())
         )
         SensorDataHandlerRegistry(handlers)
     }
@@ -142,7 +156,8 @@ val repositoryModule = module {
     // CampaignRepository for campaign data management
     single<CampaignRepository> {
         CampaignRepositoryImpl(
-            campaignService = get()
+            campaignService = get(),
+            backgroundController = get()
         )
     }
 
@@ -160,10 +175,31 @@ val repositoryModule = module {
         )
     }
 
+    // TriggerRepository for campaign trigger management
+    single {
+        CouchbaseTriggerConfigStorage(
+            couchbase = get()
+        )
+    }
+
+    single<TriggerRepository> {
+        TriggerRepositoryImpl(
+            triggerService = get(),
+            persistentStorage = get()
+        )
+    }
+
     // UserProfileRepository for user profile management
     single {
         kaist.iclab.mobiletracker.storage.UserProfileStorage(
             couchbase = get()
+        )
+    }
+
+    // TriggerConfigPusher for sending trigger config to watch via BLE
+    single {
+        TriggerConfigPusher(
+            bleChannel = kaist.iclab.tracker.sync.ble.BLEDataChannel(androidContext())
         )
     }
 
@@ -173,9 +209,11 @@ val repositoryModule = module {
             supabaseHelper = get(),
             persistentStorage = get(),
             campaignSensorRepository = get(),
-            surveyRepository = get()
+            surveyRepository = get(),
+            triggerRepository = get(),
+            triggerConfigPusher = get(),
+            backgroundController = get()
         )
     }
 
 }
-

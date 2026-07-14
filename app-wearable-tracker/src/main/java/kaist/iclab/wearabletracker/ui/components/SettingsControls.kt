@@ -32,12 +32,10 @@ fun SettingController(
     flush: () -> Unit,
     startLogging: () -> Unit,
     stopLogging: () -> Unit,
-    isCollecting: Boolean,
-    hasEnabledSensors: Boolean
+    isCollecting: Boolean
 ) {
-    // Start button requires at least one sensor enabled
-    // Connection check is done in startLogging callback
-    val canStartCollection = hasEnabledSensors
+    // Start button is always enabled; connection and permission checks are done in the callback.
+    val canStartCollection = true
 
     Row(
         modifier = Modifier

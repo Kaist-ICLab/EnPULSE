@@ -45,7 +45,6 @@ import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.ui.components.Popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.Popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
-import kaist.iclab.mobiletracker.utils.AppToast
 import org.koin.compose.koinInject
 
 /**
@@ -58,11 +57,6 @@ fun ServerSyncSettingsScreen(
     syncTimestampService: SyncTimestampService = koinInject()
 ) {
     val context = LocalContext.current
-
-    // Data collection running if started timestamp is not null
-    val isDataCollectionRunning by remember {
-        mutableStateOf(syncTimestampService.getDataCollectionStarted() != null)
-    }
 
     // Automatic sync interval and network settings
     var selectedIntervalMs by remember {
@@ -158,15 +152,11 @@ fun ServerSyncSettingsScreen(
                             description = description,
                             currentValue = currentValue,
                             icon = icon,
-                            isEnabled = !isDataCollectionRunning,
+                            isEnabled = true,
                             onClick = {
-                                if (isDataCollectionRunning) {
-                                    AppToast.show(context, R.string.turn_off_data_collection_first)
-                                } else {
-                                    when (item) {
-                                        SettingItem.Interval -> showIntervalDialog = true
-                                        SettingItem.Network -> showNetworkDialog = true
-                                    }
+                                when (item) {
+                                    SettingItem.Interval -> showIntervalDialog = true
+                                    SettingItem.Network -> showNetworkDialog = true
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()

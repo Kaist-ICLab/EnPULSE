@@ -7,7 +7,6 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
@@ -16,6 +15,7 @@ import kaist.iclab.wearabletracker.Constants.DB.BUFFER_SIZE
 import kaist.iclab.wearabletracker.Constants.DB.FLUSH_INTERVAL_MS
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.db.dao.BaseDao
+import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.repository.ErrorClassifier.runClassified
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -54,6 +54,7 @@ class SensorDataReceiver(
 
         // Inject AutoSyncManager to piggyback on hardware wakeups during Doze mode
         private val autoSyncManager by inject<AutoSyncManager>()
+        private val backgroundController by inject<BackgroundController>()
 
         // Channel to receive sensor events
         private val eventChannel = Channel<Pair<String, SensorEntity>>(
@@ -78,18 +79,25 @@ class SensorDataReceiver(
         override fun onBind(p0: Intent?): IBinder? = null
 
         override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-            val postNotification = NotificationCompat.Builder(
-                this,
-                serviceNotification.channelId
+            val postNotification = NotificationHelper.buildServiceNotification(
+                context = this,
+                config = serviceNotification
             )
-                .setSmallIcon(serviceNotification.icon)
-                .setContentTitle(serviceNotification.title)
-                .setContentText(serviceNotification.description)
-                .setOngoing(true)
-                .build()
 
-            val serviceType =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH else 0
+            val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
+                val needsMicrophone = sensors.any {
+                    (it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.ENABLED ||
+                            it.sensorStateFlow.value.flag == kaist.iclab.tracker.sensor.core.SensorState.FLAG.RUNNING) &&
+                            it.permissions.contains(android.Manifest.permission.RECORD_AUDIO)
+                }
+                if (needsMicrophone) {
+                    type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                }
+                type
+            } else {
+                0
+            }
 
             this.startForeground(
                 serviceNotification.notificationId,
@@ -159,17 +167,46 @@ class SensorDataReceiver(
             }
         }
 
+        private fun hasEnoughSpace(): Boolean {
+            return try {
+                val stat = android.os.StatFs(android.os.Environment.getDataDirectory().path)
+                val bytesAvailable = stat.availableBlocksLong * stat.blockSizeLong
+                bytesAvailable >= kaist.iclab.wearabletracker.Constants.DB.MIN_FREE_SPACE_BYTES
+            } catch (e: Exception) {
+                Log.e("SensorDataReceiver", "Failed to check storage space", e)
+                true // Default to true to avoid stopping collection on a transient error
+            }
+        }
+
         private suspend fun flushBuffer(buffer: MutableMap<String, MutableList<SensorEntity>>) {
+            // Safety check: Stop collection if storage is critically low
+            if (!hasEnoughSpace()) {
+                Log.e("SensorDataReceiver", "Stopping collection: Internal storage is low.")
+                backgroundController.stop()
+                NotificationHelper.showLowStorageNotification(this)
+                return
+            }
+
             buffer.forEach { (sensorId, entities) ->
                 if (entities.isNotEmpty()) {
-                    // Make a copy to insert and clear original list
+                    // Make a copy to insert
                     val batchToInsert = entities.toList()
-                    entities.clear()
-                    runClassified(
+                    
+                    val result = runClassified(
                         "SensorDataReceiver",
                         "flush batch for $sensorId"
                     ) {
                         sensorDataStorages[sensorId]?.insert(batchToInsert)
+                        true // Success
+                    }
+
+                    // Only clear the buffer if the insertion was successful.
+                    // If it failed (result is null), we keep the data in the list so it 
+                    // will be retried in the next flush cycle.
+                    if (result.isSuccess) {
+                        entities.clear()
+                    } else {
+                        Log.w("SensorDataReceiver", "Insertion failed for $sensorId. Keeping ${entities.size} records in buffer for retry.")
                     }
                 }
             }

@@ -703,8 +703,7 @@ private fun RecordCard(
                         text = value,
                         fontSize = Styles.FIELD_VALUE_FONT_SIZE,
                         color = AppColors.TextPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }

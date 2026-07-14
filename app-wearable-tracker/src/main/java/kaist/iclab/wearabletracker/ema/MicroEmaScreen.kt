@@ -19,6 +19,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -534,8 +535,15 @@ private fun SingleQuestionView(
                 else -> true
             }
 
+            val isConfirmEnabled = when (question.answerType) {
+                AnswerType.TEXT -> enteredText.isNotBlank()
+                AnswerType.CHECKBOX -> selectedIds.isNotEmpty()
+                else -> true
+            }
+
             ActionButtonGroup(
                 showConfirm = showConfirm,
+                isConfirmEnabled = isConfirmEnabled,
                 onConfirm = {
                     when (question.answerType) {
                         AnswerType.RADIO -> {
@@ -605,7 +613,7 @@ private fun HorizontalOptionInput(
             state = listState,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 24.dp)
+            contentPadding = PaddingValues(horizontal = 24.dp)
         ) {
             itemsIndexed(options) { index, option ->
                 val isSelected = index == selectedIndex
@@ -751,7 +759,7 @@ private fun CheckboxInput(
             .fillMaxWidth()
             .height(76.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp)
+        contentPadding = PaddingValues(horizontal = 10.dp)
     ) {
         itemsIndexed(options) { index: Int, option: WatchOption ->
             val isChecked = selectedIds.contains(option.id)
@@ -998,6 +1006,7 @@ private fun NumberPickerInput(
 @Composable
 private fun ActionButtonGroup(
     showConfirm: Boolean = true,
+    isConfirmEnabled: Boolean = true,
     onConfirm: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
@@ -1022,14 +1031,19 @@ private fun ActionButtonGroup(
         if (showConfirm) {
             Button(
                 onClick = onConfirm,
+                enabled = isConfirmEnabled,
                 modifier = Modifier.size(32.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = AccentBlue),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = if (isConfirmEnabled) AccentBlue else DarkSurface.copy(alpha = 0.4f),
+                    disabledBackgroundColor = DarkSurface.copy(alpha = 0.4f),
+                    contentColor = if (isConfirmEnabled) Color.Black else MutedGrey,
+                    disabledContentColor = MutedGrey
+                ),
                 shape = CircleShape
             ) {
                 Text(
                     text = "✓",
                     fontSize = 16.sp,
-                    color = Color.Black,
                     fontWeight = FontWeight.Bold
                 )
             }

@@ -160,10 +160,10 @@
     <string name="record_deleted_success">Record deleted from device and server</string>
     <string name="record_deleted_error">Failed to delete record</string>
 
-    <string name="menu_reload_config">Reload Config</string>
-    <string name="menu_reload_config_desc">Refresh the config from server</string>
-    <string name="reload_config_dialog_title">Reload Configuration</string>
-    <string name="reload_config_dialog_message">Are you sure you want to reload? This will fetch the latest settings for your current campaign.</string>
+    <string name="menu_reload_config">Reload &amp; Sync Config</string>
+    <string name="menu_reload_config_desc">Refresh config from server and sync between phone and watch</string>
+    <string name="reload_config_dialog_title">Reload &amp; Sync Configuration</string>
+    <string name="reload_config_dialog_message">Are you sure you want to reload? This will fetch the latest settings for your current campaign.\n\nPlease make sure to connect the watch, keep it nearby, and disable data collection on the watch so the configuration can be applied to the watch as well.</string>
     <string name="error_generic">Something went wrong. Please try again.</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
@@ -191,6 +191,9 @@
     <string name="sensor_desc_step">Step count data</string>
     <string name="sensor_desc_user_interaction">User touch events</string>
     <string name="sensor_desc_wifi">WiFi connection status</string>
+    <string name="sensor_desc_imu">Watch IMU sensor data</string>
+    <string name="sensor_desc_gesture">Watch gesture recognition data</string>
+    <string name="sensor_desc_stress">Watch stress level data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
 
     <!-- Notification -->
@@ -198,7 +201,7 @@
     <string name="notification_description">Data collection is running in the background</string>
 
     <!-- Phone Sensor Screen -->
-    <string name="turn_off_data_collection_first">Please turn off the data collection first to continue</string>
+    <string name="turn_off_data_collection_first">Data collection is still running</string>
 
     <!-- Data &amp; Sync Management Screen -->
     <string name="sync_current_time">Current Time</string>
@@ -261,6 +264,9 @@
     <string name="sensor_step">Step</string>
     <string name="sensor_user_interaction">User Interaction</string>
     <string name="sensor_wifi_scan">Wifi Scan</string>
+    <string name="sensor_imu">IMU</string>
+    <string name="sensor_gesture">Gesture</string>
+    <string name="sensor_stress">Stress</string>
 
 
     <!-- Toast Messages -->
@@ -301,4 +307,9 @@
     <string name="pagination_next">Next Page</string>
     <string name="phone_sensor_badge_description">Phone sensor</string>
     <string name="watch_sensor_badge_description">Watch sensor</string>
+
+    <string name="perm_fullscreen_intent_title">Permission Needed</string>
+    <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
+    <string name="perm_fullscreen_intent_action">Allow Reminders</string>
+    <string name="cancel">Cancel</string>
 </resources>
