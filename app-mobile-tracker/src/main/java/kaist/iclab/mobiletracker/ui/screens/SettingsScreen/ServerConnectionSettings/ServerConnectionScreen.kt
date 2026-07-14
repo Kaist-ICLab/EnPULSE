@@ -142,7 +142,7 @@ fun ServerConnectionScreen(
                         val currentUrl = configManager.getUrl()
                         val currentKey = configManager.getAnonKey()
                         val truncatedKey =
-                            if (currentKey.length > 30) "${currentKey.take(30)}" else currentKey
+                            if (currentKey.length > 30) "${currentKey.take(30)}..." else currentKey
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
