@@ -73,8 +73,11 @@
     <string name="language_screen_description">Select your preferred language for the app interface. The app will display all text and menus in the selected language.</string>
     <string name="phone_sensor_screen_description">Enable or disable individual phone sensors for data collection. Toggle each sensor on or off to control what data is being tracked.</string>
     <string name="phone_sensor_empty_config">No sensors have been configured for your campaign by the researcher.</string>
-    <string name="permission_screen_description">View and manage app permissions. Toggle permissions on or off to control what data the app can access.</string>
-
+    <string name="permission_screen_description">Grant the permissions for the data you wish to track. Denying a permission will simply disable tracking for that specific sensor without affecting the rest of the app.</string>
+    <string name="restricted_settings_title">Restricted Settings</string>
+    <string name="restricted_settings_desc">Since you installed this app manually, Android restricts this setting.\n\nTo enable it:\n1. Go to App Info (we\'ll open it for you)\n2. Tap the top-right menu (3 dots)\n3. Select \'Allow restricted settings\'\n4. Return here to enable the permission.</string>
+    <string name="restricted_settings_got_it">Got it</string>
+    <string name="restricted_settings_cancel">Cancel</string>
 
     <!-- Permission Names -->
     <string name="permission_name_notifications">Notifications</string>
@@ -94,6 +97,7 @@
     <string name="permission_name_usage_stats">Usage Stats</string>
     <string name="permission_name_activity_recognition">Activity Recognition</string>
     <string name="permission_name_steps">Physical Activity (Steps)</string>
+    <string name="permission_name_ignore_battery_optimization">Ignore Battery Optimization</string>
 
     <!-- Permission Descriptions -->
     <string name="permission_desc_notifications">Allow app to send notifications</string>
@@ -113,6 +117,7 @@
     <string name="permission_desc_notification_listener">Read notification content</string>
     <string name="permission_desc_usage_stats">Collect app usage statistics</string>
     <string name="permission_desc_steps">Read step count data</string>
+    <string name="permission_desc_ignore_battery_optimization">Allow app to run in background reliably</string>
 
     <!-- Permission Status -->
     <string name="permission_status_granted">Granted</string>

@@ -103,7 +103,7 @@ fun BottomNavigationBar(
     }
 
     NavigationBar(
-        modifier = modifier.height(Styles.NAVIGATION_BAR_HEIGHT),
+        modifier = modifier,
         windowInsets = NavigationBarDefaults.windowInsets,
         containerColor = AppColors.White
     ) {
@@ -153,9 +153,4 @@ private data class Destination(
     val filledIcon: androidx.compose.ui.graphics.vector.ImageVector
 )
 
-/**
- * Bottom navigation bar style constants
- */
-private object Styles {
-    val NAVIGATION_BAR_HEIGHT = 110.dp
-}
+

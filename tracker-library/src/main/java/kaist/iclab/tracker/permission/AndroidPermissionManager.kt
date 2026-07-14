@@ -15,6 +15,7 @@ import android.health.connect.HealthPermissions
 import android.net.Uri
 import android.os.Build
 import android.os.Looper
+import android.os.PowerManager
 import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
@@ -78,6 +79,10 @@ class AndroidPermissionManager(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) put(
             Manifest.permission.SCHEDULE_EXACT_ALARM,
             ::requestScheduleExactAlarm
+        )
+        put(
+            Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+            ::requestIgnoreBatteryOptimizations
         )
     }
 
@@ -234,6 +239,7 @@ class AndroidPermissionManager(
             Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> getBindNotificationListenerServicePermissionState()
             Manifest.permission.SYSTEM_ALERT_WINDOW -> getSystemAlertWindowPermissionState()
             Manifest.permission.SCHEDULE_EXACT_ALARM -> getScheduleExactAlarmPermissionState()
+            Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> getIgnoreBatteryOptimizationsPermissionState()
             else -> getRuntimePermissionState(permission)
         }
     }
@@ -383,6 +389,15 @@ class AndroidPermissionManager(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return PermissionState.GRANTED
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         return if (alarmManager.canScheduleExactAlarms()) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+    }
+
+    private fun getIgnoreBatteryOptimizationsPermissionState(): PermissionState {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return if (powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
+            PermissionState.GRANTED
+        } else {
+            PermissionState.NOT_REQUESTED
+        }
     }
 
     @SuppressLint("InlinedApi")
@@ -542,6 +557,14 @@ class AndroidPermissionManager(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         if (getPermissionState(Manifest.permission.SCHEDULE_EXACT_ALARM) == PermissionState.GRANTED) return
         getActivity().startActivity(createScheduleExactAlarmIntent())
+    }
+
+    private fun requestIgnoreBatteryOptimizations() {
+        if (getPermissionState(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) == PermissionState.GRANTED) return
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = Uri.parse("package:${context.packageName}")
+        }
+        getActivity().startActivity(intent)
     }
 
     private fun createUsageAccessSettingsIntent(): Intent {

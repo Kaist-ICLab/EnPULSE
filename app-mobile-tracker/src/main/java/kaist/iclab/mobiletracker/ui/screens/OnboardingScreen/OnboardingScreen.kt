@@ -84,7 +84,6 @@ fun OnboardingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(AppColors.Background)
-            .systemBarsPadding()
             .padding(horizontal = Styles.SCREEN_PADDING_HORIZONTAL),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

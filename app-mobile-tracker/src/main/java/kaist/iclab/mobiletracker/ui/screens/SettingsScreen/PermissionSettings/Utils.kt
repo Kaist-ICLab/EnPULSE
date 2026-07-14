@@ -187,6 +187,7 @@ fun getPermissionDescription(context: Context, permissionId: String): String {
         Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> R.string.permission_desc_accessibility
         Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_desc_notification_listener
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_desc_usage_stats
+        Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> R.string.permission_desc_ignore_battery_optimization
         DataTypes.STEPS.name -> R.string.permission_desc_steps
         else -> null
     }
@@ -215,6 +216,7 @@ fun getPermissionName(context: Context, permissionId: String): String {
         Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> R.string.permission_name_accessibility
         Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_name_notification_listener
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_name_usage_stats
+        Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> R.string.permission_name_ignore_battery_optimization
         DataTypes.STEPS.name -> R.string.permission_name_steps
         else -> null
     }
