@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -85,8 +86,10 @@ fun AccountSettingsScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showCampaignDialog by remember { mutableStateOf(false) }
     var showReloadDialog by remember { mutableStateOf(false) }
+    var showLeaveDialog by remember { mutableStateOf(false) }
 
     val isReloadingConfig by accountSettingsViewModel.isReloadingConfig.collectAsState()
+    val isLeavingCampaign by accountSettingsViewModel.isLeavingCampaign.collectAsState()
 
     // Fetch campaigns when dialog is shown (refresh in case new campaigns were added)
     // Note: Initial data (campaigns + user campaign) is already loaded in ViewModel init
@@ -150,6 +153,36 @@ fun AccountSettingsScreen(
             ),
             onDismiss = {
                 if (!isReloadingConfig) showReloadDialog = false
+            }
+        )
+    }
+
+    // Leave Campaign confirmation dialog
+    if (showLeaveDialog) {
+        PopupDialog(
+            title = context.getString(R.string.leave_campaign_dialog_title),
+            content = {
+                Text(
+                    text = context.getString(R.string.leave_campaign_dialog_message),
+                    fontSize = 14.sp,
+                    color = Color(0xFF6B7280),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                )
+            },
+            primaryButton = DialogButtonConfig(
+                text = context.getString(R.string.logout_confirm),
+                onClick = {
+                    accountSettingsViewModel.leaveCampaign()
+                    showLeaveDialog = false
+                },
+            ),
+            secondaryButton = DialogButtonConfig(
+                text = context.getString(R.string.logout_close),
+                onClick = { showLeaveDialog = false },
+                isPrimary = false
+            ),
+            onDismiss = {
+                if (!isLeavingCampaign) showLeaveDialog = false
             }
         )
     }
@@ -282,6 +315,26 @@ fun AccountSettingsScreen(
                                     AppToast.show(context, R.string.turn_off_data_collection_first)
                                 } else {
                                     showReloadDialog = true
+                                }
+                            }
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            thickness = 0.5.dp,
+                            color = AppColors.BorderLight
+                        )
+                        CampaignMenuItem(
+                            title = context.getString(R.string.menu_leave_campaign),
+                            description = context.getString(R.string.menu_leave_campaign_desc),
+                            icon = Icons.AutoMirrored.Filled.Logout,
+                            hasSelectedExperiment = false,
+                            isEnabled = !isDataCollectionRunning && !isLeavingCampaign,
+                            onClick = {
+                                if (isDataCollectionRunning) {
+                                    AppToast.show(context, R.string.turn_off_data_collection_first)
+                                } else {
+                                    showLeaveDialog = true
                                 }
                             }
                         )

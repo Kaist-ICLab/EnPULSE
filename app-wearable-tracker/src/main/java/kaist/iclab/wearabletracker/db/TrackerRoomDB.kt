@@ -11,6 +11,7 @@ import kaist.iclab.wearabletracker.db.dao.IMUDao
 import kaist.iclab.wearabletracker.db.dao.LocationDao
 import kaist.iclab.wearabletracker.db.dao.MicroEmaResponseDao
 import kaist.iclab.wearabletracker.db.dao.PPGDao
+import kaist.iclab.wearabletracker.db.dao.RmssdHistoryDao
 import kaist.iclab.wearabletracker.db.dao.SkinTemperatureDao
 import kaist.iclab.wearabletracker.db.dao.StressDao
 import kaist.iclab.wearabletracker.db.entity.AccelerometerEntity
@@ -21,11 +22,12 @@ import kaist.iclab.wearabletracker.db.entity.IMUEntity
 import kaist.iclab.wearabletracker.db.entity.LocationEntity
 import kaist.iclab.wearabletracker.db.entity.MicroEmaResponseEntity
 import kaist.iclab.wearabletracker.db.entity.PPGEntity
+import kaist.iclab.wearabletracker.db.entity.RmssdHistoryEntity
 import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
 import kaist.iclab.wearabletracker.db.entity.StressEntity
 
 @Database(
-    version = 2,
+    version = 4,
     entities = [
         AccelerometerEntity::class,
         PPGEntity::class,
@@ -36,7 +38,8 @@ import kaist.iclab.wearabletracker.db.entity.StressEntity
         MicroEmaResponseEntity::class,
         IMUEntity::class,
         GestureEntity::class,
-        StressEntity::class
+        StressEntity::class,
+        RmssdHistoryEntity::class,
     ],
     exportSchema = true
 )
@@ -52,4 +55,5 @@ abstract class TrackerRoomDB : RoomDatabase() {
     abstract fun imuDao(): IMUDao
     abstract fun gestureDao(): GestureDao
     abstract fun stressDao(): StressDao
+    abstract fun rmssdHistoryDao(): RmssdHistoryDao
 }

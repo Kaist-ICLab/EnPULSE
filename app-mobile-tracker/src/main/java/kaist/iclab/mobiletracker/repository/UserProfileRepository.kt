@@ -29,12 +29,6 @@ interface UserProfileRepository {
     fun clearProfile()
 
     /**
-     * Update campaign ID for current user and refresh profile
-     * @return Result with success or failure
-     */
-    suspend fun updateCampaignId(campaignId: Int): Result<Unit>
-
-    /**
      * Refresh profile from remote source
      */
     suspend fun refreshProfile(): Result<ProfileData?>
@@ -43,6 +37,11 @@ interface UserProfileRepository {
      * Consolidates refresh of profile, campaign sensors, and surveys into one operation.
      */
     suspend fun syncFullStudyConfig(): Result<ProfileData?>
+
+    /**
+     * Leave the current campaign by clearing the profile's campaign ID.
+     */
+    suspend fun leaveCampaign(): Result<Unit>
 
     /**
      * Create profile if it doesn't exist

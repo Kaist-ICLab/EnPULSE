@@ -53,16 +53,6 @@ class UserProfileRepositoryImpl(
         triggerRepository.clearTriggers()
     }
 
-    override suspend fun updateCampaignId(campaignId: Int): Result<Unit> {
-        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
-            return Result.Error(AppError.CollectionRunning("Cannot update campaign while data collection is running"))
-        }
-
-        val uuid = getCurrentUuid()
-            ?: return Result.Error(AppError.Unknown("User not logged in"))
-        return profileService.updateCampaignId(uuid, campaignId)
-    }
-
     override suspend fun refreshProfile(): Result<ProfileData?> {
         if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
             return Result.Error(AppError.CollectionRunning("Cannot refresh profile while data collection is running"))
@@ -88,14 +78,20 @@ class UserProfileRepositoryImpl(
             return Result.Error(AppError.CollectionRunning("Cannot sync config while data collection is running"))
         }
 
-        // 1. Refresh profile first to get latest campaign ID
-        val profileResult = refreshProfile()
+        val uuid = getCurrentUuid()
+            ?: return Result.Error(AppError.Unknown("User not logged in"))
+
+        // 1. Fetch the latest profile WITHOUT publishing it yet. Publishing the
+        //    campaign ID immediately would trigger navigation away from the
+        //    onboarding screen (NavGraph observes profileFlow.campaignId), which
+        //    cancels this scope before the sensors/surveys below finish loading.
+        val profileResult = profileService.getProfileByUuid(uuid)
         if (profileResult is Result.Error) return profileResult
 
         val profile = profileResult.getOrNull()
         val campaignId = profile?.campaignId
 
-        // 2. If we have a campaign, fetch sensors, surveys, and triggers
+        // 2. If we have a campaign, fetch sensors, surveys, and triggers; otherwise clear caches.
         if (campaignId != null) {
             campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
             surveyRepository.fetchAndPersistSurveys(campaignId)
@@ -108,13 +104,23 @@ class UserProfileRepositoryImpl(
                 triggerConfigPusher.pushToWatch(triggers, surveys)
             }
         } else {
-            // If no campaign, clear caches to be safe
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()
             triggerRepository.clearTriggers()
         }
 
+        // 3. Publish the profile last, so observers (e.g. navigation reacting to
+        //    campaignId) only react once the study config is fully in place.
+        _profile.value = profile
+        profile?.let { persistentStorage.set(it) }
+
         return profileResult
+    }
+
+    override suspend fun leaveCampaign(): Result<Unit> {
+        val uuid = getCurrentUuid()
+            ?: return Result.Error(AppError.Unknown("User not logged in"))
+        return profileService.leaveCampaign(uuid)
     }
 
     override suspend fun createProfileIfNotExists(

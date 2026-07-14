@@ -167,6 +167,12 @@
     <string name="error_generic">문제가 발생했습니다. 다시 시도해 주세요.</string>
     <string name="toast_success_saved">설정을 성공적으로 불러왔습니다.</string>
 
+    <string name="menu_leave_campaign">캠페인 나가기</string>
+    <string name="menu_leave_campaign_desc">현재 캠페인에서 나갑니다</string>
+    <string name="leave_campaign_dialog_title">캠페인 나가기</string>
+    <string name="leave_campaign_dialog_message">정말 나가시겠습니까? 캠페인 설정이 삭제되고 데이터 수집이 중지됩니다. 언제든지 다시 참여할 수 있습니다.</string>
+    <string name="toast_campaign_left">캠페인에서 나갔습니다</string>
+
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">조도 센서 데이터</string>
     <string name="sensor_desc_app_list_change">앱 설치 변경사항</string>

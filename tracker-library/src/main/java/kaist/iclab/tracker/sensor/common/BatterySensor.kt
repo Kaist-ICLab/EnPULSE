@@ -1,4 +1,4 @@
-package kaist.iclab.tracker.sensor.phone
+package kaist.iclab.tracker.sensor.common
 
 import android.content.Context
 import android.content.Intent
