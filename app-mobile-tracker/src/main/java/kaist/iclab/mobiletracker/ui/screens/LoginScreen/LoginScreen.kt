@@ -2,7 +2,6 @@ package kaist.iclab.mobiletracker.ui.screens.LoginScreen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,12 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,61 +34,37 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kaist.iclab.mobiletracker.helpers.ImageAsset
-import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.utils.AppToast
 
 @Composable
 fun LoginScreen(
     onSignInWithGoogle: () -> Unit,
-    onLanguageChanged: () -> Unit = {}
+    onNavigateToLanguage: () -> Unit,
+    onNavigateToServerConnection: () -> Unit
 ) {
     val context = LocalContext.current
-    val languageHelper = LanguageHelper(context)
-    var currentLanguage by remember { mutableStateOf(languageHelper.getLanguage()) }
     var expanded by remember { mutableStateOf(false) }
-
-    // Language selection handler
-    val onLanguageSelected = { language: String ->
-        if (language != currentLanguage) {
-            languageHelper.saveLanguage(language)
-            currentLanguage = language
-            onLanguageChanged()
-        }
-        expanded = false
-    }
+    val configManager = remember { SupabaseConfigManager(context) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(AppColors.Background)
     ) {
-        // Language dropdown at top-right corner
+        // Settings dropdown at top-right corner
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(Styles.LANGUAGE_DROPDOWN_PADDING)
         ) {
-            Row(
-                modifier = Modifier
-                    .clickable { expanded = true },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Styles.LANGUAGE_ROW_SPACING)
-            ) {
-                Text(
-                    text = if (currentLanguage == "ko") {
-                        context.getString(R.string.language_korean)
-                    } else {
-                        context.getString(R.string.language_english)
-                    },
-                    fontSize = Styles.LANGUAGE_TEXT_FONT_SIZE,
-                    color = AppColors.PrimaryColor
-                )
+            IconButton(onClick = { expanded = true }) {
                 Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Language",
-                    tint = AppColors.PrimaryColor,
-                    modifier = Modifier.size(Styles.LANGUAGE_ICON_SIZE)
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = AppColors.TextSecondary
                 )
             }
 
@@ -98,12 +74,18 @@ fun LoginScreen(
                 containerColor = AppColors.Background
             ) {
                 DropdownMenuItem(
-                    text = { Text(context.getString(R.string.language_english)) },
-                    onClick = { onLanguageSelected("en") }
+                    text = { Text(context.getString(R.string.menu_language)) },
+                    onClick = {
+                        expanded = false
+                        onNavigateToLanguage()
+                    }
                 )
                 DropdownMenuItem(
-                    text = { Text(context.getString(R.string.language_korean)) },
-                    onClick = { onLanguageSelected("ko") }
+                    text = { Text(context.getString(R.string.server_config_title)) },
+                    onClick = {
+                        expanded = false
+                        onNavigateToServerConnection()
+                    }
                 )
             }
         }
@@ -137,7 +119,14 @@ fun LoginScreen(
             }
             Spacer(modifier = Modifier.height(Styles.CONTENT_SPACING))
             Button(
-                onClick = onSignInWithGoogle,
+                onClick = {
+                    if (!configManager.isConfigured()) {
+                        AppToast.show(context, R.string.login_not_configured_error)
+                        onNavigateToServerConnection()
+                    } else {
+                        onSignInWithGoogle()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(Styles.BUTTON_HEIGHT),

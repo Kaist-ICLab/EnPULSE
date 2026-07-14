@@ -2,7 +2,6 @@ package kaist.iclab.wearabletracker.trigger
 
 import android.content.Context
 import android.util.Log
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
@@ -17,7 +16,7 @@ class TriggerConfigStorage(context: Context) {
     }
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    private val json = Json { 
+    private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true

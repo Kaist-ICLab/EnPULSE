@@ -48,7 +48,10 @@ class ProfileService(
      */
     private suspend fun saveProfile(profile: ProfileData): Result<Unit> {
         return SupabaseLoadingInterceptor.withLoading {
-            ErrorClassifier.runClassified(TAG, "saveProfile(${profile.uuid}, ${profile.campaignId})") {
+            ErrorClassifier.runClassified(
+                TAG,
+                "saveProfile(${profile.uuid}, ${profile.campaignId})"
+            ) {
                 supabaseClient.from(tableName).upsert(profile)
                 Unit
             }

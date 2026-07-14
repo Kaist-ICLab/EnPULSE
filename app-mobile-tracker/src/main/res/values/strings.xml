@@ -28,6 +28,7 @@
     <string name="about_description">A mobile tracking application for research data collection</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="login_not_configured_error">Please configure the server connection first.</string>
 
     <!-- Enable Tracker -->
     <string name="enable_tracker_title">Start Data Collection</string>
@@ -42,8 +43,6 @@
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE Logo</string>
-    <string name="language_english">English</string>
-    <string name="language_korean">한국어</string>
 
     <!-- Settings Menu -->
     <string name="menu_account">Account</string>
@@ -213,7 +212,7 @@
     <string name="sync_last_watch_data">Last Watch Data Received</string>
     <string name="sync_last_successful_upload">Last Successful Upload</string>
 
-    <string name="sync_automatic_sync">Automatic Sync</string>
+
     <string name="sync_automatic_sync_description">Configure automatic data synchronization settings. Set sync interval and network preferences for automatic uploads.</string>
     <string name="sync_interval_title">Sync Interval</string>
     <string name="sync_interval_description">Automatically upload sensor data to the server based on desired interval.</string>
@@ -291,7 +290,7 @@
     <string name="toast_offline_using_cache">No internet connection. Using cached configuration.</string>
 
     <string name="toast_error_generic">An error occurred</string>
-    <string name="toast_request_timeout">Request timed out. Please check your connection and try again.</string>
+
     <string name="toast_no_data_to_export">No data to export</string>
     <string name="toast_export_failed">Failed to export data</string>
     <string name="sensor_export_csv">Export CSV</string>
@@ -304,7 +303,7 @@
     <string name="onboarding_no_campaigns">No campaigns available</string>
     <string name="onboarding_survey_fetch_error">Campaign saved, but failed to load surveys.</string>
     <string name="onboarding_start">Start</string>
-    <string name="onboarding_help_text">Please consult the researcher to choose which experiment group is appropriate for you</string>
+    <string name="onboarding_help_text_config">Please consult the researcher for the configuration details</string>
 
     <!-- Pagination -->
     <string name="pagination_page_format">Page %1$d / %2$d</string>
@@ -331,7 +330,7 @@
     <string name="server_config_restart_confirm_title">Save &amp; Restart</string>
     <string name="server_config_restart_confirm_message">The application needs to restart to apply the new configuration. Do you want to proceed?</string>
     <string name="server_config_restart_confirm_button">Confirm</string>
-    <string name="server_settings_desc">Server Settings</string>
+
     <string name="back_desc">Back</string>
     <string name="copy_url_desc">Copy URL</string>
     <string name="copy_key_desc">Copy Key</string>
@@ -339,4 +338,5 @@
     <string name="server_config_testing_connection">Testing Connection...</string>
     <string name="server_config_connection_success">Connection successful!</string>
     <string name="server_config_connection_failed">Connection failed. Please check URL and Key.</string>
+
 </resources>

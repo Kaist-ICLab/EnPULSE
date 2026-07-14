@@ -83,7 +83,7 @@ class MicroEmaViewModel(
         // If the same config is already loaded and survey isn't complete, don't restart
         if (_surveyConfig.value?.surveyId == config.surveyId && !_isComplete.value) {
             Log.d(TAG, "Survey ${config.surveyId} already active, ignoring start")
-            return 
+            return
         }
 
         stopCountdown()

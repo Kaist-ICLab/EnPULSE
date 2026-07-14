@@ -44,14 +44,8 @@ android {
             ?: System.getenv("SUPABASE_ANON_KEY")
             ?: "MISSING_SUPABASE_ANON_KEY"
 
-        val supabaseServiceRoleKey: String = findProperty("SUPABASE_SERVICE_ROLE_KEY")?.toString()
-            ?: localProperties.getProperty("SUPABASE_SERVICE_ROLE_KEY")
-            ?: System.getenv("SUPABASE_SERVICE_ROLE_KEY")
-            ?: "MISSING_SUPABASE_SERVICE_ROLE_KEY"
-
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
-        buildConfigField("String", "SUPABASE_SERVICE_ROLE_KEY", "\"$supabaseServiceRoleKey\"")
     }
 
     compileOptions {

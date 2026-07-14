@@ -19,10 +19,10 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
+import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
-import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -102,7 +102,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
 
     private val activityRecognitionListener: (SensorEntity) -> Unit = listener@{ entity ->
         val activityEntity = entity as? ActivityRecognitionSensor.Entity ?: return@listener
-        
+
         // Process the data locally (now successfully saves to Room DB and syncs to Supabase)
         listener["ActivityRecognition"]?.invoke(entity)
 

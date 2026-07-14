@@ -3,9 +3,9 @@ package kaist.iclab.mobiletracker.repository
 import android.util.Log
 import kotlinx.coroutines.TimeoutCancellationException
 import java.net.ConnectException
-import kotlin.coroutines.cancellation.CancellationException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Utility for classifying raw exceptions into typed [AppError] subtypes

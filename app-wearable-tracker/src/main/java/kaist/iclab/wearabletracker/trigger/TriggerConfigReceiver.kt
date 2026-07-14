@@ -2,11 +2,11 @@ package kaist.iclab.wearabletracker.trigger
 
 import android.util.Log
 import kaist.iclab.tracker.sensor.controller.BackgroundController
-import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.engine.TriggerEngine
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.Constants
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -14,7 +14,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kaist.iclab.tracker.trigger.state.DetectionStateTracker
+
 /**
  * Receives trigger configuration from the phone via BLE and initializes
  * the trigger engine with parsed trigger rules and survey configs.
@@ -132,6 +132,7 @@ class TriggerConfigReceiver(
                 is kotlinx.serialization.json.JsonPrimitive -> {
                     json.parseToJsonElement(jsonElement.content).jsonObject
                 }
+
                 else -> {
                     json.parseToJsonElement(jsonElement.toString()).jsonObject
                 }
@@ -139,7 +140,7 @@ class TriggerConfigReceiver(
 
             Log.d(TAG, "Received simulated detection states: $payload")
             val now = System.currentTimeMillis()
-            
+
             payload.forEach { (key, valueElement) ->
                 val value = valueElement.jsonPrimitive.content
                 detectionStateTracker.updateState(key, value, now)

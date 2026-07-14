@@ -8,7 +8,8 @@ import kaist.iclab.mobiletracker.db.entity.phone.ActivityRecognitionEntity
 import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 
 @Dao
-interface ActivityRecognitionDao : BaseDao<ActivityRecognitionSensor.Entity, ActivityRecognitionEntity> {
+interface ActivityRecognitionDao :
+    BaseDao<ActivityRecognitionSensor.Entity, ActivityRecognitionEntity> {
     override suspend fun insert(sensorEntity: ActivityRecognitionSensor.Entity, userUuid: String?) {
         val entity = ActivityRecognitionEntity(
             uuid = userUuid ?: "",
@@ -28,7 +29,10 @@ interface ActivityRecognitionDao : BaseDao<ActivityRecognitionSensor.Entity, Act
     @Insert
     suspend fun insertBatchUsingRoomEntity(entities: List<ActivityRecognitionEntity>)
 
-    override suspend fun insertBatch(entities: List<ActivityRecognitionSensor.Entity>, userUuid: String?) {
+    override suspend fun insertBatch(
+        entities: List<ActivityRecognitionSensor.Entity>,
+        userUuid: String?
+    ) {
         val roomEntities = entities.map { entity ->
             ActivityRecognitionEntity(
                 uuid = userUuid ?: "",

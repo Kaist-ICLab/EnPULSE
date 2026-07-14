@@ -1,15 +1,15 @@
 package kaist.iclab.mobiletracker.di.phone
 
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
+import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
-import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
-import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.phone.BluetoothScanSensor
 import kaist.iclab.tracker.sensor.phone.CallLogSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
