@@ -17,9 +17,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
+import kaist.iclab.mobiletracker.ui.components.CampaignDialog.Styles
 import kaist.iclab.mobiletracker.ui.components.Popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.Popup.PopupDialog
-import kaist.iclab.mobiletracker.ui.components.CampaignDialog.Styles
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.ui.theme.Dimens
 
@@ -30,7 +30,7 @@ fun SupabaseConfigDialog(
 ) {
     val context = LocalContext.current
     val configManager = remember { SupabaseConfigManager(context) }
-    
+
     var url by remember { mutableStateOf(configManager.getCustomUrlRaw()) }
     var anonKey by remember { mutableStateOf(configManager.getCustomAnonKeyRaw()) }
 
@@ -50,7 +50,9 @@ fun SupabaseConfigDialog(
                     onValueChange = { url = it },
                     label = { Text(context.getString(R.string.server_config_url_label)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
                     shape = RoundedCornerShape(Dimens.CornerRadiusMedium),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AppColors.PrimaryColor,

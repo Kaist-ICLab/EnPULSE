@@ -18,15 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Scaffold
-import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
-
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
@@ -39,9 +36,8 @@ import kaist.iclab.wearabletracker.ui.components.PermissionPermanentlyDeniedDial
 import kaist.iclab.wearabletracker.ui.components.SamsungHealthConnectionErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SdkPolicyErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SensorToggleChip
-import org.koin.androidx.compose.koinViewModel
-
 import kaist.iclab.wearabletracker.ui.components.SettingController
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SettingsScreen(

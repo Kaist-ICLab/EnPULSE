@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,12 +63,14 @@ fun MainScreen(
         }
     }
 
+    val userState by authViewModel.userState.collectAsState()
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = AppColors.Background,
             bottomBar = {
-                // Show bottom navigation for all routes except Login and Onboarding
-                if (currentRoute != Screen.Login.route && currentRoute != Screen.Onboarding.route) {
+                // Show bottom navigation only for logged in users, and not on Login/Onboarding screens
+                if (userState.isLoggedIn && currentRoute != Screen.Login.route && currentRoute != Screen.Onboarding.route) {
                     BottomNavigationBar(navController = navController)
                 }
             }

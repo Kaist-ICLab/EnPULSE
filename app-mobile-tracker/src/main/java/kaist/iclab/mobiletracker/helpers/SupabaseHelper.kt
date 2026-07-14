@@ -19,16 +19,22 @@ class SupabaseHelper(private val context: Context) {
     private val settings = SharedPreferencesSettings(
         context.getSharedPreferences("supabase_session", Context.MODE_PRIVATE)
     )
-    
+
     private val configManager = SupabaseConfigManager(context)
 
     var supabaseClient: SupabaseClient = buildClient()
         private set
 
     private fun buildClient(): SupabaseClient {
+        val url = configManager.getUrl()
+        val anonKey = configManager.getAnonKey()
+
+        val finalUrl = if (url.isBlank() || url.contains("MISSING")) "" else url
+        val finalAnonKey = if (anonKey.isBlank() || anonKey.contains("MISSING")) "" else anonKey
+
         return createSupabaseClient(
-            supabaseUrl = configManager.getUrl(),
-            supabaseKey = configManager.getAnonKey()
+            supabaseUrl = finalUrl,
+            supabaseKey = finalAnonKey
         ) {
             install(Postgrest)
             install(Realtime)

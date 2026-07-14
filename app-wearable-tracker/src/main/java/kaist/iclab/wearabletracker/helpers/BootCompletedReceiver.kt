@@ -25,7 +25,7 @@ class BootCompletedReceiver : BroadcastReceiver(), KoinComponent {
         Log.d(TAG, "Watch rebooted. Checking if sensor collection should resume...")
 
         val currentState = sensorController.controllerStateFlow.value
-        
+
         // The BackgroundController uses persistent storage for its state.
         // If it was RUNNING before the reboot, we should restart the service.
         if (currentState.flag == ControllerState.FLAG.RUNNING) {

@@ -3,8 +3,8 @@ package kaist.iclab.wearabletracker.ema
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.addCallback
+import androidx.activity.compose.setContent
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 

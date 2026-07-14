@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -44,15 +43,11 @@ import kaist.iclab.mobiletracker.helpers.ImageAsset
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
-import kaist.iclab.mobiletracker.helpers.SupabaseHelper
-import kaist.iclab.mobiletracker.config.SupabaseConfigManager
-import kaist.iclab.mobiletracker.ui.components.ServerConfig.SupabaseConfigDialog
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import java.net.HttpURLConnection
+import java.net.URL
 
 @Composable
 fun OnboardingScreen(
@@ -63,9 +58,6 @@ fun OnboardingScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var showPasswordDialog by remember { mutableStateOf(false) }
-    var showServerConfigDialog by remember { mutableStateOf(false) }
-    val supabaseHelper: SupabaseHelper = koinInject()
-    val configManager = remember { SupabaseConfigManager(context) }
 
     // Navigate to home when onboarding is complete
     LaunchedEffect(uiState.isComplete) {
@@ -101,170 +93,157 @@ fun OnboardingScreen(
         ) {
             // 1. Top Section (Top Aligned)
             Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = Styles.HEADER_TOP_PADDING),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Logo - smaller
-            ImageAsset(
-                assetPath = "icon.png",
-                contentDescription = context.getString(R.string.mobile_tracker_logo),
-                modifier = Modifier.size(Styles.LOGO_SIZE)
-            )
-
-            Spacer(modifier = Modifier.height(Styles.SPACING_L))
-
-            // Welcome Title
-            Text(
-                text = context.getString(R.string.onboarding_welcome),
-                fontSize = Styles.WELCOME_FONT_SIZE,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.TextPrimary,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(Styles.SPACING_S))
-
-            // Description
-            Text(
-                text = context.getString(R.string.onboarding_description),
-                fontSize = Styles.DESCRIPTION_FONT_SIZE,
-                color = AppColors.TextSecondary,
-                textAlign = TextAlign.Center
-            )
-        }
-
-        // 2. Center Section (Fills remaining space and centers its content)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = AppColors.White),
-                shape = RoundedCornerShape(Styles.CORNER_RADIUS),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Styles.HEADER_TOP_PADDING),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (uiState.isLoading) {
-                    Box(modifier = Modifier.padding(Styles.SPACING_L)) {
-                        Text(
-                            text = context.getString(R.string.onboarding_loading),
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            color = AppColors.TextSecondary
-                        )
-                    }
-                } else if (uiState.campaigns.isEmpty()) {
-                    Box(modifier = Modifier.padding(Styles.SPACING_L)) {
-                        Text(
-                            text = uiState.error
-                                ?: context.getString(R.string.onboarding_no_campaigns),
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            color = if (uiState.error != null) AppColors.ErrorColor else AppColors.TextSecondary
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.heightIn(max = Styles.LIST_MAX_HEIGHT)
-                    ) {
-                        itemsIndexed(uiState.campaigns) { index, campaign ->
-                            CampaignListItem(
-                                name = campaign.name,
-                                isSelected = uiState.selectedCampaign?.id == campaign.id,
-                                onClick = { viewModel.selectCampaign(campaign) },
-                                showDivider = index < uiState.campaigns.lastIndex
+                // Logo - smaller
+                ImageAsset(
+                    assetPath = "icon.png",
+                    contentDescription = context.getString(R.string.mobile_tracker_logo),
+                    modifier = Modifier.size(Styles.LOGO_SIZE)
+                )
+
+                Spacer(modifier = Modifier.height(Styles.SPACING_L))
+
+                // Welcome Title
+                Text(
+                    text = context.getString(R.string.onboarding_welcome),
+                    fontSize = Styles.WELCOME_FONT_SIZE,
+                    fontWeight = FontWeight.Bold,
+                    color = AppColors.TextPrimary,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(Styles.SPACING_S))
+
+                // Description
+                Text(
+                    text = context.getString(R.string.onboarding_description),
+                    fontSize = Styles.DESCRIPTION_FONT_SIZE,
+                    color = AppColors.TextSecondary,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // 2. Center Section (Fills remaining space and centers its content)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = AppColors.White),
+                    shape = RoundedCornerShape(Styles.CORNER_RADIUS),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    if (uiState.isLoading) {
+                        Box(modifier = Modifier.padding(Styles.SPACING_L)) {
+                            Text(
+                                text = context.getString(R.string.onboarding_loading),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                color = AppColors.TextSecondary
                             )
+                        }
+                    } else if (uiState.campaigns.isEmpty()) {
+                        Box(modifier = Modifier.padding(Styles.SPACING_L)) {
+                            Text(
+                                text = uiState.error
+                                    ?: context.getString(R.string.onboarding_no_campaigns),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                color = if (uiState.error != null) AppColors.ErrorColor else AppColors.TextSecondary
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.heightIn(max = Styles.LIST_MAX_HEIGHT)
+                        ) {
+                            itemsIndexed(uiState.campaigns) { index, campaign ->
+                                CampaignListItem(
+                                    name = campaign.name,
+                                    isSelected = uiState.selectedCampaign?.id == campaign.id,
+                                    onClick = { viewModel.selectCampaign(campaign) },
+                                    showDivider = index < uiState.campaigns.lastIndex
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        // 3. Bottom Section (Bottom Aligned)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = Styles.BOTTOM_PADDING),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = context.getString(R.string.onboarding_help_text),
-                fontSize = Styles.HELP_FONT_SIZE,
-                color = AppColors.TextPrimary,
-                textAlign = TextAlign.Center,
+            // 3. Bottom Section (Bottom Aligned)
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = Styles.SPACING_S)
-            )
-
-            Spacer(modifier = Modifier.height(Styles.SPACING_XXL))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(bottom = Styles.BOTTOM_PADDING),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
-                    onClick = {
-                        showPasswordDialog = true
-                    },
+                Text(
+                    text = context.getString(R.string.onboarding_help_text_config),
+                    fontSize = Styles.HELP_FONT_SIZE,
+                    color = AppColors.TextPrimary,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .weight(3f)
-                        .height(Styles.BUTTON_HEIGHT),
-                    enabled = uiState.selectedCampaign != null && !uiState.isLoading && !showPasswordDialog,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.PrimaryColor,
-                        contentColor = Color.White,
-                        disabledContainerColor = AppColors.BorderLight,
-                        disabledContentColor = AppColors.TextSecondary
-                    ),
-                    shape = RoundedCornerShape(Styles.CORNER_RADIUS)
+                        .fillMaxWidth()
+                        .padding(horizontal = Styles.SPACING_S)
+                )
+
+                Spacer(modifier = Modifier.height(Styles.SPACING_XXL))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = context.getString(R.string.onboarding_start),
-                        fontSize = Styles.START_BUTTON_FONT_SIZE,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Button(
+                        onClick = {
+                            showPasswordDialog = true
+                        },
+                        modifier = Modifier
+                            .weight(3f)
+                            .height(Styles.BUTTON_HEIGHT),
+                        enabled = uiState.selectedCampaign != null && !uiState.isLoading && !showPasswordDialog,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.PrimaryColor,
+                            contentColor = Color.White,
+                            disabledContainerColor = AppColors.BorderLight,
+                            disabledContentColor = AppColors.TextSecondary
+                        ),
+                        shape = RoundedCornerShape(Styles.CORNER_RADIUS)
+                    ) {
+                        Text(
+                            text = context.getString(R.string.onboarding_start),
+                            fontSize = Styles.START_BUTTON_FONT_SIZE,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(Styles.SPACING_M))
+
+                    Button(
+                        onClick = onLogout,
+                        modifier = Modifier
+                            .weight(1.8f)
+                            .height(Styles.BUTTON_HEIGHT),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.ErrorColor,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(Styles.CORNER_RADIUS)
+                    ) {
+                        Text(
+                            text = context.getString(R.string.logout_title),
+                            fontSize = Styles.LOGOUT_BUTTON_FONT_SIZE,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.width(Styles.SPACING_M))
-                Button(
-                    onClick = onLogout,
-                    modifier = Modifier
-                        .weight(1.8f)
-                        .height(Styles.BUTTON_HEIGHT),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.ErrorColor,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(Styles.CORNER_RADIUS)
-                ) {
-                    Text(
-                        text = context.getString(R.string.logout_title),
-                        fontSize = Styles.LOGOUT_BUTTON_FONT_SIZE,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        } // Close Bottom Section Column
-        
-    } // Close main Column
-    
-    // Settings Button for Server Configuration
-    IconButton(
-            onClick = { showServerConfigDialog = true },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = Styles.HEADER_TOP_PADDING, end = Styles.SCREEN_PADDING_HORIZONTAL)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = context.getString(R.string.server_settings_desc),
-                tint = AppColors.TextSecondary
-            )
-        }
+            } // Close Bottom Section Column
+
+        } // Close main Column
     }
 
     if (showPasswordDialog && uiState.selectedCampaign != null) {
@@ -277,18 +256,6 @@ fun OnboardingScreen(
             onSuccess = {
                 showPasswordDialog = false
                 viewModel.confirmSelection()
-            }
-        )
-    }
-    
-    if (showServerConfigDialog) {
-        SupabaseConfigDialog(
-            onDismiss = { showServerConfigDialog = false },
-            onSave = { url, anonKey ->
-                configManager.saveCredentials(url, anonKey)
-                supabaseHelper.reinitialize()
-                showServerConfigDialog = false
-                viewModel.loadCampaigns()
             }
         )
     }
@@ -339,5 +306,27 @@ fun CampaignListItem(
                 modifier = Modifier.padding(horizontal = Styles.ITEM_HORIZONTAL_PADDING)
             )
         }
+    }
+}
+
+private suspend fun checkConnection(urlStr: String, anonKey: String): Boolean = withContext(
+    Dispatchers.IO
+) {
+    try {
+        val cleanedUrl = urlStr.trim().removeSuffix("/")
+        val restUrl = "$cleanedUrl/rest/v1/"
+
+        val url = URL(restUrl)
+        val conn = url.openConnection() as HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.connectTimeout = 5000
+        conn.readTimeout = 5000
+        conn.setRequestProperty("apikey", anonKey.trim())
+        conn.setRequestProperty("Authorization", "Bearer ${anonKey.trim()}")
+
+        val responseCode = conn.responseCode
+        responseCode == 200
+    } catch (e: java.lang.Exception) {
+        false
     }
 }

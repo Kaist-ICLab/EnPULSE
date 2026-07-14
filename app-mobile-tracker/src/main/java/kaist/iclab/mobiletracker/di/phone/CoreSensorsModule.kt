@@ -5,8 +5,8 @@ import kaist.iclab.mobiletracker.storage.CouchbaseSensorStateStorage
 import kaist.iclab.mobiletracker.storage.SimpleStateStorage
 import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
 import kaist.iclab.tracker.permission.AndroidPermissionManager
-import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.common.BatterySensor
+import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor

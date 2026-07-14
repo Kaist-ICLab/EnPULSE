@@ -191,7 +191,7 @@ class SensorDataReceiver(
                 if (entities.isNotEmpty()) {
                     // Make a copy to insert
                     val batchToInsert = entities.toList()
-                    
+
                     val result = runClassified(
                         "SensorDataReceiver",
                         "flush batch for $sensorId"
@@ -206,7 +206,10 @@ class SensorDataReceiver(
                     if (result.isSuccess) {
                         entities.clear()
                     } else {
-                        Log.w("SensorDataReceiver", "Insertion failed for $sensorId. Keeping ${entities.size} records in buffer for retry.")
+                        Log.w(
+                            "SensorDataReceiver",
+                            "Insertion failed for $sensorId. Keeping ${entities.size} records in buffer for retry."
+                        )
                     }
                 }
             }

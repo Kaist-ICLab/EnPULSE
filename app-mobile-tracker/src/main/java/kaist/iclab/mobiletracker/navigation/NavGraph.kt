@@ -27,10 +27,10 @@ import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AboutSettings.AboutSe
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.AccountSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.CampaignSettings.CampaignSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.ServerConnectionSettings.ServerConnectionScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.LanguageSettings.LanguageScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.PermissionSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PhoneSensorConfigSettings.PhoneSensorConfigSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.ServerConnectionSettings.ServerConnectionScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SettingsScreen
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthUiEvent
@@ -175,7 +175,12 @@ fun NavGraph(
                         authViewModel.login(activity)
                     }
                 },
-                onLanguageChanged = onLanguageChanged
+                onNavigateToLanguage = {
+                    navController.navigate(Screen.Language.route)
+                },
+                onNavigateToServerConnection = {
+                    navController.navigate(Screen.ServerConnection.route)
+                }
             )
         }
 

@@ -17,8 +17,8 @@ import kaist.iclab.tracker.sensor.galaxywatch.IMUSensor
 import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
 import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
-import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.core.RmssdHistory
+import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter

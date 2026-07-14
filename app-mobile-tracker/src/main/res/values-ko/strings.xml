@@ -28,6 +28,7 @@
     <string name="about_description">연구 데이터 수집을 위한 모바일 추적 애플리케이션</string>
     <string name="sign_out">로그아웃</string>
     <string name="sign_in_with_google">Google로 로그인</string>
+    <string name="login_not_configured_error">서버 연결을 먼저 구성해 주세요.</string>
 
     <!-- Enable Tracker -->
     <string name="enable_tracker_title">데이터 수집 시작</string>
@@ -204,9 +205,8 @@
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">백그라운드 센서 컨트롤러가 실행 중입니다</string>
-    <string name="notification_warning_toast">백그라운드에서 데이터를 수집하려면 알림 권한이 필요합니다. 설정에서 활성화해주세요.</string>
     <string name="menu_server_connection">서버 연결 설정</string>
-    
+
     <string name="server_config_title">서버 설정</string>
     <string name="server_config_description">사용자 지정 Supabase 백엔드 URL과 Anonymous Key를 설정하세요. 빈 칸으로 두면 기본 서버가 사용됩니다.</string>
     <string name="server_config_url_label">Supabase URL</string>
@@ -220,7 +220,7 @@
     <string name="server_config_restart_confirm_title">저장 및 다시 시작</string>
     <string name="server_config_restart_confirm_message">새 서버 설정을 적용하려면 앱을 다시 시작해야 합니다. 계속하시겠습니까?</string>
     <string name="server_config_restart_confirm_button">확인</string>
-    <string name="server_settings_desc">서버 설정</string>
+
     <string name="back_desc">뒤로 가기</string>
     <string name="copy_url_desc">URL 복사</string>
     <string name="copy_key_desc">Key 복사</string>
@@ -228,6 +228,7 @@
     <string name="server_config_testing_connection">연결 테스트 중...</string>
     <string name="server_config_connection_success">연결에 성공했습니다!</string>
     <string name="server_config_connection_failed">연결에 실패했습니다. URL과 Key를 확인해주세요.</string>
+
 
     <!-- Phone Sensor Screen -->
     <string name="turn_off_data_collection_first">데이터 수집이 아직 진행 중입니다</string>
@@ -237,7 +238,7 @@
     <string name="sync_last_watch_data">마지막 워치 데이터 수신</string>
     <string name="sync_last_successful_upload">마지막 성공한 업로드</string>
 
-    <string name="sync_automatic_sync">자동 동기화</string>
+
     <string name="sync_automatic_sync_description">자동 데이터 동기화 설정을 구성하세요. 자동 업로드를 위한 동기화 간격 및 네트워크 기본 설정을 설정합니다.</string>
     <string name="sync_interval_title">동기화 간격</string>
     <string name="sync_interval_description">선택한 간격에 따라 모든 센서 데이터를 서버에 자동 업로드합니다.</string>
@@ -328,7 +329,7 @@
     <string name="onboarding_no_campaigns">사용 가능한 캠페인이 없습니다</string>
     <string name="onboarding_survey_fetch_error">캠페인은 저장되었으나, 설문 로딩에 실패했습니다.</string>
     <string name="onboarding_start">시작</string>
-    <string name="onboarding_help_text">본인에게 적합한 실험 그룹 선택은 연구자에게 문의해주세요.</string>
+    <string name="onboarding_help_text_config">설정 세부 정보는 연구자에게 문의해주세요.</string>
 
     <!-- Pagination -->
     <string name="pagination_page_format">%1$d / %2$d 페이지</string>
