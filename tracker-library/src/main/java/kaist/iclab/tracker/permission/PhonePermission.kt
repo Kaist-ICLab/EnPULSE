@@ -92,6 +92,10 @@ data class Permission(
                 ids = arrayOf(Manifest.permission.PACKAGE_USAGE_STATS)
             ),
             Permission(
+                name = "Ignore Battery Optimization",
+                ids = arrayOf(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            ),
+            Permission(
                 name = "Read Steps (Samsung Health)",
                 ids = arrayOf(DataTypes.STEPS.name)
             )

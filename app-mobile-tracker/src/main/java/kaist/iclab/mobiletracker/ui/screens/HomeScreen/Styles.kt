@@ -12,7 +12,7 @@ object Styles {
     // Layout spacings
     val SCREEN_HORIZONTAL_PADDING = 16.dp
     val SCREEN_VERTICAL_SPACING = 8.dp
-    val TOP_SPACER_HEIGHT = 4.dp
+    val TOP_SPACER_HEIGHT = 16.dp
     val BOTTOM_SPACER_HEIGHT = 8.dp
 
     // Greeting Section

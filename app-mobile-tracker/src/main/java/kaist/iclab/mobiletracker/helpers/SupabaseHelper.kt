@@ -13,23 +13,38 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
-import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 
-class SupabaseHelper(context: Context) {
+class SupabaseHelper(private val context: Context) {
     private val settings = SharedPreferencesSettings(
         context.getSharedPreferences("supabase_session", Context.MODE_PRIVATE)
     )
+    
+    private val configManager = SupabaseConfigManager(context)
 
-    val supabaseClient: SupabaseClient = createSupabaseClient(
-        supabaseUrl = AppConfig.SUPABASE_URL,
-        supabaseKey = AppConfig.SUPABASE_ANON_KEY
-    ) {
-        install(Postgrest)
-        install(Realtime)
-        install(Auth) {
-            // Persist session across app restarts
-            sessionManager = io.github.jan.supabase.auth.SettingsSessionManager(settings)
+    var supabaseClient: SupabaseClient = buildClient()
+        private set
+
+    private fun buildClient(): SupabaseClient {
+        return createSupabaseClient(
+            supabaseUrl = configManager.getUrl(),
+            supabaseKey = configManager.getAnonKey()
+        ) {
+            install(Postgrest)
+            install(Realtime)
+            install(Auth) {
+                // Persist session across app restarts
+                sessionManager = io.github.jan.supabase.auth.SettingsSessionManager(settings)
+            }
+            install(Functions)
         }
-        install(Functions)
+    }
+
+    /**
+     * Rebuilds the Supabase client using the latest configuration.
+     * Useful when the user updates the backend connection details dynamically.
+     */
+    fun reinitialize() {
+        supabaseClient = buildClient()
     }
 }

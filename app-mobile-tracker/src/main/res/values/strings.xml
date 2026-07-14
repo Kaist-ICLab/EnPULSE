@@ -73,8 +73,11 @@
     <string name="language_screen_description">Select your preferred language for the app interface. The app will display all text and menus in the selected language.</string>
     <string name="phone_sensor_screen_description">Enable or disable individual phone sensors for data collection. Toggle each sensor on or off to control what data is being tracked.</string>
     <string name="phone_sensor_empty_config">No sensors have been configured for your campaign by the researcher.</string>
-    <string name="permission_screen_description">View and manage app permissions. Toggle permissions on or off to control what data the app can access.</string>
-
+    <string name="permission_screen_description">Grant the permissions for the data you wish to track. Denying a permission will simply disable tracking for that specific sensor without affecting the rest of the app.</string>
+    <string name="restricted_settings_title">Restricted Settings</string>
+    <string name="restricted_settings_desc">Since you installed this app manually, Android restricts this setting.\n\nTo enable it:\n1. Go to App Info (we\'ll open it for you)\n2. Tap the top-right menu (3 dots)\n3. Select \'Allow restricted settings\'\n4. Return here to enable the permission.</string>
+    <string name="restricted_settings_got_it">Got it</string>
+    <string name="restricted_settings_cancel">Cancel</string>
 
     <!-- Permission Names -->
     <string name="permission_name_notifications">Notifications</string>
@@ -94,6 +97,7 @@
     <string name="permission_name_usage_stats">Usage Stats</string>
     <string name="permission_name_activity_recognition">Activity Recognition</string>
     <string name="permission_name_steps">Physical Activity (Steps)</string>
+    <string name="permission_name_ignore_battery_optimization">Ignore Battery Optimization</string>
 
     <!-- Permission Descriptions -->
     <string name="permission_desc_notifications">Allow app to send notifications</string>
@@ -113,6 +117,7 @@
     <string name="permission_desc_notification_listener">Read notification content</string>
     <string name="permission_desc_usage_stats">Collect app usage statistics</string>
     <string name="permission_desc_steps">Read step count data</string>
+    <string name="permission_desc_ignore_battery_optimization">Allow app to run in background reliably</string>
 
     <!-- Permission Status -->
     <string name="permission_status_granted">Granted</string>
@@ -312,4 +317,26 @@
     <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
     <string name="perm_fullscreen_intent_action">Allow Reminders</string>
     <string name="cancel">Cancel</string>
+    <string name="menu_server_connection">Server Connection</string>
+    <string name="server_config_title">Server Configuration</string>
+    <string name="server_config_description">Set a custom Supabase backend URL and Anonymous Key. Leave fields blank to use the default application server.</string>
+    <string name="server_config_url_label">Supabase URL</string>
+    <string name="server_config_key_label">Supabase Anon Key</string>
+    <string name="server_config_save">Save and Connect</string>
+    <string name="server_config_save_restart">Save and Restart App</string>
+    <string name="server_config_current_title">Current Active Connection:</string>
+    <string name="server_config_current_url">URL: %1$s</string>
+    <string name="server_config_current_key">Key: %1$s</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="server_config_restart_confirm_title">Save &amp; Restart</string>
+    <string name="server_config_restart_confirm_message">The application needs to restart to apply the new configuration. Do you want to proceed?</string>
+    <string name="server_config_restart_confirm_button">Confirm</string>
+    <string name="server_settings_desc">Server Settings</string>
+    <string name="back_desc">Back</string>
+    <string name="copy_url_desc">Copy URL</string>
+    <string name="copy_key_desc">Copy Key</string>
+    <string name="server_config_test_connection">Test Connection</string>
+    <string name="server_config_testing_connection">Testing Connection...</string>
+    <string name="server_config_connection_success">Connection successful!</string>
+    <string name="server_config_connection_failed">Connection failed. Please check URL and Key.</string>
 </resources>

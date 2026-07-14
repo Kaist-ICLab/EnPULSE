@@ -16,8 +16,17 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import android.Manifest
+import android.os.Build
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +64,10 @@ fun PermissionSettingsScreen(
     val controllerState = settingsViewModel.controllerState.collectAsState().value
     val isCollecting = controllerState.flag == ControllerState.FLAG.RUNNING
 
+    // State for Restricted Settings Dialog
+    var showRestrictedDialog by remember { mutableStateOf(false) }
+    var pendingPermissionId by remember { mutableStateOf<String?>(null) }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -84,7 +97,7 @@ fun PermissionSettingsScreen(
 
             // Description text
             Text(
-                text = context.getString(R.string.permission_screen_description),
+                text = stringResource(R.string.permission_screen_description),
                 color = AppColors.TextSecondary,
                 fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE,
                 modifier = Modifier
@@ -136,8 +149,17 @@ fun PermissionSettingsScreen(
                                         }
 
                                         else -> {
-                                            // Request permission
-                                            permissionManager.request(permission.ids)
+                                            // Handle Android 13+ Restricted Settings for special accessibility/notification permissions
+                                            val id = permission.ids.first()
+                                            if (Build.VERSION.SDK_INT >= 33 &&
+                                                (id == Manifest.permission.BIND_ACCESSIBILITY_SERVICE ||
+                                                 id == Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE)) {
+                                                pendingPermissionId = id
+                                                showRestrictedDialog = true
+                                            } else {
+                                                // Request permission normally
+                                                permissionManager.request(permission.ids)
+                                            }
                                         }
                                     }
                                 }
@@ -163,5 +185,32 @@ fun PermissionSettingsScreen(
                 }
             }
         }
+    }
+
+    if (showRestrictedDialog && pendingPermissionId != null) {
+        AlertDialog(
+            onDismissRequest = { showRestrictedDialog = false },
+            title = { Text(stringResource(R.string.restricted_settings_title)) },
+            text = { 
+                Text(stringResource(R.string.restricted_settings_desc)) 
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showRestrictedDialog = false
+                    permissionManager.openPermissionSettings(pendingPermissionId!!)
+                    pendingPermissionId = null
+                }) {
+                    Text(stringResource(R.string.restricted_settings_got_it))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showRestrictedDialog = false
+                    pendingPermissionId = null
+                }) {
+                    Text(stringResource(R.string.restricted_settings_cancel))
+                }
+            }
+        )
     }
 }

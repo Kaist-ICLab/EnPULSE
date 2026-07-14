@@ -45,6 +45,14 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
+import kaist.iclab.mobiletracker.helpers.SupabaseHelper
+import kaist.iclab.mobiletracker.config.SupabaseConfigManager
+import kaist.iclab.mobiletracker.ui.components.ServerConfig.SupabaseConfigDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 @Composable
 fun OnboardingScreen(
@@ -55,6 +63,9 @@ fun OnboardingScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var showPasswordDialog by remember { mutableStateOf(false) }
+    var showServerConfigDialog by remember { mutableStateOf(false) }
+    val supabaseHelper: SupabaseHelper = koinInject()
+    val configManager = remember { SupabaseConfigManager(context) }
 
     // Navigate to home when onboarding is complete
     LaunchedEffect(uiState.isComplete) {
@@ -80,16 +91,16 @@ fun OnboardingScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppColors.Background)
-            .systemBarsPadding()
-            .padding(horizontal = Styles.SCREEN_PADDING_HORIZONTAL),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // 1. Top Section (Top Aligned)
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppColors.Background)
+                .padding(horizontal = Styles.SCREEN_PADDING_HORIZONTAL),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 1. Top Section (Top Aligned)
+            Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = Styles.HEADER_TOP_PADDING),
@@ -237,6 +248,22 @@ fun OnboardingScreen(
                     )
                 }
             }
+        } // Close Bottom Section Column
+        
+    } // Close main Column
+    
+    // Settings Button for Server Configuration
+    IconButton(
+            onClick = { showServerConfigDialog = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = Styles.HEADER_TOP_PADDING, end = Styles.SCREEN_PADDING_HORIZONTAL)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = context.getString(R.string.server_settings_desc),
+                tint = AppColors.TextSecondary
+            )
         }
     }
 
@@ -250,6 +277,18 @@ fun OnboardingScreen(
             onSuccess = {
                 showPasswordDialog = false
                 viewModel.confirmSelection()
+            }
+        )
+    }
+    
+    if (showServerConfigDialog) {
+        SupabaseConfigDialog(
+            onDismiss = { showServerConfigDialog = false },
+            onSave = { url, anonKey ->
+                configManager.saveCredentials(url, anonKey)
+                supabaseHelper.reinitialize()
+                showServerConfigDialog = false
+                viewModel.loadCampaigns()
             }
         )
     }
