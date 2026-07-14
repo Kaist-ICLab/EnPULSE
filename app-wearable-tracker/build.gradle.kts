@@ -17,7 +17,6 @@ android {
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
-        setProperty("archivesBaseName", "EnPULSE-Watch")
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
@@ -61,6 +60,12 @@ android {
     }
     buildToolsVersion = libs.versions.buildTools.get()
 
+    applicationVariants.all {
+        outputs.all {
+            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            outputImpl.outputFileName = "EnPULSE-Watch.apk"
+        }
+    }
 }
 
 dependencies {
