@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
@@ -110,6 +111,12 @@ fun SettingsScreen(
                             title = context.getString(R.string.menu_server_sync),
                             icon = Icons.Filled.CloudSync,
                             onClick = { navController.navigate(Screen.ServerSync.route) },
+                            iconTint = AppColors.IconSync
+                        )
+                        AppMenuItem(
+                            title = context.getString(R.string.menu_server_connection),
+                            icon = Icons.Filled.Storage,
+                            onClick = { navController.navigate(Screen.ServerConnection.route) },
                             iconTint = AppColors.IconSync
                         )
                         AppMenuItem(
