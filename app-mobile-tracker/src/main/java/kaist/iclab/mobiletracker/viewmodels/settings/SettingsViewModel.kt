@@ -77,7 +77,7 @@ class SettingsViewModel(
             // Reset states first to ensure a state change is detected by the watch's DetectionStateTracker
             bleHelper.sendDetectionStateUpdates(
                 mapOf(
-                    "physical_activity" to "Other",
+                    "gesture" to "Other",
                     "stress" to "Low"
                 )
             )
@@ -88,7 +88,7 @@ class SettingsViewModel(
             // Set target states
             bleHelper.sendDetectionStateUpdates(
                 mapOf(
-                    "physical_activity" to "Drinking",
+                    "gesture" to "Drinking",
                     "stress" to "High"
                 )
             )

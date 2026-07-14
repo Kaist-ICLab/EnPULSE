@@ -18,7 +18,7 @@ import org.koin.core.component.inject
  *
  * Examples:
  * - Stress: `... --es sensor stress --es value High`
- * - Gesture: `... --es sensor physical_activity --es value Drinking`
+ * - Gesture: `... --es sensor gesture --es value Drinking`
  */
 class TriggerDebugReceiver : BroadcastReceiver(), KoinComponent {
 
