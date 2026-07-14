@@ -318,7 +318,7 @@
     <string name="cancel">Cancel</string>
     <string name="menu_server_connection">Server Connection</string>
     <string name="server_config_title">Server Configuration</string>
-    <string name="server_config_description">Set a custom Supabase backend URL and Anonymous Key. Leave fields blank to use the default application server.</string>
+    <string name="server_config_description">Set a custom Supabase backend URL and Anonymous Key.</string>
     <string name="server_config_url_label">Supabase URL</string>
     <string name="server_config_key_label">Supabase Anon Key</string>
     <string name="server_config_save">Save and Connect</string>

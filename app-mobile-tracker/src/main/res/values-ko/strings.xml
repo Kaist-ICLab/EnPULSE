@@ -208,7 +208,7 @@
     <string name="menu_server_connection">서버 연결 설정</string>
 
     <string name="server_config_title">서버 설정</string>
-    <string name="server_config_description">사용자 지정 Supabase 백엔드 URL과 Anonymous Key를 설정하세요. 빈 칸으로 두면 기본 서버가 사용됩니다.</string>
+    <string name="server_config_description">사용자 지정 Supabase 백엔드 URL과 Anonymous Key를 설정하세요.</string>
     <string name="server_config_url_label">Supabase URL</string>
     <string name="server_config_key_label">Supabase Anon Key</string>
     <string name="server_config_save">저장 및 연결</string>
