@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import kaist.iclab.mobiletracker.db.dao.common.BaseDao
 import kaist.iclab.mobiletracker.db.entity.phone.ActivityRecognitionEntity
-import kaist.iclab.tracker.sensor.phone.ActivityRecognitionSensor
+import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 
 @Dao
 interface ActivityRecognitionDao : BaseDao<ActivityRecognitionSensor.Entity, ActivityRecognitionEntity> {

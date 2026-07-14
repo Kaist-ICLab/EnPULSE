@@ -91,23 +91,6 @@ fun SettingsScreen(
                     )
                 }
 
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Styles.CARD_CONTAINER_HORIZONTAL_PADDING),
-                        colors = CardDefaults.cardColors(containerColor = AppColors.White),
-                        shape = Styles.CARD_SHAPE
-                    ) {
-                        AppMenuItem(
-                            title = "Debug: High Stress + Drinking",
-                            icon = Icons.Filled.PhoneAndroid,
-                            onClick = { settingsViewModel.triggerDebugStatesOnWatch() },
-                            showDivider = false,
-                            iconTint = AppColors.PrimaryColor
-                        )
-                    }
-                }
 
                 item {
                     Card(

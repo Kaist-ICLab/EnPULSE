@@ -12,12 +12,15 @@ data class StressEntity(
     val received: Long,
     override val timestamp: Long,
     val windowStartMs: Long,
-    val probability: Float,
-    val isHighStress: Boolean
+    val windowEndMs: Long,
+    val rmssd: Float,
+    val ibiCount: Int,
+    val threshold: Float,
+    val isStressed: Boolean
 ) : CsvSerializable {
     override fun toCsvHeader(): String =
-        "eventId,received,timestamp,windowStartMs,probability,isHighStress"
+        "eventId,received,timestamp,windowStartMs,windowEndMs,rmssd,ibiCount,threshold,isStressed"
 
     override fun toCsvRow(): String =
-        "$eventId,$received,$timestamp,$windowStartMs,$probability,$isHighStress"
+        "$eventId,$received,$timestamp,$windowStartMs,$windowEndMs,$rmssd,$ibiCount,$threshold,$isStressed"
 }

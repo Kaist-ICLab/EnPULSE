@@ -1,6 +1,6 @@
 # Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
+# proguardFiles setting in build.gradle.kts.
 
 # Room DB rules
 -keep class * extends androidx.room.RoomDatabase
@@ -21,3 +21,11 @@
     @kotlinx.serialization.Serializable *;
 }
 -keep @kotlinx.serialization.Serializable class * { *; }
+
+# Ktor & Supabase rules
+-keep class io.ktor.** { *; }
+-dontwarn io.ktor.**
+-keep class io.github.jan.supabase.** { *; }
+-dontwarn io.github.jan.supabase.**
+-keep class okhttp3.** { *; }
+-dontwarn okhttp3.**

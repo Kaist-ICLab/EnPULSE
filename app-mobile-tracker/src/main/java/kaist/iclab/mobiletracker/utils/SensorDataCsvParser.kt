@@ -479,7 +479,7 @@ object SensorDataCsvParser {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "Stress",
-            headerPattern = "eventId,received,timestamp,windowStartMs,probability,isHighStress",
+            headerPattern = "eventId,received,timestamp,windowStartMs,windowEndMs,rmssd,ibiCount,threshold,isStressed",
             rowParser = ::parseStressRow
         )
     }
@@ -487,13 +487,16 @@ object SensorDataCsvParser {
     private fun parseStressRow(row: String): StressSensorData? {
         return try {
             val parts = row.split(",").map { it.trim() }
-            if (parts.size >= 6) {
+            if (parts.size >= 9) {
                 val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
                 val windowStartMs = parts[3].toLongOrNull() ?: return null
-                val probability = parts[4].toFloatOrNull() ?: return null
-                val isHighStress = parts[5].toBooleanStrictOrNull() ?: return null
+                val windowEndMs = parts[4].toLongOrNull() ?: return null
+                val rmssd = parts[5].toFloatOrNull() ?: return null
+                val ibiCount = parts[6].toIntOrNull() ?: return null
+                val threshold = parts[7].toFloatOrNull() ?: return null
+                val isStressed = parts[8].toBooleanStrictOrNull() ?: return null
 
                 StressSensorData(
                     eventId = eventId,
@@ -501,8 +504,11 @@ object SensorDataCsvParser {
                     deviceType = DeviceType.WATCH.value,
                     timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
                     windowStart = Instant.ofEpochMilli(windowStartMs).toString(),
-                    probability = probability,
-                    isHighStress = isHighStress,
+                    windowEnd = Instant.ofEpochMilli(windowEndMs).toString(),
+                    rmssd = rmssd,
+                    ibiCount = ibiCount,
+                    threshold = threshold,
+                    isStressed = isStressed,
                     received = Instant.ofEpochMilli(received).toString(),
                 )
             } else null

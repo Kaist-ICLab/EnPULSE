@@ -590,8 +590,11 @@ class BLEHelper(
                             received = Instant.parse(data.received).toEpochMilli(),
                             timestamp = Instant.parse(data.timestamp).toEpochMilli(),
                             windowStartMs = Instant.parse(data.windowStart).toEpochMilli(),
-                            probability = data.probability,
-                            isHighStress = data.isHighStress
+                            windowEndMs = Instant.parse(data.windowEnd).toEpochMilli(),
+                            rmssd = data.rmssd,
+                            ibiCount = data.ibiCount,
+                            threshold = data.threshold,
+                            isStressed = data.isStressed
                         )
                     }
                     when (val result = watchSensorRepository.insertStressData(entities)) {

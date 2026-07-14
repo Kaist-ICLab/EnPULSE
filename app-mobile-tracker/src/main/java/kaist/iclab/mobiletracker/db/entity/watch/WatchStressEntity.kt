@@ -13,6 +13,9 @@ data class WatchStressEntity(
     val received: Long,
     val timestamp: Long,
     val windowStartMs: Long,
-    val probability: Float,
-    val isHighStress: Boolean
+    val windowEndMs: Long,
+    val rmssd: Float,
+    val ibiCount: Int,
+    val threshold: Float,
+    val isStressed: Boolean
 )

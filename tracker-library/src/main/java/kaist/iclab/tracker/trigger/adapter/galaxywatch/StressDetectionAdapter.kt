@@ -24,7 +24,7 @@ class StressDetectionAdapter(
     override val sensorName: String = "stress"
 
     private val listener: (StressSensor.Entity) -> Unit = { entity ->
-        val label = if (entity.isHighStress) "High" else "Low"
+        val label = if (entity.isStressed) "High" else "Low"
         tracker.updateState(sensorName, label, entity.timestamp)
     }
 

@@ -25,9 +25,12 @@ class WatchStressDataHandler(private val dao: WatchStressDao) : SensorDataHandle
                 id = entity.id,
                 timestamp = entity.timestamp,
                 fields = mapOf(
-                    "Probability" to String.format("%.2f", entity.probability),
-                    "High Stress" to entity.isHighStress.toString(),
-                    "Window Start" to entity.windowStartMs.toString()
+                    "RMSSD" to String.format("%.2f", entity.rmssd),
+                    "IBI Count" to entity.ibiCount.toString(),
+                    "Threshold" to String.format("%.2f", entity.threshold),
+                    "Stressed" to entity.isStressed.toString(),
+                    "Window Start" to entity.windowStartMs.toString(),
+                    "Window End" to entity.windowEndMs.toString()
                 )
             )
         }

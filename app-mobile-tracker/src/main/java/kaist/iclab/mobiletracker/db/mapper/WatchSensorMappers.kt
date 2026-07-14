@@ -63,8 +63,11 @@ object StressMapper : EntityToSupabaseMapper<WatchStressEntity, StressSensorData
             received = Instant.ofEpochMilli(entity.received).toString(),
             timestamp = Instant.ofEpochMilli(entity.timestamp).toString(),
             windowStart = Instant.ofEpochMilli(entity.windowStartMs).toString(),
-            probability = entity.probability,
-            isHighStress = entity.isHighStress
+            windowEnd = Instant.ofEpochMilli(entity.windowEndMs).toString(),
+            rmssd = entity.rmssd,
+            ibiCount = entity.ibiCount,
+            threshold = entity.threshold,
+            isStressed = entity.isStressed
         )
     }
 }

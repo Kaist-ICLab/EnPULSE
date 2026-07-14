@@ -14,8 +14,11 @@ interface StressDao : BaseDao<StressSensor.Entity> {
             received = sensorEntity.received,
             timestamp = sensorEntity.timestamp,
             windowStartMs = sensorEntity.windowStartMs,
-            probability = sensorEntity.probability,
-            isHighStress = sensorEntity.isHighStress
+            windowEndMs = sensorEntity.windowEndMs,
+            rmssd = sensorEntity.rmssd,
+            ibiCount = sensorEntity.ibiCount,
+            threshold = sensorEntity.threshold,
+            isStressed = sensorEntity.isStressed
         )
         insertUsingRoomEntity(listOf(entity))
     }
@@ -26,8 +29,11 @@ interface StressDao : BaseDao<StressSensor.Entity> {
                 received = sensorEntity.received,
                 timestamp = sensorEntity.timestamp,
                 windowStartMs = sensorEntity.windowStartMs,
-                probability = sensorEntity.probability,
-                isHighStress = sensorEntity.isHighStress
+                windowEndMs = sensorEntity.windowEndMs,
+                rmssd = sensorEntity.rmssd,
+                ibiCount = sensorEntity.ibiCount,
+                threshold = sensorEntity.threshold,
+                isStressed = sensorEntity.isStressed
             )
         }
         insertUsingRoomEntity(entities)

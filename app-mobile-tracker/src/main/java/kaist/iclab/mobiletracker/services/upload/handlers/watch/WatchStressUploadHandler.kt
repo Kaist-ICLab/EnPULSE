@@ -65,11 +65,11 @@ class WatchStressUploadHandler(
     }
 
     override fun getCsvHeader(): String {
-        return "eventId,uuid,deviceType,received,timestamp,windowStartMs,probability,isHighStress"
+        return "eventId,uuid,deviceType,received,timestamp,windowStartMs,windowEndMs,rmssd,ibiCount,threshold,isStressed"
     }
 
     override fun recordToCsvRow(record: Any): String {
         val entity = record as kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
-        return "${entity.eventId},${entity.uuid},${entity.deviceType},${entity.received},${entity.timestamp},${entity.windowStartMs},${entity.probability},${entity.isHighStress}"
+        return "${entity.eventId},${entity.uuid},${entity.deviceType},${entity.received},${entity.timestamp},${entity.windowStartMs},${entity.windowEndMs},${entity.rmssd},${entity.ibiCount},${entity.threshold},${entity.isStressed}"
     }
 }

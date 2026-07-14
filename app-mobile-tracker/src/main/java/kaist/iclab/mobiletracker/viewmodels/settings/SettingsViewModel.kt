@@ -72,28 +72,6 @@ class SettingsViewModel(
         private const val TAG = "SettingsViewModel"
     }
 
-    fun triggerDebugStatesOnWatch() {
-        viewModelScope.launch {
-            // Reset states first to ensure a state change is detected by the watch's DetectionStateTracker
-            bleHelper.sendDetectionStateUpdates(
-                mapOf(
-                    "gesture" to "Other",
-                    "stress" to "Low"
-                )
-            )
-
-            // Small delay to ensure BLE messages are processed sequentially
-            kotlinx.coroutines.delay(100)
-
-            // Set target states
-            bleHelper.sendDetectionStateUpdates(
-                mapOf(
-                    "gesture" to "Drinking",
-                    "stress" to "High"
-                )
-            )
-        }
-    }
 
     private val sensors = backgroundController.sensors
 

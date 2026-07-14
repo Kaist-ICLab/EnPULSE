@@ -22,7 +22,7 @@ import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
-import kaist.iclab.tracker.sensor.phone.ActivityRecognitionSensor
+import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

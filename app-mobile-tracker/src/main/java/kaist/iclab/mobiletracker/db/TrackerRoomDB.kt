@@ -59,7 +59,7 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 
 @Database(
-    version = 3,
+    version = 1,
     entities = [
 
         // Phone sensor data
