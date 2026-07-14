@@ -17,6 +17,7 @@ android {
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+        setProperty("archivesBaseName", "EnPULSE-Watch")
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
