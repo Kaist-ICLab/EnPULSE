@@ -326,12 +326,12 @@ fun DataScreen(
     uiState.uploadProgress?.let { progress ->
         if (progress.isComplete) {
             PopupDialog(
-                title = "Upload Complete",
+                title = stringResource(R.string.upload_complete_title),
                 content = {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         if (progress.successCount > 0) {
                             Text(
-                                text = "Successfully uploaded ${progress.successCount} sensor(s):",
+                                text = stringResource(R.string.upload_success_header, progress.successCount),
                                 color = AppColors.PrimaryColor,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -342,7 +342,7 @@ fun DataScreen(
                             )
                         } else if (progress.failedCount == 0) {
                             Text(
-                                text = "No new data to upload.",
+                                text = stringResource(R.string.upload_no_data),
                                 color = AppColors.TextPrimary,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -351,7 +351,7 @@ fun DataScreen(
                         if (progress.failedCount > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Failed to upload ${progress.failedCount} sensor(s):",
+                                text = stringResource(R.string.upload_failed_header, progress.failedCount),
                                 color = AppColors.ErrorColor,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -361,10 +361,24 @@ fun DataScreen(
                                 color = AppColors.TextSecondary
                             )
                         }
+
+                        if (progress.upToDateCount > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = stringResource(R.string.upload_uptodate_header, progress.upToDateCount),
+                                color = AppColors.TextPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = progress.upToDateSensors.joinToString(", "),
+                                fontSize = 12.sp,
+                                color = AppColors.TextSecondary
+                            )
+                        }
                     }
                 },
                 primaryButton = DialogButtonConfig(
-                    text = "OK",
+                    text = stringResource(R.string.ok),
                     onClick = { viewModel.clearUploadProgress() }
                 ),
                 onDismiss = { viewModel.clearUploadProgress() }
@@ -382,14 +396,14 @@ fun DataScreen(
                             .padding(24.dp)
                     ) {
                         Text(
-                            text = "Uploading Data",
+                            text = stringResource(R.string.upload_dialog_title),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = AppColors.TextPrimary
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Uploading ${progress.currentSensorName}...",
+                            text = stringResource(R.string.upload_dialog_status, progress.currentSensorName),
                             fontSize = 14.sp,
                             color = AppColors.TextPrimary
                         )
@@ -402,7 +416,7 @@ fun DataScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "${progress.currentIndex} of ${progress.totalSensors}",
+                            text = stringResource(R.string.upload_dialog_progress, progress.currentIndex, progress.totalSensors),
                             fontSize = 12.sp,
                             color = AppColors.TextSecondary,
                             modifier = Modifier.align(Alignment.End)

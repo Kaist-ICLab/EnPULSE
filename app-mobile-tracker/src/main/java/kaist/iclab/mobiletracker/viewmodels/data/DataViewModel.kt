@@ -25,8 +25,10 @@ data class UploadProgressState(
     val totalSensors: Int = 0,
     val successCount: Int = 0,
     val failedCount: Int = 0,
+    val upToDateCount: Int = 0,
     val successfulSensors: List<String> = emptyList(),
-    val failedSensors: List<String> = emptyList()
+    val failedSensors: List<String> = emptyList(),
+    val upToDateSensors: List<String> = emptyList()
 )
 
 /**
@@ -135,6 +137,7 @@ class DataViewModel(
             startUploadProgress(sensorsToUpload.size)
             val successfulSensors = mutableListOf<String>()
             val failedSensors = mutableListOf<String>()
+            val upToDateSensors = mutableListOf<String>()
 
             try {
                 sensorsToUpload.forEachIndexed { index, sensor ->
@@ -146,6 +149,8 @@ class DataViewModel(
                             successfulSensors.add(sensor.displayName)
                         } else if (result == -1) {
                             failedSensors.add(sensor.displayName)
+                        } else {
+                            upToDateSensors.add(sensor.displayName)
                         }
                     } catch (e: Exception) {
                         failedSensors.add(sensor.displayName)
@@ -153,7 +158,7 @@ class DataViewModel(
                     }
                 }
             } finally {
-                finishUploadProgress(successfulSensors, failedSensors)
+                finishUploadProgress(successfulSensors, failedSensors, upToDateSensors)
                 loadSensorInfo()
             }
         }
@@ -178,15 +183,17 @@ class DataViewModel(
         )
     }
 
-    private fun finishUploadProgress(successful: List<String>, failed: List<String>) {
+    private fun finishUploadProgress(successful: List<String>, failed: List<String>, upToDate: List<String>) {
         SupabaseLoadingInterceptor.suppressGlobalLoading = false
         _uiState.value = _uiState.value.copy(
             uploadProgress = _uiState.value.uploadProgress?.copy(
                 isComplete = true,
                 successCount = successful.size,
                 failedCount = failed.size,
+                upToDateCount = upToDate.size,
                 successfulSensors = successful,
-                failedSensors = failed
+                failedSensors = failed,
+                upToDateSensors = upToDate
             )
         )
     }

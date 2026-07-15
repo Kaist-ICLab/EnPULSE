@@ -339,4 +339,15 @@
     <string name="server_config_connection_success">Connection successful!</string>
     <string name="server_config_connection_failed">Connection failed. Please check URL and Key.</string>
 
+    <!-- Data Upload Dialog -->
+    <string name="upload_dialog_title">Uploading Data</string>
+    <string name="upload_dialog_status">Uploading %1$s…</string>
+    <string name="upload_dialog_progress">%1$d of %2$d</string>
+    <string name="upload_complete_title">Upload Complete</string>
+    <string name="upload_success_header">Successfully uploaded %1$d sensor(s):</string>
+    <string name="upload_no_data">No new data to upload.</string>
+    <string name="upload_failed_header">Failed to upload %1$d sensor(s):</string>
+    <string name="upload_uptodate_header">Already up to date (%1$d sensor(s)):</string>
+    <string name="ok">OK</string>
+
 </resources>
