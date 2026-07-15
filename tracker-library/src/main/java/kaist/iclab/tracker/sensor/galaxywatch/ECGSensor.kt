@@ -112,25 +112,32 @@ class ECGSensor(
         }
     }
 
+    private var connectionJob: kotlinx.coroutines.Job? = null
+
     override fun onStart() {
-        try {
-            if (!samsungHealthSensorInitializer.connectionStateFlow.value) {
-                Log.w(name, "HealthTrackingService not connected yet")
-                return
+        connectionJob?.cancel()
+        connectionJob = CoroutineScope(Dispatchers.IO).launch {
+            samsungHealthSensorInitializer.connectionStateFlow.collect { isConnected ->
+                if (isConnected) {
+                    try {
+                        tracker.setEventListener(listener)
+                    } catch (e: Exception) {
+                        Log.w(name, "Failed to start ECG sensor: ${e.message}")
+                    }
+                    this.cancel()
+                }
             }
-            tracker.setEventListener(listener)
-        } catch (e: Exception) {
-            // ECG not supported or not connected yet, ignore
-            Log.w(name, "Failed to start ECG sensor: ${e.message}")
         }
     }
 
     override fun onStop() {
+        connectionJob?.cancel()
+        connectionJob = null
         try {
-            if (!samsungHealthSensorInitializer.connectionStateFlow.value) return
-            tracker.unsetEventListener()
+            if (samsungHealthSensorInitializer.connectionStateFlow.value) {
+                tracker.unsetEventListener()
+            }
         } catch (e: Exception) {
-            // ECG not supported or not connected yet, ignore
             Log.w(name, "Failed to stop ECG sensor: ${e.message}")
         }
     }
