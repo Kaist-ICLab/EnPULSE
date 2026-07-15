@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 
@@ -153,6 +154,7 @@ class DataViewModel(
                             upToDateSensors.add(sensor.displayName)
                         }
                     } catch (e: Exception) {
+                        if (e is CancellationException) throw e
                         failedSensors.add(sensor.displayName)
                         Log.e("DataViewModel", "Error uploading ${sensor.sensorId}", e)
                     }
