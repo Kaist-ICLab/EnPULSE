@@ -221,10 +221,6 @@ class SettingsViewModel(
         )
     }
 
-    /**
-     * Starts logging with proper error handling
-     */
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun startLogging() {
         startLoggingSafely()
     }
@@ -232,6 +228,7 @@ class SettingsViewModel(
     /**
      * Starts logging with error handling (internal safe method)
      */
+    @android.annotation.SuppressLint("MissingPermission")
     private fun startLoggingSafely() {
         try {
             backgroundController.start()

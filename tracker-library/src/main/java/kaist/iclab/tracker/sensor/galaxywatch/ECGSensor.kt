@@ -114,17 +114,24 @@ class ECGSensor(
 
     override fun onStart() {
         try {
+            if (!samsungHealthSensorInitializer.connectionStateFlow.value) {
+                Log.w(name, "HealthTrackingService not connected yet")
+                return
+            }
             tracker.setEventListener(listener)
-        } catch (e: UnsupportedOperationException) {
-            // ECG not supported on this device, ignore
+        } catch (e: Exception) {
+            // ECG not supported or not connected yet, ignore
+            Log.w(name, "Failed to start ECG sensor: ${e.message}")
         }
     }
 
     override fun onStop() {
         try {
+            if (!samsungHealthSensorInitializer.connectionStateFlow.value) return
             tracker.unsetEventListener()
-        } catch (e: UnsupportedOperationException) {
-            // ECG not supported on this device, ignore
+        } catch (e: Exception) {
+            // ECG not supported or not connected yet, ignore
+            Log.w(name, "Failed to stop ECG sensor: ${e.message}")
         }
     }
 }

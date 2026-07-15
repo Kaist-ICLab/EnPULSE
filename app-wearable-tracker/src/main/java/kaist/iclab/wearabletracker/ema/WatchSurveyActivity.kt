@@ -2,6 +2,7 @@ package kaist.iclab.wearabletracker.ema
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -27,6 +28,12 @@ class WatchSurveyActivity : ComponentActivity() {
                     android.view.WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
 
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                microEmaViewModel.dismiss()
+            }
+        })
+
         setContent {
             WearableTrackerTheme {
                 MicroEmaScreen(
@@ -35,14 +42,5 @@ class WatchSurveyActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-    /**
-     * Handle back press / swipe-to-dismiss as a DISMISSED event.
-     */
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        microEmaViewModel.dismiss()
-        // onFinish callback in MicroEmaScreen will call finish() after the brief delay
     }
 }

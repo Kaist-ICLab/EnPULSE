@@ -3,6 +3,7 @@ package kaist.iclab.wearabletracker.ecg
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -24,6 +25,13 @@ class EcgMeasurementActivity : ComponentActivity() {
                     WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
 
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                ecgViewModel.cancelMeasurement()
+                finish()
+            }
+        })
+
         setContent {
             WearableTrackerTheme {
                 EcgMeasurementScreen(
@@ -32,15 +40,5 @@ class EcgMeasurementActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-    /**
-     * Treat back press as an early cancel — stop the sensor immediately rather than
-     * leaving it running for the rest of the 30s window.
-     */
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        ecgViewModel.cancelMeasurement()
-        finish()
     }
 }
