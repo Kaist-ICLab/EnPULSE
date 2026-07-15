@@ -13,6 +13,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
+
+/**
+ * Data class to track the progress of uploading all sensors.
+ */
+data class UploadProgressState(
+    val isComplete: Boolean = false,
+    val currentSensorName: String = "",
+    val currentIndex: Int = 0,
+    val totalSensors: Int = 0,
+    val successCount: Int = 0,
+    val failedCount: Int = 0,
+    val successfulSensors: List<String> = emptyList(),
+    val failedSensors: List<String> = emptyList()
+)
+
 /**
  * UI state for the Data screen.
  */
@@ -26,7 +42,8 @@ data class DataUiState(
     val isExporting: Boolean = false,
     val currentTime: String = "--",
     val lastWatchData: String? = null,
-    val lastSuccessfulUpload: String? = null
+    val lastSuccessfulUpload: String? = null,
+    val uploadProgress: UploadProgressState? = null
 )
 
 /**
@@ -103,28 +120,82 @@ class DataViewModel(
     }
 
     /**
-     * Upload all data for all sensors.
+     * Upload all data for all sensors with detailed progress tracking.
      */
     fun uploadAllData() {
-        if (_uiState.value.isUploading) return
+        if (_uiState.value.uploadProgress != null) return
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isUploading = true)
+            val sensorsToUpload = _uiState.value.sensors.filter { it.recordCount > 0 }
+            if (sensorsToUpload.isEmpty()) {
+                AppToast.show(context, R.string.toast_no_data_to_upload)
+                return@launch
+            }
+
+            startUploadProgress(sensorsToUpload.size)
+            val successfulSensors = mutableListOf<String>()
+            val failedSensors = mutableListOf<String>()
+
             try {
-                val successCount = dataRepository.uploadAllData()
-                if (successCount > 0) {
-                    AppToast.show(context, R.string.toast_upload_all_summary, successCount)
-                } else if (successCount == 0) {
-                    AppToast.show(context, R.string.toast_no_data_to_upload)
-                } else {
-                    AppToast.show(context, R.string.toast_sensor_data_upload_error)
+                sensorsToUpload.forEachIndexed { index, sensor ->
+                    updateUploadProgress(index + 1, sensor.displayName)
+
+                    try {
+                        val result = dataRepository.uploadSensorData(sensor.sensorId)
+                        if (result > 0) {
+                            successfulSensors.add(sensor.displayName)
+                        } else if (result == -1) {
+                            failedSensors.add(sensor.displayName)
+                        }
+                    } catch (e: Exception) {
+                        failedSensors.add(sensor.displayName)
+                        Log.e("DataViewModel", "Error uploading ${sensor.sensorId}", e)
+                    }
                 }
-                loadSensorInfo()
-            } catch (e: Exception) {
-                AppToast.show(context, R.string.toast_sensor_data_upload_error)
             } finally {
-                _uiState.value = _uiState.value.copy(isUploading = false)
+                finishUploadProgress(successfulSensors, failedSensors)
+                loadSensorInfo()
             }
         }
+    }
+
+    private fun startUploadProgress(totalSensors: Int) {
+        SupabaseLoadingInterceptor.suppressGlobalLoading = true
+        _uiState.value = _uiState.value.copy(
+            uploadProgress = UploadProgressState(
+                isComplete = false,
+                totalSensors = totalSensors
+            )
+        )
+    }
+
+    private fun updateUploadProgress(currentIndex: Int, sensorName: String) {
+        _uiState.value = _uiState.value.copy(
+            uploadProgress = _uiState.value.uploadProgress?.copy(
+                currentIndex = currentIndex,
+                currentSensorName = sensorName
+            )
+        )
+    }
+
+    private fun finishUploadProgress(successful: List<String>, failed: List<String>) {
+        SupabaseLoadingInterceptor.suppressGlobalLoading = false
+        _uiState.value = _uiState.value.copy(
+            uploadProgress = _uiState.value.uploadProgress?.copy(
+                isComplete = true,
+                successCount = successful.size,
+                failedCount = failed.size,
+                successfulSensors = successful,
+                failedSensors = failed
+            )
+        )
+    }
+
+    /**
+     * Dismisses the upload progress summary dialog.
+     */
+    fun clearUploadProgress() {
+        _uiState.value = _uiState.value.copy(uploadProgress = null)
     }
 
     /**

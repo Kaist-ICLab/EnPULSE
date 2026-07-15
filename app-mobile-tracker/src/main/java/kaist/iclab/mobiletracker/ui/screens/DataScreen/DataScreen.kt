@@ -28,11 +28,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -183,7 +185,7 @@ fun DataScreen(
                                     lastWatchData = uiState.lastWatchData,
                                     lastSuccessfulUpload = uiState.lastSuccessfulUpload,
                                     totalRecords = uiState.totalRecords,
-                                    isUploading = uiState.isUploading,
+                                    isUploading = uiState.uploadProgress?.isComplete == false,
                                     isDeleting = uiState.isDeleting,
                                     isExporting = uiState.isExporting,
                                     onUploadClick = { showUploadConfirm = true },
@@ -318,6 +320,97 @@ fun DataScreen(
             ),
             onDismiss = { showDeleteConfirm = false }
         )
+    }
+
+    // Upload Progress & Summary Dialog
+    uiState.uploadProgress?.let { progress ->
+        if (progress.isComplete) {
+            PopupDialog(
+                title = "Upload Complete",
+                content = {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        if (progress.successCount > 0) {
+                            Text(
+                                text = "Successfully uploaded ${progress.successCount} sensor(s):",
+                                color = AppColors.PrimaryColor,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = progress.successfulSensors.joinToString(", "),
+                                fontSize = 12.sp,
+                                color = AppColors.TextSecondary
+                            )
+                        } else if (progress.failedCount == 0) {
+                            Text(
+                                text = "No new data to upload.",
+                                color = AppColors.TextPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        if (progress.failedCount > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Failed to upload ${progress.failedCount} sensor(s):",
+                                color = AppColors.ErrorColor,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = progress.failedSensors.joinToString(", "),
+                                fontSize = 12.sp,
+                                color = AppColors.TextSecondary
+                            )
+                        }
+                    }
+                },
+                primaryButton = DialogButtonConfig(
+                    text = "OK",
+                    onClick = { viewModel.clearUploadProgress() }
+                ),
+                onDismiss = { viewModel.clearUploadProgress() }
+            )
+        } else {
+            Dialog(onDismissRequest = { /* do nothing, must wait */ }) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = AppColors.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                    ) {
+                        Text(
+                            text = "Uploading Data",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = AppColors.TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Uploading ${progress.currentSensorName}...",
+                            fontSize = 14.sp,
+                            color = AppColors.TextPrimary
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        LinearProgressIndicator(
+                            progress = { if (progress.totalSensors > 0) progress.currentIndex.toFloat() / progress.totalSensors else 0f },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = AppColors.PrimaryColor,
+                            trackColor = AppColors.PrimaryColor.copy(alpha = 0.2f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "${progress.currentIndex} of ${progress.totalSensors}",
+                            fontSize = 12.sp,
+                            color = AppColors.TextSecondary,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
