@@ -54,7 +54,8 @@ import java.lang.ref.WeakReference
 import androidx.core.net.toUri
 
 class AndroidPermissionManager(
-    private val context: Context
+    private val context: Context,
+    private val scope: CoroutineScope
 ) : PermissionManager {
     companion object {
         private val TAG = AndroidPermissionManager::class.simpleName
@@ -229,7 +230,7 @@ class AndroidPermissionManager(
         return permissionStateFlow.map { stateMap ->
             stateMap.filterKeys { it in permissions.toList() }
         }.stateIn(
-            scope = CoroutineScope(Dispatchers.IO), // TODO: Use injected scope to avoid leaks
+            scope = scope,
             started = SharingStarted.Eagerly, 
             initialValue = initialValue
         )
@@ -472,7 +473,7 @@ class AndroidPermissionManager(
         }
 
         if (specialPermission != "") {
-            CoroutineScope(Dispatchers.IO).launch {
+            scope.launch {
                 permissionStateFlow.collect { permissionState ->
                     if (permissionState[specialPermission] == PermissionState.GRANTED) {
                         // Request a normal permission first that is required to grant a special permission

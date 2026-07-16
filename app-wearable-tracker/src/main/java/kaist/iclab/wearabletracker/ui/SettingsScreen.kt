@@ -317,6 +317,7 @@ fun SettingsScreenContent(
                         SensorToggleChip(
                             sensorId = name,
                             sensorStateFlow = stateFlow,
+                            isCollecting = isCollecting,
                             updateStatus = { status -> onSensorToggle(name, status) }
                         )
                     }

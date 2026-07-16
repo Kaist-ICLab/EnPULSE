@@ -23,7 +23,7 @@ class GestureEntity : WatchBaseEntity, CsvSerializable {
         this.probabilities = probabilities
     }
 
-    override fun toCsvHeader(): String = "eventId,received,timestamp,classIndex,score,probabilities"
+    override fun csvHeader(): String = "eventId,received,timestamp,classIndex,score,probabilities"
     override fun toCsvRow(): String =
         "$eventId,$received,$timestamp,$classIndex,$score,${probabilities.joinToString(";")}"
 }

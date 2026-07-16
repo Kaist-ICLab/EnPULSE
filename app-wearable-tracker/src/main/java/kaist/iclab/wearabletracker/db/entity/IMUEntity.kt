@@ -32,7 +32,7 @@ class IMUEntity : WatchBaseEntity, CsvSerializable {
         this.gyroZ = gyroZ
     }
 
-    override fun toCsvHeader(): String =
+    override fun csvHeader(): String =
         "eventId,received,timestamp,accX,accY,accZ,gyroX,gyroY,gyroZ"
 
     override fun toCsvRow(): String =

@@ -22,6 +22,9 @@ import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseSurveyScheduleStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -39,7 +42,14 @@ val koinModule = module {
     }
 
     single {
-        AndroidPermissionManager(context = androidContext())
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    }
+
+    single {
+        AndroidPermissionManager(
+            context = androidContext(),
+            scope = get<CoroutineScope>()
+        )
     }
 
     // Sensors

@@ -32,7 +32,7 @@ class StressEntity : WatchBaseEntity, CsvSerializable {
         this.isStressed = isStressed
     }
 
-    override fun toCsvHeader(): String =
+    override fun csvHeader(): String =
         "eventId,received,timestamp,windowStart,windowEnd,rmssd,ibiCount,threshold,isStressed"
 
     override fun toCsvRow(): String =

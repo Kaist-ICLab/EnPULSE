@@ -20,6 +20,9 @@ import kaist.iclab.tracker.storage.core.RmssdHistory
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
@@ -32,6 +35,7 @@ import kaist.iclab.wearabletracker.ecg.EcgViewModel
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.ema.MicroEmaViewModel
+import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
@@ -67,7 +71,14 @@ val koinModule = module {
     }
 
     single {
-        AndroidPermissionManager(context = androidContext())
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    }
+
+    single {
+        AndroidPermissionManager(
+            context = androidContext(),
+            scope = get<CoroutineScope>()
+        )
     }
 
     // Sensors
@@ -264,6 +275,10 @@ val koinModule = module {
     }
 
     single {
+        MicroEmaPreferencesHelper(context = androidContext())
+    }
+
+    single {
         PhoneCommunicationManager(
             androidContext = androidContext(),
             stores = get(named("sensorDataStorages")),
@@ -328,7 +343,9 @@ val koinModule = module {
     // --- MicroEMA ---
 
     single {
-        MicroEmaRepository()
+        MicroEmaRepository(
+            prefsHelper = get()
+        )
     }
 
     single {
