@@ -98,6 +98,8 @@
     <string name="permission_name_usage_stats">사용 통계</string>
     <string name="permission_name_activity_recognition">신체 활동 인식</string>
     <string name="permission_name_steps">신체 활동 (걸음 수)</string>
+    <string name="permission_name_sleep">신체 활동 (수면)</string>
+    <string name="permission_name_exercise">신체 활동 (운동)</string>
     <string name="permission_name_ignore_battery_optimization">배터리 최적화 예외</string>
 
     <!-- Permission Descriptions -->
@@ -118,6 +120,8 @@
     <string name="permission_desc_notification_listener">알림 내용 읽기</string>
     <string name="permission_desc_usage_stats">앱 사용 통계 수집</string>
     <string name="permission_desc_steps">걸음 수 데이터 읽기</string>
+    <string name="permission_desc_sleep">삼성 헬스에서 수면 세션 데이터 읽기</string>
+    <string name="permission_desc_exercise">삼성 헬스에서 운동 세션 데이터 읽기</string>
     <string name="permission_desc_ignore_battery_optimization">안정적인 백그라운드 추적을 위해 배터리 최적화 예외 허용</string>
 
     <!-- Permission Status -->
@@ -165,6 +169,9 @@
     <string name="sensor_detail_delete_cancel">취소</string>
     <string name="record_deleted_success">기기 및 서버에서 기록이 삭제되었습니다</string>
     <string name="record_deleted_error">기록 삭제에 실패했습니다</string>
+
+    <string name="sensor_survey">설문</string>
+    <string name="sensor_desc_survey">사용자 설문 응답 데이터</string>
 
     <string name="menu_reload_config">설정 새로고침 및 동기화</string>
     <string name="menu_reload_config_desc">서버에서 설정을 새로고침하고 워치와 동기화합니다</string>

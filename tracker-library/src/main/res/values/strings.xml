@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="ble_sync_path">/AndroidTracker</string>
+    <string name="msg_samsung_health_dev_mode_needed">Samsung Health Developer Mode might be needed for this app.</string>
 </resources>

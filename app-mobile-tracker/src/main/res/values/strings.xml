@@ -96,6 +96,8 @@
     <string name="permission_name_usage_stats">Usage Stats</string>
     <string name="permission_name_activity_recognition">Activity Recognition</string>
     <string name="permission_name_steps">Physical Activity (Steps)</string>
+    <string name="permission_name_sleep">Physical Activity (Sleep)</string>
+    <string name="permission_name_exercise">Physical Activity (Exercise)</string>
     <string name="permission_name_ignore_battery_optimization">Ignore Battery Optimization</string>
 
     <!-- Permission Descriptions -->
@@ -116,6 +118,8 @@
     <string name="permission_desc_notification_listener">Read notification content</string>
     <string name="permission_desc_usage_stats">Collect app usage statistics</string>
     <string name="permission_desc_steps">Read step count data</string>
+    <string name="permission_desc_sleep">Read sleep session data from Samsung Health</string>
+    <string name="permission_desc_exercise">Read exercise session data from Samsung Health</string>
     <string name="permission_desc_ignore_battery_optimization">Allow app to run in background reliably</string>
 
     <!-- Permission Status -->
@@ -163,6 +167,9 @@
     <string name="sensor_detail_delete_cancel">Cancel</string>
     <string name="record_deleted_success">Record deleted from device and server</string>
     <string name="record_deleted_error">Failed to delete record</string>
+
+    <string name="sensor_survey">Survey</string>
+    <string name="sensor_desc_survey">User survey responses</string>
 
     <string name="menu_reload_config">Reload &amp; Sync Config</string>
     <string name="menu_reload_config_desc">Refresh config from server and sync between phone and watch</string>

@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.ui.utils
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AppRegistration
@@ -59,6 +60,7 @@ fun getSensorTitleResId(sensorId: String): Int {
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_wifi_scan
         "Exercise" -> R.string.sensor_exercise
         "Sleep" -> R.string.sensor_sleep
+        "Survey", "SurveySensor" -> R.string.sensor_survey
         "Accelerometer" -> R.string.sensor_accelerometer
         "EDA" -> R.string.sensor_eda
         "HeartRate" -> R.string.sensor_heart_rate
@@ -97,6 +99,7 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_desc_wifi
         "Exercise" -> R.string.sensor_desc_exercise
         "Sleep" -> R.string.sensor_desc_sleep
+        "Survey", "SurveySensor" -> R.string.sensor_desc_survey
         "ECG" -> R.string.sensor_desc_ecg
         "Accelerometer" -> R.string.sensor_desc_accelerometer
         "EDA" -> R.string.sensor_desc_eda
@@ -153,6 +156,7 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "WifiScan", "Wifi" -> Icons.Default.WifiTethering
         "Exercise" -> Icons.Default.FitnessCenter
         "Sleep" -> Icons.Default.Bedtime
+        "Survey", "SurveySensor" -> Icons.AutoMirrored.Filled.Assignment
         "Accelerometer", "WatchAccelerometer" -> Icons.Default.Speed
         "EDA", "WatchEDA" -> Icons.Default.Waves
         "HeartRate", "WatchHeartRate" -> Icons.Default.FavoriteBorder
