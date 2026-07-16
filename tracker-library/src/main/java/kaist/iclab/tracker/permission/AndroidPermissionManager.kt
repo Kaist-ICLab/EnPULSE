@@ -61,6 +61,7 @@ class AndroidPermissionManager(
         private val TAG = AndroidPermissionManager::class.simpleName
         private const val PREFS_NAME = "permission_tracking"
         private const val KEY_PREFIX_REQUESTED = "permission_requested_"
+        private const val KEY_PREFIX_HEALTH_STATE = "health_permission_state_"
     }
 
     private var activityWeakRef: WeakReference<ComponentActivity>? = null
@@ -217,6 +218,12 @@ class AndroidPermissionManager(
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
             putAll(healthPermissionStates)
         }
+        // Cache the unsupported state
+        permissionTrackingPrefs.edit {
+            healthDataPermission.keys.forEach { name ->
+                putString("$KEY_PREFIX_HEALTH_STATE$name", PermissionState.UNSUPPORTED.name)
+            }
+        }
     }
 
     override fun getPermissionFlow(permissions: Array<String>): StateFlow<Map<String, PermissionState>> {
@@ -247,7 +254,14 @@ class AndroidPermissionManager(
             if (!HardwareAvailabilityChecker.isSamsungDevice()) {
                 return PermissionState.UNSUPPORTED
             }
-            // For Samsung devices, return NOT_REQUESTED initially
+            
+            // Read cached state if available to avoid flicker while querying SDK
+            val cachedState = permissionTrackingPrefs.getString("$KEY_PREFIX_HEALTH_STATE$permission", null)
+            if (cachedState != null) {
+                return try { PermissionState.valueOf(cachedState) } catch (e: Exception) { PermissionState.NOT_REQUESTED }
+            }
+            
+            // For Samsung devices, return NOT_REQUESTED initially if no cache
             // The actual state will be updated asynchronously by notifyChange() which queries the Samsung Health SDK
             return PermissionState.NOT_REQUESTED
         }
@@ -268,11 +282,19 @@ class AndroidPermissionManager(
         grantedPermission: Set<com.samsung.android.sdk.health.data.permission.Permission>
     ) {
         val permissionMap = requestedPermission.associate { p ->
-            p.dataType.name to if (p in grantedPermission) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+            val state = if (p in grantedPermission) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+            p.dataType.name to state
         }
 
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
             putAll(permissionMap)
+        }
+        
+        // Cache the results
+        permissionTrackingPrefs.edit {
+            permissionMap.forEach { (name, state) ->
+                putString("$KEY_PREFIX_HEALTH_STATE$name", state.name)
+            }
         }
     }
 
