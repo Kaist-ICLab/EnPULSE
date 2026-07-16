@@ -7,4 +7,7 @@ plugins {
 
     // For app-wearable-tracker
     id("com.google.devtools.ksp") version "2.2.10-2.0.2" apply false
+
+    // For app-mobile-tracker ObjectBox migration
+    alias(libs.plugins.objectbox) apply false
 }

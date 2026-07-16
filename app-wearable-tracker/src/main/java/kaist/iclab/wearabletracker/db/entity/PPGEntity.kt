@@ -1,26 +1,26 @@
 package kaist.iclab.wearabletracker.db.entity
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.util.UUID
+import io.objectbox.annotation.Entity
 
 @Entity
-data class PPGEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val received: Long,
-    val green: Int,
-    val red: Int,
-    val ir: Int,
-    val greenStatus: Int,
-    val redStatus: Int,
-    val irStatus: Int,
-    override val timestamp: Long
-) : CsvSerializable {
-    override fun toCsvHeader(): String =
-        "eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
+class PPGEntity() : WatchBaseEntity(), CsvSerializable {
+    var green: Int = 0
+    var red: Int = 0
+    var ir: Int = 0
+    var greenStatus: Int = 0
+    var redStatus: Int = 0
+    var irStatus: Int = 0
 
-    override fun toCsvRow(): String =
-        "$eventId,$received,$timestamp,$green,$greenStatus,$red,$redStatus,$ir,$irStatus"
+    constructor(
+        received: Long, timestamp: Long,
+        green: Int, red: Int, ir: Int,
+        greenStatus: Int, redStatus: Int, irStatus: Int
+    ) : this() {
+        initBase(received, timestamp)
+        this.green = green; this.red = red; this.ir = ir
+        this.greenStatus = greenStatus; this.redStatus = redStatus; this.irStatus = irStatus
+    }
+
+    override fun csvHeader() = "eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
+    override fun toCsvRow() = "$eventId,$received,$timestamp,$green,$greenStatus,$red,$redStatus,$ir,$irStatus"
 }

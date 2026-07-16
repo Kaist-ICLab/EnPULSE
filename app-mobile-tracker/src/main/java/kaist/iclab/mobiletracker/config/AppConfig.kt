@@ -43,6 +43,7 @@ object AppConfig {
         const val IMU_SENSOR = "imu_sensor"
         const val GESTURE_SENSOR = "gesture_sensor"
         const val STRESS_SENSOR = "stress_sensor"
+        const val ECG_SENSOR = "ecg_sensor"
 
         // Phone sensor table names
         const val ACTIVITY_RECOGNITION_SENSOR = "activity_recognition_sensor"
@@ -62,6 +63,8 @@ object AppConfig {
         const val STEP_SENSOR = "step_sensor"
         const val SCREEN_SENSOR = "screen_sensor"
         const val WIFI_SCAN_SENSOR = "wifi_scan_sensor"
+        const val EXERCISE_SENSOR = "exercise_sensor"
+        const val SLEEP_SENSOR = "sleep_sensor"
     }
 
     /**
@@ -77,6 +80,7 @@ object AppConfig {
         const val TRIGGER_CONFIG = "trigger_config"
         const val PHONE_EMA_TRIGGER = "phone_ema_trigger"
         const val DETECTION_STATE_UPDATE = "detection_state_update"
+        const val ACTIVE_SENSOR_CONFIG = "active_sensor_config"
     }
 
     /**

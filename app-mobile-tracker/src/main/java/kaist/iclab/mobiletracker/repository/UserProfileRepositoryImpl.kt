@@ -1,9 +1,11 @@
 package kaist.iclab.mobiletracker.repository
 
-import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
+import kaist.iclab.mobiletracker.data.sensors.ProfileData
+import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.ProfileService
 import kaist.iclab.mobiletracker.services.TriggerConfigPusher
+import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
@@ -23,7 +25,8 @@ class UserProfileRepositoryImpl(
     private val surveyRepository: SurveyRepository,
     private val triggerRepository: TriggerRepository,
     private val triggerConfigPusher: TriggerConfigPusher,
-    private val backgroundController: BackgroundController
+    private val backgroundController: BackgroundController,
+    private val bleHelper: BLEHelper
 ) : UserProfileRepository {
 
     companion object {
@@ -103,6 +106,8 @@ class UserProfileRepositoryImpl(
             if (triggers.isNotEmpty()) {
                 triggerConfigPusher.pushToWatch(triggers, surveys)
             }
+            
+            bleHelper.sendActiveSensorConfig(SensorTypeHelper.activeWatchSensorIds(campaignSensorRepository))
         } else {
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()

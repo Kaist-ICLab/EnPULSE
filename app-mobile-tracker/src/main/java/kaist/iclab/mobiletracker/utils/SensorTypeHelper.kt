@@ -1,23 +1,28 @@
 package kaist.iclab.mobiletracker.utils
 
+import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
+
 /**
  * Utility class for identifying and working with phone and watch sensors.
  * Provides helper methods to determine sensor types and get sensor IDs.
  */
 object SensorTypeHelper {
     /**
-     * List of all watch sensor IDs (matching handler sensorId values)
+     * List of all watch sensor IDs (matching handler sensorId values where a phone-side
+     * handler exists; IMU/Gesture/Stress have no phone-side data pipeline and are only
+     * used here for campaign-sensor matching).
      */
     val watchSensorIds: List<String> = listOf(
-        "WatchHeartRate",
-        "WatchAccelerometer",
-        "WatchEDA",
-        "WatchPPG",
-        "WatchSkinTemperature",
-        "WatchLocation",
-        "WatchIMU",
-        "WatchGesture",
-        "WatchStress"
+        "HeartRate",
+        "Accelerometer",
+        "EDA",
+        "PPG",
+        "SkinTemperature",
+        "Location",
+        "ECG",
+        "IMU",
+        "Gesture",
+        "Stress"
     )
 
     /**
@@ -38,6 +43,17 @@ object SensorTypeHelper {
      */
     fun isPhoneSensor(sensorId: String): Boolean {
         return !isWatchSensor(sensorId)
+    }
+
+    /**
+     * Watch sensor IDs currently active for the campaign, derived by matching each bare
+     * watch sensor ID's campaign name against the cached active-sensor list. Standalone
+     * from `SensorDataHandlerRegistry` so it works for sensors with no phone-side handler
+     * (e.g. IMU/Gesture/Stress).
+     */
+    fun activeWatchSensorIds(campaignSensorRepository: CampaignSensorRepository): Set<String> {
+        val activeSensorNames = campaignSensorRepository.getActiveSensors().map { it.name }
+        return watchSensorIds.filter { it.toCampaignSensorName() in activeSensorNames }.toSet()
     }
 }
 

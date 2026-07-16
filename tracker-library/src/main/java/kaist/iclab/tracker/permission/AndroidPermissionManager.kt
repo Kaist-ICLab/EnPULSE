@@ -87,7 +87,9 @@ class AndroidPermissionManager(
     }
 
     val healthDataPermission = mapOf(
-        DataTypes.STEPS.name to DataTypes.STEPS
+        DataTypes.STEPS.name to DataTypes.STEPS,
+        DataTypes.SLEEP.name to DataTypes.SLEEP,
+        DataTypes.EXERCISE.name to DataTypes.EXERCISE
     )
 
     override fun registerPermission(newPermissions: Array<String>) {

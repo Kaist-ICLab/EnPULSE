@@ -1,23 +1,37 @@
 package kaist.iclab.wearabletracker.db.entity
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.util.UUID
+import io.objectbox.annotation.Entity
 
 @Entity
-data class IMUEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val received: Long,
-    override val timestamp: Long,
-    val accX: Float,
-    val accY: Float,
-    val accZ: Float,
-    val gyroX: Float,
-    val gyroY: Float,
-    val gyroZ: Float
-) : CsvSerializable {
+class IMUEntity : WatchBaseEntity, CsvSerializable {
+    var accX: Float = 0f
+    var accY: Float = 0f
+    var accZ: Float = 0f
+    var gyroX: Float = 0f
+    var gyroY: Float = 0f
+    var gyroZ: Float = 0f
+
+    constructor() : super()
+
+    constructor(
+        received: Long,
+        timestamp: Long,
+        accX: Float,
+        accY: Float,
+        accZ: Float,
+        gyroX: Float,
+        gyroY: Float,
+        gyroZ: Float
+    ) : super() {
+        initBase(received, timestamp)
+        this.accX = accX
+        this.accY = accY
+        this.accZ = accZ
+        this.gyroX = gyroX
+        this.gyroY = gyroY
+        this.gyroZ = gyroZ
+    }
+
     override fun toCsvHeader(): String =
         "eventId,received,timestamp,accX,accY,accZ,gyroX,gyroY,gyroZ"
 

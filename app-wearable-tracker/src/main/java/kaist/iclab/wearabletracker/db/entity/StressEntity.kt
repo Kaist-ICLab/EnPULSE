@@ -1,26 +1,40 @@
 package kaist.iclab.wearabletracker.db.entity
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.util.UUID
+import io.objectbox.annotation.Entity
 
 @Entity
-data class StressEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val received: Long,
-    override val timestamp: Long,
-    val windowStartMs: Long,
-    val windowEndMs: Long,
-    val rmssd: Float,
-    val ibiCount: Int,
-    val threshold: Float,
-    val isStressed: Boolean
-) : CsvSerializable {
+class StressEntity : WatchBaseEntity, CsvSerializable {
+    var windowStart: Long = 0
+    var windowEnd: Long = 0
+    var rmssd: Float = 0f
+    var ibiCount: Int = 0
+    var threshold: Float = 0f
+    var isStressed: Boolean = false
+
+    constructor() : super()
+
+    constructor(
+        received: Long,
+        timestamp: Long,
+        windowStart: Long,
+        windowEnd: Long,
+        rmssd: Float,
+        ibiCount: Int,
+        threshold: Float,
+        isStressed: Boolean
+    ) : super() {
+        initBase(received, timestamp)
+        this.windowStart = windowStart
+        this.windowEnd = windowEnd
+        this.rmssd = rmssd
+        this.ibiCount = ibiCount
+        this.threshold = threshold
+        this.isStressed = isStressed
+    }
+
     override fun toCsvHeader(): String =
-        "eventId,received,timestamp,windowStartMs,windowEndMs,rmssd,ibiCount,threshold,isStressed"
+        "eventId,received,timestamp,windowStart,windowEnd,rmssd,ibiCount,threshold,isStressed"
 
     override fun toCsvRow(): String =
-        "$eventId,$received,$timestamp,$windowStartMs,$windowEndMs,$rmssd,$ibiCount,$threshold,$isStressed"
+        "$eventId,$received,$timestamp,$windowStart,$windowEnd,$rmssd,$ibiCount,$threshold,$isStressed"
 }

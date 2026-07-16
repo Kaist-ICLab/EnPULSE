@@ -198,7 +198,17 @@
     <string name="sensor_desc_imu">Watch IMU sensor data</string>
     <string name="sensor_desc_gesture">Watch gesture recognition data</string>
     <string name="sensor_desc_stress">Watch stress level data</string>
+    <string name="sensor_desc_exercise">Exercise session data</string>
+    <string name="sensor_desc_sleep">Sleep session data</string>
+    <string name="sensor_desc_ecg">Watch ECG sensor data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
+    <!-- Watch Sensor Descriptions -->
+    <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
+    <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>
+    <string name="sensor_desc_heart_rate">Heart rate measurement</string>
+    <string name="sensor_desc_skin_temperature">Skin temperature measurement</string>
+    <string name="sensor_desc_eda">Galvanic skin response based on sweat</string>
+    <string name="sensor_desc_audio">Audio signal</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -251,6 +261,7 @@
     <string name="sensor_eda">EDA</string>
     <string name="sensor_ppg">PPG</string>
     <string name="sensor_skin_temperature">Skin Temperature</string>
+    <string name="sensor_ecg">ECG</string>
     <string name="sensor_ambient_light">Ambient Light</string>
     <string name="sensor_app_list_change">App List Change</string>
     <string name="sensor_app_usage">App Usage Log</string>
@@ -271,6 +282,8 @@
     <string name="sensor_imu">IMU</string>
     <string name="sensor_gesture">Gesture</string>
     <string name="sensor_stress">Stress</string>
+    <string name="sensor_exercise">Exercise</string>
+    <string name="sensor_sleep">Sleep</string>
 
 
     <!-- Toast Messages -->

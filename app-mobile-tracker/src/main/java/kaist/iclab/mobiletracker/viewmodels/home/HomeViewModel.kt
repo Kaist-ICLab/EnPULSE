@@ -2,7 +2,7 @@ package kaist.iclab.mobiletracker.viewmodels.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kaist.iclab.mobiletracker.data.sensors.phone.ProfileData
+import kaist.iclab.mobiletracker.data.sensors.ProfileData
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.HomeRepository
 import kaist.iclab.mobiletracker.repository.SurveyRepository
@@ -51,6 +51,8 @@ data class HomeUiState(
     val messageLogCount: Int = 0,
     val userInteractionCount: Int = 0,
     val wifiScanCount: Int = 0,
+    val exerciseCount: Int = 0,
+    val sleepCount: Int = 0,
     // Watch sensors
     val watchHeartRateCount: Int = 0,
     val watchAccelerometerCount: Int = 0,
@@ -60,6 +62,7 @@ data class HomeUiState(
     val watchIMUCount: Int = 0,
     val watchGestureCount: Int = 0,
     val watchStressCount: Int = 0,
+    val ecgCount: Int = 0,
     // Other
     val watchStatus: WatchConnectionStatus = WatchConnectionStatus.DISCONNECTED,
     val connectedDevices: List<String> = emptyList(),
@@ -146,6 +149,8 @@ class HomeViewModel(
                 messageLogCount = counts.messageLogCount,
                 userInteractionCount = counts.userInteractionCount,
                 wifiScanCount = counts.wifiScanCount,
+                exerciseCount = counts.exerciseCount,
+                sleepCount = counts.sleepCount,
                 // Watch sensors
                 watchHeartRateCount = counts.watchHeartRateCount,
                 watchAccelerometerCount = counts.watchAccelerometerCount,
@@ -155,6 +160,7 @@ class HomeViewModel(
                 watchIMUCount = counts.watchIMUCount,
                 watchGestureCount = counts.watchGestureCount,
                 watchStressCount = counts.watchStressCount,
+                ecgCount = counts.ecgCount,
                 userName = profile?.email?.split("@")?.firstOrNull()
                     ?.replaceFirstChar { it.uppercase() } ?: "User"
             )

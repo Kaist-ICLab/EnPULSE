@@ -36,7 +36,7 @@ class CampaignRepositoryImpl(
                 }
 
                 is Result.Error -> {
-                    throw result.exception ?: Exception(result.message)
+                    throw result.exception
                 }
             }
         }

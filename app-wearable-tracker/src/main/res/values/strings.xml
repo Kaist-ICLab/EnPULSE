@@ -2,7 +2,11 @@
     <string name="app_name">EnPULSE</string>
 
     <!-- Settings Screen -->
-    <string name="upload_data">Upload data</string>
+    <string name="upload_data">Force Upload</string>
+    <string name="flush_data">Delete All</string>
+    <string name="danger_zone_label">Danger Zone</string>
+    <string name="start_collection">Start</string>
+    <string name="stop_collection">Stop</string>
     <string name="start_stop_collection">Start/Stop Collection</string>
     <string name="reset_icon">Reset icon</string>
     <string name="last_sync_placeholder">Last Sync: -</string>
@@ -46,6 +50,7 @@
     <string name="sensor_audio">Audio</string>
     <string name="sensor_gesture">Gesture</string>
     <string name="sensor_stress">Stress</string>
+    <string name="sensor_ecg">ECG</string>
     <string name="sensor_default">Sensor</string>
 
     <!-- Samsung Health Connection -->
@@ -60,12 +65,11 @@
     <!-- Status Dashboard -->
     <string name="status_battery_format">🔋%1$d%%</string>
     <string name="status_records_format">📊%1$s</string>
-    <string name="syncing_progress_format">Syncing... %1$d%%</string>
+    <string name="syncing_progress_format">Syncing… %1$d%%</string>
 
     <!-- Auto Sync Settings -->
     <string name="auto_sync_label">Auto Sync</string>
-    <string name="auto_sync_interval_label">Threshold</string>
-    <string name="interval_none">None</string>
+    <string name="interval_none">Off</string>
     <string name="interval_5m">5m</string>
     <string name="interval_30m">30m</string>
     <string name="interval_1h">1h</string>
@@ -76,7 +80,7 @@
     <string name="ema_low">Low</string>
     <string name="ema_high">High</string>
     <string name="ema_dismiss">Dismiss</string>
-    <string name="ema_loading">Loading...</string>
+    <string name="ema_loading">Loading…</string>
     <string name="ema_done">Response recorded</string>
     <string name="ema_time_up">Time’s up</string>
     <string name="ema_dismissed">Dismissed</string>
@@ -88,4 +92,13 @@
     <string name="turn_off_data_collection_first">Data collection is still running</string>
     <string name="notification_low_storage_title">Storage Critically Low</string>
     <string name="notification_low_storage_message">Data collection stopped to protect device stability. Please free up space.</string>
+    
+    <!-- ECG (on-demand) -->
+    <string name="measure_ecg">Measure ECG</string>
+    <string name="ecg_instruction_title">Prepare for ECG</string>
+    <string name="ecg_instruction_message">Move the watch towards your elbow, and put your index finger on the upper button</string>
+    <string name="ecg_running_instruction">Keep your index finger on the upper button</string>
+    <string name="ecg_unavailable">ECG is not supported on this device</string>
+    <string name="ecg_needs_permission">Permission required for ECG measurement</string>
+    <string name="ecg_completed">Measurement complete</string>
 </resources>

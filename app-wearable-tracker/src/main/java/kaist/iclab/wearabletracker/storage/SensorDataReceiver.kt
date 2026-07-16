@@ -14,7 +14,7 @@ import kaist.iclab.wearabletracker.Constants.DB.BATCH_SIZE
 import kaist.iclab.wearabletracker.Constants.DB.BUFFER_SIZE
 import kaist.iclab.wearabletracker.Constants.DB.FLUSH_INTERVAL_MS
 import kaist.iclab.wearabletracker.data.AutoSyncManager
-import kaist.iclab.wearabletracker.db.dao.BaseDao
+import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.repository.ErrorClassifier.runClassified
 import kotlinx.coroutines.CoroutineScope
@@ -42,38 +42,27 @@ class SensorDataReceiver(
 
     class SensorDataReceiverService : Service() {
         private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("sensors"))
-        private val sensorDataStorages by inject<Map<String, BaseDao<SensorEntity>>>(
-            qualifier = named(
-                "sensorDataStorages"
-            )
+        private val sensorDataStorages by inject<Map<String, WatchSensorStore<*>>>(
+            qualifier = named("sensorDataStorages")
         )
         private val serviceNotification by inject<BackgroundController.ServiceNotification>()
-
-        // Injected CoroutineScope for lifecycle management
         private val coroutineScope by inject<CoroutineScope>()
-
-        // Inject AutoSyncManager to piggyback on hardware wakeups during Doze mode
         private val autoSyncManager by inject<AutoSyncManager>()
         private val backgroundController by inject<BackgroundController>()
 
-        // Channel to receive sensor events
         private val eventChannel = Channel<Pair<String, SensorEntity>>(
             capacity = BUFFER_SIZE,
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         private var batchJob: Job? = null
-
-        // Guards against duplicate registration on repeated onStartCommand
         private var listenersRegistered = false
 
         private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate {
-            it.id to
-                    { e: SensorEntity ->
-                        // Send to channel instead of immediate insert
-                        eventChannel.trySend(it.id to e)
-                        Log.v(it.id, e.toString())
-                        Unit
-                    }
+            it.id to { e: SensorEntity ->
+                eventChannel.trySend(it.id to e)
+//                Log.v(it.id, e.toString())
+                Unit
+            }
         }
 
         override fun onBind(p0: Intent?): IBinder? = null
@@ -99,16 +88,10 @@ class SensorDataReceiver(
                 0
             }
 
-            this.startForeground(
-                serviceNotification.notificationId,
-                postNotification,
-                serviceType
-            )
+            this.startForeground(serviceNotification.notificationId, postNotification, serviceType)
 
-            // Start batch processing
             startBatchProcessing()
 
-            // Register listeners only once to prevent duplicates
             if (!listenersRegistered) {
                 listenersRegistered = true
                 for (sensor in sensors) {
@@ -128,13 +111,11 @@ class SensorDataReceiver(
 
                 try {
                     while (isActive) {
-                        // Calculate remaining time until next scheduled flush
                         val nextFlushDelay = maxOf(
                             0L,
                             FLUSH_INTERVAL_MS - (System.currentTimeMillis() - lastFlushTime)
                         )
 
-                        // Wait for data OR for the flush interval to hit
                         val result = withTimeoutOrNull(nextFlushDelay) {
                             eventChannel.receive()
                         }
@@ -144,14 +125,12 @@ class SensorDataReceiver(
                             val sensorBuffer = buffer.getOrPut(sensorId) { mutableListOf() }
                             sensorBuffer.add(entity)
 
-                            // Flush immediately if this sensor hit the batch limit
                             if (sensorBuffer.size >= BATCH_SIZE) {
                                 flushBuffer(buffer)
                                 lastFlushTime = System.currentTimeMillis()
                                 autoSyncManager.evalSync()
                             }
                         } else {
-                            // Timeout reached: periodic flush of all sensors
                             if (buffer.isNotEmpty()) {
                                 flushBuffer(buffer)
                             }
@@ -196,7 +175,7 @@ class SensorDataReceiver(
                         "SensorDataReceiver",
                         "flush batch for $sensorId"
                     ) {
-                        sensorDataStorages[sensorId]?.insert(batchToInsert)
+                        sensorDataStorages[sensorId]?.insertFromSensorEntities(batchToInsert)
                         true // Success
                     }
 
@@ -216,7 +195,6 @@ class SensorDataReceiver(
         }
 
         override fun onDestroy() {
-            // Unregister listeners
             if (listenersRegistered) {
                 for (sensor in sensors) {
                     sensor.removeListener(listener[sensor.id]!!)
@@ -224,11 +202,8 @@ class SensorDataReceiver(
                 listenersRegistered = false
             }
 
-            // Cancel incoming data processing job
             batchJob?.cancel()
 
-            // Drain remaining data and flush synchronously with a timeout
-            // to ensure data is persisted before the process dies
             val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
             while (true) {
                 val result = eventChannel.tryReceive()

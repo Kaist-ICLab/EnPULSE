@@ -3,19 +3,12 @@ package kaist.iclab.mobiletracker.helpers
 
 import android.content.Context
 import android.util.Log
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
-import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.dao.phone.MicroEmaResponseDao
-import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchAccelerometerEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchEDAEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchHeartRateEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchPPGEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchSkinTemperatureEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
+
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
@@ -30,6 +23,8 @@ import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -37,8 +32,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 /**
  * Helper class for managing BLE communication with wearable devices.
@@ -49,7 +42,7 @@ class BLEHelper(
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
     private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
-    private val microEmaResponseDao: MicroEmaResponseDao
+    private val microEmaResponseStore: MicroEmaResponseStore
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
@@ -58,9 +51,20 @@ class BLEHelper(
     private val surveySensor by inject<SurveySensor>()
     private val userProfileRepository by inject<UserProfileRepository>()
 
-    private val isoFormatter = DateTimeFormatter.ISO_INSTANT
-
     private var isInitialized = false
+
+    private val parserBySensorId: Map<String, (String) -> List<BaseEntity>> = mapOf(
+        Constants.SensorId.LOCATION to { csv -> SensorDataCsvParser.parseLocationCsv(csv) },
+        Constants.SensorId.ACCELEROMETER to { csv -> SensorDataCsvParser.parseAccelerometerCsv(csv) },
+        Constants.SensorId.EDA to { csv -> SensorDataCsvParser.parseEDACsv(csv) },
+        Constants.SensorId.HEART_RATE to { csv -> SensorDataCsvParser.parseHeartRateCsv(csv) },
+        Constants.SensorId.PPG to { csv -> SensorDataCsvParser.parsePPGCsv(csv) },
+        Constants.SensorId.SKIN_TEMPERATURE to { csv -> SensorDataCsvParser.parseSkinTemperatureCsv(csv) },
+        Constants.SensorId.IMU to { csv -> SensorDataCsvParser.parseIMUCsv(csv) },
+        Constants.SensorId.GESTURE to { csv -> SensorDataCsvParser.parseGestureCsv(csv) },
+        Constants.SensorId.STRESS to { csv -> SensorDataCsvParser.parseStressCsv(csv) },
+        Constants.SensorId.ECG to { csv -> SensorDataCsvParser.parseECGCsv(csv) },
+    )
 
     fun initialize() {
         if (isInitialized) {
@@ -169,7 +173,7 @@ class BLEHelper(
                 }
 
                 if (responses.isNotEmpty()) {
-                    microEmaResponseDao.insertAll(responses)
+                    microEmaResponseStore.insertAll(responses)
                     Log.d(
                         AppConfig.LogTags.PHONE_BLE,
                         "[MICRO_EMA] Cached ${responses.size} responses locally on phone"
@@ -180,7 +184,7 @@ class BLEHelper(
                     // Attempt to upload immediately for real-time responsiveness
                     // We launch this in the IO dispatcher so it doesn't block BLE reception
                     appScope.io.launch {
-                        surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)
+                        surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseStore)
                     }
                 }
             } catch (e: Exception) {
@@ -238,48 +242,88 @@ class BLEHelper(
     }
 
     /**
-     * Parse batch ID from the CSV header.
-     * Expected format: "BATCH:uuid-string\nSINCE:timestamp\n---DATA---\n..."
+     * Push the campaign's active watch-sensor list to the watch, so it only collects/shows
+     * sensors that are actually part of the wearer's campaign.
      */
-    private fun parseBatchId(csvData: String): String? {
+    fun sendActiveSensorConfig(activeSensorIds: Collection<String>) {
+        appScope.io.launch {
+            try {
+                val payload = buildJsonArray {
+                    activeSensorIds.forEach { add(it) }
+                }.toString()
+
+                bleChannel.send(AppConfig.BLEKeys.ACTIVE_SENSOR_CONFIG, payload)
+                Log.d(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "Sent active sensor config to watch: $activeSensorIds"
+                )
+            } catch (e: Exception) {
+                Log.e(
+                    AppConfig.LogTags.PHONE_BLE,
+                    "Failed to send active sensor config: ${e.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Parse the sensor ID from the CSV header.
+     * Expected format: "SENSOR:sensorId\nCHUNK_START_TS:...\nCHUNK_END_TS:...\n---DATA---\n..."
+     */
+    private fun parseSensorId(csvData: String): String? {
         val lines = csvData.lines()
         for (line in lines) {
-            if (line.startsWith("BATCH:")) {
-                return line.removePrefix("BATCH:").trim()
+            if (line.startsWith("SENSOR:")) {
+                return line.removePrefix("SENSOR:").trim()
             }
         }
         return null
     }
 
     /**
-     * Send ACK (acknowledgment) back to watch after successful data processing.
-     * Format: "batchId:status:endTimestamp"
+     * Send ACK (acknowledgment) back to watch after processing a chunk.
+     * Format: "sensorId:status:endTimestamp" - endTimestamp is the phone's verified-contiguous
+     * watermark for this sensor, not necessarily this chunk's own raw end (see
+     * parseAndStoreWatchData's gap-detection logic).
      */
-    private suspend fun sendAck(batchId: String, success: Boolean, endTimestamp: Long?) {
+    private suspend fun sendAck(sensorId: String, success: Boolean, endTimestamp: Long?) {
         try {
             val status = if (success) "OK" else "FAIL"
             val ackData = if (endTimestamp != null) {
-                "$batchId:$status:$endTimestamp"
+                "$sensorId:$status:$endTimestamp"
             } else {
-                "$batchId:$status"
+                "$sensorId:$status"
             }
             bleChannel.send(AppConfig.BLEKeys.SYNC_ACK, ackData)
             Log.d(
                 AppConfig.LogTags.PHONE_BLE,
-                "Sent ACK for batch $batchId: $status (ts=$endTimestamp)"
+                "Sent ACK for $sensorId: $status (ts=$endTimestamp)"
             )
         } catch (e: Exception) {
             Log.e(
                 AppConfig.LogTags.PHONE_BLE,
-                "Failed to send ACK for batch $batchId: ${e.message}",
+                "Failed to send ACK for $sensorId: ${e.message}",
                 e
             )
         }
     }
 
     /**
+     * Parse CHUNK_START_TS from the CSV header - the cursor the watch used to fetch this chunk.
+     */
+    private fun parseChunkStartTimestamp(csvData: String): Long? {
+        val lines = csvData.lines()
+        for (line in lines) {
+            if (line.startsWith("CHUNK_START_TS:")) {
+                return line.removePrefix("CHUNK_START_TS:").trim().toLongOrNull()
+            }
+        }
+        return null
+    }
+
+    /**
      * Parse CHUNK_END_TS from the CSV header.
-     * Expected format: "BATCH:...\nSINCE:...\nCHUNK_END_TS:123456789\n---DATA---"
+     * Expected format: "SENSOR:...\nCHUNK_START_TS:...\nCHUNK_END_TS:123456789\n---DATA---"
      */
     private fun parseChunkEndTimestamp(csvData: String): Long? {
         val lines = csvData.lines()
@@ -292,362 +336,73 @@ class BLEHelper(
     }
 
     /**
-     * Parse CSV data and extract all sensor data types, then store locally in Room database.
+     * Compute the timestamp to ACK for this sensor: only advances past this chunk's own end if
+     * the chunk is contiguous with what's already verified received (chunkStartTs <= the phone's
+     * current watermark). If there's a gap - an earlier chunk was lost or arrived out of order -
+     * re-affirms the old watermark instead of advancing past the hole, so the watch's cumulative
+     * ACK matching never prunes data the phone doesn't actually have a contiguous copy of.
+     */
+    private fun computeAckEndTimestamp(sensorId: String, chunkStartTs: Long?, chunkEndTs: Long?): Long {
+        val contiguousUpTo = timestampService.getBleContiguousTimestamp(sensorId) ?: 0L
+        return if (chunkStartTs != null && chunkStartTs <= contiguousUpTo) {
+            val advanced = maxOf(contiguousUpTo, chunkEndTs ?: contiguousUpTo)
+            timestampService.setBleContiguousTimestamp(sensorId, advanced)
+            advanced
+        } else {
+            contiguousUpTo
+        }
+    }
+
+    /**
+     * Parse a single-sensor CSV chunk and store it locally, then ACK.
      * Uses managed coroutine scope for proper lifecycle management.
      */
     private fun parseAndStoreWatchData(csvData: String) {
         appScope.io.launch {
-            // Extract batch ID for ACK (if present in new format)
-            val batchId = parseBatchId(csvData)
+            val sensorId = parseSensorId(csvData)
+            if (sensorId == null) {
+                Log.w(AppConfig.LogTags.PHONE_BLE, "No SENSOR header found in chunk, dropping")
+                return@launch
+            }
+
+            val chunkStartTs = parseChunkStartTimestamp(csvData)
+            val chunkEndTs = parseChunkEndTimestamp(csvData)
 
             try {
-
-                // Parse all sensor types from CSV
-                val locationDataList = SensorDataCsvParser.parseLocationCsv(csvData)
-                val accelerometerDataList = SensorDataCsvParser.parseAccelerometerCsv(csvData)
-                val edaDataList = SensorDataCsvParser.parseEDACsv(csvData)
-                val heartRateDataList = SensorDataCsvParser.parseHeartRateCsv(csvData)
-                val ppgDataList = SensorDataCsvParser.parsePPGCsv(csvData)
-                val skinTemperatureDataList = SensorDataCsvParser.parseSkinTemperatureCsv(csvData)
-                val imuDataList = SensorDataCsvParser.parseIMUCsv(csvData)
-                val gestureDataList = SensorDataCsvParser.parseGestureCsv(csvData)
-                val stressDataList = SensorDataCsvParser.parseStressCsv(csvData)
-
-                // Convert Supabase data classes to Room entities and store locally
-                var totalStored = 0
-                var hasAnyData = false
-
-                if (locationDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = locationDataList.map { data ->
-                        // Parse timestamp from "YYYY-MM-DD HH:mm:ss" back to milliseconds
-                        LocationEntity(
-                            eventId = data.eventId,
-                            uuid = "", // Will be set by repository
-                            deviceType = DeviceType.WATCH.value,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            latitude = data.latitude,
-                            longitude = data.longitude,
-                            altitude = data.altitude,
-                            speed = data.speed,
-                            accuracy = data.accuracy
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertLocationData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} location entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store location data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
+                val parser = parserBySensorId[sensorId]
+                if (parser == null) {
+                    Log.e(AppConfig.LogTags.PHONE_BLE, "Unknown sensorId in chunk: $sensorId")
+                    sendAck(sensorId, success = false, endTimestamp = null)
+                    return@launch
                 }
 
-                if (accelerometerDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = accelerometerDataList.map { data ->
-                        WatchAccelerometerEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            x = data.x,
-                            y = data.y,
-                            z = data.z
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertAccelerometerData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} accelerometer entries locally"
-                            )
-                        }
+                val entities = parser(csvData)
 
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store accelerometer data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
+                if (entities.isEmpty()) {
+                    Log.w(AppConfig.LogTags.PHONE_BLE, "No rows parsed for $sensorId chunk")
+                    // Still ACK - an empty but valid chunk still needs its range confirmed.
+                    sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
+                    return@launch
                 }
 
-                if (edaDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = edaDataList.map { data ->
-                        WatchEDAEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            skinConductance = data.skinConductance,
-                            status = data.status
-                        )
+                when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
+                    is Result.Success -> {
+                        timestampService.updateLastWatchDataReceived()
+                        Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} $sensorId entries locally")
+                        sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
                     }
-                    when (val result = watchSensorRepository.insertEDAData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} EDA entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store EDA data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (heartRateDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = heartRateDataList.map { data ->
-                        WatchHeartRateEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            hr = data.hr,
-                            hrStatus = data.hrStatus,
-                            ibi = data.ibi,
-                            ibiStatus = data.ibiStatus
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertHeartRateData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} HeartRate entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store HeartRate data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (ppgDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = ppgDataList.map { data ->
-                        WatchPPGEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            green = data.green,
-                            greenStatus = data.greenStatus,
-                            red = data.red,
-                            redStatus = data.redStatus,
-                            ir = data.ir,
-                            irStatus = data.irStatus
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertPPGData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} PPG entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store PPG data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (skinTemperatureDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = skinTemperatureDataList.map { data ->
-                        WatchSkinTemperatureEntity(
-                            eventId = data.eventId,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            ambientTemp = data.ambientTemp,
-                            objectTemp = data.objectTemp,
-                            status = data.status
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertSkinTemperatureData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} SkinTemperature entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store SkinTemperature data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (imuDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = imuDataList.map { data ->
-                        WatchIMUEntity(
-                            eventId = data.eventId,
-                            uuid = "",
-                            deviceType = DeviceType.WATCH.value,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            accX = data.accX,
-                            accY = data.accY,
-                            accZ = data.accZ,
-                            gyroX = data.gyroX,
-                            gyroY = data.gyroY,
-                            gyroZ = data.gyroZ
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertIMUData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} IMU entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store IMU data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (gestureDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = gestureDataList.map { data ->
-                        WatchGestureEntity(
-                            eventId = data.eventId,
-                            uuid = "",
-                            deviceType = DeviceType.WATCH.value,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            classIndex = data.classIndex,
-                            score = data.score,
-                            probabilities = data.probabilities
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertGestureData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} Gesture entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store Gesture data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (stressDataList.isNotEmpty()) {
-                    hasAnyData = true
-                    val entities = stressDataList.map { data ->
-                        WatchStressEntity(
-                            eventId = data.eventId,
-                            uuid = "",
-                            deviceType = DeviceType.WATCH.value,
-                            received = Instant.parse(data.received).toEpochMilli(),
-                            timestamp = Instant.parse(data.timestamp).toEpochMilli(),
-                            windowStartMs = Instant.parse(data.windowStart).toEpochMilli(),
-                            windowEndMs = Instant.parse(data.windowEnd).toEpochMilli(),
-                            rmssd = data.rmssd,
-                            ibiCount = data.ibiCount,
-                            threshold = data.threshold,
-                            isStressed = data.isStressed
-                        )
-                    }
-                    when (val result = watchSensorRepository.insertStressData(entities)) {
-                        is Result.Success -> {
-                            totalStored += entities.size
-                            Log.d(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Stored ${entities.size} Stress entries locally"
-                            )
-                        }
-
-                        is Result.Error -> {
-                            Log.e(
-                                AppConfig.LogTags.PHONE_BLE,
-                                "Failed to store Stress data: ${result.message}",
-                                result.exception
-                            )
-                        }
-                    }
-                }
-
-                if (hasAnyData && totalStored > 0) {
-                    // Track when watch data is received
-                    timestampService.updateLastWatchDataReceived()
-                    Log.d(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "Total stored: $totalStored sensor data entries locally"
-                    )
-
-                    // Send success ACK back to watch if batch ID is present
-                    if (batchId != null) {
-                        val chunkEndTs = parseChunkEndTimestamp(csvData)
-                        sendAck(batchId, success = true, endTimestamp = chunkEndTs)
-                    }
-                } else {
-                    Log.w(AppConfig.LogTags.PHONE_BLE, "No sensor data found in CSV")
-                    // Still send ACK for empty but valid batch
-                    if (batchId != null) {
-                        val chunkEndTs = parseChunkEndTimestamp(csvData)
-                        sendAck(batchId, success = true, endTimestamp = chunkEndTs)
+                    is Result.Error -> {
+                        Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store $sensorId data: ${result.message}", result.exception)
+                        sendAck(sensorId, success = false, endTimestamp = null)
                     }
                 }
             } catch (e: Exception) {
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
-                    "Error parsing or storing sensor data: ${e.message}",
+                    "Error parsing or storing $sensorId data: ${e.message}",
                     e
                 )
-                // Send failure ACK if we have a batch ID
-                if (batchId != null) {
-                    val chunkEndTs = parseChunkEndTimestamp(csvData)
-                    sendAck(batchId, success = false, endTimestamp = chunkEndTs)
-                }
+                sendAck(sensorId, success = false, endTimestamp = null)
             }
         }
     }

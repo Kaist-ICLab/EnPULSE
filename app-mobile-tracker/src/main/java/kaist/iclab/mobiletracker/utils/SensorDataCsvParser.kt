@@ -3,16 +3,16 @@ package kaist.iclab.mobiletracker.utils
 import android.util.Log
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.data.sensors.common.LocationSensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.AccelerometerSensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.EDASensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.GestureSensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.HeartRateSensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.IMUSensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.PPGSensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.SkinTemperatureSensorData
-import kaist.iclab.mobiletracker.data.sensors.watch.StressSensorData
-import java.time.Instant
+import kaist.iclab.mobiletracker.db.entity.common.LocationEntity
+import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
+import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
+import kaist.iclab.mobiletracker.db.entity.watch.EDAEntity
+import kaist.iclab.mobiletracker.db.entity.watch.HeartRateEntity
+import kaist.iclab.mobiletracker.db.entity.watch.PPGEntity
+import kaist.iclab.mobiletracker.db.entity.watch.SkinTemperatureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 
 /**
  * Parser for sensor data in CSV format received from wearable devices.
@@ -27,126 +27,62 @@ import java.time.Instant
  */
 object SensorDataCsvParser {
 
-    /**
-     * Parse CSV data to extract location sensor entries
-     *
-     * @param csvData The raw CSV string containing sensor data
-     * @return List of parsed LocationSensorData, empty list if parsing fails
-     */
-    fun parseLocationCsv(csvData: String): List<LocationSensorData> {
-        return parseSensorSection(
+    fun parseLocationCsv(csvData: String): List<LocationEntity> =
+        parseSensorSection(
             csvData = csvData,
             sectionName = "Location",
             headerPattern = "eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy",
             rowParser = ::parseLocationRow
         )
-    }
 
-    /**
-     * Parse a single location data row
-     * Format: eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy
-     */
-    private fun parseLocationRow(row: String): LocationSensorData? {
-        return try {
-            val parts = row.split(",").map { it.trim() }
-            if (parts.size >= 8) {
-                val eventId = parts[0]
-                val received = parts[1].toLongOrNull() ?: return null
-                val timestampMillis = parts[2].toLongOrNull() ?: return null
-                val latitude = parts[3].toDoubleOrNull() ?: return null
-                val longitude = parts[4].toDoubleOrNull() ?: return null
-                val altitude = parts[5].toDoubleOrNull() ?: return null
-                val speed = parts[6].toFloatOrNull() ?: return null
-                val accuracy = parts[7].toFloatOrNull() ?: return null
-
-                LocationSensorData(
-                    eventId = eventId,
-                    uuid = null,
-                    deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
-                    accuracy = accuracy,
-                    altitude = altitude,
-                    latitude = latitude,
-                    longitude = longitude,
-                    speed = speed,
-                    received = Instant.ofEpochMilli(received).toString()
-                )
-            } else null
-        } catch (e: Exception) {
-            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing location row: ${e.message}", e)
-            null
-        }
-    }
-
-    /**
-     * Parse CSV data to extract accelerometer sensor entries
-     * CSV format: accelerometer\neventId,received,timestamp,x,y,z\n...
-     */
-    fun parseAccelerometerCsv(csvData: String): List<AccelerometerSensorData> {
-        return parseSensorSection(
+    fun parseAccelerometerCsv(csvData: String): List<AccelerometerEntity> =
+        parseSensorSection(
             csvData = csvData,
             sectionName = "Accelerometer",
             headerPattern = "eventId,received,timestamp,x,y,z",
             rowParser = ::parseAccelerometerRow
         )
-    }
 
-    /**
-     * Parse CSV data to extract PPG sensor entries
-     * CSV format: ppg\neventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus\n...
-     */
-    fun parsePPGCsv(csvData: String): List<PPGSensorData> {
-        return parseSensorSection(
+    fun parsePPGCsv(csvData: String): List<PPGEntity> =
+        parseSensorSection(
             csvData = csvData,
             sectionName = "PPG",
             headerPattern = "eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus",
             rowParser = ::parsePPGRow
         )
-    }
 
-    /**
-     * Parse CSV data to extract heart rate sensor entries
-     * CSV format: heartRate\neventId,received,timestamp,hr,hrStatus,ibi,ibiStatus\n...
-     * Note: ibi and ibiStatus are semicolon-separated lists
-     */
-    fun parseHeartRateCsv(csvData: String): List<HeartRateSensorData> {
-        return parseSensorSection(
+    fun parseHeartRateCsv(csvData: String): List<HeartRateEntity> =
+        parseSensorSection(
             csvData = csvData,
             sectionName = "HeartRate",
             headerPattern = "eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus",
             rowParser = ::parseHeartRateRow
         )
-    }
 
-    /**
-     * Parse CSV data to extract skin temperature sensor entries
-     * CSV format: skinTemperature\neventId,received,timestamp,ambientTemp,objectTemp,status\n...
-     */
-    fun parseSkinTemperatureCsv(csvData: String): List<SkinTemperatureSensorData> {
-        return parseSensorSection(
+    fun parseSkinTemperatureCsv(csvData: String): List<SkinTemperatureEntity> =
+        parseSensorSection(
             csvData = csvData,
             sectionName = "SkinTemperature",
             headerPattern = "eventId,received,timestamp,ambientTemp,objectTemp,status",
             rowParser = ::parseSkinTemperatureRow
         )
-    }
 
-    /**
-     * Parse CSV data to extract EDA sensor entries
-     * CSV format: eda\neventId,received,timestamp,skinConductance,status\n...
-     */
-    fun parseEDACsv(csvData: String): List<EDASensorData> {
-        return parseSensorSection(
+    fun parseEDACsv(csvData: String): List<EDAEntity> =
+        parseSensorSection(
             csvData = csvData,
             sectionName = "EDA",
             headerPattern = "eventId,received,timestamp,skinConductance,status",
             rowParser = ::parseEDARow
         )
-    }
 
-    /**
-     * Generic parser for sensor sections in CSV
-     */
+    fun parseECGCsv(csvData: String): List<ECGEntity> =
+        parseSensorSection(
+            csvData = csvData,
+            sectionName = "ECG",
+            headerPattern = "eventId,received,timestamp,ecgMv,leadOff,sequence,ppgGreen,maxThresholdMv,minThresholdMv",
+            rowParser = ::parseECGRow
+        )
+
     private fun <T> parseSensorSection(
         csvData: String,
         sectionName: String,
@@ -163,16 +99,12 @@ object SensorDataCsvParser {
             for (line in lines) {
                 val trimmedLine = line.trim()
 
-                // Check if we're entering the section
-                if (trimmedLine.replace(" ", "")
-                        .equals(sectionName.replace(" ", ""), ignoreCase = true)
-                ) {
+                if (trimmedLine.replace(" ", "").equals(sectionName.replace(" ", ""), ignoreCase = true)) {
                     inSection = true
                     headerFound = false
                     continue
                 }
 
-                // If we're in section, look for header
                 if (inSection && !headerFound) {
                     if (trimmedLine.contains(headerPattern, ignoreCase = true)) {
                         headerFound = true
@@ -180,26 +112,17 @@ object SensorDataCsvParser {
                     }
                 }
 
-                // If header found, parse data rows
                 if (inSection && headerFound) {
-                    // Check if we've moved to a new section
                     if (trimmedLine.isNotEmpty() &&
                         !trimmedLine.first().isDigit() &&
                         !trimmedLine.first().isLetter().not() &&
                         !trimmedLine.replace(" ", "").equals(sectionName, ignoreCase = true) &&
                         isKnownSectionHeader(trimmedLine)
-                    ) {
-                        break
-                    }
+                    ) break
 
-                    // Skip empty lines
-                    if (trimmedLine.isEmpty()) {
-                        continue
-                    }
+                    if (trimmedLine.isEmpty()) continue
 
-                    // Parse data row
-                    val data = rowParser(trimmedLine)
-                    data?.let { dataList.add(it) }
+                    rowParser(trimmedLine)?.let { dataList.add(it) }
                 }
             }
         } catch (e: Exception) {
@@ -209,42 +132,48 @@ object SensorDataCsvParser {
         return dataList
     }
 
-    /**
-     * Check if a line is a known section header
-     */
     private fun isKnownSectionHeader(line: String): Boolean {
         val knownSections = listOf(
             "Accelerometer", "PPG", "HeartRate", "SkinTemperature",
-            "EDA", "Location", "IMU", "Gesture", "Stress"
+            "EDA", "Location", "IMU", "Gesture", "Stress", "ECG"
         )
         val normalizedLine = line.replace(" ", "")
         return knownSections.any { normalizedLine.equals(it, ignoreCase = true) }
     }
 
-    /**
-     * Parse a single accelerometer data row
-     * Format: eventId,received,timestamp,x,y,z
-     */
-    private fun parseAccelerometerRow(row: String): AccelerometerSensorData? {
+    private fun parseLocationRow(row: String): LocationEntity? {
+        return try {
+            val parts = row.split(",").map { it.trim() }
+            if (parts.size >= 8) {
+                LocationEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    deviceType = DeviceType.WATCH.value,
+                    latitude = parts[3].toDoubleOrNull() ?: return null,
+                    longitude = parts[4].toDoubleOrNull() ?: return null,
+                    altitude = parts[5].toDoubleOrNull() ?: return null,
+                    speed = parts[6].toFloatOrNull() ?: return null,
+                    accuracy = parts[7].toFloatOrNull() ?: return null
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing location row: ${e.message}", e)
+            null
+        }
+    }
+
+    private fun parseAccelerometerRow(row: String): AccelerometerEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 6) {
-                val eventId = parts[0]
-                val received = parts[1].toLongOrNull() ?: return null
-                val timestampMillis = parts[2].toLongOrNull() ?: return null
-                val x = parts[3].toFloatOrNull() ?: return null
-                val y = parts[4].toFloatOrNull() ?: return null
-                val z = parts[5].toFloatOrNull() ?: return null
-
-                AccelerometerSensorData(
-                    eventId = eventId,
-                    uuid = null,
-                    deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
-                    x = x,
-                    y = y,
-                    z = z,
-                    received = Instant.ofEpochMilli(received).toString(),
+                AccelerometerEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    x = parts[3].toFloatOrNull() ?: return null,
+                    y = parts[4].toFloatOrNull() ?: return null,
+                    z = parts[5].toFloatOrNull() ?: return null
                 )
             } else null
         } catch (e: Exception) {
@@ -253,36 +182,20 @@ object SensorDataCsvParser {
         }
     }
 
-    /**
-     * Parse a single PPG data row
-     * Format: eventId,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus
-     */
-    private fun parsePPGRow(row: String): PPGSensorData? {
+    private fun parsePPGRow(row: String): PPGEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 9) {
-                val eventId = parts[0]
-                val received = parts[1].toLongOrNull() ?: return null
-                val timestampMillis = parts[2].toLongOrNull() ?: return null
-                val green = parts[3].toIntOrNull() ?: return null
-                val greenStatus = parts[4].toIntOrNull() ?: return null
-                val red = parts[5].toIntOrNull() ?: return null
-                val redStatus = parts[6].toIntOrNull() ?: return null
-                val ir = parts[7].toIntOrNull() ?: return null
-                val irStatus = parts[8].toIntOrNull() ?: return null
-
-                PPGSensorData(
-                    eventId = eventId,
-                    uuid = null,
-                    deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
-                    green = green,
-                    greenStatus = greenStatus,
-                    red = red,
-                    redStatus = redStatus,
-                    ir = ir,
-                    irStatus = irStatus,
-                    received = Instant.ofEpochMilli(received).toString(),
+                PPGEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    green = parts[3].toIntOrNull() ?: return null,
+                    greenStatus = parts[4].toIntOrNull() ?: return null,
+                    red = parts[5].toIntOrNull() ?: return null,
+                    redStatus = parts[6].toIntOrNull() ?: return null,
+                    ir = parts[7].toIntOrNull() ?: return null,
+                    irStatus = parts[8].toIntOrNull() ?: return null
                 )
             } else null
         } catch (e: Exception) {
@@ -291,35 +204,40 @@ object SensorDataCsvParser {
         }
     }
 
-    /**
-     * Parse a single heart rate data row
-     * Format: eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus
-     * Note: ibi and ibiStatus are semicolon-separated lists
-     */
-    private fun parseHeartRateRow(row: String): HeartRateSensorData? {
+    private fun parseECGRow(row: String): ECGEntity? {
+        return try {
+            val parts = row.split(",").map { it.trim() }
+            if (parts.size >= 9) {
+                ECGEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    ecgMv = parts[3].toFloatOrNull() ?: return null,
+                    leadOff = parts[4].toIntOrNull() ?: return null,
+                    sequence = parts[5].toIntOrNull() ?: return null,
+                    ppgGreen = parts[6].toIntOrNull() ?: return null,
+                    maxThresholdMv = parts[7].toFloatOrNull() ?: return null,
+                    minThresholdMv = parts[8].toFloatOrNull() ?: return null
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing ECG row: ${e.message}", e)
+            null
+        }
+    }
+
+    private fun parseHeartRateRow(row: String): HeartRateEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 7) {
-                val eventId = parts[0]
-                val received = parts[1].toLongOrNull() ?: return null
-                val timestampMillis = parts[2].toLongOrNull() ?: return null
-                val hr = parts[3].toIntOrNull() ?: return null
-                val hrStatus = parts[4].toIntOrNull() ?: return null
-
-                // Parse semicolon-separated lists
-                val ibi = parts[5].split(";").mapNotNull { it.trim().toIntOrNull() }
-                val ibiStatus = parts[6].split(";").mapNotNull { it.trim().toIntOrNull() }
-
-                HeartRateSensorData(
-                    eventId = eventId,
-                    uuid = null,
-                    deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
-                    hr = hr,
-                    hrStatus = hrStatus,
-                    ibi = ibi,
-                    ibiStatus = ibiStatus,
-                    received = Instant.ofEpochMilli(received).toString(),
+                HeartRateEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    hr = parts[3].toIntOrNull() ?: return null,
+                    hrStatus = parts[4].toIntOrNull() ?: return null,
+                    ibi = parts[5].split(";").mapNotNull { it.trim().toIntOrNull() }.toIntArray(),
+                    ibiStatus = parts[6].split(";").mapNotNull { it.trim().toIntOrNull() }.toIntArray()
                 )
             } else null
         } catch (e: Exception) {
@@ -328,64 +246,35 @@ object SensorDataCsvParser {
         }
     }
 
-    /**
-     * Parse a single skin temperature data row
-     * Format: eventId,received,timestamp,ambientTemp,objectTemp,status
-     */
-    private fun parseSkinTemperatureRow(row: String): SkinTemperatureSensorData? {
+    private fun parseSkinTemperatureRow(row: String): SkinTemperatureEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 6) {
-                val eventId = parts[0]
-                val received = parts[1].toLongOrNull() ?: return null
-                val timestampMillis = parts[2].toLongOrNull() ?: return null
-                val ambientTemp = parts[3].toFloatOrNull() ?: return null
-                val objectTemp = parts[4].toFloatOrNull() ?: return null
-                val status = parts[5].toIntOrNull() ?: return null
-
-                SkinTemperatureSensorData(
-                    eventId = eventId,
-                    uuid = null,
-                    deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
-                    ambientTemp = ambientTemp,
-                    objectTemp = objectTemp,
-                    status = status,
-                    received = Instant.ofEpochMilli(received).toString(),
+                SkinTemperatureEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    ambientTemp = parts[3].toFloatOrNull() ?: return null,
+                    objectTemp = parts[4].toFloatOrNull() ?: return null,
+                    status = parts[5].toIntOrNull() ?: return null
                 )
             } else null
         } catch (e: Exception) {
-            Log.e(
-                AppConfig.LogTags.PHONE_BLE,
-                "Error parsing skin temperature row: ${e.message}",
-                e
-            )
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing skin temperature row: ${e.message}", e)
             null
         }
     }
 
-    /**
-     * Parse a single EDA data row
-     * Format: eventId,received,timestamp,skinConductance,status
-     */
-    private fun parseEDARow(row: String): EDASensorData? {
+    private fun parseEDARow(row: String): EDAEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 5) {
-                val eventId = parts[0]
-                val received = parts[1].toLongOrNull() ?: return null
-                val timestampMillis = parts[2].toLongOrNull() ?: return null
-                val skinConductance = parts[3].toFloatOrNull() ?: return null
-                val status = parts[4].toIntOrNull() ?: return null
-
-                EDASensorData(
-                    eventId = eventId,
-                    uuid = null,
-                    deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
-                    skinConductance = skinConductance,
-                    status = status,
-                    received = Instant.ofEpochMilli(received).toString(),
+                EDAEntity(
+                    eventId = parts[0],
+                    received = parts[1].toLongOrNull() ?: return null,
+                    timestamp = parts[2].toLongOrNull() ?: return null,
+                    skinConductance = parts[3].toFloatOrNull() ?: return null,
+                    status = parts[4].toIntOrNull() ?: return null
                 )
             } else null
         } catch (e: Exception) {
@@ -394,7 +283,7 @@ object SensorDataCsvParser {
         }
     }
 
-    fun parseIMUCsv(csvData: String): List<IMUSensorData> {
+    fun parseIMUCsv(csvData: String): List<WatchIMUEntity> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "IMU",
@@ -403,7 +292,7 @@ object SensorDataCsvParser {
         )
     }
 
-    private fun parseIMURow(row: String): IMUSensorData? {
+    private fun parseIMURow(row: String): WatchIMUEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 9) {
@@ -417,18 +306,18 @@ object SensorDataCsvParser {
                 val gyroY = parts[7].toFloatOrNull() ?: return null
                 val gyroZ = parts[8].toFloatOrNull() ?: return null
 
-                IMUSensorData(
+                WatchIMUEntity(
                     eventId = eventId,
-                    uuid = null,
+                    uuid = "",
                     deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
+                    timestamp = timestampMillis,
                     accX = accX,
                     accY = accY,
                     accZ = accZ,
                     gyroX = gyroX,
                     gyroY = gyroY,
                     gyroZ = gyroZ,
-                    received = Instant.ofEpochMilli(received).toString(),
+                    received = received,
                 )
             } else null
         } catch (e: Exception) {
@@ -437,7 +326,7 @@ object SensorDataCsvParser {
         }
     }
 
-    fun parseGestureCsv(csvData: String): List<GestureSensorData> {
+    fun parseGestureCsv(csvData: String): List<WatchGestureEntity> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "Gesture",
@@ -446,7 +335,7 @@ object SensorDataCsvParser {
         )
     }
 
-    private fun parseGestureRow(row: String): GestureSensorData? {
+    private fun parseGestureRow(row: String): WatchGestureEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 6) {
@@ -458,15 +347,15 @@ object SensorDataCsvParser {
 
                 val probabilities = parts[5].split(";").mapNotNull { it.trim().toIntOrNull() }
 
-                GestureSensorData(
+                WatchGestureEntity(
                     eventId = eventId,
-                    uuid = null,
+                    uuid = "",
                     deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
+                    timestamp = timestampMillis,
                     classIndex = classIndex,
                     score = score,
-                    probabilities = probabilities,
-                    received = Instant.ofEpochMilli(received).toString(),
+                    probabilities = probabilities.toIntArray(),
+                    received = received,
                 )
             } else null
         } catch (e: Exception) {
@@ -475,7 +364,7 @@ object SensorDataCsvParser {
         }
     }
 
-    fun parseStressCsv(csvData: String): List<StressSensorData> {
+    fun parseStressCsv(csvData: String): List<WatchStressEntity> {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "Stress",
@@ -484,7 +373,7 @@ object SensorDataCsvParser {
         )
     }
 
-    private fun parseStressRow(row: String): StressSensorData? {
+    private fun parseStressRow(row: String): WatchStressEntity? {
         return try {
             val parts = row.split(",").map { it.trim() }
             if (parts.size >= 9) {
@@ -498,18 +387,18 @@ object SensorDataCsvParser {
                 val threshold = parts[7].toFloatOrNull() ?: return null
                 val isStressed = parts[8].toBooleanStrictOrNull() ?: return null
 
-                StressSensorData(
+                WatchStressEntity(
                     eventId = eventId,
-                    uuid = null,
+                    uuid = "",
                     deviceType = DeviceType.WATCH.value,
-                    timestamp = Instant.ofEpochMilli(timestampMillis).toString(),
-                    windowStart = Instant.ofEpochMilli(windowStartMs).toString(),
-                    windowEnd = Instant.ofEpochMilli(windowEndMs).toString(),
+                    timestamp = timestampMillis,
+                    windowStart = windowStartMs,
+                    windowEnd = windowEndMs,
                     rmssd = rmssd,
                     ibiCount = ibiCount,
                     threshold = threshold,
                     isStressed = isStressed,
-                    received = Instant.ofEpochMilli(received).toString(),
+                    received = received,
                 )
             } else null
         } catch (e: Exception) {

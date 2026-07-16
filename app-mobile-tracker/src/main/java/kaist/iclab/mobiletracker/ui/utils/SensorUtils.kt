@@ -6,11 +6,14 @@ import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CompassCalibration
 import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MonitorHeart
@@ -54,14 +57,17 @@ fun getSensorTitleResId(sensorId: String): Int {
         "Step" -> R.string.sensor_step
         "UserInteraction" -> R.string.sensor_user_interaction
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_wifi_scan
-        "WatchAccelerometer" -> R.string.sensor_accelerometer
-        "WatchEDA" -> R.string.sensor_eda
-        "WatchHeartRate" -> R.string.sensor_heart_rate
-        "WatchPPG" -> R.string.sensor_ppg
-        "WatchSkinTemperature" -> R.string.sensor_skin_temperature
-        "WatchIMU" -> R.string.sensor_imu
-        "WatchGesture" -> R.string.sensor_gesture
-        "WatchStress" -> R.string.sensor_stress
+        "Exercise" -> R.string.sensor_exercise
+        "Sleep" -> R.string.sensor_sleep
+        "Accelerometer" -> R.string.sensor_accelerometer
+        "EDA" -> R.string.sensor_eda
+        "HeartRate" -> R.string.sensor_heart_rate
+        "PPG" -> R.string.sensor_ppg
+        "SkinTemperature" -> R.string.sensor_skin_temperature
+        "ECG" -> R.string.sensor_ecg
+        "IMU" -> R.string.sensor_imu
+        "Gesture" -> R.string.sensor_gesture
+        "Stress" -> R.string.sensor_stress
         else -> R.string.sensor_desc_default
     }
 }
@@ -89,9 +95,17 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "Step" -> R.string.sensor_desc_step
         "UserInteraction" -> R.string.sensor_desc_user_interaction
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_desc_wifi
-        "WatchIMU" -> R.string.sensor_desc_imu
-        "WatchGesture" -> R.string.sensor_desc_gesture
-        "WatchStress" -> R.string.sensor_desc_stress
+        "Exercise" -> R.string.sensor_desc_exercise
+        "Sleep" -> R.string.sensor_desc_sleep
+        "ECG" -> R.string.sensor_desc_ecg
+        "Accelerometer" -> R.string.sensor_desc_accelerometer
+        "EDA" -> R.string.sensor_desc_eda
+        "HeartRate" -> R.string.sensor_desc_heart_rate
+        "PPG" -> R.string.sensor_desc_ppg
+        "SkinTemperature" -> R.string.sensor_desc_skin_temperature
+        "IMU" -> R.string.sensor_desc_imu
+        "Gesture" -> R.string.sensor_desc_gesture
+        "Stress" -> R.string.sensor_desc_stress
         else -> R.string.sensor_desc_default
     }
 }
@@ -137,14 +151,17 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "Step" -> Icons.AutoMirrored.Filled.DirectionsWalk
         "UserInteraction" -> Icons.Default.TouchApp
         "WifiScan", "Wifi" -> Icons.Default.WifiTethering
-        "WatchAccelerometer" -> Icons.Default.Speed
-        "WatchEDA" -> Icons.Default.Waves
-        "WatchHeartRate" -> Icons.Default.FavoriteBorder
-        "WatchPPG" -> Icons.Default.MonitorHeart
-        "WatchSkinTemperature" -> Icons.Default.Thermostat
-        "WatchIMU" -> Icons.Default.CompassCalibration
-        "WatchGesture" -> Icons.Default.BackHand
-        "WatchStress" -> Icons.Default.Psychology
+        "Exercise" -> Icons.Default.FitnessCenter
+        "Sleep" -> Icons.Default.Bedtime
+        "Accelerometer", "WatchAccelerometer" -> Icons.Default.Speed
+        "EDA", "WatchEDA" -> Icons.Default.Waves
+        "HeartRate", "WatchHeartRate" -> Icons.Default.FavoriteBorder
+        "PPG", "WatchPPG" -> Icons.Default.MonitorHeart
+        "SkinTemperature", "WatchSkinTemperature" -> Icons.Default.Thermostat
+        "ECG" -> Icons.Default.Favorite
+        "IMU", "WatchIMU" -> Icons.Default.CompassCalibration
+        "Gesture", "WatchGesture" -> Icons.Default.BackHand
+        "Stress", "WatchStress" -> Icons.Default.Psychology
         else -> Icons.Default.DataUsage
     }
 }

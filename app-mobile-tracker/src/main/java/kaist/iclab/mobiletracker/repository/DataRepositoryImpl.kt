@@ -5,9 +5,8 @@ import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
-import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
-import kaist.iclab.mobiletracker.utils.SensorTypeHelper
+import kaist.iclab.mobiletracker.services.upload.SensorUploadService
+import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -20,9 +19,9 @@ import java.util.concurrent.ConcurrentHashMap
 class DataRepositoryImpl(
     private val handlerRegistry: SensorDataHandlerRegistry,
     private val syncTimestampService: SyncTimestampService,
-    private val phoneSensorUploadService: PhoneSensorUploadService,
-    private val watchSensorUploadService: WatchSensorUploadService,
-    private val supabaseHelper: SupabaseHelper
+    private val sensorUploadService: SensorUploadService,
+    private val supabaseHelper: SupabaseHelper,
+    private val campaignSensorRepository: CampaignSensorRepository
 ) : DataRepository {
 
     companion object {
@@ -31,17 +30,24 @@ class DataRepositoryImpl(
 
     private val syncingSensors = ConcurrentHashMap<String, Boolean>()
 
+    private fun isSensorActive(sensorId: String): Boolean {
+        val activeSensorNames = campaignSensorRepository.getActiveSensors().map { it.name }
+        return activeSensorNames.contains(sensorId.toCampaignSensorName())
+    }
+
     override suspend fun getAllSensorInfo(): List<SensorInfo> =
-        handlerRegistry.getAllHandlers().map { handler ->
-            SensorInfo(
-                sensorId = handler.sensorId,
-                displayName = handler.displayName,
-                recordCount = handler.getRecordCount(),
-                lastRecordedTime = handler.getLatestTimestamp(),
-                isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
-                isPhoneSensor = handler.isPhoneSensor
-            )
-        }.sortedBy { it.displayName }
+        handlerRegistry.getAllHandlers()
+            .filter { handler -> isSensorActive(handler.sensorId) }
+            .map { handler ->
+                SensorInfo(
+                    sensorId = handler.sensorId,
+                    displayName = handler.displayName,
+                    recordCount = handler.getRecordCount(),
+                    lastRecordedTime = handler.getLatestTimestamp(),
+                    isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
+                    isPhoneSensor = handler.isPhoneSensor
+                )
+            }.sortedBy { it.displayName }
 
     override suspend fun getSensorInfo(sensorId: String): SensorInfo? =
         getAllSensorInfo().find { it.sensorId == sensorId }
@@ -88,48 +94,10 @@ class DataRepositoryImpl(
     }
 
     override suspend fun uploadSensorData(sensorId: String): Int {
-        if (syncingSensors.putIfAbsent(sensorId, true) != null) {
-            return -2 // Already syncing
-        }
-
+        if (syncingSensors.putIfAbsent(sensorId, true) != null) return -2
         try {
-            // Special handling for Location: upload both phone and watch data
-            if (sensorId == "Location") {
-                var result = 0
-
-                // 1. Upload Phone Location
-                if (phoneSensorUploadService.hasDataToUpload("Location")) {
-                    when (phoneSensorUploadService.uploadSensorData("Location")) {
-                        is Result.Success -> result = 1
-                        is Result.Error -> return -1 // Immediate failure on error
-                    }
-                }
-
-                // 2. Upload Watch Location (stored with ID "WatchLocation")
-                if (watchSensorUploadService.hasDataToUpload("WatchLocation")) {
-                    when (watchSensorUploadService.uploadSensorData("WatchLocation")) {
-                        is Result.Success -> result = 1
-                        is Result.Error -> return -1 // Immediate failure on error
-                    }
-                }
-
-                return result
-            }
-
-            if (SensorTypeHelper.isWatchSensor(sensorId)) {
-                if (!watchSensorUploadService.hasDataToUpload(sensorId)) {
-                    return 0
-                }
-                return when (watchSensorUploadService.uploadSensorData(sensorId)) {
-                    is Result.Success -> 1
-                    is Result.Error -> -1
-                }
-            }
-
-            if (!phoneSensorUploadService.hasDataToUpload(sensorId)) {
-                return 0
-            }
-            return when (phoneSensorUploadService.uploadSensorData(sensorId)) {
+            if (!sensorUploadService.hasDataToUpload(sensorId)) return 0
+            return when (sensorUploadService.uploadSensorData(sensorId)) {
                 is Result.Success -> 1
                 is Result.Error -> -1
             }

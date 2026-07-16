@@ -1,38 +1,36 @@
 package kaist.iclab.wearabletracker.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
+import androidx.wear.compose.material.ListHeader
 import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Switch
+import androidx.wear.compose.material.PositionIndicator
+import androidx.wear.compose.material.RadioButton
+import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.ToggleChip
-import androidx.wear.compose.material.ToggleChipDefaults
+import androidx.wear.compose.material.Vignette
+import androidx.wear.compose.material.VignettePosition
 import androidx.wear.compose.material.dialog.Dialog
 import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.theme.AppSizes
@@ -40,12 +38,15 @@ import kaist.iclab.wearabletracker.theme.AppSpacing
 import kaist.iclab.wearabletracker.theme.AppTypography
 import kaist.iclab.wearabletracker.theme.SensorNameText
 
+/**
+ * Single unified control for auto-sync: tapping it opens the interval picker, and picking
+ * "Off" (0ms) is what turns auto-sync off — there's no separate enable/disable toggle.
+ */
 @Composable
 fun AutoSyncSettings(
-    enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit,
     intervalMs: Long,
-    onIntervalChange: (Long) -> Unit
+    onIntervalChange: (Long) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var showIntervalDialog by remember { mutableStateOf(false) }
 
@@ -59,6 +60,7 @@ fun AutoSyncSettings(
         43_200_000L to stringResource(R.string.interval_12h)
     )
 
+    val enabled = intervalMs > 0L
     val currentIntervalLabel = intervals.find { it.first == intervalMs }?.second
         ?: stringResource(R.string.interval_none)
 
@@ -71,132 +73,71 @@ fun AutoSyncSettings(
         label = "syncIconColor"
     )
 
-    Column {
-        // ── Auto-sync toggle chip ──
-        ToggleChip(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = AppSpacing.sensorChipHorizontal,
-                    end = AppSpacing.sensorChipHorizontal,
-                    bottom = AppSpacing.sensorChipBottom
-                )
-                .height(AppSizes.sensorChipHeight),
-            checked = enabled,
-            onCheckedChange = onEnabledChange,
-            label = {
-                SensorNameText(
-                    text = stringResource(R.string.auto_sync_label),
-                    maxLines = 1
-                )
-            },
-            appIcon = {
-                Icon(
-                    imageVector = Icons.Default.Sync,
-                    contentDescription = null,
-                    tint = syncIconColor,
-                    modifier = Modifier.size(16.dp)
-                )
-            },
-            toggleControl = {
-                val switchOnText = stringResource(R.string.switch_on)
-                val switchOffText = stringResource(R.string.switch_off)
-                Switch(
-                    checked = enabled,
-                    modifier = Modifier.semantics {
-                        this.contentDescription =
-                            if (enabled) switchOnText else switchOffText
-                    }
-                )
-            },
-            colors = ToggleChipDefaults.toggleChipColors(
-                checkedStartBackgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.15f),
-                checkedEndBackgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.05f),
+    Chip(
+        modifier = modifier
+            .padding(
+                bottom = AppSpacing.sensorChipBottom
             )
-        )
+            .height(AppSizes.buttonMedium),
+        onClick = { showIntervalDialog = true },
+        label = {
+            SensorNameText(
+                text = currentIntervalLabel,
+                maxLines = 1
+            )
+        },
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Sync,
+                contentDescription = null,
+                tint = syncIconColor,
+                modifier = Modifier.size(16.dp)
+            )
+        },
+        colors = ChipDefaults.secondaryChipColors()
+    )
 
-        // ── Interval selector chip ──
-        Chip(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    start = AppSpacing.sensorChipHorizontal,
-                    end = AppSpacing.sensorChipHorizontal,
-                    bottom = AppSpacing.sensorChipBottom
-                )
-                .height(AppSizes.sensorChipHeight),
-            onClick = { showIntervalDialog = true },
-            enabled = enabled,
-            label = {
-                SensorNameText(
-                    text = "${stringResource(R.string.auto_sync_interval_label)}: $currentIntervalLabel",
-                    maxLines = 1
-                )
-            },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Timer,
-                    contentDescription = null,
-                    tint = if (enabled)
-                        MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-                    else
-                        MaterialTheme.colors.onSurface.copy(alpha = 0.3f),
-                    modifier = Modifier.size(16.dp)
-                )
-            },
-            colors = ChipDefaults.secondaryChipColors()
-        )
-
-        // Spacer before sensor list
-        Spacer(modifier = Modifier.height(2.dp))
-    }
-
-    // ── Interval selection dialog ──
+    // ── Interval selection dialog — styled like a default Wear OS settings list ──
     Dialog(
         showDialog = showIntervalDialog,
         onDismissRequest = { showIntervalDialog = false }
     ) {
-        ScalingLazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            item {
-                Text(
-                    text = stringResource(R.string.auto_sync_interval_label),
-                    style = AppTypography.dialogTitle,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 4.dp)
-                )
+        val listState = rememberScalingLazyListState()
+        Scaffold(
+            vignette = {
+                Vignette(vignettePosition = VignettePosition.TopAndBottom)
+            },
+            positionIndicator = {
+                PositionIndicator(scalingLazyListState = listState)
             }
-            items(intervals) { (ms, label) ->
-                val isSelected = ms == intervalMs
-                Chip(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                    onClick = {
-                        onIntervalChange(ms)
-                        showIntervalDialog = false
-                    },
-                    label = { Text(label) },
-                    icon = if (isSelected) {
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Sync,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    } else null,
-                    colors = if (isSelected) {
-                        ChipDefaults.primaryChipColors()
-                    } else {
-                        ChipDefaults.secondaryChipColors()
+        ) {
+            ScalingLazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    ListHeader {
+                        Text(
+                            text = stringResource(R.string.auto_sync_label),
+                            style = AppTypography.dialogTitle
+                        )
                     }
-                )
+                }
+                items(intervals) { (ms, label) ->
+                    val isSelected = ms == intervalMs
+                    ToggleChip(
+                        modifier = Modifier.fillMaxWidth(),
+                        checked = isSelected,
+                        onCheckedChange = {
+                            onIntervalChange(ms)
+                            showIntervalDialog = false
+                        },
+                        label = { Text(label) },
+                        toggleControl = {
+                            RadioButton(selected = isSelected)
+                        }
+                    )
+                }
             }
         }
     }

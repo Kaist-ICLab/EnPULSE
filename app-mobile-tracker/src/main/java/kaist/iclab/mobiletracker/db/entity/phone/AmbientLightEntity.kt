@@ -1,17 +1,39 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import kaist.iclab.mobiletracker.data.DeviceType
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
+import kotlinx.serialization.Serializable
 import java.util.UUID
 
 @Entity
-data class AmbientLightEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val uuid: String,
-    val received: Long,
-    val timestamp: Long,
-    val accuracy: Int,
-    val value: Float
-)
+@Serializable
+class AmbientLightEntity : BaseEntity, CsvSerializable, RecordSerializable {
+    var accuracy: Int = 0
+    var value: Float = 0f
+
+    constructor() : super()
+
+    constructor(
+        id: Long = 0,
+        eventId: String = UUID.randomUUID().toString(),
+        uuid: String = "",
+        received: Long = 0,
+        timestamp: Long = 0,
+        deviceType: Int = DeviceType.PHONE.value,
+        accuracy: Int = 0,
+        value: Float = 0f
+    ) {
+        initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
+        this.accuracy = accuracy
+        this.value = value
+    }
+
+    override fun csvHeader() = "eventId,uuid,received,timestamp,accuracy,value"
+    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$accuracy,$value"
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Value" to String.format("%.1f lux", value)))
+}

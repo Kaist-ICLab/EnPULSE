@@ -1,7 +1,9 @@
 package kaist.iclab.mobiletracker.di
 
-import androidx.room.Room
-import kaist.iclab.mobiletracker.db.TrackerRoomDB
+import io.objectbox.BoxStore
+import kaist.iclab.mobiletracker.db.entity.MyObjectBox
+import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
+import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -12,17 +14,16 @@ val databaseModule = module {
         CouchbaseDB(context = androidContext())
     }
 
-    // Room Database - for phone sensor data storage
-    single {
-        Room.databaseBuilder(
-            androidContext(),
-            TrackerRoomDB::class.java,
-            "mobile_tracker_db"
-        )
-            .fallbackToDestructiveMigration(dropAllTables = true)
+    // ObjectBox - for sensor data storage
+    single<BoxStore> {
+        MyObjectBox.builder()
+            .androidContext(androidContext())
             .build()
     }
+
+    // Registry of every sensor's generic store (replaces the per-sensor Room DAOs)
+    single { SensorStores(get()) }
+
+    // Store for locally cached microEMA responses
+    single { MicroEmaResponseStore(get()) }
 }
-
-
-

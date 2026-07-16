@@ -38,7 +38,9 @@ private val sensorConfigs = listOf(
     SensorConfig(listOf("Screen"), "Screen"),
     SensorConfig(listOf("Step"), "Step"),
     SensorConfig(listOf("User Interaction"), "UserInteraction"),
-    SensorConfig(listOf("Wifi", "WiFi"), "Wifi")
+    SensorConfig(listOf("Wifi", "WiFi"), "Wifi"),
+    SensorConfig(listOf("Exercise"), "Exercise"),
+    SensorConfig(listOf("Sleep"), "Sleep")
 )
 
 private val defaultConfig = SensorConfig(

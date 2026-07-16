@@ -19,11 +19,14 @@ import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CompassCalibration
 import androidx.compose.material.icons.filled.DataUsage
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MonitorHeart
@@ -118,7 +121,7 @@ fun HomeScreen(
         val sensorItems = remember(uiState) {
             listOf(
                 SensorItem(
-                    "WatchAccelerometer",
+                    "Accelerometer",
                     uiState.watchAccelerometerCount,
                     Icons.Default.Speed,
                     Styles.Colors.WATCH_ACCELEROMETER
@@ -172,13 +175,13 @@ fun HomeScreen(
                     Styles.Colors.DEVICE_MODE
                 ),
                 SensorItem(
-                    "WatchEDA",
+                    "EDA",
                     uiState.watchEDACount,
                     Icons.Default.Waves,
                     Styles.Colors.WATCH_EDA
                 ),
                 SensorItem(
-                    "WatchHeartRate",
+                    "HeartRate",
                     uiState.watchHeartRateCount,
                     Icons.Default.FavoriteBorder,
                     Styles.Colors.WATCH_HEART_RATE
@@ -220,7 +223,7 @@ fun HomeScreen(
                     Styles.Colors.ACTIVITY
                 ),
                 SensorItem(
-                    "WatchPPG",
+                    "PPG",
                     uiState.watchPPGCount,
                     Icons.Default.MonitorHeart,
                     Styles.Colors.WATCH_PPG
@@ -232,7 +235,7 @@ fun HomeScreen(
                     Styles.Colors.SCREEN
                 ),
                 SensorItem(
-                    "WatchSkinTemperature",
+                    "SkinTemperature",
                     uiState.watchSkinTemperatureCount,
                     Icons.Default.Thermostat,
                     Styles.Colors.WATCH_SKIN_TEMP
@@ -266,6 +269,24 @@ fun HomeScreen(
                     uiState.watchStressCount,
                     Icons.Default.Psychology,
                     Styles.Colors.WATCH_STRESS
+                ),
+                SensorItem(
+                    "Exercise",
+                    uiState.exerciseCount,
+                    Icons.Default.FitnessCenter,
+                    Styles.Colors.EXERCISE
+                ),
+                SensorItem(
+                    "Sleep",
+                    uiState.sleepCount,
+                    Icons.Default.Bedtime,
+                    Styles.Colors.SLEEP
+                ),
+                SensorItem(
+                    "ECG",
+                    uiState.ecgCount,
+                    Icons.Default.Favorite,
+                    Styles.Colors.ECG
                 )
             ).filter { it.count > 0 }
         }

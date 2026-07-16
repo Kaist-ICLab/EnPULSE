@@ -96,7 +96,8 @@ object AppSpacing {
  */
 object AppSizes {
     val iconButtonSmall = 28.dp
-    val iconButtonMedium = 40.dp
+    val iconButtonMedium = 36.dp
+    val buttonMedium = 40.dp
     val iconSmall = 16.dp
     val iconMedium = 24.dp
     val iconLarge = 32.dp
