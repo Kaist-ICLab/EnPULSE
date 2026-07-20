@@ -15,6 +15,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <!-- Location -->
@@ -160,7 +162,7 @@
         <service
             android:name="kaist.iclab.tracker.sensor.controller.BackgroundController$ControllerService"
             android:exported="false"
-            android:foregroundServiceType="health|specialUse|location|connectedDevice"></service>
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone"></service>
 
         <!-- Phone Sensor Data Service for receiving and storing phone sensor data locally -->
         <service

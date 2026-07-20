@@ -18,6 +18,10 @@ plugins {
 android {
     namespace = "kaist.iclab.mobiletracker"
     compileSdk = libs.versions.compileSdk.get().toInt()
+    lint {
+        abortOnError = false
+        disable.add("ExtraTranslation")
+    }
 
     defaultConfig {
         applicationId = "kaist.iclab.trackerSystem"

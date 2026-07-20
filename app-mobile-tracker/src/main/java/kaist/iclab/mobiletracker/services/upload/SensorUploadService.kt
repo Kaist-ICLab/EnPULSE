@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.services.upload
 
+import kotlinx.coroutines.CancellationException
 import android.util.Log
 import io.github.jan.supabase.auth.auth
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
@@ -73,6 +74,7 @@ class SensorUploadService(
                 is Result.Error -> result
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.e(TAG, "Error uploading sensor data for $sensorId: ${e.message}", e)
             Result.Error(e)
         }
@@ -98,6 +100,7 @@ class SensorUploadService(
             )
             hasData
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.e(TAG, "Error checking data availability for sensor $sensorId: ${e.message}", e)
             false
         }

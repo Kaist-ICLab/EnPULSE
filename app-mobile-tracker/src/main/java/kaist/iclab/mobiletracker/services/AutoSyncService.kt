@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.services
 
+import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -114,6 +115,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                     checkAndSyncIfNeeded()
                     delay(Constants.AutoSync.CHECK_INTERVAL_MS)
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Log.e(TAG, "Error in auto-sync loop: ${e.message}", e)
                     delay(Constants.AutoSync.CHECK_INTERVAL_MS)
                 }
@@ -267,6 +269,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
             }
 
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.e(TAG, "Fatal error in auto-sync upload: ${e.message}", e)
             showFailureNotification(0, listOf("Fatal error: ${e.message}"))
         }

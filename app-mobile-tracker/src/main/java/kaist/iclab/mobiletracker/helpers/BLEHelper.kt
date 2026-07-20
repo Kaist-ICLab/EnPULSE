@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.helpers
 
 
+import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.util.Log
 import kaist.iclab.mobiletracker.Constants
@@ -188,6 +189,7 @@ class BLEHelper(
                     }
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
                     "[MICRO_EMA] Error processing response: ${e.message}", e
@@ -208,6 +210,7 @@ class BLEHelper(
                 bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_ACK, ackData)
                 Log.d(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Sent ACK for IDs: $ackData")
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Failed to send ACK: ${e.message}")
             }
         }
@@ -233,6 +236,7 @@ class BLEHelper(
                     "[TRIGGER] Sent state updates to watch: $payload"
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
                     "[TRIGGER] Failed to send state updates: ${e.message}"
@@ -258,6 +262,7 @@ class BLEHelper(
                     "Sent active sensor config to watch: $activeSensorIds"
                 )
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
                     "Failed to send active sensor config: ${e.message}"
@@ -300,6 +305,7 @@ class BLEHelper(
                 "Sent ACK for $sensorId: $status (ts=$endTimestamp)"
             )
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.e(
                 AppConfig.LogTags.PHONE_BLE,
                 "Failed to send ACK for $sensorId: ${e.message}",
@@ -397,6 +403,7 @@ class BLEHelper(
                     }
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(
                     AppConfig.LogTags.PHONE_BLE,
                     "Error parsing or storing $sensorId data: ${e.message}",
