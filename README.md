@@ -1,25 +1,26 @@
 # EnPULSE
-
 **EnPULSE (Enabling Platform for User Logging and Sensing Environment)** is a sensor data collection platform for mobile and wrist-worn wearable devices. Developed by KAIST Interactive Computing Laboratory.
 
 ## Overview
+EnPULSE consists of several core components, which can also be used individually.
+Together, they support end-to-end sensor data collection.
 
-EnPULSE consists of several core components that support end-to-end sensor data collection:
+**Note: Other components will be opened to the public after paper publication.**
 
 ### Android Library (`tracker-library`)
 The core sensor tracking library capable of collecting various sensor data from mobile and Galaxy Watch devices. It includes 21 sensor types, with watch-specific sensors (`AccelerometerSensor`, `PPGSensor`, `HeartRateSensor`, `SkinTemperatureSensor`, `EDASensor`, `ECGSensor`) and phone-specific sensors (such as `StepSensor`).
 
 ### Mobile Tracker Application (`app-mobile-tracker`)
-A handheld application for smartphone sensor data collection, study campaign configuration, local caching, and cloud data synchronization. See the [Mobile Tracker README](app-mobile-tracker/README.md) for details.
+A mobile app for easy smartphone sensor data collection from Samsung devices. See the [Mobile Tracker README](app-mobile-tracker/README.md) for details.
 
 ### Wearable Tracker Application (`app-wearable-tracker`)
-A WearOS application for continuous biosignal sensing on Galaxy Watch devices. See the [Wearable Tracker README](app-wearable-tracker/README.md) for details.
+A smartwatch app for continuous biosignal sensing on Galaxy Watch devices. See the [Wearable Tracker README](app-wearable-tracker/README.md) for details.
 
-### Backend (Supabase)
-Cloud infrastructure for user authentication, study campaign distribution, and real-time/batch sensor data synchronization powered by Supabase.
+### [Backend](https://github.com/Kaist-ICLab/EnPULSE-backend)
+Locally-hosted Supabase-based backend component for storing sensor data and campaign configuration.
 
-### Dashboard
-Next.js based dashboard for campaign configuration, management, and real-time data monitoring. Available in [this repository](https://github.com/Kaist-ICLab/EnPULSE-dashboard).
+### [Dashboard](https://github.com/Kaist-ICLab/EnPULSE-dashboard)
+Web-based dashboard for campaign configuration, management, and data monitoring.
 
 ---
 
