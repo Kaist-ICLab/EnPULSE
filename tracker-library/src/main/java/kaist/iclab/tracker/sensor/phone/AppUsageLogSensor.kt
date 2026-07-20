@@ -10,6 +10,9 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import kaist.iclab.tracker.listener.AlarmListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.GridView
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -25,7 +28,10 @@ class AppUsageLogSensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<AppUsageLogSensor.Config, AppUsageLogSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_app_usage,
+    descriptionResId = R.string.sensor_desc_app_usage,
+    icon = Icons.Default.GridView
 ) {
     data class Config(
         val interval: Long,

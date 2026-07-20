@@ -11,6 +11,9 @@ import android.os.Bundle
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Poll
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.BroadcastListener
@@ -46,7 +49,10 @@ class SurveySensor(
     stateStorage: StateStorage<SensorState>,
     private val scheduleStorage: SurveyScheduleStorage,
 ): BaseSensor<SurveySensor.Config, SurveySensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_survey,
+    descriptionResId = R.string.sensor_desc_survey,
+    icon = Icons.Default.Poll
 ) {
     companion object {
         private val TAG = SurveySensor::class.simpleName

@@ -7,6 +7,9 @@ import android.util.Log
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -28,7 +31,10 @@ class ECGSensor(
     private val stateStorage: StateStorage<SensorState>,
     private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<ECGSensor.Config, ECGSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_ecg,
+    descriptionResId = R.string.sensor_desc_ecg,
+    icon = Icons.Default.Favorite
 ) {
     override val permissions = listOfNotNull(
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.VANILLA_ICE_CREAM) Manifest.permission.BODY_SENSORS else "com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA",

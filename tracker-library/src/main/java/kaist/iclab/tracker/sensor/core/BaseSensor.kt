@@ -3,6 +3,7 @@ package kaist.iclab.tracker.sensor.core
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.storage.core.StateStorage
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
@@ -14,6 +15,9 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
     private val stateStorage: StateStorage<SensorState>,
     override val configClass: KClass<C>,
     override val entityClass: KClass<E>,
+    override val titleResId: Int,
+    override val descriptionResId: Int,
+    override val icon: ImageVector
 ) : Sensor<C, E> {
     override val id: String = extractId(this::class.simpleName ?: "Unknown")
     override val name: String = extractName(this::class.simpleName ?: "Unknown")

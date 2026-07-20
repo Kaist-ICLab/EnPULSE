@@ -7,6 +7,9 @@ import android.util.Log
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Waves
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -27,7 +30,10 @@ class EDASensor(
     private val stateStorage: StateStorage<SensorState>,
     private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer,
 ) : BaseSensor<EDASensor.Config, EDASensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_eda,
+    descriptionResId = R.string.sensor_desc_eda,
+    icon = Icons.Default.Waves
 ) {
     override val permissions = listOfNotNull(
         // For foreground service type

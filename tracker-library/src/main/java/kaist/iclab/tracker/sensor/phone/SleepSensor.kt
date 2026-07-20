@@ -10,6 +10,9 @@ import com.samsung.android.sdk.health.data.request.LocalTimeFilter
 import com.samsung.android.sdk.health.data.request.Ordering
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -34,7 +37,10 @@ class SleepSensor(
     val stateStorage: StateStorage<SensorState>,
     samsungHealthDataInitializer: SamsungHealthDataInitializer
 ) : BaseSensor<SleepSensor.Config, SleepSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_sleep,
+    descriptionResId = R.string.sensor_desc_sleep,
+    icon = Icons.Default.Bedtime
 ) {
     override val permissions = arrayOf(DataTypes.SLEEP.name)
 

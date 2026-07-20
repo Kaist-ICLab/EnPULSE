@@ -12,6 +12,9 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
 import android.os.SystemClock
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CompassCalibration
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -31,7 +34,10 @@ class IMUSensor(
     configStorage,
     stateStorage,
     Config::class,
-    Entity::class
+    Entity::class,
+    titleResId = R.string.sensor_imu,
+    descriptionResId = R.string.sensor_desc_imu,
+    icon = Icons.Default.CompassCalibration
 ), SensorEventListener {
     companion object {
         private const val SAMPLE_RATE = 50

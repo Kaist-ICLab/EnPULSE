@@ -209,6 +209,7 @@
     <string name="sensor_desc_sleep">Sleep session data</string>
     <string name="sensor_desc_ecg">Watch ECG sensor data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
+    <string name="sensor_desc_activity_recognition">Recognize user physical activity</string>
     <!-- Watch Sensor Descriptions -->
     <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
     <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>
@@ -291,6 +292,7 @@
     <string name="sensor_stress">Stress</string>
     <string name="sensor_exercise">Exercise</string>
     <string name="sensor_sleep">Sleep</string>
+    <string name="sensor_activity_recognition">Activity Recognition</string>
 
 
     <!-- Toast Messages -->

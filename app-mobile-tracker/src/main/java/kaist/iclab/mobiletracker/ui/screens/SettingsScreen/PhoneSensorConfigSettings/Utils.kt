@@ -22,6 +22,7 @@ private data class SensorConfig(
  * Sensor configurations mapping patterns to canonical IDs
  */
 private val sensorConfigs = listOf(
+    SensorConfig(listOf("Activity Recognition"), "ActivityRecognition"),
     SensorConfig(listOf("Ambient Light"), "AmbientLight"),
     SensorConfig(listOf("App List Change"), "AppListChange"),
     SensorConfig(listOf("App Usage"), "AppUsage"),

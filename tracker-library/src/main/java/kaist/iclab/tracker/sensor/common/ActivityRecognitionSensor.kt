@@ -7,6 +7,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import kaist.iclab.tracker.R
 import androidx.annotation.RequiresPermission
 import com.google.android.gms.location.ActivityRecognition
 import com.google.android.gms.location.ActivityRecognitionClient
@@ -27,7 +30,10 @@ class ActivityRecognitionSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<ActivityRecognitionSensor.Config, ActivityRecognitionSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_activity_recognition,
+    descriptionResId = R.string.sensor_desc_activity_recognition,
+    icon = Icons.AutoMirrored.Filled.DirectionsWalk
 ) {
     companion object {
         private val TAG = ActivityRecognitionSensor::class.simpleName

@@ -211,6 +211,7 @@
     <string name="sensor_desc_sleep">수면 세션 데이터</string>
     <string name="sensor_desc_ecg">워치 심전도 센서 데이터</string>
     <string name="sensor_desc_default">센서 데이터 수집</string>
+    <string name="sensor_desc_activity_recognition">사용자 신체 활동 인식</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -309,6 +310,7 @@
     <string name="sensor_stress">스트레스</string>
     <string name="sensor_exercise">운동</string>
     <string name="sensor_sleep">수면</string>
+    <string name="sensor_activity_recognition">신체 활동 인식</string>
     <string name="sensor_ecg">심전도</string>
     <string name="sensor_desc_accelerometer">3축 가속도계 데이터</string>
     <string name="sensor_desc_ppg">녹색, 적색, 적외선으로 측정한 혈류 펄스 데이터</string>

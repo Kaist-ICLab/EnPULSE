@@ -6,6 +6,9 @@ import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AppRegistration
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -24,7 +27,10 @@ class AppListChangeSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<AppListChangeSensor.Config, AppListChangeSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_app_list_change,
+    descriptionResId = R.string.sensor_desc_app_list_change,
+    icon = Icons.Default.AppRegistration
 ) {
     companion object {
         private const val TAG = "AppListChangeSensor"

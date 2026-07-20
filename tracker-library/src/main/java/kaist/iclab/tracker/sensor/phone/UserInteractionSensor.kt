@@ -6,6 +6,9 @@ import android.os.Build
 import android.view.accessibility.AccessibilityEvent
 import kaist.iclab.tracker.listener.AccessibilityListener
 import kaist.iclab.tracker.listener.core.AccessibilityEventInfo
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.TouchApp
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -21,7 +24,10 @@ class UserInteractionSensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<UserInteractionSensor.Config, UserInteractionSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_user_interaction,
+    descriptionResId = R.string.sensor_desc_user_interaction,
+    icon = Icons.Default.TouchApp
 ) {
     companion object {
         var instance: WeakReference<UserInteractionSensor>? = null

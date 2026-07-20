@@ -41,6 +41,7 @@ import kaist.iclab.mobiletracker.R
 fun getSensorTitleResId(sensorId: String): Int {
     val normalizedId = sensorId.replace(" ", "")
     return when (normalizedId) {
+        "ActivityRecognition" -> R.string.sensor_activity_recognition
         "AmbientLight" -> R.string.sensor_ambient_light
         "AppListChange" -> R.string.sensor_app_list_change
         "AppUsage", "AppUsageLog" -> R.string.sensor_app_usage
@@ -80,6 +81,7 @@ fun getSensorTitleResId(sensorId: String): Int {
 fun getSensorDescriptionResId(sensorId: String): Int {
     val normalizedId = sensorId.replace(" ", "")
     return when (normalizedId) {
+        "ActivityRecognition" -> R.string.sensor_desc_activity_recognition
         "AmbientLight" -> R.string.sensor_desc_ambient_light
         "AppListChange" -> R.string.sensor_desc_app_list_change
         "AppUsage", "AppUsageLog" -> R.string.sensor_desc_app_usage

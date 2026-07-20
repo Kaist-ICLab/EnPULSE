@@ -9,6 +9,9 @@ import android.database.Cursor
 import android.provider.Telephony
 import androidx.core.net.toUri
 import kaist.iclab.tracker.listener.AlarmListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -25,7 +28,10 @@ class MessageLogSensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<MessageLogSensor.Config, MessageLogSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_message,
+    descriptionResId = R.string.sensor_desc_message,
+    icon = Icons.Default.Email
 ) {
     data class Config(
         val interval: Long

@@ -1,11 +1,17 @@
 package kaist.iclab.tracker.sensor.core
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.reflect.KClass
 
 interface Sensor<C : SensorConfig, E : SensorEntity> {
     val id: String
     val name: String
+
+    /* UI-related */
+    val titleResId: Int
+    val descriptionResId: Int
+    val icon: ImageVector
 
     val permissions: Array<String>
     val foregroundServiceTypes: Array<Int>

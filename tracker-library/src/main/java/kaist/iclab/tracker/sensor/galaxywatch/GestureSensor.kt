@@ -4,6 +4,9 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BackHand
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -31,7 +34,10 @@ class GestureSensor(
     configStorage,
     stateStorage,
     Config::class,
-    Entity::class
+    Entity::class,
+    titleResId = R.string.sensor_gesture,
+    descriptionResId = R.string.sensor_desc_gesture,
+    icon = Icons.Default.BackHand
 ) {
     companion object {
         private const val CHANNELS = 6

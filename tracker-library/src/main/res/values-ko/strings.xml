@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="msg_samsung_health_dev_mode_needed">이 앱을 사용하려면 삼성 헬스 개발자 모드가 필요할 수 있습니다.</string>
+    <string name="sensor_activity_recognition">신체 활동 인식</string>
+    <string name="sensor_desc_activity_recognition">사용자 신체 활동 인식</string>
 </resources>

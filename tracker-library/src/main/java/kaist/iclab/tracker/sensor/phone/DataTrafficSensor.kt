@@ -7,6 +7,9 @@ import android.content.pm.ServiceInfo
 import android.net.TrafficStats
 import android.os.Build
 import kaist.iclab.tracker.listener.AlarmListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DataUsage
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -21,7 +24,10 @@ class DataTrafficSensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<DataTrafficSensor.Config, DataTrafficSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_data_traffic,
+    descriptionResId = R.string.sensor_desc_data_traffic,
+    icon = Icons.Default.DataUsage
 ) {
     data class Config(
         val interval: Long,

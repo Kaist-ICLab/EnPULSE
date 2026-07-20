@@ -6,6 +6,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import kaist.iclab.tracker.listener.BroadcastListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.StayCurrentPortrait
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -20,7 +23,10 @@ class ScreenSensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<ScreenSensor.Config, ScreenSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_screen,
+    descriptionResId = R.string.sensor_desc_screen,
+    icon = Icons.Default.StayCurrentPortrait
 ) {
     /*No attribute required... can not be data class*/
     class Config : SensorConfig

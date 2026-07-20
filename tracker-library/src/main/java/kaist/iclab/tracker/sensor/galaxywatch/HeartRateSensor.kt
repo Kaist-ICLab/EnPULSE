@@ -7,6 +7,9 @@ import android.os.Build
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FavoriteBorder
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -21,7 +24,10 @@ class HeartRateSensor(
     private val stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<HeartRateSensor.Config, HeartRateSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_heart_rate,
+    descriptionResId = R.string.sensor_desc_heart_rate,
+    icon = Icons.Default.FavoriteBorder
 ) {
     override val id: String = "HeartRate"
     override val permissions = listOfNotNull(
