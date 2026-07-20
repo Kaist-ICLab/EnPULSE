@@ -49,7 +49,7 @@ include(":app-mobile-tracker")
 //include(":test-survey")
 //include(":test-sync")
 //include(":test-sync-watch")
-include(":test-survey")
+//include(":test-survey")
 
 // Other Modules
 //include(":phone")
