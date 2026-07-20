@@ -33,11 +33,9 @@ class MediaEntity : BaseEntity, CsvSerializable, RecordSerializable {
     var size: Long? = null
 
     @SerialName("date_added")
-    @Serializable(with = EpochMillisIsoSerializer::class)
     var dateAdded: Long? = null
 
     @SerialName("date_modified")
-    @Serializable(with = EpochMillisIsoSerializer::class)
     var dateModified: Long? = null
 
     constructor() : super()
