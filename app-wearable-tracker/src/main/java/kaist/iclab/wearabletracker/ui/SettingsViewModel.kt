@@ -14,7 +14,10 @@ import com.google.android.gms.wearable.Wearable
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.core.SensorState
+import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
 import kaist.iclab.wearabletracker.data.AutoSyncManager
+import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
@@ -27,6 +30,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -41,7 +46,9 @@ class SettingsViewModel(
     private val repository: WatchSensorRepository,
     private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer,
     private val applicationContext: Context,
-    private val autoSyncManager: AutoSyncManager
+    private val autoSyncManager: AutoSyncManager,
+    private val ecgSensor: ECGSensor,
+    private val campaignSensorConfigRepository: CampaignSensorConfigRepository
 ) : ViewModel() {
     companion object {
         private val TAG = SettingsViewModel::class.simpleName
@@ -67,19 +74,17 @@ class SettingsViewModel(
 
     private val nodeClient by lazy { Wearable.getNodeClient(applicationContext) }
 
-    // Auto-sync settings
-    val autoSyncEnabled: StateFlow<Boolean> = repository.autoSyncEnabledFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
+    // Auto-sync settings — no separate enabled flag surfaced to the UI; see setAutoSyncInterval.
     val autoSyncInterval: StateFlow<Long> = repository.autoSyncIntervalFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
-    fun setAutoSyncEnabled(enabled: Boolean) {
-        repository.setAutoSyncEnabled(enabled)
-    }
-
+    /**
+     * Auto-sync has no separate on/off switch in the UI — picking an interval of 0 (None) is
+     * what turns it off, so enabled is derived from the interval here.
+     */
     fun setAutoSyncInterval(intervalMs: Long) {
         repository.setAutoSyncInterval(intervalMs)
+        repository.setAutoSyncEnabled(intervalMs > 0L)
     }
 
     // Battery level (0-100)
@@ -97,6 +102,31 @@ class SettingsViewModel(
     // SDK Policy Error state - true when dev mode is not enabled on Health Platform
     val sdkPolicyError: StateFlow<Boolean> = samsungHealthSensorInitializer.sdkPolicyErrorStateFlow
 
+    // ECG is on-demand only and isn't part of `sensorState` (not in watchSensorDescriptors);
+    // this drives visibility of the "Measure ECG" button. Also requires ECG to be part of the
+    // wearer's campaign (a never-synced/null config fails open).
+    val ecgAvailable: StateFlow<Boolean> = combine(
+        ecgSensor.sensorStateFlow,
+        campaignSensorConfigRepository.configFlow
+    ) { sensorState, config ->
+        sensorState.flag != SensorState.FLAG.UNAVAILABLE &&
+            (config.activeSensorIds == null || ecgSensor.id in config.activeSensorIds)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    // Names (not bare ids) of sensors active for the wearer's campaign, translated via
+    // `sensorController.sensors` since `sensorState`/`sensorMap` below are keyed by `.name`
+    // (the human-readable display form, e.g. "Skin Temperature") rather than `.id`.
+    // Null means "never synced with the phone" and fails open (shows every sensor).
+    val activeCampaignSensorNames: StateFlow<Set<String>?> = campaignSensorConfigRepository.configFlow
+        .map { config ->
+            config.activeSensorIds?.let { ids ->
+                sensorController.sensors.filter { it.id in ids }.map { it.name }.toSet()
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val ecgPermissions: Array<String> get() = ecgSensor.permissions
+
     /**
      * Clear the SDK Policy Error and stop logging (called when user dismisses the error screen).
      */
@@ -106,6 +136,11 @@ class SettingsViewModel(
     }
 
     init {
+        // ECG is excluded from BackgroundController's managed sensor list (see KoinModule.kt),
+        // so nothing else calls init() on it — without this, its persisted state stays at the
+        // default UNAVAILABLE forever and the "Measure ECG" button never appears.
+        ecgSensor.init()
+
         viewModelScope.launch {
             repository.lastSyncTimestampFlow.collect {
                 _lastSyncTimestamp.value = it

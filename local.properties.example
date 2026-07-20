@@ -1,0 +1,9 @@
+## Local Configuration Template
+# Copy this file to local.properties and fill in your SDK directory and Supabase credentials.
+
+# Location of the Android SDK.
+sdk.dir=/path/to/your/Android/sdk
+
+# Supabase backend credentials (used for data collection sync and authentication)
+SUPABASE_URL=https://your-supabase-instance.url/
+SUPABASE_ANON_KEY=your_supabase_anon_public_key

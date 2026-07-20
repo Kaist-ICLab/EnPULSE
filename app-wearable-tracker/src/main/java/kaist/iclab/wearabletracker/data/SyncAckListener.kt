@@ -3,33 +3,22 @@ package kaist.iclab.wearabletracker.data
 import android.util.Log
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
-import kaist.iclab.wearabletracker.db.dao.BaseDao
+import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.ErrorClassifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 
-/**
- * Listens for sync acknowledgment (ACK) messages from the phone.
- * When an ACK is received, it confirms the sync was successful and triggers cleanup.
- */
 class SyncAckListener(
     private val bleChannel: BLEDataChannel,
-    private val daos: Map<String, BaseDao<*>>,
+    private val stores: Map<String, WatchSensorStore<*>>,
     private val syncPreferencesHelper: SyncPreferencesHelper,
     private val coroutineScope: CoroutineScope
 ) {
     private val TAG = javaClass.simpleName
 
-    /**
-     * Start listening for ACK messages from the phone.
-     * Also checks for and clears any stale pending batches from previous sessions.
-     */
     fun startListening() {
-        // Recover from stale batches left by previous app sessions
-        syncPreferencesHelper.clearStaleBatchIfNeeded()
-
         bleChannel.addOnReceivedListener(setOf(Constants.BLE.KEY_SYNC_ACK)) { _, jsonElement ->
             val ackData = when (jsonElement) {
                 is JsonPrimitive -> jsonElement.content
@@ -40,8 +29,10 @@ class SyncAckListener(
     }
 
     /**
-     * Handle incoming ACK message.
-     * Format: "batchId:OK" or "batchId:FAIL" or "batchId:OK:endTimestamp"
+     * ACK format: "sensorId:status:endTimestamp" - endTimestamp is the phone's verified-contiguous
+     * watermark for that sensor, cumulative and idempotent: a stale/duplicate/out-of-order ACK for
+     * a sensor is safe to process any number of times, since advanceSensorWatermarkIfNewer only
+     * ever moves forward.
      */
     private fun handleAck(ackData: String) {
         coroutineScope.launch {
@@ -51,61 +42,35 @@ class SyncAckListener(
                     throw IllegalArgumentException("Invalid ACK format: $ackData")
                 }
 
-                val receivedBatchId = parts[0]
+                val sensorId = parts[0]
                 val status = parts[1]
                 val endTimestamp = if (parts.size >= 3) parts[2].toLongOrNull() else null
 
-                val pendingBatch = syncPreferencesHelper.getPendingBatch()
-                if (pendingBatch == null) {
-                    Log.w(TAG, "Received ACK but no pending batch: $receivedBatchId")
+                if (status != "OK") {
+                    Log.e(TAG, "Received non-OK ACK for $sensorId: $status")
                     return@runClassified
                 }
 
-                if (pendingBatch.batchId != receivedBatchId) {
-                    Log.w(
-                        TAG,
-                        "ACK batch ID mismatch. Expected: ${pendingBatch.batchId}, Received: $receivedBatchId"
-                    )
+                if (endTimestamp == null) {
+                    Log.w(TAG, "Received OK ACK with no timestamp for $sensorId, nothing to confirm")
                     return@runClassified
                 }
 
-                when (status) {
-                    "OK" -> onSyncConfirmed(pendingBatch, endTimestamp)
-                    "FAIL" -> Log.e(TAG, "Received failure ACK for batch: $receivedBatchId")
-                    else -> Log.e(TAG, "Received unknown status in ACK: $status")
+                val store = stores[sensorId]
+                if (store == null) {
+                    Log.w(TAG, "Received ACK for unknown sensorId: $sensorId")
+                    return@runClassified
+                }
+
+                if (syncPreferencesHelper.advanceSensorWatermarkIfNewer(sensorId, endTimestamp)) {
+                    Log.d(TAG, "Pruning $sensorId data up to: $endTimestamp")
+                    store.deleteDataBefore(endTimestamp)
+                } else {
+                    Log.d(TAG, "Stale/duplicate ACK for $sensorId at $endTimestamp, ignoring")
                 }
             }
         }
     }
 
-    /**
-     * Called when sync is confirmed successful by the phone.
-     * Deletes synced data and updates sync timestamp.
-     * @param batch The batch information
-     * @param endTimestamp The specific timestamp to prune up to. If null, uses batch.endTimestamp.
-     */
-    private suspend fun onSyncConfirmed(batch: SyncBatch, endTimestamp: Long?) {
-        val pruneUntil = endTimestamp ?: batch.endTimestamp
-        Log.d(TAG, "Pruning data up to: $pruneUntil (batchId=${batch.batchId})")
-
-        // Delete synced data from all DAOs
-        daos.values.forEach { dao ->
-            dao.deleteDataBefore(pruneUntil)
-        }
-
-        // Update last sync timestamp
-        syncPreferencesHelper.saveLastSyncTimestamp(pruneUntil)
-
-        // Only clear pending batch if we synced the whole thing
-        if (endTimestamp == null || endTimestamp >= batch.endTimestamp) {
-            syncPreferencesHelper.clearPendingBatch()
-        }
-    }
-
-    /**
-     * Cleanup method - call when listener is no longer needed.
-     */
-    fun cleanup() {
-        // Handled by injected scope lifecycle
-    }
+    fun cleanup() {}
 }

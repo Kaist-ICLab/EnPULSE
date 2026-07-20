@@ -23,6 +23,16 @@ SUPABASE_URL=your_self_hosted_supabase_server_address
 * `SUPABASE_URL`: The url is the same address that you access the supabase dashboard. Without manual
   setting, it uses port 8000.
 
+### Connecting the App with Firebase Backend (Google Sign-In)
+
+The `google-services.json` file is ignored by Git to keep project credentials secure. To enable Google Sign-In and Firebase services:
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
+2. Register an Android App using the package name `kaist.iclab.trackerSystem`.
+3. Download the generated `google-services.json` file.
+4. Place the `google-services.json` file inside the `app-mobile-tracker/` directory.
+5. Configure Google Sign-In in the Firebase Console (Authentication > Sign-in method > Google).
+
 ## Related Modules
 
 - [`tracker-library`](../tracker-library/README.md) - Core sensor tracking library

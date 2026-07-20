@@ -11,6 +11,9 @@ import com.samsung.android.sdk.health.data.request.LocalTimeFilter
 import com.samsung.android.sdk.health.data.request.LocalTimeGroup
 import com.samsung.android.sdk.health.data.request.LocalTimeGroupUnit
 import com.samsung.android.sdk.health.data.request.Ordering
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsWalk
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
 import kaist.iclab.tracker.permission.PermissionManager
@@ -36,7 +39,10 @@ class StepSensor(
     val stateStorage: StateStorage<SensorState>,
     samsungHealthDataInitializer: SamsungHealthDataInitializer
 ) : BaseSensor<StepSensor.Config, StepSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_step,
+    descriptionResId = R.string.sensor_desc_step,
+    icon = Icons.Default.DirectionsWalk
 ) {
     override val permissions = listOfNotNull(
         Manifest.permission.ACTIVITY_RECOGNITION,
@@ -60,8 +66,7 @@ class StepSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val startTime: Long,
-        val endTime: Long,
+        val duration: Long,
         val steps: Long
     ) : SensorEntity()
 
@@ -99,17 +104,18 @@ class StepSensor(
 
         CoroutineScope(Dispatchers.IO).launch {
             store.aggregateData(req).dataList.forEach {
+                val startTime = it.startTime.toEpochMilli()
+                val duration = it.endTime.toEpochMilli() - startTime
                 val entity = Entity(
                     timestamp,
-                    timestamp,
-                    it.startTime.toEpochMilli(),
-                    it.endTime.toEpochMilli(),
+                    startTime,
+                    duration,
                     it.value ?: 0
                 )
                 lastSynced = max(lastSynced, it.endTime.toEpochMilli())
 
-                listeners.forEach {
-                    it.invoke(entity)
+                listeners.forEach { l ->
+                    l.invoke(entity)
                 }
             }
         }

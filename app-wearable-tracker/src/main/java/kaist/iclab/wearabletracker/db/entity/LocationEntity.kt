@@ -1,25 +1,25 @@
 package kaist.iclab.wearabletracker.db.entity
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.util.UUID
+import io.objectbox.annotation.Entity
 
 @Entity
-data class LocationEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val received: Long,
-    val latitude: Double,
-    val longitude: Double,
-    val altitude: Double,
-    val speed: Float,
-    val accuracy: Float,
-    override val timestamp: Long
-) : CsvSerializable {
-    override fun toCsvHeader(): String =
-        "eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy"
+class LocationEntity() : WatchBaseEntity(), CsvSerializable {
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
+    var altitude: Double = 0.0
+    var speed: Float = 0f
+    var accuracy: Float = 0f
 
-    override fun toCsvRow(): String =
-        "$eventId,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
+    constructor(
+        received: Long, timestamp: Long,
+        latitude: Double, longitude: Double, altitude: Double,
+        speed: Float, accuracy: Float
+    ) : this() {
+        initBase(received, timestamp)
+        this.latitude = latitude; this.longitude = longitude; this.altitude = altitude
+        this.speed = speed; this.accuracy = accuracy
+    }
+
+    override fun csvHeader() = "eventId,received,timestamp,latitude,longitude,altitude,speed,accuracy"
+    override fun toCsvRow() = "$eventId,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
 }

@@ -8,6 +8,9 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Build
 import androidx.annotation.RequiresPermission
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -34,7 +37,10 @@ class AudioSensor(
     configStorage,
     stateStorage,
     Config::class,
-    Entity::class
+    Entity::class,
+    titleResId = R.string.sensor_media, // Placeholder if no audio specific
+    descriptionResId = R.string.sensor_desc_media,
+    icon = Icons.Default.Mic
 ) {
     companion object {
         private const val AUDIO_SAMPLE_RATE = 16000

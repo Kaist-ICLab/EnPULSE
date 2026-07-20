@@ -115,6 +115,7 @@ class SensorViewModel(
             val value = when (key) {
                 "timestamp" -> json.optLong(key).takeIf { it > 0 }?.formatLocalDateTime()
                     ?: json.opt(key).toDisplayValue()
+
                 else -> json.opt(key).toDisplayValue()
             }
             "$key=$value"

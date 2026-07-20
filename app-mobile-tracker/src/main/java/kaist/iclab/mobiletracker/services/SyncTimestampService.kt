@@ -20,16 +20,18 @@ class SyncTimestampService(private val context: Context) {
      * Update timestamp when watch data is received via BLE
      */
     fun updateLastWatchDataReceived() {
-        prefs.edit().putLong(Constants.Prefs.KEY_LAST_WATCH_DATA, System.currentTimeMillis())
-            .apply()
+        prefs.edit {
+            putLong(Constants.Prefs.KEY_LAST_WATCH_DATA, System.currentTimeMillis())
+        }
     }
 
     /**
      * Update timestamp when phone sensor data is collected
      */
     fun updateLastPhoneSensorData() {
-        prefs.edit().putLong(Constants.Prefs.KEY_LAST_PHONE_SENSOR, System.currentTimeMillis())
-            .apply()
+        prefs.edit {
+            putLong(Constants.Prefs.KEY_LAST_PHONE_SENSOR, System.currentTimeMillis())
+        }
     }
 
     /**
@@ -37,7 +39,7 @@ class SyncTimestampService(private val context: Context) {
      * @param timestamp Optional timestamp to use, defaults to current time
      */
     fun updateLastSuccessfulUpload(timestamp: Long = System.currentTimeMillis()) {
-        prefs.edit().putLong(Constants.Prefs.KEY_LAST_SUCCESSFUL_UPLOAD, timestamp).apply()
+        prefs.edit { putLong(Constants.Prefs.KEY_LAST_SUCCESSFUL_UPLOAD, timestamp) }
     }
 
     /**
@@ -47,7 +49,7 @@ class SyncTimestampService(private val context: Context) {
      */
     fun updateLastSuccessfulUpload(sensorId: String, timestamp: Long) {
         val key = "last_upload_$sensorId"
-        prefs.edit().putLong(key, timestamp).apply()
+        prefs.edit { putLong(key, timestamp) }
         // Also update global timestamp
         updateLastSuccessfulUpload(timestamp)
     }
@@ -82,16 +84,16 @@ class SyncTimestampService(private val context: Context) {
      * Update timestamp when data collection starts
      */
     fun updateDataCollectionStarted() {
-        prefs.edit()
-            .putLong(Constants.Prefs.KEY_DATA_COLLECTION_STARTED, System.currentTimeMillis())
-            .apply()
+        prefs.edit {
+            putLong(Constants.Prefs.KEY_DATA_COLLECTION_STARTED, System.currentTimeMillis())
+        }
     }
 
     /**
      * Clear data collection started timestamp (when collection stops)
      */
     fun clearDataCollectionStarted() {
-        prefs.edit().remove(Constants.Prefs.KEY_DATA_COLLECTION_STARTED).apply()
+        prefs.edit { remove(Constants.Prefs.KEY_DATA_COLLECTION_STARTED) }
     }
 
     /**
@@ -135,7 +137,7 @@ class SyncTimestampService(private val context: Context) {
     }
 
     fun setAutoSyncNetworkMode(mode: Int) {
-        prefs.edit().putInt(Constants.Prefs.KEY_AUTO_SYNC_NETWORK, mode).apply()
+        prefs.edit { putInt(Constants.Prefs.KEY_AUTO_SYNC_NETWORK, mode) }
     }
 
     /**
@@ -193,7 +195,7 @@ class SyncTimestampService(private val context: Context) {
      */
     fun clearLastSuccessfulUpload(sensorId: String) {
         val key = "last_upload_$sensorId"
-        prefs.edit().remove(key).apply()
+        prefs.edit { remove(key) }
     }
 
     /**
@@ -220,22 +222,39 @@ class SyncTimestampService(private val context: Context) {
      * - Data collection started
      */
     fun clearAllSyncTimestamps() {
-        val editor = prefs.edit()
+        prefs.edit {
 
-        // Clear all per-sensor upload timestamps using the same editor
-        clearAllSensorUploadTimestamps(editor)
+            // Clear all per-sensor upload timestamps using the same editor
+            clearAllSensorUploadTimestamps(this)
 
-        // Clear global upload timestamp
-        editor.remove(Constants.Prefs.KEY_LAST_SUCCESSFUL_UPLOAD)
+            // Clear global upload timestamp
+            remove(Constants.Prefs.KEY_LAST_SUCCESSFUL_UPLOAD)
 
-        // Clear last received timestamps
-        editor.remove(Constants.Prefs.KEY_LAST_WATCH_DATA)
-        editor.remove(Constants.Prefs.KEY_LAST_PHONE_SENSOR)
+            // Clear last received timestamps
+            remove(Constants.Prefs.KEY_LAST_WATCH_DATA)
+            remove(Constants.Prefs.KEY_LAST_PHONE_SENSOR)
 
-        // Clear data collection started
-        editor.remove(Constants.Prefs.KEY_DATA_COLLECTION_STARTED)
+            // Clear data collection started
+            remove(Constants.Prefs.KEY_DATA_COLLECTION_STARTED)
 
-        editor.apply()
+        }
+    }
+
+    /**
+     * Get the verified-contiguous watch->phone BLE sync watermark for a sensor.
+     * Distinct from [getLastSuccessfulUploadTimestamp]: this tracks how far BLE receipt
+     * from the watch has been confirmed gap-free, not how far upload-to-server has progressed.
+     */
+    fun getBleContiguousTimestamp(sensorId: String): Long? {
+        val timestamp = prefs.getLong("ble_contiguous_ts_$sensorId", 0L)
+        return if (timestamp > 0) timestamp else null
+    }
+
+    /**
+     * Set the verified-contiguous watch->phone BLE sync watermark for a sensor.
+     */
+    fun setBleContiguousTimestamp(sensorId: String, timestamp: Long) {
+        prefs.edit { putLong("ble_contiguous_ts_$sensorId", timestamp) }
     }
 
     /**

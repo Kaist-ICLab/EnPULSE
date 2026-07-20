@@ -10,8 +10,7 @@ import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.upload.PhoneSensorUploadService
-import kaist.iclab.mobiletracker.services.upload.WatchSensorUploadService
+import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.DateTimeFormatter
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
@@ -28,8 +27,7 @@ class DataSyncSettingsViewModel(
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
     private val sensors: List<Sensor<*, *>>,
-    private val phoneSensorUploadService: PhoneSensorUploadService,
-    private val watchSensorUploadService: WatchSensorUploadService,
+    private val sensorUploadService: SensorUploadService,
     private val context: Context
 ) : ViewModel() {
     private val TAG = "ServerSyncSettingsViewModel"
@@ -121,29 +119,13 @@ class DataSyncSettingsViewModel(
 
                 val totalSensorsCount = sensors.size + SensorTypeHelper.watchSensorIds.size
 
-                // Upload all phone sensors in parallel
-                val phoneJobs = sensors.map { sensor ->
+                val allSensorIds = sensors.map { it.id } + SensorTypeHelper.watchSensorIds
+                val jobs = allSensorIds.map { sensorId ->
                     viewModelScope.async {
-                        if (!phoneSensorUploadService.hasDataToUpload(sensor.id)) {
+                        if (!sensorUploadService.hasDataToUpload(sensorId)) {
                             skippedCount++
                         } else {
-                            phoneSensorUploadService.uploadSensorData(sensor.id)
-                                .onSuccess { _: Unit -> uploadedCount++ }
-                                .onFailure { e: Throwable ->
-                                    failedCount++
-                                    Log.e(TAG, "Upload failed for ${sensor.name}: ${e.message}", e)
-                                }
-                        }
-                    }
-                }
-
-                // Upload all watch sensors in parallel
-                val watchJobs = SensorTypeHelper.watchSensorIds.map { sensorId ->
-                    viewModelScope.async {
-                        if (!watchSensorUploadService.hasDataToUpload(sensorId)) {
-                            skippedCount++
-                        } else {
-                            watchSensorUploadService.uploadSensorData(sensorId)
+                            sensorUploadService.uploadSensorData(sensorId)
                                 .onSuccess { _: Unit -> uploadedCount++ }
                                 .onFailure { e: Throwable ->
                                     failedCount++
@@ -153,8 +135,7 @@ class DataSyncSettingsViewModel(
                     }
                 }
 
-                // Wait for all uploads to complete
-                (phoneJobs + watchJobs).awaitAll()
+                jobs.awaitAll()
 
                 // Show summary toast
                 when {

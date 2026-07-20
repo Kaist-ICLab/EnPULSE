@@ -3,6 +3,9 @@ package kaist.iclab.tracker.sensor.common
 import android.content.Context
 import android.content.Intent
 import android.os.BatteryManager
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.listener.BroadcastListener
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
@@ -18,7 +21,10 @@ class BatterySensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<BatterySensor.Config, BatterySensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_battery,
+    descriptionResId = R.string.sensor_desc_battery,
+    icon = Icons.Default.BatteryChargingFull
 ) {
     class Config : SensorConfig
 

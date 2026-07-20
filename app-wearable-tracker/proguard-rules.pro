@@ -21,3 +21,9 @@
     @kotlinx.serialization.Serializable *;
 }
 -keep @kotlinx.serialization.Serializable class * { *; }
+
+# Strip debug and verbose logs in release build
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}

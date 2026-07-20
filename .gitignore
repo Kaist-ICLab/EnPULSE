@@ -21,3 +21,6 @@ tracker-library/libs/*
 # Samsung Health AAR files. Please comment out this line if you want to include the AAR files in the repository.
 samsung-health-data-api/*.aar
 samsung-health-sensor-api/*.aar
+
+# Firebase Configuration
+/app-mobile-tracker/google-services.json

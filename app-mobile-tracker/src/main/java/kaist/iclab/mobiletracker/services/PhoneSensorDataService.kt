@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.services
 
+import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -242,6 +243,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                 Log.d(TAG, "[SURVEY] - Submitted ${responses.size} responses")
             }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             Log.e(TAG, "[SURVEY] - Error processing response", e)
         }
     }

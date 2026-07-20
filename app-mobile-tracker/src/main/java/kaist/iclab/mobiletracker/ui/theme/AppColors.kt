@@ -69,6 +69,9 @@ object AppColors {
     val ColorIMU = Color(0xFF6366F1) // Indigo
     val ColorGesture = Color(0xFF14B8A6) // Teal
     val ColorStress = Color(0xFFF59E0B) // Amber
+    val ColorExercise = Color(0xFFFF7043)
+    val ColorSleep = Color(0xFF5C6BC0)
+    val ColorECG = Color(0xFFD32F2F)
     val ColorDefault = Color(0xFF9E9E9E)
 
     fun getSensorColor(sensorId: String): Color {
@@ -94,16 +97,19 @@ object AppColors {
             "Step" -> ColorActivity
             "UserInteraction" -> ColorUserInteraction
             "WifiScan", "Wifi", "WiFi" -> ColorWifi
+            "Exercise" -> ColorExercise
+            "Sleep" -> ColorSleep
 
             // Watch sensors
-            "WatchAccelerometer" -> ColorBluetooth
-            "WatchEDA" -> ColorWifi
-            "WatchHeartRate" -> ColorAppListChange
-            "WatchPPG" -> ColorMedia
-            "WatchSkinTemperature" -> ColorAmbientLight
-            "WatchIMU" -> ColorIMU
-            "WatchGesture" -> ColorGesture
-            "WatchStress" -> ColorStress
+            "WatchAccelerometer", "Accelerometer" -> ColorBluetooth
+            "WatchEDA", "EDA" -> ColorWifi
+            "WatchHeartRate", "HeartRate" -> ColorAppListChange
+            "WatchPPG", "PPG" -> ColorMedia
+            "WatchSkinTemperature", "SkinTemperature" -> ColorAmbientLight
+            "WatchIMU", "IMU" -> ColorIMU
+            "WatchGesture", "Gesture" -> ColorGesture
+            "WatchStress", "Stress" -> ColorStress
+            "ECG" -> ColorECG
             else -> ColorDefault
         }
     }
@@ -116,6 +122,8 @@ object AppColors {
             "Camera", "Media Images", "Media Video", "Media Audio", "Storage", "Microphone" -> ColorMedia
             "Read Calendar", "Calendar" -> ColorAppUsage
             "Activity Recognition", "Read Steps (Samsung Health)", "Body Sensors" -> ColorActivity
+            "Read Exercise (Samsung Health)" -> ColorExercise
+            "Read Sleep (Samsung Health)" -> ColorSleep
             "Accessibility Service" -> ColorUserInteraction
             "Usage Stats" -> ColorAppUsage
             else -> ColorDefault

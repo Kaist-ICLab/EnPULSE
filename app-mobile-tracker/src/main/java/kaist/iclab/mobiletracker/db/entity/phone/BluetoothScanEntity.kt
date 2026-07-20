@@ -1,23 +1,67 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import io.objectbox.annotation.Entity
+import kaist.iclab.mobiletracker.data.DeviceType
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.repository.SensorRecord
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import java.util.UUID
 
 @Entity
-data class BluetoothScanEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val uuid: String,
-    val received: Long,
-    val timestamp: Long,
-    val name: String,
-    val alias: String,
-    val address: String,
-    val bondState: Int,
-    val connectionType: Int,
-    val classType: Int,
-    val rssi: Int,
-    val isLE: Boolean
-)
+@Serializable
+class BluetoothScanEntity : BaseEntity, CsvSerializable, RecordSerializable {
+    var name: String = ""
+    var alias: String = ""
+    var address: String = ""
+
+    @SerialName("bond_state")
+    var bondState: Int = 0
+
+    @SerialName("connection_type")
+    var connectionType: Int = 0
+
+    @SerialName("class_type")
+    var classType: Int = 0
+
+    var rssi: Int = 0
+
+    @SerialName("is_le")
+    var isLE: Boolean = false
+
+    constructor() : super()
+
+    constructor(
+        id: Long = 0,
+        eventId: String = UUID.randomUUID().toString(),
+        uuid: String = "",
+        received: Long = 0,
+        timestamp: Long = 0,
+        deviceType: Int = DeviceType.PHONE.value,
+        name: String = "",
+        alias: String = "",
+        address: String = "",
+        bondState: Int = 0,
+        connectionType: Int = 0,
+        classType: Int = 0,
+        rssi: Int = 0,
+        isLE: Boolean = false
+    ) {
+        initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
+        this.name = name
+        this.alias = alias
+        this.address = address
+        this.bondState = bondState
+        this.connectionType = connectionType
+        this.classType = classType
+        this.rssi = rssi
+        this.isLE = isLE
+    }
+
+    override fun csvHeader() = "eventId,uuid,received,timestamp,name,alias,address,bondState,connectionType,classType,rssi,isLE"
+    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$name,$alias,$address,$bondState,$connectionType,$classType,$rssi,$isLE"
+
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Name" to name, "Address" to address))
+}

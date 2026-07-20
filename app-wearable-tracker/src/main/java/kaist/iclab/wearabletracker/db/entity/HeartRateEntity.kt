@@ -1,25 +1,28 @@
 package kaist.iclab.wearabletracker.db.entity
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.util.UUID
+import io.objectbox.annotation.Entity
 
 @Entity
-data class HeartRateEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
-    val eventId: String = UUID.randomUUID().toString(),
-    val received: Long,
-    val hr: Int,
-    val hrStatus: Int,
-    val ibi: List<Int>,
-    val ibiStatus: List<Int>,
-    override val timestamp: Long
-) : CsvSerializable {
-    override fun toCsvHeader(): String = "eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus"
+class HeartRateEntity() : WatchBaseEntity(), CsvSerializable {
+    var hr: Int = 0
+    var hrStatus: Int = 0
+    var ibi: IntArray = IntArray(0)
+    var ibiStatus: IntArray = IntArray(0)
+
+    constructor(
+        received: Long, timestamp: Long,
+        hr: Int, hrStatus: Int,
+        ibi: IntArray, ibiStatus: IntArray
+    ) : this() {
+        initBase(received, timestamp)
+        this.hr = hr; this.hrStatus = hrStatus
+        this.ibi = ibi; this.ibiStatus = ibiStatus
+    }
+
+    override fun csvHeader() = "eventId,received,timestamp,hr,hrStatus,ibi,ibiStatus"
     override fun toCsvRow(): String {
-        val ibiString = ibi.joinToString(";")
-        val ibiStatusString = ibiStatus.joinToString(";")
-        return "$eventId,$received,$timestamp,$hr,$hrStatus,$ibiString,$ibiStatusString"
+        val ibiStr = ibi.joinToString(";")
+        val ibiStatusStr = ibiStatus.joinToString(";")
+        return "$eventId,$received,$timestamp,$hr,$hrStatus,$ibiStr,$ibiStatusStr"
     }
 }

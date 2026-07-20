@@ -14,12 +14,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.ui.components.Popup.DialogButtonConfig
+import kaist.iclab.mobiletracker.ui.components.Popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
@@ -189,28 +189,34 @@ fun PermissionSettingsScreen(
     }
 
     if (showRestrictedDialog && pendingPermissionId != null) {
-        AlertDialog(
-            onDismissRequest = { showRestrictedDialog = false },
-            title = { Text(stringResource(R.string.restricted_settings_title)) },
-            text = {
-                Text(stringResource(R.string.restricted_settings_desc))
+        PopupDialog(
+            title = stringResource(R.string.restricted_settings_title),
+            content = {
+                Text(
+                    text = stringResource(R.string.restricted_settings_desc),
+                    color = AppColors.TextSecondary,
+                    fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE
+                )
             },
-            confirmButton = {
-                TextButton(onClick = {
+            primaryButton = DialogButtonConfig(
+                text = stringResource(R.string.restricted_settings_got_it),
+                onClick = {
                     showRestrictedDialog = false
                     permissionManager.openPermissionSettings(pendingPermissionId!!)
                     pendingPermissionId = null
-                }) {
-                    Text(stringResource(R.string.restricted_settings_got_it))
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = {
+            ),
+            secondaryButton = DialogButtonConfig(
+                text = stringResource(R.string.restricted_settings_cancel),
+                onClick = {
                     showRestrictedDialog = false
                     pendingPermissionId = null
-                }) {
-                    Text(stringResource(R.string.restricted_settings_cancel))
-                }
+                },
+                isPrimary = false
+            ),
+            onDismiss = {
+                showRestrictedDialog = false
+                pendingPermissionId = null
             }
         )
     }

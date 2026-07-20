@@ -5,6 +5,9 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import kaist.iclab.tracker.listener.NotificationListener
 import kaist.iclab.tracker.listener.core.NotificationEventInfo
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -18,7 +21,10 @@ class NotificationSensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<NotificationSensor.Config, NotificationSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_notification,
+    descriptionResId = R.string.sensor_desc_notification,
+    icon = Icons.Default.Notifications
 ) {
     /*No attribute required... can not be data class*/
     class Config : SensorConfig

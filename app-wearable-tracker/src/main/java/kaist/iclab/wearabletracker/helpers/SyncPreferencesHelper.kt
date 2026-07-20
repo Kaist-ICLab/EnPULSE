@@ -2,8 +2,7 @@ package kaist.iclab.wearabletracker.helpers
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
-import kaist.iclab.wearabletracker.data.SyncBatch
+import androidx.core.content.edit
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -20,31 +19,51 @@ class SyncPreferencesHelper(context: Context) {
     )
 
     /**
-     * Save the last successful sync timestamp.
+     * Get the confirmed-synced watermark for a single sensor - the highest timestamp the phone
+     * has ACKed as durably (and contiguously) stored. Used as the starting cursor for that
+     * sensor's next sync and as the prune point once an ACK confirms it.
+     * Returns null if this sensor has never been confirmed synced.
      */
-    fun saveLastSyncTimestamp(timestamp: Long) {
-        sharedPreferences.edit()
-            .putLong(KEY_LAST_SYNC_TIMESTAMP, timestamp)
-            .apply()
-    }
-
-    /**
-     * Get the last successful sync timestamp.
-     * Returns null if no sync has been recorded yet.
-     */
-    fun getLastSyncTimestamp(): Long? {
-        val timestamp = sharedPreferences.getLong(KEY_LAST_SYNC_TIMESTAMP, -1L)
+    fun getSensorWatermark(sensorId: String): Long? {
+        val timestamp = sharedPreferences.getLong(sensorWatermarkKey(sensorId), -1L)
         return if (timestamp == -1L) null else timestamp
     }
 
     /**
-     * Flow of the last successful sync timestamp.
+     * Advance a sensor's confirmed-synced watermark to [timestamp], but only if it's newer than
+     * the currently stored value. A stale/duplicate/out-of-order ACK for this sensor is a no-op.
+     * Returns whether the watermark actually advanced.
+     */
+    fun advanceSensorWatermarkIfNewer(sensorId: String, timestamp: Long): Boolean {
+        val current = getSensorWatermark(sensorId)
+        if (current != null && timestamp <= current) return false
+        sharedPreferences.edit {
+            putLong(sensorWatermarkKey(sensorId), timestamp)
+        }
+        return true
+    }
+
+    private fun sensorWatermarkKey(sensorId: String) = "$KEY_SENSOR_WATERMARK_PREFIX$sensorId"
+
+    /**
+     * Derived "last synced" value for UI display and the auto-sync interval gate: the max
+     * confirmed watermark across all sensors, i.e. the most recent confirmation event. Not the
+     * min - a single stuck/disabled/new sensor should not stall this indicator or the auto-sync
+     * interval gate for every other sensor.
+     */
+    fun getLastSyncTimestamp(): Long? =
+        sharedPreferences.all.entries
+            .filter { it.key.startsWith(KEY_SENSOR_WATERMARK_PREFIX) }
+            .mapNotNull { it.value as? Long }
+            .maxOrNull()
+
+    /**
+     * Flow of the derived "last synced" value (see [getLastSyncTimestamp]).
      */
     val lastSyncTimestampFlow: Flow<Long?> = callbackFlow {
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
-            if (key == KEY_LAST_SYNC_TIMESTAMP) {
-                val timestamp = prefs.getLong(KEY_LAST_SYNC_TIMESTAMP, -1L)
-                trySend(if (timestamp == -1L) null else timestamp)
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key?.startsWith(KEY_SENSOR_WATERMARK_PREFIX) == true) {
+                trySend(getLastSyncTimestamp())
             }
         }
         sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
@@ -56,61 +75,27 @@ class SyncPreferencesHelper(context: Context) {
     }
 
     /**
-     * Save a pending sync batch (before confirmation is received).
-     * This enables recovery if the app is killed during sync.
+     * Timestamp of the last time a sync was *attempted* (not confirmed) - pure cooldown
+     * bookkeeping so AutoSyncManager doesn't retrigger faster than one BLE round trip.
      */
-    fun savePendingBatch(batch: SyncBatch) {
-        sharedPreferences.edit()
-            .putString(KEY_PENDING_BATCH_ID, batch.batchId)
-            .putLong(KEY_PENDING_START_TS, batch.startTimestamp)
-            .putLong(KEY_PENDING_END_TS, batch.endTimestamp)
-            .putInt(KEY_PENDING_RECORD_COUNT, batch.recordCount)
-            .putLong(KEY_PENDING_CREATED_AT, batch.createdAt)
-            .apply()
+    fun getLastSyncAttemptAt(): Long? {
+        val timestamp = sharedPreferences.getLong(KEY_LAST_SYNC_ATTEMPT_AT, -1L)
+        return if (timestamp == -1L) null else timestamp
     }
 
-    /**
-     * Get the pending sync batch, if one exists.
-     * Returns null if there's no pending batch.
-     */
-    fun getPendingBatch(): SyncBatch? {
-        val batchId = sharedPreferences.getString(KEY_PENDING_BATCH_ID, null) ?: return null
-        return SyncBatch(
-            batchId = batchId,
-            startTimestamp = sharedPreferences.getLong(KEY_PENDING_START_TS, 0L),
-            endTimestamp = sharedPreferences.getLong(KEY_PENDING_END_TS, 0L),
-            recordCount = sharedPreferences.getInt(KEY_PENDING_RECORD_COUNT, 0),
-            createdAt = sharedPreferences.getLong(KEY_PENDING_CREATED_AT, 0L)
-        )
-    }
-
-    /**
-     * Clear the pending batch after successful sync confirmation.
-     */
-    fun clearPendingBatch() {
-        sharedPreferences.edit()
-            .remove(KEY_PENDING_BATCH_ID)
-            .remove(KEY_PENDING_START_TS)
-            .remove(KEY_PENDING_END_TS)
-            .remove(KEY_PENDING_RECORD_COUNT)
-            .remove(KEY_PENDING_CREATED_AT)
-            .apply()
-    }
-
-    /**
-     * Check if there's a pending batch that hasn't been confirmed.
-     */
-    fun hasPendingBatch(): Boolean {
-        return sharedPreferences.getString(KEY_PENDING_BATCH_ID, null) != null
+    fun saveLastSyncAttemptAt(timestamp: Long) {
+        sharedPreferences.edit {
+            putLong(KEY_LAST_SYNC_ATTEMPT_AT, timestamp)
+        }
     }
 
     /**
      * Set whether auto-sync is enabled.
      */
     fun setAutoSyncEnabled(enabled: Boolean) {
-        sharedPreferences.edit()
-            .putBoolean(KEY_AUTO_SYNC_ENABLED, enabled)
-            .apply()
+        sharedPreferences.edit {
+            putBoolean(KEY_AUTO_SYNC_ENABLED, enabled)
+        }
     }
 
     /**
@@ -141,9 +126,9 @@ class SyncPreferencesHelper(context: Context) {
      * Set the auto-sync interval in milliseconds.
      */
     fun setAutoSyncInterval(intervalMs: Long) {
-        sharedPreferences.edit()
-            .putLong(KEY_AUTO_SYNC_INTERVAL, intervalMs)
-            .apply()
+        sharedPreferences.edit {
+            putLong(KEY_AUTO_SYNC_INTERVAL, intervalMs)
+        }
     }
 
     /**
@@ -171,43 +156,14 @@ class SyncPreferencesHelper(context: Context) {
     }
 
     companion object {
-        private const val TAG = "SyncPreferencesHelper"
         private const val PREFS_NAME = "sync_preferences"
-        private const val KEY_LAST_SYNC_TIMESTAMP = "last_sync_timestamp"
-        private const val KEY_PENDING_BATCH_ID = "pending_batch_id"
-        private const val KEY_PENDING_START_TS = "pending_start_timestamp"
-        private const val KEY_PENDING_END_TS = "pending_end_timestamp"
-        private const val KEY_PENDING_RECORD_COUNT = "pending_record_count"
-        private const val KEY_PENDING_CREATED_AT = "pending_created_at"
+        private const val KEY_SENSOR_WATERMARK_PREFIX = "sensor_watermark_"
+        private const val KEY_LAST_SYNC_ATTEMPT_AT = "last_sync_attempt_at"
 
         private const val KEY_AUTO_SYNC_ENABLED = "auto_sync_enabled"
         private const val KEY_AUTO_SYNC_INTERVAL = "auto_sync_interval"
 
         /** Default auto-sync interval: None (disabled) */
         private const val DEFAULT_AUTO_SYNC_INTERVAL_MS = 0L
-
-        /** Stale batch timeout: 5 minutes */
-        private const val STALE_BATCH_TIMEOUT_MS = 5L * 60 * 1000
-    }
-
-    /**
-     * Check if there's a stale pending batch (exceeded timeout) and clear it.
-     * This prevents a stuck pending batch from blocking future syncs.
-     * @return true if a stale batch was found and cleared
-     */
-    fun clearStaleBatchIfNeeded(): Boolean {
-        val pendingBatch = getPendingBatch() ?: return false
-        val elapsed = System.currentTimeMillis() - pendingBatch.createdAt
-
-        if (elapsed > STALE_BATCH_TIMEOUT_MS) {
-            Log.w(
-                TAG,
-                "Clearing stale pending batch ${pendingBatch.batchId} " +
-                        "(age: ${elapsed / 1000}s, records: ${pendingBatch.recordCount})"
-            )
-            clearPendingBatch()
-            return true
-        }
-        return false
     }
 }

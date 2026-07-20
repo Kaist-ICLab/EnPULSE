@@ -312,9 +312,11 @@ val koinModule = module {
         ActivityRecognitionSensor(
             context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
-            configStorage = SimpleStateStorage(ActivityRecognitionSensor.Config(
-                intervalMillis = TimeUnit.SECONDS.toMillis(10)
-            )),
+            configStorage = SimpleStateStorage(
+                ActivityRecognitionSensor.Config(
+                    intervalMillis = TimeUnit.SECONDS.toMillis(10)
+                )
+            ),
             stateStorage = CouchbaseSensorStateStorage(
                 couchbase = get(),
                 collectionName = ActivityRecognitionSensor::class.simpleName ?: ""

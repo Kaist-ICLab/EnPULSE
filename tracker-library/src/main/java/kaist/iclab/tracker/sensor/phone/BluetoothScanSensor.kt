@@ -11,6 +11,9 @@ import android.os.Build
 import androidx.annotation.RequiresPermission
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.BroadcastListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -29,7 +32,10 @@ class BluetoothScanSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<BluetoothScanSensor.Config, BluetoothScanSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_bluetooth_scan,
+    descriptionResId = R.string.sensor_desc_bluetooth,
+    icon = Icons.Default.Bluetooth
 ) {
     data class Config(
         val doScan: Boolean,

@@ -25,7 +25,10 @@ val coreSensorsModule = module {
     }
 
     single {
-        AndroidPermissionManager(context = androidContext())
+        AndroidPermissionManager(
+            context = androidContext(),
+            scope = get<kaist.iclab.mobiletracker.di.AppCoroutineScope>().io
+        )
     }
 
     // Location Sensor

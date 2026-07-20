@@ -3,7 +3,11 @@
     <string name="app_name">EnPULSE</string>
 
     <!-- Settings Screen -->
-    <string name="upload_data">데이터 업로드</string>
+    <string name="upload_data">강제 업로드</string>
+    <string name="flush_data">모두 삭제</string>
+    <string name="danger_zone_label">위험 구역</string>
+    <string name="start_collection">시작</string>
+    <string name="stop_collection">중지</string>
     <string name="start_stop_collection">수집 시작/중지</string>
     <string name="reset_icon">초기화 아이콘</string>
     <string name="last_sync_placeholder">마지막 동기화: -</string>
@@ -47,6 +51,7 @@
     <string name="sensor_audio">오디오</string>
     <string name="sensor_gesture">제스쳐</string>
     <string name="sensor_stress">스트레스</string>
+    <string name="sensor_ecg">ECG</string>
     <string name="sensor_default">센서</string>
 
     <!-- Samsung Health Connection -->
@@ -61,12 +66,11 @@
     <!-- Status Dashboard -->
     <string name="status_battery_format">🔋%1$d%%</string>
     <string name="status_records_format">📊%1$s</string>
-    <string name="syncing_progress_format">동기화 중... %1$d%%</string>
+    <string name="syncing_progress_format">동기화 중… %1$d%%</string>
 
     <!-- Auto Sync Settings -->
     <string name="auto_sync_label">자동 동기화</string>
-    <string name="auto_sync_interval_label">간격</string>
-    <string name="interval_none">안 함</string>
+    <string name="interval_none">꺼짐</string>
     <string name="interval_5m">5분</string>
     <string name="interval_30m">30분</string>
     <string name="interval_1h">1시간</string>
@@ -77,7 +81,7 @@
     <string name="ema_low">낮음</string>
     <string name="ema_high">높음</string>
     <string name="ema_dismiss">무시</string>
-    <string name="ema_loading">로딩 중...</string>
+    <string name="ema_loading">로딩 중…</string>
     <string name="ema_done">답변해주셔서 감사합니다</string>
     <string name="ema_time_up">시간 종료</string>
     <string name="ema_dismissed">무시됨</string>
@@ -89,4 +93,13 @@
     <string name="turn_off_data_collection_first">데이터 수집이 아직 진행 중입니다</string>
     <string name="notification_low_storage_title">저장 공간 부족</string>
     <string name="notification_low_storage_message">기기 안정을 위해 데이터 수집을 중단했습니다. 공간을 확보해 주세요.</string>
+
+    <!-- ECG (on-demand) -->
+    <string name="measure_ecg">ECG 측정</string>
+    <string name="ecg_instruction_title">ECG 측정 준비</string>
+    <string name="ecg_instruction_message">워치를 팔꿈치에 가까워지도록 당겨주시고, 상단 버튼에 검지손가락을 올려주세요</string>
+    <string name="ecg_running_instruction">상단 버튼에 검지손가락을 올려놓은 상태로 유지해주세요</string>
+    <string name="ecg_unavailable">ECG 측정이 지원되지 않는 기기입니다</string>
+    <string name="ecg_needs_permission">ECG 측정을 위해 권한이 필요합니다</string>
+    <string name="ecg_completed">측정 완료</string>
 </resources>

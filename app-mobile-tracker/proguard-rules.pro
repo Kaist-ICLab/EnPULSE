@@ -29,3 +29,9 @@
 -dontwarn io.github.jan.supabase.**
 -keep class okhttp3.** { *; }
 -dontwarn okhttp3.**
+
+# Strip debug and verbose logs in release build
+-assumenosideeffects class android.util.Log {
+    public static int d(...);
+    public static int v(...);
+}

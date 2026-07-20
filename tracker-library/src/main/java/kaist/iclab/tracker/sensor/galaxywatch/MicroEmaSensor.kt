@@ -1,5 +1,8 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QuestionAnswer
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -31,7 +34,10 @@ class MicroEmaSensor(
     stateStorage: StateStorage<SensorState>,
     private val bleChannel: BLEDataChannel
 ): BaseSensor<MicroEmaSensor.Config, SurveySensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, SurveySensor.Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, SurveySensor.Entity::class,
+    titleResId = R.string.sensor_survey, // Placeholder for MicroEMA
+    descriptionResId = R.string.sensor_desc_survey,
+    icon = Icons.Default.QuestionAnswer
 ) {
 
     @Serializable

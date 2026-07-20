@@ -96,6 +96,8 @@
     <string name="permission_name_usage_stats">Usage Stats</string>
     <string name="permission_name_activity_recognition">Activity Recognition</string>
     <string name="permission_name_steps">Physical Activity (Steps)</string>
+    <string name="permission_name_sleep">Physical Activity (Sleep)</string>
+    <string name="permission_name_exercise">Physical Activity (Exercise)</string>
     <string name="permission_name_ignore_battery_optimization">Ignore Battery Optimization</string>
 
     <!-- Permission Descriptions -->
@@ -116,6 +118,8 @@
     <string name="permission_desc_notification_listener">Read notification content</string>
     <string name="permission_desc_usage_stats">Collect app usage statistics</string>
     <string name="permission_desc_steps">Read step count data</string>
+    <string name="permission_desc_sleep">Read sleep session data from Samsung Health</string>
+    <string name="permission_desc_exercise">Read exercise session data from Samsung Health</string>
     <string name="permission_desc_ignore_battery_optimization">Allow app to run in background reliably</string>
 
     <!-- Permission Status -->
@@ -164,6 +168,9 @@
     <string name="record_deleted_success">Record deleted from device and server</string>
     <string name="record_deleted_error">Failed to delete record</string>
 
+    <string name="sensor_survey">Survey</string>
+    <string name="sensor_desc_survey">User survey responses</string>
+
     <string name="menu_reload_config">Reload &amp; Sync Config</string>
     <string name="menu_reload_config_desc">Refresh config from server and sync between phone and watch</string>
     <string name="reload_config_dialog_title">Reload &amp; Sync Configuration</string>
@@ -198,7 +205,18 @@
     <string name="sensor_desc_imu">Watch IMU sensor data</string>
     <string name="sensor_desc_gesture">Watch gesture recognition data</string>
     <string name="sensor_desc_stress">Watch stress level data</string>
+    <string name="sensor_desc_exercise">Exercise session data</string>
+    <string name="sensor_desc_sleep">Sleep session data</string>
+    <string name="sensor_desc_ecg">Watch ECG sensor data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
+    <string name="sensor_desc_activity_recognition">Recognize user physical activity</string>
+    <!-- Watch Sensor Descriptions -->
+    <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
+    <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>
+    <string name="sensor_desc_heart_rate">Heart rate measurement</string>
+    <string name="sensor_desc_skin_temperature">Skin temperature measurement</string>
+    <string name="sensor_desc_eda">Galvanic skin response based on sweat</string>
+    <string name="sensor_desc_audio">Audio signal</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -251,6 +269,7 @@
     <string name="sensor_eda">EDA</string>
     <string name="sensor_ppg">PPG</string>
     <string name="sensor_skin_temperature">Skin Temperature</string>
+    <string name="sensor_ecg">ECG</string>
     <string name="sensor_ambient_light">Ambient Light</string>
     <string name="sensor_app_list_change">App List Change</string>
     <string name="sensor_app_usage">App Usage Log</string>
@@ -271,6 +290,9 @@
     <string name="sensor_imu">IMU</string>
     <string name="sensor_gesture">Gesture</string>
     <string name="sensor_stress">Stress</string>
+    <string name="sensor_exercise">Exercise</string>
+    <string name="sensor_sleep">Sleep</string>
+    <string name="sensor_activity_recognition">Activity Recognition</string>
 
 
     <!-- Toast Messages -->

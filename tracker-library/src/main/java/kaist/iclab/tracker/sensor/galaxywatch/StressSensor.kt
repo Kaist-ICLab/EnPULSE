@@ -3,6 +3,9 @@ package kaist.iclab.tracker.sensor.galaxywatch
 import android.content.Context
 import android.content.Intent
 import kaist.iclab.tracker.listener.AlarmListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Psychology
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -29,7 +32,10 @@ class StressSensor(
     private val heartRateSensor: HeartRateSensor,
     private val rmssdHistory: RmssdHistory,
 ) : BaseSensor<StressSensor.Config, StressSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_stress,
+    descriptionResId = R.string.sensor_desc_stress,
+    icon = Icons.Default.Psychology
 ) {
     companion object {
         private const val WINDOW_MS = 60_000L

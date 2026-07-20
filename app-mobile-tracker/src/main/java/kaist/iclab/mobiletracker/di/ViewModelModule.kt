@@ -73,8 +73,7 @@ val viewModelModule = module {
             watchSensorRepository = get<WatchSensorRepository>(),
             timestampService = get(),
             sensors = get(qualifier = named("phoneSensors")),
-            phoneSensorUploadService = get(),
-            watchSensorUploadService = get(),
+            sensorUploadService = get(),
             context = androidContext()
         )
     }

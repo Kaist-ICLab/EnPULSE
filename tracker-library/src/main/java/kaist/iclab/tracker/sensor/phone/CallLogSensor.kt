@@ -7,6 +7,9 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.provider.CallLog
 import kaist.iclab.tracker.listener.AlarmListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -22,7 +25,10 @@ class CallLogSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>
 ) : BaseSensor<CallLogSensor.Config, CallLogSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_call_log,
+    descriptionResId = R.string.sensor_desc_call_log,
+    icon = Icons.Default.Call
 ) {
     data class Config(
         val interval: Long

@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 import kaist.iclab.tracker.listener.BroadcastListener
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SettingsSuggest
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -19,7 +22,10 @@ class DeviceModeSensor(
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<DeviceModeSensor.Config, DeviceModeSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_device_mode,
+    descriptionResId = R.string.sensor_desc_device_mode,
+    icon = Icons.Default.SettingsSuggest
 ) {
     companion object {
         // Notification mode

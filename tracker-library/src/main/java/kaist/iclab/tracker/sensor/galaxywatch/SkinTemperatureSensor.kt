@@ -7,6 +7,9 @@ import android.os.Build
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Thermostat
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -23,7 +26,10 @@ class SkinTemperatureSensor(
     private val stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<SkinTemperatureSensor.Config, SkinTemperatureSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class
+    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    titleResId = R.string.sensor_skin_temperature,
+    descriptionResId = R.string.sensor_desc_skin_temperature,
+    icon = Icons.Default.Thermostat
 ) {
     override val id: String = "SkinTemperature"
     override val permissions = listOfNotNull(

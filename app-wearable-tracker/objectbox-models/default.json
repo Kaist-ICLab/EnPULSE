@@ -1,0 +1,628 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:1933693547914067122",
+      "lastPropertyId": "7:2057843479139207889",
+      "name": "AccelerometerEntity",
+      "properties": [
+        {
+          "id": "1:9170623677110017366",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4818871467543036235",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:9198538516722911680",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:2744048461379880725",
+          "name": "timestamp",
+          "indexId": "1:5261171301554570215",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:6174177162491882474",
+          "name": "x",
+          "type": 7
+        },
+        {
+          "id": "6:8682638249128616349",
+          "name": "y",
+          "type": 7
+        },
+        {
+          "id": "7:2057843479139207889",
+          "name": "z",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:8545522735419220747",
+      "lastPropertyId": "10:9067387288087119885",
+      "name": "ECGEntity",
+      "properties": [
+        {
+          "id": "1:116597296725374740",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6490575252863381408",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:2810100257926653249",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:3289202189804067666",
+          "name": "timestamp",
+          "indexId": "2:2798034468221721260",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:5256052649097464285",
+          "name": "ecgMv",
+          "type": 7
+        },
+        {
+          "id": "6:2334394040615319611",
+          "name": "leadOff",
+          "type": 5
+        },
+        {
+          "id": "7:6429591258665122563",
+          "name": "sequence",
+          "type": 5
+        },
+        {
+          "id": "8:6220603962103136618",
+          "name": "ppgGreen",
+          "type": 5
+        },
+        {
+          "id": "9:5167297328986985850",
+          "name": "maxThresholdMv",
+          "type": 7
+        },
+        {
+          "id": "10:9067387288087119885",
+          "name": "minThresholdMv",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:1577480485206604548",
+      "lastPropertyId": "6:8932371225600995416",
+      "name": "EDAEntity",
+      "properties": [
+        {
+          "id": "1:5368023437819448858",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:73071334333252961",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:3322307531049312806",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:3423071768391732201",
+          "name": "timestamp",
+          "indexId": "3:4257520890593050726",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:4815006723191489588",
+          "name": "skinConductance",
+          "type": 7
+        },
+        {
+          "id": "6:8932371225600995416",
+          "name": "status",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:879589556528375620",
+      "lastPropertyId": "7:8276940517998869453",
+      "name": "GestureEntity",
+      "properties": [
+        {
+          "id": "1:5604163437379466887",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:656629888773698761",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:4418752427866495969",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:829242324829118941",
+          "name": "timestamp",
+          "indexId": "4:3693799376957303528",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:2343022374022019592",
+          "name": "classIndex",
+          "type": 5
+        },
+        {
+          "id": "6:1106797659793996807",
+          "name": "score",
+          "type": 5
+        },
+        {
+          "id": "7:8276940517998869453",
+          "name": "probabilities",
+          "type": 26
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:2776207881107996898",
+      "lastPropertyId": "8:5938876608104453197",
+      "name": "HeartRateEntity",
+      "properties": [
+        {
+          "id": "1:5414304004356757192",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3076693579466392447",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:3332373264280272592",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:4269843170488459299",
+          "name": "timestamp",
+          "indexId": "5:3796129977050508598",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:256238222228983776",
+          "name": "hr",
+          "type": 5
+        },
+        {
+          "id": "6:2970936686854745204",
+          "name": "hrStatus",
+          "type": 5
+        },
+        {
+          "id": "7:2687966667484036843",
+          "name": "ibi",
+          "type": 26
+        },
+        {
+          "id": "8:5938876608104453197",
+          "name": "ibiStatus",
+          "type": 26
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "6:8221031477935253756",
+      "lastPropertyId": "10:1958847131376239520",
+      "name": "IMUEntity",
+      "properties": [
+        {
+          "id": "1:2640452403885333784",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6048780404452394583",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:4666927349149303124",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:7393338362962587551",
+          "name": "timestamp",
+          "indexId": "6:5311264304846586885",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:7504831479047003640",
+          "name": "accX",
+          "type": 7
+        },
+        {
+          "id": "6:2688716962186025355",
+          "name": "accY",
+          "type": 7
+        },
+        {
+          "id": "7:6819070801131141408",
+          "name": "accZ",
+          "type": 7
+        },
+        {
+          "id": "8:9028226519773406785",
+          "name": "gyroX",
+          "type": 7
+        },
+        {
+          "id": "9:7444572068900059645",
+          "name": "gyroY",
+          "type": 7
+        },
+        {
+          "id": "10:1958847131376239520",
+          "name": "gyroZ",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "7:1886462666755447348",
+      "lastPropertyId": "9:7723277181878064497",
+      "name": "LocationEntity",
+      "properties": [
+        {
+          "id": "1:1723574807510642326",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:99055031057083377",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:6249438078186466560",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:1335679942681345377",
+          "name": "timestamp",
+          "indexId": "7:5345652226847490111",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:4496228834531672007",
+          "name": "latitude",
+          "type": 8
+        },
+        {
+          "id": "6:4492826361874365869",
+          "name": "longitude",
+          "type": 8
+        },
+        {
+          "id": "7:405805958309015338",
+          "name": "altitude",
+          "type": 8
+        },
+        {
+          "id": "8:2504811159542428258",
+          "name": "speed",
+          "type": 7
+        },
+        {
+          "id": "9:7723277181878064497",
+          "name": "accuracy",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "8:3427271149705450884",
+      "lastPropertyId": "9:6086621678146841330",
+      "name": "MicroEmaResponseEntity",
+      "properties": [
+        {
+          "id": "1:108001599217555277",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6542056280260872990",
+          "name": "surveyId",
+          "type": 5
+        },
+        {
+          "id": "3:2978680095441734826",
+          "name": "questionId",
+          "type": 5
+        },
+        {
+          "id": "4:751884358583711712",
+          "name": "answer",
+          "type": 9
+        },
+        {
+          "id": "5:436315851193215970",
+          "name": "status",
+          "type": 9
+        },
+        {
+          "id": "6:7784637181885223536",
+          "name": "triggerTime",
+          "type": 6
+        },
+        {
+          "id": "7:3614352943806784448",
+          "name": "surveyStartTime",
+          "type": 6
+        },
+        {
+          "id": "8:5228506583610773989",
+          "name": "responseTime",
+          "type": 6
+        },
+        {
+          "id": "9:6086621678146841330",
+          "name": "isSynced",
+          "indexId": "8:6201386406962532683",
+          "type": 1,
+          "flags": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "9:5389595452687354929",
+      "lastPropertyId": "10:7417043496834122985",
+      "name": "PPGEntity",
+      "properties": [
+        {
+          "id": "1:1872383759455077304",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4950208265131546102",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:3586483646567603589",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:6559287122865880471",
+          "name": "timestamp",
+          "indexId": "9:2745634955799242844",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:5479196033468068189",
+          "name": "green",
+          "type": 5
+        },
+        {
+          "id": "6:4921295922810996077",
+          "name": "red",
+          "type": 5
+        },
+        {
+          "id": "7:7338122503488687356",
+          "name": "ir",
+          "type": 5
+        },
+        {
+          "id": "8:2232871618968351031",
+          "name": "greenStatus",
+          "type": 5
+        },
+        {
+          "id": "9:8199448727109641507",
+          "name": "redStatus",
+          "type": 5
+        },
+        {
+          "id": "10:7417043496834122985",
+          "name": "irStatus",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "10:3793327079506763595",
+      "lastPropertyId": "3:3954568494854105921",
+      "name": "RmssdHistoryEntity",
+      "properties": [
+        {
+          "id": "1:3427581392346541247",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3006013731409500293",
+          "name": "timestamp",
+          "type": 6
+        },
+        {
+          "id": "3:3954568494854105921",
+          "name": "rmssd",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "11:7722577625486853070",
+      "lastPropertyId": "7:489953248217371307",
+      "name": "SkinTemperatureEntity",
+      "properties": [
+        {
+          "id": "1:3582041364821678899",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1438450469142335248",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:8077146380485098688",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:2334678902336641548",
+          "name": "timestamp",
+          "indexId": "10:4074879242367136401",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:961131532096787622",
+          "name": "objectTemperature",
+          "type": 7
+        },
+        {
+          "id": "6:4388840263252715023",
+          "name": "ambientTemperature",
+          "type": 7
+        },
+        {
+          "id": "7:489953248217371307",
+          "name": "status",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "12:5212911369007796461",
+      "lastPropertyId": "10:6603748727979647870",
+      "name": "StressEntity",
+      "properties": [
+        {
+          "id": "1:7717659435574915309",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1132233215336626280",
+          "name": "eventId",
+          "type": 9
+        },
+        {
+          "id": "3:2186913214676111500",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "4:5389538302313845376",
+          "name": "timestamp",
+          "indexId": "11:9013069110920186846",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "5:6915339082440371516",
+          "name": "windowStart",
+          "type": 6
+        },
+        {
+          "id": "6:153771153757966156",
+          "name": "windowEnd",
+          "type": 6
+        },
+        {
+          "id": "7:4055290187166177876",
+          "name": "rmssd",
+          "type": 7
+        },
+        {
+          "id": "8:3821572658076844352",
+          "name": "ibiCount",
+          "type": 5
+        },
+        {
+          "id": "9:6643535431335041647",
+          "name": "threshold",
+          "type": 7
+        },
+        {
+          "id": "10:6603748727979647870",
+          "name": "isStressed",
+          "type": 1
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "12:5212911369007796461",
+  "lastIndexId": "11:9013069110920186846",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}
