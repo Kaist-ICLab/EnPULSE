@@ -44,7 +44,8 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
             controllerStateStorage = koin.get(named("watchControllerStateStorage")),
             sensors = sensors,
             serviceNotification = koin.get(),
-            allowPartialSensing = true
+            allowPartialSensing = true,
+            offBodyDetector = koin.get()
         )
     }
 }

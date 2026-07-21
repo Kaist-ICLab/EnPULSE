@@ -149,15 +149,23 @@ class SettingsViewModel(
 
         viewModelScope.launch {
             sensorController.controllerStateFlow.collect {
-                if (it.flag == ControllerState.FLAG.RUNNING) {
-                    sensorDataReceiver.startBackgroundCollection()
-                    // Track recording start time
-                    if (_recordingStartTime.value == null) {
-                        _recordingStartTime.value = System.currentTimeMillis()
+                when (it.flag) {
+                    ControllerState.FLAG.RUNNING -> {
+                        sensorDataReceiver.startBackgroundCollection()
+                        // Track recording start time
+                        if (_recordingStartTime.value == null) {
+                            _recordingStartTime.value = System.currentTimeMillis()
+                        }
                     }
-                } else {
-                    sensorDataReceiver.stopBackgroundCollection()
-                    _recordingStartTime.value = null
+                    ControllerState.FLAG.PAUSED -> {
+                        // Sensors are paused (watch not worn) — keep SensorDataReceiver
+                        // alive since no data arrives anyway, and preserve recording
+                        // start time so the elapsed timer isn't reset on resume.
+                    }
+                    else -> {
+                        sensorDataReceiver.stopBackgroundCollection()
+                        _recordingStartTime.value = null
+                    }
                 }
             }
         }

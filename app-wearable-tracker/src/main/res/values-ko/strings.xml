@@ -102,4 +102,7 @@
     <string name="ecg_unavailable">ECG 측정이 지원되지 않는 기기입니다</string>
     <string name="ecg_needs_permission">ECG 측정을 위해 권한이 필요합니다</string>
     <string name="ecg_completed">측정 완료</string>
+
+    <!-- Off-body detection (watch not worn) -->
+    <string name="paused_not_worn">일시정지 — 미착용</string>
 </resources>
