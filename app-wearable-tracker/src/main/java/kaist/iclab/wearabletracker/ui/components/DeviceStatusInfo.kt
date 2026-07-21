@@ -47,6 +47,7 @@ fun DeviceStatusInfo(
     totalRecordCount: Int = 0,
     batteryLevel: Int = -1,
     isRecording: Boolean = false,
+    isPaused: Boolean = false,
     recordingStartTime: Long? = null,
     syncProgress: Float? = null,
     isPhoneConnected: Boolean = false,
@@ -70,8 +71,24 @@ fun DeviceStatusInfo(
                 PulsingDot(
                     modifier = Modifier.padding(end = 4.dp)
                 )
+            } else if (isPaused) {
+                PulsingDot(
+                    color = Color(0xFFFFA726), // Amber for paused
+                    modifier = Modifier.padding(end = 4.dp)
+                )
             }
             DeviceNameText(text = deviceInfo.name)
+        }
+
+        // Paused indicator
+        if (isPaused) {
+            Text(
+                text = stringResource(R.string.paused_not_worn),
+                style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Medium),
+                color = Color(0xFFFFA726), // Amber
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 1.dp)
+            )
         }
 
         // Sync status: Show percentage if syncing, else show last sync time
@@ -144,7 +161,10 @@ fun DeviceStatusInfo(
  * Pulsing red dot animation to indicate active recording.
  */
 @Composable
-private fun PulsingDot(modifier: Modifier = Modifier) {
+private fun PulsingDot(
+    modifier: Modifier = Modifier,
+    color: Color = Color(0xFFEF5350) // Red by default
+) {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -160,7 +180,7 @@ private fun PulsingDot(modifier: Modifier = Modifier) {
         modifier = modifier
             .size(6.dp)
             .alpha(alpha)
-            .background(Color(0xFFEF5350), CircleShape)
+            .background(color, CircleShape)
     )
 }
 

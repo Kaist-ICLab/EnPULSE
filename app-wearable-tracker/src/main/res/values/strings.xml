@@ -101,4 +101,7 @@
     <string name="ecg_unavailable">ECG is not supported on this device</string>
     <string name="ecg_needs_permission">Permission required for ECG measurement</string>
     <string name="ecg_completed">Measurement complete</string>
+
+    <!-- Off-body detection (watch not worn) -->
+    <string name="paused_not_worn">Paused — not worn</string>
 </resources>
