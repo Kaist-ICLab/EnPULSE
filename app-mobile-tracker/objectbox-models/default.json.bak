@@ -1,0 +1,2044 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:2480224252671509718",
+      "lastPropertyId": "9:5889798310741328336",
+      "name": "AccelerometerEntity",
+      "properties": [
+        {
+          "id": "1:3348792844310631513",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6744515702389933199",
+          "name": "eventId",
+          "indexId": "1:8389036244378478855",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:2326424020888796124",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:7163595751088032484",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:25182004030504083",
+          "name": "timestamp",
+          "indexId": "2:378656759568255993",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:742289336076275866",
+          "name": "deviceType",
+          "indexId": "3:3934006792712351487",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2454128928583843672",
+          "name": "x",
+          "type": 7
+        },
+        {
+          "id": "8:7770680688443290658",
+          "name": "y",
+          "type": 7
+        },
+        {
+          "id": "9:5889798310741328336",
+          "name": "z",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:8170227954873837890",
+      "lastPropertyId": "10:8256852300985745565",
+      "name": "ActivityRecognitionEntity",
+      "properties": [
+        {
+          "id": "1:215041545141953138",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2039047017584863116",
+          "name": "eventId",
+          "indexId": "4:5460048271283250023",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:332912265043293539",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:7871689062361914061",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:702132285807056440",
+          "name": "timestamp",
+          "indexId": "5:5487607040823466465",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:5383967625410596467",
+          "name": "deviceType",
+          "indexId": "6:1176142558112032782",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:8321028579261108042",
+          "name": "elapsedRealtimeMillis",
+          "type": 6
+        },
+        {
+          "id": "8:1882635740317800337",
+          "name": "activityType",
+          "type": 5
+        },
+        {
+          "id": "9:8068573783298933211",
+          "name": "score",
+          "type": 5
+        },
+        {
+          "id": "10:8256852300985745565",
+          "name": "probabilities",
+          "type": 26
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:3838525396913049242",
+      "lastPropertyId": "8:4934518781570364094",
+      "name": "AmbientLightEntity",
+      "properties": [
+        {
+          "id": "1:8009336243386749771",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:229306717809294393",
+          "name": "eventId",
+          "indexId": "7:9098055888550450359",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:7543084352576620261",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:6827987637972965295",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:7375856823022058471",
+          "name": "timestamp",
+          "indexId": "8:9138558193819653121",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4767510938029395118",
+          "name": "deviceType",
+          "indexId": "9:2077858075597540624",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2410889328038101244",
+          "name": "accuracy",
+          "type": 5
+        },
+        {
+          "id": "8:4934518781570364094",
+          "name": "value",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:7309326355553772308",
+      "lastPropertyId": "8:4413638769032050768",
+      "name": "AppListChangeEntity",
+      "properties": [
+        {
+          "id": "1:1071923654130613205",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:242002686665342967",
+          "name": "eventId",
+          "indexId": "10:2427135423512389974",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:2394617739495590586",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:1914498840358963937",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:5187231637836067981",
+          "name": "timestamp",
+          "indexId": "11:1813576433536183333",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:5299820624299452244",
+          "name": "deviceType",
+          "indexId": "12:3961212016512853215",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:1170161044875596891",
+          "name": "changedAppJson",
+          "type": 9
+        },
+        {
+          "id": "8:4413638769032050768",
+          "name": "appListJson",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "5:2787027379947434923",
+      "lastPropertyId": "9:3783847142704250759",
+      "name": "AppUsageLogEntity",
+      "properties": [
+        {
+          "id": "1:4297987876058120573",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7107813135450381164",
+          "name": "eventId",
+          "indexId": "13:6411965688127093835",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:2659834512123452750",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:9210724111881143257",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:1959287161841647431",
+          "name": "timestamp",
+          "indexId": "14:6033395149056260731",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:6705633873634324759",
+          "name": "deviceType",
+          "indexId": "15:9133961120306163397",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:3250300726943521040",
+          "name": "packageName",
+          "type": 9
+        },
+        {
+          "id": "8:5446329784573994248",
+          "name": "installedBy",
+          "type": 9
+        },
+        {
+          "id": "9:3783847142704250759",
+          "name": "eventType",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "6:5880550678910741688",
+      "lastPropertyId": "10:5377370526111664931",
+      "name": "BatteryEntity",
+      "properties": [
+        {
+          "id": "1:830384356926132800",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6198370692067754601",
+          "name": "eventId",
+          "indexId": "16:9094031238821381456",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:5787426423408082036",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:7759909489208424292",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:6549776449417593701",
+          "name": "timestamp",
+          "indexId": "17:4164415577395156339",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:8925742756710222529",
+          "name": "deviceType",
+          "indexId": "18:4540394510193893291",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:1216885293931151845",
+          "name": "connectedType",
+          "type": 5
+        },
+        {
+          "id": "8:4735425676733845007",
+          "name": "status",
+          "type": 5
+        },
+        {
+          "id": "9:4738845170109209698",
+          "name": "level",
+          "type": 5
+        },
+        {
+          "id": "10:5377370526111664931",
+          "name": "temperature",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "7:1182796124000387915",
+      "lastPropertyId": "14:1981212613958004812",
+      "name": "BluetoothScanEntity",
+      "properties": [
+        {
+          "id": "1:8058136382628759501",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2293145467306470633",
+          "name": "eventId",
+          "indexId": "19:4367307916422532687",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:8021306237604327177",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:7099531284513036513",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:2096546151631961703",
+          "name": "timestamp",
+          "indexId": "20:6307563950842217647",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:291171437305653340",
+          "name": "deviceType",
+          "indexId": "21:8714766658913180779",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:7258596686913174142",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "8:2111447891510544106",
+          "name": "alias",
+          "type": 9
+        },
+        {
+          "id": "9:4154783941045585125",
+          "name": "address",
+          "type": 9
+        },
+        {
+          "id": "10:6537454514612333706",
+          "name": "bondState",
+          "type": 5
+        },
+        {
+          "id": "11:5787009137021293873",
+          "name": "connectionType",
+          "type": 5
+        },
+        {
+          "id": "12:2638206661111269429",
+          "name": "classType",
+          "type": 5
+        },
+        {
+          "id": "13:1323132036180148887",
+          "name": "rssi",
+          "type": 5
+        },
+        {
+          "id": "14:1981212613958004812",
+          "name": "isLE",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "8:2254084375689894138",
+      "lastPropertyId": "9:5221712679306022301",
+      "name": "CallLogEntity",
+      "properties": [
+        {
+          "id": "1:5624818604679874261",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:517439753616044571",
+          "name": "eventId",
+          "indexId": "22:9223031623817871642",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:7540669217777257519",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:4410348408163887259",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:5365488671003533519",
+          "name": "timestamp",
+          "indexId": "23:304561509125837809",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:8370973406040316165",
+          "name": "deviceType",
+          "indexId": "24:6713759205985580388",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:1805499134246654638",
+          "name": "duration",
+          "type": 6
+        },
+        {
+          "id": "8:7958377326211194810",
+          "name": "number",
+          "type": 9
+        },
+        {
+          "id": "9:5221712679306022301",
+          "name": "type",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "9:3459147597067243721",
+      "lastPropertyId": "10:7337050986618007623",
+      "name": "ConnectivityEntity",
+      "properties": [
+        {
+          "id": "1:8056649053956096109",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:85413034973899554",
+          "name": "eventId",
+          "indexId": "25:5925122701838665423",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:4246812691418390862",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:3369573378820973409",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:8202542299633129655",
+          "name": "timestamp",
+          "indexId": "26:4293006587131559410",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:561851066424804980",
+          "name": "deviceType",
+          "indexId": "27:8325890079120310051",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2341553362004846688",
+          "name": "networkType",
+          "type": 9
+        },
+        {
+          "id": "8:6346894425568163908",
+          "name": "isConnected",
+          "type": 1
+        },
+        {
+          "id": "9:7098489126267480331",
+          "name": "hasInternet",
+          "type": 1
+        },
+        {
+          "id": "10:7337050986618007623",
+          "name": "transportTypes",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "10:427233326137027497",
+      "lastPropertyId": "10:9098621991707389675",
+      "name": "DataTrafficEntity",
+      "properties": [
+        {
+          "id": "1:347369613475579086",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7867920425720754987",
+          "name": "eventId",
+          "indexId": "28:6505673651370087113",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:1323428564624463528",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:5924817467244054903",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:1321155011515908350",
+          "name": "timestamp",
+          "indexId": "29:7545214311526333996",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:6592441524466641937",
+          "name": "deviceType",
+          "indexId": "30:5099176782659017980",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:8722527868414436329",
+          "name": "totalRx",
+          "type": 6
+        },
+        {
+          "id": "8:6712646997923974291",
+          "name": "totalTx",
+          "type": 6
+        },
+        {
+          "id": "9:1305220720632768081",
+          "name": "mobileRx",
+          "type": 6
+        },
+        {
+          "id": "10:9098621991707389675",
+          "name": "mobileTx",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "11:4832402446712634577",
+      "lastPropertyId": "8:3966541313575986863",
+      "name": "DeviceModeEntity",
+      "properties": [
+        {
+          "id": "1:4660236334394149060",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7951505059688206534",
+          "name": "eventId",
+          "indexId": "31:5591168214862774954",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:8742868210147984668",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:508755566166249265",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:9137311617042217091",
+          "name": "timestamp",
+          "indexId": "32:4447864795218303937",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:7113480788532775394",
+          "name": "deviceType",
+          "indexId": "33:3623761444422359986",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:7287302600622124616",
+          "name": "eventType",
+          "type": 9
+        },
+        {
+          "id": "8:3966541313575986863",
+          "name": "value",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "12:4358657960667075470",
+      "lastPropertyId": "12:1920511873706859654",
+      "name": "ECGEntity",
+      "properties": [
+        {
+          "id": "1:5221179107815065725",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:376912215878471695",
+          "name": "eventId",
+          "indexId": "34:518931611642133088",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:7426578627473450704",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:9100161646754841056",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:1719761549585699917",
+          "name": "timestamp",
+          "indexId": "35:7068352563692933376",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4354855163691932835",
+          "name": "deviceType",
+          "indexId": "36:410550557995361832",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:96283683319643598",
+          "name": "ecgMv",
+          "type": 7
+        },
+        {
+          "id": "8:627665635892690292",
+          "name": "leadOff",
+          "type": 5
+        },
+        {
+          "id": "9:722286324426047075",
+          "name": "sequence",
+          "type": 5
+        },
+        {
+          "id": "10:2363169797389537227",
+          "name": "ppgGreen",
+          "type": 5
+        },
+        {
+          "id": "11:2697349306562791202",
+          "name": "maxThresholdMv",
+          "type": 7
+        },
+        {
+          "id": "12:1920511873706859654",
+          "name": "minThresholdMv",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "13:7484086519189076493",
+      "lastPropertyId": "8:662215637182844905",
+      "name": "EDAEntity",
+      "properties": [
+        {
+          "id": "1:7333686456795676825",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6269764854416981865",
+          "name": "eventId",
+          "indexId": "37:1025696577232477941",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:4015517181580728542",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:7723770961017012106",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:6518709382636063422",
+          "name": "timestamp",
+          "indexId": "38:5907211197765755432",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:6653128645290082520",
+          "name": "deviceType",
+          "indexId": "39:2319714599724422471",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2717683325143344970",
+          "name": "skinConductance",
+          "type": 7
+        },
+        {
+          "id": "8:662215637182844905",
+          "name": "status",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "14:4067875023911350292",
+      "lastPropertyId": "25:6533779300946107741",
+      "name": "ExerciseEntity",
+      "properties": [
+        {
+          "id": "1:1529478355202966292",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7082059393029135594",
+          "name": "eventId",
+          "indexId": "40:4080116930529621165",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:1083575760237835495",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:8547051454170062038",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:6437354800446321736",
+          "name": "timestamp",
+          "indexId": "41:2803742435887477857",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4219301875024603031",
+          "name": "deviceType",
+          "indexId": "42:2043883378716061716",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:895059920932495961",
+          "name": "duration",
+          "type": 6
+        },
+        {
+          "id": "8:5434603633988065510",
+          "name": "exerciseType",
+          "type": 9
+        },
+        {
+          "id": "9:8172529425257354157",
+          "name": "customTitle",
+          "type": 9
+        },
+        {
+          "id": "10:6892285375916320210",
+          "name": "calories",
+          "type": 7
+        },
+        {
+          "id": "11:3931229199820819540",
+          "name": "distance",
+          "type": 7
+        },
+        {
+          "id": "12:1955741379914753525",
+          "name": "count",
+          "type": 5
+        },
+        {
+          "id": "13:863123874821082570",
+          "name": "meanHeartRate",
+          "type": 7
+        },
+        {
+          "id": "14:6192614878327105174",
+          "name": "maxHeartRate",
+          "type": 7
+        },
+        {
+          "id": "15:452538977359607196",
+          "name": "minHeartRate",
+          "type": 7
+        },
+        {
+          "id": "16:3615841640073907171",
+          "name": "altitudeGain",
+          "type": 7
+        },
+        {
+          "id": "17:147653515106402666",
+          "name": "altitudeLoss",
+          "type": 7
+        },
+        {
+          "id": "18:5268625070669386914",
+          "name": "meanCadence",
+          "type": 7
+        },
+        {
+          "id": "19:8222811203099335213",
+          "name": "maxCadence",
+          "type": 7
+        },
+        {
+          "id": "20:4975444637777593890",
+          "name": "meanPower",
+          "type": 7
+        },
+        {
+          "id": "21:5837722317608532842",
+          "name": "maxPower",
+          "type": 7
+        },
+        {
+          "id": "22:8114002820233273444",
+          "name": "meanSpeed",
+          "type": 7
+        },
+        {
+          "id": "23:6386057149717595589",
+          "name": "maxSpeed",
+          "type": 7
+        },
+        {
+          "id": "24:4768561673720760655",
+          "name": "meanRpm",
+          "type": 7
+        },
+        {
+          "id": "25:6533779300946107741",
+          "name": "maxRpm",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "15:7882623205032622584",
+      "lastPropertyId": "10:4103465869373232515",
+      "name": "HeartRateEntity",
+      "properties": [
+        {
+          "id": "1:3775037300377173911",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5588478364649422177",
+          "name": "eventId",
+          "indexId": "43:2358184176432970522",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:7643822250254413843",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:5221462280526210557",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:4156739526245450177",
+          "name": "timestamp",
+          "indexId": "44:364493842756368120",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4730018923757786037",
+          "name": "deviceType",
+          "indexId": "45:4257064498033925309",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:4154784746077148399",
+          "name": "hr",
+          "type": 5
+        },
+        {
+          "id": "8:3746793669303132772",
+          "name": "hrStatus",
+          "type": 5
+        },
+        {
+          "id": "9:7804081513240143350",
+          "name": "ibi",
+          "type": 26
+        },
+        {
+          "id": "10:4103465869373232515",
+          "name": "ibiStatus",
+          "type": 26
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "16:2412499405659859279",
+      "lastPropertyId": "11:6564306016612665414",
+      "name": "LocationEntity",
+      "properties": [
+        {
+          "id": "1:7457923688934601697",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2840879200509640602",
+          "name": "eventId",
+          "indexId": "46:6611631782989580916",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:4514353250725954835",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:4199819944036458081",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:8731880621410668828",
+          "name": "timestamp",
+          "indexId": "47:5207061908154257705",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:8566908182976946522",
+          "name": "deviceType",
+          "indexId": "48:662130545047833692",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:5472524715550057167",
+          "name": "latitude",
+          "type": 8
+        },
+        {
+          "id": "8:1487149378936974340",
+          "name": "longitude",
+          "type": 8
+        },
+        {
+          "id": "9:1945966547231752161",
+          "name": "altitude",
+          "type": 8
+        },
+        {
+          "id": "10:5733146834763923321",
+          "name": "speed",
+          "type": 7
+        },
+        {
+          "id": "11:6564306016612665414",
+          "name": "accuracy",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "17:7907083430347873160",
+      "lastPropertyId": "15:1680608390222642053",
+      "name": "MediaEntity",
+      "properties": [
+        {
+          "id": "1:2999041767379159387",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1312436075041743309",
+          "name": "eventId",
+          "indexId": "49:4772891393751611941",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:7401639138415732285",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:969751012583882516",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:4641993178863550262",
+          "name": "timestamp",
+          "indexId": "50:1198873996188075164",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:1089536603114415267",
+          "name": "deviceType",
+          "indexId": "51:2238144262354657418",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:1862883705159459453",
+          "name": "operation",
+          "type": 9
+        },
+        {
+          "id": "8:900126870005903362",
+          "name": "mediaType",
+          "type": 9
+        },
+        {
+          "id": "9:1743368044386402328",
+          "name": "storageType",
+          "type": 9
+        },
+        {
+          "id": "10:2370590083412215016",
+          "name": "uri",
+          "type": 9
+        },
+        {
+          "id": "11:852127774282779535",
+          "name": "fileName",
+          "type": 9
+        },
+        {
+          "id": "12:6006858972913273358",
+          "name": "mimeType",
+          "type": 9
+        },
+        {
+          "id": "13:6683629162633228332",
+          "name": "size",
+          "type": 6
+        },
+        {
+          "id": "14:8838961788405942174",
+          "name": "dateAdded",
+          "type": 6
+        },
+        {
+          "id": "15:1680608390222642053",
+          "name": "dateModified",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "18:8382606101077927402",
+      "lastPropertyId": "9:4065864301269918573",
+      "name": "MessageLogEntity",
+      "properties": [
+        {
+          "id": "1:2343280806081278593",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2839681521446087395",
+          "name": "eventId",
+          "indexId": "52:4777949808270639758",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:1238993777696554416",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:6274937281660536543",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:6555919808741154497",
+          "name": "timestamp",
+          "indexId": "53:1467018056380258544",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4317097411017552393",
+          "name": "deviceType",
+          "indexId": "54:5785461747944354429",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2205100731494919715",
+          "name": "number",
+          "type": 9
+        },
+        {
+          "id": "8:924673846520787530",
+          "name": "messageType",
+          "type": 9
+        },
+        {
+          "id": "9:4065864301269918573",
+          "name": "contactType",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "19:2899603043132831015",
+      "lastPropertyId": "11:7013561500524356039",
+      "name": "MicroEmaResponseEntity",
+      "properties": [
+        {
+          "id": "1:2019504853456101917",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4285971995271096973",
+          "name": "watchId",
+          "type": 6
+        },
+        {
+          "id": "3:2252100631596026088",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:3585619430913437744",
+          "name": "questionId",
+          "type": 5
+        },
+        {
+          "id": "5:2441078774630252485",
+          "name": "triggerTime",
+          "type": 9
+        },
+        {
+          "id": "6:6073842868023017831",
+          "name": "actualTriggerTime",
+          "type": 9
+        },
+        {
+          "id": "7:3281315191936006595",
+          "name": "surveyStartTime",
+          "type": 9
+        },
+        {
+          "id": "8:5466641454170224644",
+          "name": "responseSubmissionTime",
+          "type": 9
+        },
+        {
+          "id": "9:4026179757644175348",
+          "name": "responseJson",
+          "type": 9
+        },
+        {
+          "id": "10:5424060426762076317",
+          "name": "deviceType",
+          "type": 5
+        },
+        {
+          "id": "11:7013561500524356039",
+          "name": "isSynced",
+          "indexId": "55:3352300982903032305",
+          "type": 1,
+          "flags": 8
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "20:627392682797753793",
+      "lastPropertyId": "12:3230104759989890933",
+      "name": "NotificationEntity",
+      "properties": [
+        {
+          "id": "1:2794035894553279206",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:9113593052946683115",
+          "name": "eventId",
+          "indexId": "56:7072244806789803818",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:1641640827288406341",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:5454896290301362393",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:5712276586624126861",
+          "name": "timestamp",
+          "indexId": "57:2455044546989781820",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4630342725455815614",
+          "name": "deviceType",
+          "indexId": "58:5312217803019375481",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2560750625544828851",
+          "name": "packageName",
+          "type": 9
+        },
+        {
+          "id": "8:9209905185337246311",
+          "name": "eventType",
+          "type": 9
+        },
+        {
+          "id": "9:1868009537638679938",
+          "name": "title",
+          "type": 9
+        },
+        {
+          "id": "10:8764287660553977926",
+          "name": "text",
+          "type": 9
+        },
+        {
+          "id": "11:1231652540290390754",
+          "name": "visibility",
+          "type": 5
+        },
+        {
+          "id": "12:3230104759989890933",
+          "name": "category",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "21:636038410108866781",
+      "lastPropertyId": "12:5054432952869832464",
+      "name": "PPGEntity",
+      "properties": [
+        {
+          "id": "1:3687089373164762921",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6650582333750495394",
+          "name": "eventId",
+          "indexId": "59:5055353246698574521",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:5524753317804187312",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:8206403676177866995",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:2857997114631651269",
+          "name": "timestamp",
+          "indexId": "60:8971827527711975649",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4832179844595664572",
+          "name": "deviceType",
+          "indexId": "61:8519634210516331682",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:8446386084346330641",
+          "name": "green",
+          "type": 5
+        },
+        {
+          "id": "8:3441309649164215046",
+          "name": "greenStatus",
+          "type": 5
+        },
+        {
+          "id": "9:4212597742097671409",
+          "name": "red",
+          "type": 5
+        },
+        {
+          "id": "10:4872619689761633039",
+          "name": "redStatus",
+          "type": 5
+        },
+        {
+          "id": "11:3390067076488754667",
+          "name": "ir",
+          "type": 5
+        },
+        {
+          "id": "12:5054432952869832464",
+          "name": "irStatus",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "22:861429621882582753",
+      "lastPropertyId": "7:59252388830423345",
+      "name": "ScreenEntity",
+      "properties": [
+        {
+          "id": "1:4420306968886733437",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3239131918865107692",
+          "name": "eventId",
+          "indexId": "62:7621259142252489460",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:7503739160671074813",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:6874146055069116007",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:3451113960615599736",
+          "name": "timestamp",
+          "indexId": "63:6734292877421383871",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:8434182539880737477",
+          "name": "deviceType",
+          "indexId": "64:4013149815394998340",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:59252388830423345",
+          "name": "type",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "23:940831509609563727",
+      "lastPropertyId": "9:8014679515447530920",
+      "name": "SkinTemperatureEntity",
+      "properties": [
+        {
+          "id": "1:2932322729469706997",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6276963472332225018",
+          "name": "eventId",
+          "indexId": "65:9035634425306156259",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:5995006025129317942",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:2823674751175061288",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:3745843084947534363",
+          "name": "timestamp",
+          "indexId": "66:8849080990681632377",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:5989561868832602822",
+          "name": "deviceType",
+          "indexId": "67:2185963597805235467",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:5588460699921181922",
+          "name": "ambientTemp",
+          "type": 7
+        },
+        {
+          "id": "8:6181274463747835277",
+          "name": "objectTemp",
+          "type": 7
+        },
+        {
+          "id": "9:8014679515447530920",
+          "name": "status",
+          "type": 5
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "24:2719474297057318365",
+      "lastPropertyId": "9:7076069373250873269",
+      "name": "SleepEntity",
+      "properties": [
+        {
+          "id": "1:8653699567058872460",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:725295998917603642",
+          "name": "eventId",
+          "indexId": "68:4167070707936862064",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:6632985857865564894",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:3734764142381537760",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:2547627032895160087",
+          "name": "timestamp",
+          "indexId": "69:8336376245821549023",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:34126949057082454",
+          "name": "deviceType",
+          "indexId": "70:7002781023998999749",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2337102462948813340",
+          "name": "duration",
+          "type": 6
+        },
+        {
+          "id": "8:2923837203814078129",
+          "name": "sleepScore",
+          "type": 5
+        },
+        {
+          "id": "9:7076069373250873269",
+          "name": "stagesJson",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "25:4236263408185439372",
+      "lastPropertyId": "8:858694663614108194",
+      "name": "StepEntity",
+      "properties": [
+        {
+          "id": "1:1787293290503423243",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3746390138985748889",
+          "name": "eventId",
+          "indexId": "71:6574256119005578502",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:2642414278817498819",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:3183861290378072879",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:2545636937843878574",
+          "name": "timestamp",
+          "indexId": "72:1601633759226397935",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:8535706153187631532",
+          "name": "deviceType",
+          "indexId": "73:6439834630277801358",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:8891034136692052310",
+          "name": "duration",
+          "type": 6
+        },
+        {
+          "id": "8:858694663614108194",
+          "name": "steps",
+          "type": 6
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "26:2563735227919149804",
+      "lastPropertyId": "10:6019616477246414934",
+      "name": "UserInteractionEntity",
+      "properties": [
+        {
+          "id": "1:5548907180981638720",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1654918471625264412",
+          "name": "eventId",
+          "indexId": "74:6713569261809566089",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:8742300681901075556",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:330281941100019273",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:8858535215499361395",
+          "name": "timestamp",
+          "indexId": "75:8873196362975686757",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:6728997309848096757",
+          "name": "deviceType",
+          "indexId": "76:1775763549058769989",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:288301361377031675",
+          "name": "packageName",
+          "type": 9
+        },
+        {
+          "id": "8:7020312419560148113",
+          "name": "className",
+          "type": 9
+        },
+        {
+          "id": "9:2232652677167637732",
+          "name": "eventType",
+          "type": 5
+        },
+        {
+          "id": "10:6019616477246414934",
+          "name": "text",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "27:2979405069586373795",
+      "lastPropertyId": "9:2632112874892850504",
+      "name": "WatchGestureEntity",
+      "properties": [
+        {
+          "id": "1:3572760943359961302",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2691247126091125714",
+          "name": "eventId",
+          "indexId": "77:6411037348531527844",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:1448948157266058264",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:2859490130767599000",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:4318398532684858007",
+          "name": "timestamp",
+          "indexId": "78:1817545034971676304",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:2872080624250976882",
+          "name": "deviceType",
+          "indexId": "79:1884453748839033661",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:654971926496996654",
+          "name": "classIndex",
+          "type": 5
+        },
+        {
+          "id": "8:4368082117881270296",
+          "name": "score",
+          "type": 5
+        },
+        {
+          "id": "9:2632112874892850504",
+          "name": "probabilities",
+          "type": 26
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "28:6286573272924077264",
+      "lastPropertyId": "12:6938648440001617552",
+      "name": "WatchIMUEntity",
+      "properties": [
+        {
+          "id": "1:9129531347180002610",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3768092031904790727",
+          "name": "eventId",
+          "indexId": "80:5328850154231578487",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:8961238587850755186",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:1433554571150667406",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:1358962165079606678",
+          "name": "timestamp",
+          "indexId": "81:7860267698853044243",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:5087857988361518601",
+          "name": "deviceType",
+          "indexId": "82:7291730012729697569",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:6305176879581046143",
+          "name": "accX",
+          "type": 7
+        },
+        {
+          "id": "8:4785327273306848801",
+          "name": "accY",
+          "type": 7
+        },
+        {
+          "id": "9:6556703327058110676",
+          "name": "accZ",
+          "type": 7
+        },
+        {
+          "id": "10:3162759514962811110",
+          "name": "gyroX",
+          "type": 7
+        },
+        {
+          "id": "11:7187073745706705294",
+          "name": "gyroY",
+          "type": 7
+        },
+        {
+          "id": "12:6938648440001617552",
+          "name": "gyroZ",
+          "type": 7
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "29:4196493409904201559",
+      "lastPropertyId": "12:4657894724401452805",
+      "name": "WatchStressEntity",
+      "properties": [
+        {
+          "id": "1:7017051427087311794",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:1307612618046810072",
+          "name": "eventId",
+          "indexId": "83:4900605116760399910",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:6833055837304837878",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:6466473554402233001",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:3170396247007644885",
+          "name": "timestamp",
+          "indexId": "84:4393196357171965315",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:7438126244721523677",
+          "name": "deviceType",
+          "indexId": "85:5314648697301983715",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:7082442092561574663",
+          "name": "windowStart",
+          "type": 6
+        },
+        {
+          "id": "8:1516309987136753711",
+          "name": "windowEnd",
+          "type": 6
+        },
+        {
+          "id": "9:4345474967117113757",
+          "name": "rmssd",
+          "type": 7
+        },
+        {
+          "id": "10:1736794036613800135",
+          "name": "ibiCount",
+          "type": 5
+        },
+        {
+          "id": "11:409880301090354048",
+          "name": "threshold",
+          "type": 7
+        },
+        {
+          "id": "12:4657894724401452805",
+          "name": "isStressed",
+          "type": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "30:4821649951120164626",
+      "lastPropertyId": "10:9100121865974783463",
+      "name": "WifiScanEntity",
+      "properties": [
+        {
+          "id": "1:5833155589347524713",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:2263288614240966039",
+          "name": "eventId",
+          "indexId": "86:2284061551641817863",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:3951800824895970091",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:7357377522672247062",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:7279085882413757355",
+          "name": "timestamp",
+          "indexId": "87:1348516575883127967",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:567501909548605978",
+          "name": "deviceType",
+          "indexId": "88:7952405308212291379",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2475684170197195576",
+          "name": "ssid",
+          "type": 9
+        },
+        {
+          "id": "8:440873958798024901",
+          "name": "bssid",
+          "type": 9
+        },
+        {
+          "id": "9:4723956620412432760",
+          "name": "frequency",
+          "type": 5
+        },
+        {
+          "id": "10:9100121865974783463",
+          "name": "level",
+          "type": 5
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "30:4821649951120164626",
+  "lastIndexId": "88:7952405308212291379",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

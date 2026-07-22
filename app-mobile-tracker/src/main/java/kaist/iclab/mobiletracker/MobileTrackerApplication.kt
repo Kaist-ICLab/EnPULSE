@@ -131,7 +131,8 @@ class MobileTrackerApplication : Application(), KoinComponent,
             controllerStateStorage = koin.get(named("phoneControllerStateStorage")),
             sensors = koin.get(named("phoneSensors")),
             serviceNotification = koin.get(),
-            allowPartialSensing = true
+            allowPartialSensing = true,
+            offBodyDetector = koin.get()
         )
     }
 }
