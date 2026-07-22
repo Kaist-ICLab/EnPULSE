@@ -8,14 +8,25 @@ import com.couchbase.lite.MutableDocument
 import com.couchbase.lite.Ordering
 import com.couchbase.lite.QueryBuilder
 import com.couchbase.lite.SelectResult
-import com.google.gson.Gson
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.storage.core.DataStat
 import kaist.iclab.tracker.storage.core.SensorDataStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.serializer
 import java.util.UUID
+import kotlin.reflect.KType
 import kotlin.reflect.full.memberProperties
+import com.couchbase.lite.Array as CblArray
+import com.couchbase.lite.Dictionary as CblDictionary
 
 
 class CouchbaseSensorDataStorage(
@@ -28,7 +39,7 @@ class CouchbaseSensorDataStorage(
     override val statFlow: StateFlow<DataStat>
         get() = _stateFlow
 
-    private val gson = Gson()
+    private val json = Json { encodeDefaults = true }
     private val collection = couchbase.getCollection(collectionName)
 
     init {
@@ -61,23 +72,16 @@ class CouchbaseSensorDataStorage(
                     is Float -> document.setFloat(propertyName, value)
                     is Double -> document.setDouble(propertyName, value)
                     is Boolean -> document.setBoolean(propertyName, value)
-                    is List<*> -> {
-                        // Handle lists by converting to JSON for complex types
-                        val listJson = gson.toJson(value)
-                        document.setString("${propertyName}_json", listJson)
-                    }
-
                     else -> {
-                        // For other types, convert to JSON as fallback
-                        val jsonValue = gson.toJson(value)
-                        document.setString("${propertyName}_json", jsonValue)
+                        // Lists and other complex types go in as JSON text
+                        document.setString(
+                            "${propertyName}_json",
+                            encodeToJson(property.returnType, value)
+                        )
                     }
                 }
             } catch (e: Exception) {
-                Log.w(
-                    "CouchbaseSensorDataStorage",
-                    "Failed to access property ${property.name}: ${e.message}"
-                )
+                Log.w(TAG, "Failed to access property ${property.name}: ${e.message}")
             }
         }
 
@@ -198,39 +202,77 @@ class CouchbaseSensorDataStorage(
      * Convert a Couchbase document back to JSON format for compatibility
      */
     private fun convertDocumentToJson(document: com.couchbase.lite.Document): String {
-        val jsonObject = mutableMapOf<String, Any?>()
-
-        // Get all properties from the document
-        document.keys.forEach { key ->
-            when {
-                key.endsWith("_json") -> {
-                    // Handle JSON-encoded properties
-                    val originalKey = key.removeSuffix("_json")
-                    val jsonValue = document.getString(key)
-                    if (jsonValue != null) {
-                        try {
-                            // Parse the JSON string back to an object
-                            val parsedValue = gson.fromJson(jsonValue, Any::class.java)
-                            jsonObject[originalKey] = parsedValue
-                        } catch (e: Exception) {
-                            // If parsing fails, store as string
-                            jsonObject[originalKey] = jsonValue
+        val jsonObject = buildJsonObject {
+            // Get all properties from the document
+            document.keys.forEach { key ->
+                when {
+                    key.endsWith("_json") -> {
+                        // Splice JSON-encoded properties back in as real JSON, not as a string
+                        val originalKey = key.removeSuffix("_json")
+                        val jsonValue = document.getString(key)
+                        if (jsonValue != null) {
+                            put(originalKey, try {
+                                json.parseToJsonElement(jsonValue)
+                            } catch (e: SerializationException) {
+                                // If parsing fails, store as string
+                                JsonPrimitive(jsonValue)
+                            })
                         }
                     }
-                }
 
-                key == "entityType" -> {
-                    // Skip entityType as it's metadata
-                }
+                    key == "entityType" -> {
+                        // Skip entityType as it's metadata
+                    }
 
-                else -> {
-                    // Handle direct properties
-                    val value = document.getValue(key)
-                    jsonObject[key] = value
+                    else -> {
+                        // Handle direct properties
+                        put(key, document.getValue(key).toJsonElement())
+                    }
                 }
             }
         }
 
-        return gson.toJson(jsonObject)
+        return json.encodeToString(JsonObject.serializer(), jsonObject)
+    }
+
+    /**
+     * Serializes [value] with the serializer for its declared [type]. Falls back to the value's
+     * `toString()` when the type carries no `@Serializable` contract, so one exotic property can't
+     * take the whole document down with it.
+     */
+    private fun encodeToJson(type: KType, value: Any?): String = try {
+        json.encodeToString(serializer(type), value)
+    } catch (e: SerializationException) {
+        Log.w(TAG, "No serializer for $type; storing toString() instead: ${e.message}")
+        json.encodeToString(JsonElement.serializer(), JsonPrimitive(value.toString()))
+    }
+
+    /**
+     * Couchbase hands values back as plain types or as its own `Array`/`Dictionary` wrappers; map
+     * whatever comes out onto the JSON tree.
+     */
+    private fun Any?.toJsonElement(): JsonElement {
+        val value = this
+        return when (value) {
+            null -> JsonNull
+            is String -> JsonPrimitive(value)
+            is Boolean -> JsonPrimitive(value)
+            is Number -> JsonPrimitive(value)
+            is CblArray -> buildJsonArray { value.forEach { add(it.toJsonElement()) } }
+            is CblDictionary -> buildJsonObject {
+                value.keys.forEach { put(it, value.getValue(it).toJsonElement()) }
+            }
+
+            is Map<*, *> -> buildJsonObject {
+                value.forEach { (k, v) -> put(k.toString(), v.toJsonElement()) }
+            }
+
+            is Iterable<*> -> buildJsonArray { value.forEach { add(it.toJsonElement()) } }
+            else -> JsonPrimitive(value.toString())
+        }
+    }
+
+    companion object {
+        private const val TAG = "CouchbaseSensorDataStorage"
     }
 }

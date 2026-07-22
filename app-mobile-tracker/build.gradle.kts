@@ -154,7 +154,6 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     // ObjectBox (applied via the io.objectbox plugin, which adds the runtime + kapt processor)
-    implementation(libs.gson) // for AppListChange JSON mapping in PhoneEntityMappers
 
     /* Google Play Services Wearable */
     implementation(libs.android.gms.wearable)
