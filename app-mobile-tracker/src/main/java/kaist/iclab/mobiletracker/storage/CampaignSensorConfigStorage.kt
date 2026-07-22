@@ -13,6 +13,6 @@ class CampaignSensorConfigStorage(
 ) : CouchbaseStateStorage<CampaignSensorList>(
     couchbase = couchbase,
     defaultVal = CampaignSensorList(),
-    clazz = CampaignSensorList::class.java,
+    serializer = CampaignSensorList.serializer(),
     collectionName = collectionName
 )

@@ -44,6 +44,7 @@ class IMUSensor(
         private const val TICK_PERIOD_MS = 1000L / SAMPLE_RATE
     }
 
+    @Serializable
     class Config : SensorConfig
 
     @Serializable

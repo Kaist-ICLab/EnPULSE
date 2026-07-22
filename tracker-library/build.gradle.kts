@@ -30,7 +30,6 @@ dependencies {
     implementation(libs.bundles.auth)
 
     /* Local Database*/
-    implementation(libs.gson)
     implementation(libs.couchbase)
 
     /* Location */

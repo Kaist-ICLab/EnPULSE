@@ -252,7 +252,7 @@ val koinModule = module {
         CouchbaseStateStorage(
             couchbase = get(),
             defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
-            clazz = ControllerState::class.java,
+            serializer = ControllerState.serializer(),
             collectionName = BackgroundController::class.simpleName ?: ""
         )
     }

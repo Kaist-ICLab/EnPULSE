@@ -34,6 +34,7 @@ class LocationSensor(
     descriptionResId = R.string.sensor_desc_location,
     icon = Icons.Default.Place
 ) {
+    @Serializable
     data class Config(
         val interval: Long,
         val maxUpdateAge: Long,

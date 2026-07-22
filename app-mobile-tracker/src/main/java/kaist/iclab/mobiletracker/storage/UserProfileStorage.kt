@@ -14,6 +14,6 @@ class UserProfileStorage(
 ) : CouchbaseStateStorage<ProfileData>(
     couchbase = couchbase,
     defaultVal = ProfileData(),
-    clazz = ProfileData::class.java,
+    serializer = ProfileData.serializer(),
     collectionName = collectionName
 )

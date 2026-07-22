@@ -21,7 +21,6 @@ composeBom = "2025.08.01"
 appcompat = "1.7.1"
 koin = "4.1.1"
 couchbase = "3.2.4"
-gson = "2.13.1"
 playServicesLocation = "21.3.0"
 playServicesWearables = "19.0.0"
 postgrestKt = "3.2.5"
@@ -113,7 +112,6 @@ android-gms-wearable = { group = "com.google.android.gms", name = "play-services
 
 
 couchbase = { group = "com.couchbase.lite", name = "couchbase-lite-android-ktx", version.ref = "couchbase" }
-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 tensorflow-lite = { group = "org.tensorflow", name = "tensorflow-lite", version.ref = "tensorflowLite" }
 
 # plugin Dependencies of the included build-logic

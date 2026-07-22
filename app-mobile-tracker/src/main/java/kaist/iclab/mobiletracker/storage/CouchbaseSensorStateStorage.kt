@@ -11,7 +11,7 @@ class CouchbaseSensorStateStorage(
 ) : CouchbaseStateStorage<SensorState>(
     couchbase = couchbase,
     defaultVal = SensorState(SensorState.FLAG.UNAVAILABLE),
-    clazz = SensorState::class.java,
+    serializer = SensorState.serializer(),
     collectionName = collectionName
 )
 

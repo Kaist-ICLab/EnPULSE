@@ -49,6 +49,7 @@ class AudioSensor(
         private const val OUTPUT_SAMPLE_RATE = AUDIO_SAMPLE_RATE / DOWNSAMPLE_STEP
     }
 
+    @Serializable
     data class Config(
         val chunkSizeMillis: Long = 20L,
     ) : SensorConfig

@@ -7,6 +7,7 @@ import kaist.iclab.wearabletracker.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -14,6 +15,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * Persisted campaign sensor config. `activeSensorIds == null` means "never synced with the
  * phone yet" (distinct from an empty campaign) so gating can fail open on a fresh install.
  */
+@Serializable
 data class CampaignSensorConfig(val activeSensorIds: Set<String>? = null)
 
 /**

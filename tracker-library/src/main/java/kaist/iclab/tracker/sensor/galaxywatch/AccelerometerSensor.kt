@@ -42,6 +42,7 @@ class AccelerometerSensor(
     ).toTypedArray()
 
     /*No attribute required... can not be data class*/
+    @Serializable
     class Config : SensorConfig
 
     override val initialConfig: Config = Config()
