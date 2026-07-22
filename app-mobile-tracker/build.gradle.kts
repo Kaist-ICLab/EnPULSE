@@ -2,7 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
+//    alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.googleServices)
 
@@ -11,7 +11,7 @@ plugins {
 
     // ObjectBox (uses kapt; must be applied after the Android + Kotlin plugins).
     // kapt is applied version-less because the Kotlin plugin is already on the classpath.
-    kotlin("kapt")
+//    kotlin("kapt")
     alias(libs.plugins.objectbox)
 }
 
@@ -95,10 +95,19 @@ android {
     }
     buildToolsVersion = libs.versions.buildTools.get()
 
-    applicationVariants.all {
-        outputs.all {
-            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            outputImpl.outputFileName = "EnPULSE-Mobile.apk"
+//    applicationVariants.all {
+//        outputs.all {
+//            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+//            outputImpl.outputFileName = "EnPULSE-Mobile.apk"
+//        }
+//    }
+
+    androidComponents {
+        onVariants { variant ->
+            variant.outputs.forEach {
+                val outputImpl = it as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+                outputImpl.outputFileName = "EnPULSE-Mobile.apk"
+            }
         }
     }
 }
