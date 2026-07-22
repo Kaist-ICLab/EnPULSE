@@ -16,6 +16,8 @@ import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.services.AutoSyncService
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.permission.PermissionState
@@ -31,6 +33,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import android.widget.Toast
 
 /**
  * ViewModel for the Settings screen.
@@ -125,15 +128,21 @@ class SettingsViewModel(
     }
 
     /**
-     * Enables a sensor by requesting permissions and observing the permission flow
+     * Enables a sensor by checking permissions. If they are not granted, it prevents enabling.
      */
     private fun enableSensor(sensor: Sensor<*, *>, sensorName: String) {
-        permissionManager.request(sensor.permissions)
-        observePermissionFlow(
-            permissions = sensor.permissions,
-            onGranted = { sensor.enable() },
-            errorContext = "enabling sensor $sensorName"
-        )
+        val permissionFlow = permissionManager.getPermissionFlow(sensor.permissions)
+        val allGranted = permissionFlow.value.values.all { it == PermissionState.GRANTED }
+        if (!allGranted) {
+            AppToast.show(context, R.string.grant_permissions_in_menu_first)
+            return
+        }
+        
+        try {
+            sensor.enable()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error enabling sensor $sensorName: ${e.message}", e)
+        }
     }
 
     /**
