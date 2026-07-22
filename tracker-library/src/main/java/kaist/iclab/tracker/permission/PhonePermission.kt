@@ -2,7 +2,9 @@ package kaist.iclab.tracker.permission
 
 import android.Manifest
 import android.os.Build
+import androidx.annotation.StringRes
 import com.samsung.android.sdk.health.data.request.DataTypes
+import kaist.iclab.tracker.R
 
 /**
  * Data class for managing app permissions.
@@ -10,10 +12,12 @@ import com.samsung.android.sdk.health.data.request.DataTypes
  * @property name The user-friendly name of the permission (e.g., "Camera Permission", "Location Permission").
  * @property ids  A list of permission IDs to request (e.g., [Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO]).
  *                Some permissions must be requested together (e.g., [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION]).
+ * @property instructionResId An optional string resource ID containing instructions for multi-step permissions.
  */
 data class Permission(
     val name: String,
-    val ids: Array<String> /*Some permission required to requested together*/
+    val ids: Array<String>, /*Some permission required to requested together*/
+    @StringRes val instructionResId: Int? = null
 ) {
     companion object {
         val supportedPermissions: Array<Permission> = listOfNotNull(
@@ -30,7 +34,8 @@ data class Permission(
                 ids = arrayOf(
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                     Manifest.permission.ACCESS_FINE_LOCATION
-                )
+                ),
+                instructionResId = R.string.instruction_bg_location
             ),
             Permission(
                 name = "Read Contacts",
@@ -77,35 +82,43 @@ data class Permission(
                 ids = listOfNotNull(
                     Manifest.permission.BODY_SENSORS,
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.BODY_SENSORS_BACKGROUND else null
-                ).toTypedArray()
+                ).toTypedArray(),
+                instructionResId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) R.string.instruction_bg_location else null
             ),
             Permission(
                 name = "Accessibility Service",
-                ids = arrayOf(Manifest.permission.BIND_ACCESSIBILITY_SERVICE)
+                ids = arrayOf(Manifest.permission.BIND_ACCESSIBILITY_SERVICE),
+                instructionResId = R.string.instruction_accessibility
             ),
             Permission(
                 name = "Notification Listener",
-                ids = arrayOf(Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE)
+                ids = arrayOf(Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE),
+                instructionResId = R.string.instruction_notification
             ),
             Permission(
                 name = "Usage Stats",
-                ids = arrayOf(Manifest.permission.PACKAGE_USAGE_STATS)
+                ids = arrayOf(Manifest.permission.PACKAGE_USAGE_STATS),
+                instructionResId = R.string.instruction_usage_stats
             ),
             Permission(
                 name = "Ignore Battery Optimization",
-                ids = arrayOf(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                ids = arrayOf(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS),
+                instructionResId = R.string.instruction_battery_opt
             ),
             Permission(
                 name = "Read Steps (Samsung Health)",
-                ids = arrayOf(DataTypes.STEPS.name)
+                ids = arrayOf(DataTypes.STEPS.name),
+                instructionResId = R.string.instruction_samsung_health
             ),
             Permission(
                 name = "Read Sleep (Samsung Health)",
-                ids = arrayOf(DataTypes.SLEEP.name)
+                ids = arrayOf(DataTypes.SLEEP.name),
+                instructionResId = R.string.instruction_samsung_health
             ),
             Permission(
                 name = "Read Exercise (Samsung Health)",
-                ids = arrayOf(DataTypes.EXERCISE.name)
+                ids = arrayOf(DataTypes.EXERCISE.name),
+                instructionResId = R.string.instruction_samsung_health
             )
         ).toTypedArray()
     }

@@ -68,6 +68,32 @@ fun PermissionSettingsScreen(
     var showRestrictedDialog by remember { mutableStateOf(false) }
     var pendingPermissionId by remember { mutableStateOf<String?>(null) }
 
+    // State for Instruction Dialog
+    var pendingPermissionForInstruction by remember { mutableStateOf<Permission?>(null) }
+
+    val handlePermissionRequest: (Permission, PermissionState) -> Unit = { permission, state ->
+        when (state) {
+            PermissionState.GRANTED, PermissionState.PERMANENTLY_DENIED -> {
+                // Open settings to allow user to revoke/change permission or for permanently denied
+                permissionManager.openPermissionSettings(permission.ids.first())
+            }
+            else -> {
+                // Handle Android 13+ Restricted Settings for special accessibility/notification permissions
+                val id = permission.ids.first()
+                if (Build.VERSION.SDK_INT >= 33 &&
+                    (id == Manifest.permission.BIND_ACCESSIBILITY_SERVICE ||
+                            id == Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE)
+                ) {
+                    pendingPermissionId = id
+                    showRestrictedDialog = true
+                } else {
+                    // Request permission normally
+                    permissionManager.request(permission.ids)
+                }
+            }
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -137,31 +163,10 @@ fun PermissionSettingsScreen(
                                     AppToast.show(context, R.string.turn_off_data_collection_first)
                                 } else {
                                     // Allow permission request if not collecting
-                                    when (permissionAggregatedState) {
-                                        PermissionState.GRANTED -> {
-                                            // Open settings to allow user to revoke/change permission
-                                            permissionManager.openPermissionSettings(permission.ids.first())
-                                        }
-
-                                        PermissionState.PERMANENTLY_DENIED -> {
-                                            // Open settings for permanently denied permissions
-                                            permissionManager.openPermissionSettings(permission.ids.first())
-                                        }
-
-                                        else -> {
-                                            // Handle Android 13+ Restricted Settings for special accessibility/notification permissions
-                                            val id = permission.ids.first()
-                                            if (Build.VERSION.SDK_INT >= 33 &&
-                                                (id == Manifest.permission.BIND_ACCESSIBILITY_SERVICE ||
-                                                        id == Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE)
-                                            ) {
-                                                pendingPermissionId = id
-                                                showRestrictedDialog = true
-                                            } else {
-                                                // Request permission normally
-                                                permissionManager.request(permission.ids)
-                                            }
-                                        }
+                                    if (permission.instructionResId != null && permissionAggregatedState != PermissionState.GRANTED) {
+                                        pendingPermissionForInstruction = permission
+                                    } else {
+                                        handlePermissionRequest(permission, permissionAggregatedState)
                                     }
                                 }
                             },
@@ -217,6 +222,37 @@ fun PermissionSettingsScreen(
             onDismiss = {
                 showRestrictedDialog = false
                 pendingPermissionId = null
+            }
+        )
+    }
+
+    pendingPermissionForInstruction?.let { permission ->
+        PopupDialog(
+            title = stringResource(R.string.permission_instruction_title),
+            content = {
+                Text(
+                    text = stringResource(permission.instructionResId!!),
+                    color = AppColors.TextSecondary,
+                    fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE
+                )
+            },
+            primaryButton = DialogButtonConfig(
+                text = stringResource(R.string.ok),
+                onClick = {
+                    val state = permission.getPermissionState(permissionStateMap)
+                    pendingPermissionForInstruction = null
+                    handlePermissionRequest(permission, state)
+                }
+            ),
+            secondaryButton = DialogButtonConfig(
+                text = stringResource(R.string.cancel),
+                onClick = {
+                    pendingPermissionForInstruction = null
+                },
+                isPrimary = false
+            ),
+            onDismiss = {
+                pendingPermissionForInstruction = null
             }
         )
     }

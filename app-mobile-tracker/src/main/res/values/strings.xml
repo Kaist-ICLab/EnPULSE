@@ -372,4 +372,6 @@
     <string name="upload_uptodate_header">Already up to date (%1$d sensor(s)):</string>
     <string name="ok">OK</string>
 
+    <string name="permission_instruction_title">Action Required</string>
+    <string name="grant_permissions_in_menu_first">Please grant permissions in the Permissions menu first.</string>
 </resources>
