@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
 class HeartRateSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<HeartRateSensor.Config, HeartRateSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,

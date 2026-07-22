@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 class AccelerometerSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<AccelerometerSensor.Config, AccelerometerSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,

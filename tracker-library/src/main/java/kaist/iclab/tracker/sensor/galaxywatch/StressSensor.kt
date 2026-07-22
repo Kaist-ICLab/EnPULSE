@@ -28,7 +28,7 @@ class StressSensor(
     private val context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     private val heartRateSensor: HeartRateSensor,
     private val rmssdHistory: RmssdHistory,
 ) : BaseSensor<StressSensor.Config, StressSensor.Entity>(

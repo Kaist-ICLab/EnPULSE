@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
 class PPGSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<PPGSensor.Config, PPGSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,

@@ -130,7 +130,7 @@ class CouchbaseSensorDataStorage(
         val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("id"))
             .from(DataSource.collection(collection))
             .orderBy(Ordering.property("received").descending())
-            .limit(com.couchbase.lite.Expression.intValue(limit))
+            .limit(Expression.intValue(limit))
 
         val results = mutableListOf<String>()
         query.execute().use { resultSet ->
@@ -213,7 +213,7 @@ class CouchbaseSensorDataStorage(
                         if (jsonValue != null) {
                             put(originalKey, try {
                                 json.parseToJsonElement(jsonValue)
-                            } catch (e: SerializationException) {
+                            } catch (_: SerializationException) {
                                 // If parsing fails, store as string
                                 JsonPrimitive(jsonValue)
                             })

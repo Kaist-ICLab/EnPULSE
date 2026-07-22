@@ -26,7 +26,7 @@ class GestureSensor(
     private val context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     private val imuSensor: IMUSensor,
     private val audioSensor: AudioSensor,
 ) : BaseSensor<GestureSensor.Config, GestureSensor.Entity>(

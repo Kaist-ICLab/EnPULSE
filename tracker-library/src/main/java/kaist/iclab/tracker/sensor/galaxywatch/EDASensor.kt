@@ -113,7 +113,7 @@ class EDASensor(
     override fun onStart() {
         try {
             tracker.setEventListener(listener)
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             // EDA not supported on this device, ignore
         }
     }
@@ -121,7 +121,7 @@ class EDASensor(
     override fun onStop() {
         try {
             tracker.unsetEventListener()
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             // EDA not supported on this device, ignore
         }
     }

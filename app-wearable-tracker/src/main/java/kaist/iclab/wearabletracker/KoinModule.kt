@@ -341,8 +341,8 @@ val koinModule = module {
         )
     }
 
-    single<kotlinx.coroutines.CoroutineScope> {
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+    single<CoroutineScope> {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 
     // --- MicroEMA ---

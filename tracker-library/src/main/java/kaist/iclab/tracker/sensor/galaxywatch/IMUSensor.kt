@@ -25,7 +25,7 @@ import kotlinx.serialization.Serializable
 import java.util.concurrent.atomic.AtomicReference
 
 class IMUSensor(
-    private val context: Context,
+    context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,

@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 class AudioSensor(
-    private val context: Context,
+    context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
