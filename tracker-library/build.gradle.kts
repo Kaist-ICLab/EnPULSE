@@ -29,10 +29,6 @@ dependencies {
     api(platform(libs.firebase.bom))
     implementation(libs.bundles.auth)
 
-    /* Supabase Authentication */
-    implementation(libs.supabase.kt)
-    implementation(libs.supabase.auth.kt)
-
     /* Local Database*/
     implementation(libs.gson)
     implementation(libs.couchbase)
@@ -47,9 +43,8 @@ dependencies {
 
     /* Network */
     implementation(libs.firebase.messaging)
-    implementation(libs.okhttp)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
+
+    /* On-device model */
     implementation(libs.tensorflow.lite)
 
     // Samsung Dependencies
