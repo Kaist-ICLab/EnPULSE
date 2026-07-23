@@ -26,7 +26,7 @@ class GestureSensor(
     private val context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     private val imuSensor: IMUSensor,
     private val audioSensor: AudioSensor,
 ) : BaseSensor<GestureSensor.Config, GestureSensor.Entity>(
@@ -95,6 +95,7 @@ class GestureSensor(
         private val NORM_P_STD = floatArrayOf(5.883963f, 4.776786f, 5.469956f, 1.504210f, 0.813269f, 0.856229f)
     }
 
+    @Serializable
     data class Config(
         val thresholdHigh: Float = 0.7f,
         val thresholdLow: Float = 0.5f,

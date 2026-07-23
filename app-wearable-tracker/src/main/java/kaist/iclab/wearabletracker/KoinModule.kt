@@ -252,7 +252,7 @@ val koinModule = module {
         CouchbaseStateStorage(
             couchbase = get(),
             defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
-            clazz = ControllerState::class.java,
+            serializer = ControllerState.serializer(),
             collectionName = BackgroundController::class.simpleName ?: ""
         )
     }
@@ -341,8 +341,8 @@ val koinModule = module {
         )
     }
 
-    single<kotlinx.coroutines.CoroutineScope> {
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+    single<CoroutineScope> {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 
     // --- MicroEMA ---

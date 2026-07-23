@@ -28,7 +28,7 @@ class StressSensor(
     private val context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     private val heartRateSensor: HeartRateSensor,
     private val rmssdHistory: RmssdHistory,
 ) : BaseSensor<StressSensor.Config, StressSensor.Entity>(
@@ -55,6 +55,7 @@ class StressSensor(
         private const val REQUEST_CODE_INFER = 0x57
     }
 
+    @Serializable
     data class Config(
         val windowMs: Long = WINDOW_MS,
         val strideMs: Long = STRIDE_MS,

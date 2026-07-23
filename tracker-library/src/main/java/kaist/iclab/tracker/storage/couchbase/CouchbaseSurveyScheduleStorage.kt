@@ -99,35 +99,20 @@ class CouchbaseSurveyScheduleStorage(
     }
 
     override fun getScheduleByScheduleId(scheduleId: String): SurveySchedule? {
-        val query = QueryBuilder.select(SelectResult.expression(Meta.id).`as`("uuid"), SelectResult.all())
-            .from(DataSource.collection(collection))
-            .where(Expression.property("uuid").equalTo(Expression.string(scheduleId)))
+        /* The scheduleId is the document ID assigned in addSchedule, so look the document up
+         * directly — the same way setActualTriggerTime and friends do. This previously filtered on
+         * a "uuid" property that no document ever carries (the UUID is document metadata, not a
+         * field), so it always matched nothing and returned null. */
+        val document = collection.getDocument(scheduleId) ?: return null
 
-        try {
-            val result = query.execute().use {
-                val result = it.first()
-                val docUuid = result.getString("uuid")!!
-
-                val resultDict = result.getDictionary(collection.name)
-                if (resultDict == null) null else SurveySchedule(
-                    scheduleId = docUuid,
-                    surveyId = resultDict.getString("surveyId") ?: "",
-                    triggerTime = resultDict.getLong("triggerTime"),
-                    actualTriggerTime = resultDict.getLong("actualTriggerTime"),
-                    surveyStartTime = resultDict.getLong("surveyStartTime"),
-                    responseSubmissionTime = resultDict.getLong("responseSubmissionTime"),
-                )
-            }
-
-            return result
-
-        } catch(e: NoSuchElementException) {
-            e.printStackTrace()
-            return null
-        } catch(e: NullPointerException) {
-            e.printStackTrace()
-            return null
-        }
+        return SurveySchedule(
+            scheduleId = scheduleId,
+            surveyId = document.getString("surveyId") ?: "",
+            triggerTime = document.getLong("triggerTime"),
+            actualTriggerTime = document.getLong("actualTriggerTime"),
+            surveyStartTime = document.getLong("surveyStartTime"),
+            responseSubmissionTime = document.getLong("responseSubmissionTime"),
+        )
     }
 
     override fun addSchedule(schedule: SurveySchedule): String {

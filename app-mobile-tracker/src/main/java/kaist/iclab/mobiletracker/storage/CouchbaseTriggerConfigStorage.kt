@@ -13,6 +13,6 @@ class CouchbaseTriggerConfigStorage(
 ) : CouchbaseStateStorage<CampaignTriggerList>(
     couchbase = couchbase,
     defaultVal = CampaignTriggerList(),
-    clazz = CampaignTriggerList::class.java,
+    serializer = CampaignTriggerList.serializer(),
     collectionName = collectionName
 )

@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
 class SkinTemperatureSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<SkinTemperatureSensor.Config, SkinTemperatureSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
@@ -44,6 +44,7 @@ class SkinTemperatureSensor(
     ).toTypedArray()
 
     /*No attribute required... can not be data class*/
+    @Serializable
     class Config : SensorConfig
 
     override val initialConfig: Config = Config()
@@ -88,7 +89,7 @@ class SkinTemperatureSensor(
     override fun onStart() {
         try {
             tracker.setEventListener(listener)
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             // Skin Temperature not supported on this device, ignore
         }
     }
@@ -96,7 +97,7 @@ class SkinTemperatureSensor(
     override fun onStop() {
         try {
             tracker.unsetEventListener()
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             // Skin Temperature not supported on this device, ignore
         }
     }

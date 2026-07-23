@@ -1,12 +1,15 @@
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.kotlinSerialization)
 
     // ObjectBox (uses kapt; must be applied after the Android + Kotlin plugins)
-    kotlin("kapt")
+    alias(libs.plugins.kapt) apply false
     alias(libs.plugins.objectbox)
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 android {
@@ -45,11 +48,6 @@ android {
         }
     }
 
-
-    kotlin {
-        jvmToolchain(17)
-    }
-
     buildFeatures {
         compose = true
     }
@@ -58,17 +56,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildToolsVersion = libs.versions.buildTools.get()
+}
 
-    applicationVariants.all {
-        outputs.all {
-            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            outputImpl.outputFileName = "EnPULSE-Watch.apk"
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("EnPULSE-Watch.apk")
         }
     }
 }
 
 dependencies {
-
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
@@ -80,8 +78,7 @@ dependencies {
     implementation(libs.compose.activity)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.compose.foundation.layout)
-    androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
+//    androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 

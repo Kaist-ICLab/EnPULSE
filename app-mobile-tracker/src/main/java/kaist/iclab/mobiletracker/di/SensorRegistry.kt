@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.di
 
-import com.google.gson.Gson
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
@@ -38,6 +37,7 @@ import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
+import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.handlers.GenericSensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
@@ -100,7 +100,6 @@ class SensorDescriptor<T>(
 }
 
 fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
-    val gson = Gson()
     return listOf(
         SensorDescriptor(
             sensorId = "ActivityRecognition",
@@ -143,7 +142,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = AppListChangeEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as AppListChangeSensor.Entity
-                AppListChangeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, changedAppJson = e.changedApp?.let { gson.toJson(it) }, appListJson = e.appList?.let { gson.toJson(it) })
+                AppListChangeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, changedAppJson = e.changedApp?.let { SupabaseJson.encodeToString(it) }, appListJson = e.appList?.let { SupabaseJson.encodeToString(it) })
             }
         ),
         SensorDescriptor(
@@ -340,7 +339,7 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     timestamp = e.timestamp,
                     duration = e.duration,
                     sleepScore = e.sleepScore,
-                    stagesJson = gson.toJson(e.stages)
+                    stagesJson = SupabaseJson.encodeToString(e.stages)
                 )
             }
         ),

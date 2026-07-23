@@ -41,6 +41,7 @@ import org.koin.core.qualifier.named
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Foreground service for receiving and storing phone sensor data locally in Room database.
@@ -90,7 +91,6 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
             } else {
                 Log.w(TAG, "[PHONE] - No storage found for sensor ${sensor.name} (${sensor.id})")
             }
-            Unit
         }
     }
 
@@ -195,7 +195,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                     val (sensorId, entity) = result.getOrThrow()
                     buffer.getOrPut(sensorId) { mutableListOf() }.add(entity)
                 } else {
-                    delay(100)
+                    delay(100.milliseconds)
                 }
 
                 val currentTime = System.currentTimeMillis()
@@ -288,7 +288,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
 
         // Flush remaining data before destruction with a timeout to avoid ANR
         runBlocking {
-            val flushed = withTimeoutOrNull(3000L) {
+            val flushed = withTimeoutOrNull(3000L.milliseconds) {
                 val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
                 while (true) {
                     val result = eventChannel.tryReceive()

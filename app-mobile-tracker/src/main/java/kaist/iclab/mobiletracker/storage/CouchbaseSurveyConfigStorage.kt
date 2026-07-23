@@ -13,6 +13,6 @@ class CouchbaseSurveyConfigStorage(
 ) : CouchbaseStateStorage<SurveyConfigList>(
     couchbase = couchbase,
     defaultVal = SurveyConfigList(),
-    clazz = SurveyConfigList::class.java,
+    serializer = SurveyConfigList.serializer(),
     collectionName = collectionName
 )

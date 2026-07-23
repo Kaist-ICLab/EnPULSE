@@ -73,7 +73,7 @@ class WatchSensorRepositoryImpl(
             if (sensorId == Constants.SensorId.LOCATION) {
                 stores.location.count(DeviceType.WATCH.value)
             } else {
-                storeById[sensorId]?.count()?.toInt() ?: 0
+                storeById[sensorId]?.count() ?: 0
             }
         }.getOrNull() ?: 0
     }
@@ -118,7 +118,7 @@ class WatchSensorRepositoryImpl(
                             trySend(WatchConnectionInfo(WatchConnectionStatus.CONNECTED, reachableNodes.nodes.map { it.displayName }))
                         }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     trySend(WatchConnectionInfo(WatchConnectionStatus.DISCONNECTED, emptyList()))
                 }
             }

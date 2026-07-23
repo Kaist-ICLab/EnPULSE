@@ -2,15 +2,16 @@ package kaist.iclab.tracker.storage.couchbase
 
 import android.util.Log
 import com.couchbase.lite.MutableDocument
-import com.google.gson.Gson
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 
 open class CouchbaseStateStorage<T>(
     couchbase: CouchbaseDB,
     private val defaultVal: T,
-    private val clazz: Class<T>,
+    private val serializer: KSerializer<T>,
     private val collectionName: String
 ) : StateStorage<T> {
     private val _stateFlow = MutableStateFlow(defaultVal)
@@ -19,7 +20,6 @@ open class CouchbaseStateStorage<T>(
         = _stateFlow
 
     private val collection = couchbase.getCollection(collectionName)
-    private val gson = Gson()
 
     init {
         _stateFlow.value = get()
@@ -28,7 +28,7 @@ open class CouchbaseStateStorage<T>(
 
     override fun set(value: T) {
         Log.d("CouchbaseStateStorage", "set: $value")
-        val json = gson.toJson(value)
+        val json = JSON.encodeToString(serializer, value)
 
         val existingDoc = collection.getDocument(collectionName)
         val mutableDoc = if (existingDoc != null) {
@@ -52,7 +52,7 @@ open class CouchbaseStateStorage<T>(
 
         return try {
             val json = document.toJSON()
-            gson.fromJson(json, clazz) ?: defaultVal
+            JSON.decodeFromString(serializer, json)
         } catch (e: Exception) {
             // Handle data migration or corrupted data gracefully
             Log.w(
@@ -70,5 +70,19 @@ open class CouchbaseStateStorage<T>(
 
     companion object {
         private const val TAG = "CouchbaseStateStorage"
+
+        /**
+         * Configured to match the Gson behaviour these documents were written with, because the
+         * catch in [get] treats any decode failure as corruption and *deletes* the document:
+         * - `ignoreUnknownKeys` — a field since dropped from a stored type must not wipe the rest.
+         * - `explicitNulls = false` — Gson omitted nulls entirely, so stored documents are missing
+         *   keys for every null-valued property; without this, decoding a nullable property that
+         *   has no default (e.g. `SurveyConfig.description`) throws on those documents.
+         */
+        private val JSON = Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+            encodeDefaults = true
+        }
     }
 }

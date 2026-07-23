@@ -47,6 +47,7 @@ class EDASensor(
     ).toTypedArray()
 
     /*No attribute required... can not be data class*/
+    @Serializable
     class Config : SensorConfig
 
     override val initialConfig: Config = Config()
@@ -112,7 +113,7 @@ class EDASensor(
     override fun onStart() {
         try {
             tracker.setEventListener(listener)
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             // EDA not supported on this device, ignore
         }
     }
@@ -120,7 +121,7 @@ class EDASensor(
     override fun onStop() {
         try {
             tracker.unsetEventListener()
-        } catch (e: UnsupportedOperationException) {
+        } catch (_: UnsupportedOperationException) {
             // EDA not supported on this device, ignore
         }
     }

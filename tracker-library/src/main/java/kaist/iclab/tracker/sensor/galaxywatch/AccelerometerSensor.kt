@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
 class AccelerometerSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
 ) : BaseSensor<AccelerometerSensor.Config, AccelerometerSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
@@ -42,6 +42,7 @@ class AccelerometerSensor(
     ).toTypedArray()
 
     /*No attribute required... can not be data class*/
+    @Serializable
     class Config : SensorConfig
 
     override val initialConfig: Config = Config()

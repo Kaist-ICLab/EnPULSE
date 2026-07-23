@@ -25,7 +25,7 @@ import kotlinx.serialization.Serializable
 import java.util.concurrent.atomic.AtomicReference
 
 class IMUSensor(
-    private val context: Context,
+    context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
     private val stateStorage: StateStorage<SensorState>,
@@ -44,6 +44,7 @@ class IMUSensor(
         private const val TICK_PERIOD_MS = 1000L / SAMPLE_RATE
     }
 
+    @Serializable
     class Config : SensorConfig
 
     @Serializable

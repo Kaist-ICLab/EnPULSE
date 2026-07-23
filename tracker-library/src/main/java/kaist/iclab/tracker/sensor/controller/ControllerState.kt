@@ -1,5 +1,8 @@
 package kaist.iclab.tracker.sensor.controller
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ControllerState(
     val flag: FLAG,
     val message: String? = null

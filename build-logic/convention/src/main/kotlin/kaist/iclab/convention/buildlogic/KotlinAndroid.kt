@@ -9,20 +9,20 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
 internal fun Project.configureKotlinAndroid(
-    commonExtension: CommonExtension<*, *, *, *, *, *>,
+    commonExtension: CommonExtension,
 ) {
     val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
     commonExtension.apply {
         compileSdk = libs.findVersion("compileSdk").get().requiredVersion.toInt()
 
-        defaultConfig {
+        defaultConfig.apply {
             minSdk = libs.findVersion("minSdk").get().requiredVersion.toInt()
 
             testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
             vectorDrawables.useSupportLibrary = true
         }
 
-        compileOptions {
+        compileOptions.apply {
             sourceCompatibility = JavaVersion.VERSION_17
             targetCompatibility = JavaVersion.VERSION_17
         }

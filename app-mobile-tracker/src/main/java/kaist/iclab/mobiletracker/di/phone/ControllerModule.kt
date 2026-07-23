@@ -6,6 +6,7 @@ import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.controller.OffBodyDetector
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
@@ -80,9 +81,13 @@ val controllerModule = module {
         CouchbaseStateStorage(
             couchbase = get(),
             defaultVal = ControllerState(ControllerState.FLAG.DISABLED),
-            clazz = ControllerState::class.java,
+            serializer = ControllerState.serializer(),
             collectionName = BackgroundController::class.simpleName ?: ""
         )
+    }
+
+    single {
+        OffBodyDetector(context = androidContext())
     }
 
     // BackgroundController
