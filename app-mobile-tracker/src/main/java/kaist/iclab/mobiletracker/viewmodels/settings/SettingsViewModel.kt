@@ -5,10 +5,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
@@ -16,7 +16,6 @@ import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.services.AutoSyncService
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.permission.AndroidPermissionManager
@@ -33,7 +32,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import android.widget.Toast
 
 /**
  * ViewModel for the Settings screen.
