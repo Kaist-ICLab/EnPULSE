@@ -51,7 +51,7 @@ open class CouchbaseStateStorage<T>(
         }
 
         return try {
-            val json = document.toJSON() ?: return defaultVal
+            val json = document.toJSON()
             JSON.decodeFromString(serializer, json)
         } catch (e: Exception) {
             // Handle data migration or corrupted data gracefully

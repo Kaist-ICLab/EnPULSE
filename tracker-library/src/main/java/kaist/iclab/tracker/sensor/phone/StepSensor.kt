@@ -5,14 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import com.samsung.android.sdk.health.data.request.DataType
 import com.samsung.android.sdk.health.data.request.DataTypes
 import com.samsung.android.sdk.health.data.request.LocalTimeFilter
 import com.samsung.android.sdk.health.data.request.LocalTimeGroup
 import com.samsung.android.sdk.health.data.request.LocalTimeGroupUnit
 import com.samsung.android.sdk.health.data.request.Ordering
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DirectionsWalk
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
@@ -42,7 +42,7 @@ class StepSensor(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
     titleResId = R.string.sensor_step,
     descriptionResId = R.string.sensor_desc_step,
-    icon = Icons.Default.DirectionsWalk
+    icon = Icons.AutoMirrored.Filled.DirectionsWalk
 ) {
     override val permissions = listOfNotNull(
         Manifest.permission.ACTIVITY_RECOGNITION,

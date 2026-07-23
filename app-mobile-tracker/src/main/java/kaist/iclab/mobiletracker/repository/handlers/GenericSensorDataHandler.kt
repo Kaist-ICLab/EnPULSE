@@ -17,7 +17,7 @@ class GenericSensorDataHandler<T>(
     override val supabaseTableName: String,
     private val store: SensorStore<T>
 ) : SensorDataHandler where T : BaseEntity, T : RecordSerializable {
-    override suspend fun getRecordCount() = store.count().toInt()
+    override suspend fun getRecordCount() = store.count()
     override suspend fun getLatestTimestamp() = store.latestTimestamp()
     override suspend fun getRecordCountAfterTimestamp(timestamp: Long) =
         store.countAfter(timestamp).toInt()

@@ -21,5 +21,5 @@ class PhoneSensorStore<T : BaseEntity>(
 
     fun deleteAll() = store.removeAll()
     fun latestTimestamp(): Long? = store.latestTimestamp()
-    fun recordCount(): Int = store.count().toInt()
+    fun recordCount(): Int = store.count()
 }
