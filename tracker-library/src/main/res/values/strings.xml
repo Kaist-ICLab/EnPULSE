@@ -65,4 +65,12 @@
     <string name="sensor_desc_eda">Galvanic skin response based on sweat</string>
     <string name="sensor_desc_survey">User survey responses</string>
     <string name="sensor_desc_default">Sensor data collection</string>
+
+    <!-- Permission Instructions -->
+    <string name="instruction_bg_location">To track location in the background, please select \'Allow all the time\' in the next screen.</string>
+    <string name="instruction_accessibility">Please find the app in the Accessibility settings and turn it ON.</string>
+    <string name="instruction_notification">Please find the app in the Notification access settings and Allow notification access.</string>
+    <string name="instruction_usage_stats">Please find the app in the Usage access settings and turn it ON.</string>
+    <string name="instruction_battery_opt">To ensure continuous data collection, please select \'Unrestricted\' in the battery settings.</string>
+    <string name="instruction_samsung_health">Please select \'Allow all\' in the Samsung Health permission screen.</string>
 </resources>

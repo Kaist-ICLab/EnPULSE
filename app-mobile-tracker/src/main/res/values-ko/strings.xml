@@ -375,5 +375,7 @@
     <string name="upload_uptodate_header">최신 상태 유지 중 (%1$d개 센서):</string>
     <string name="ok">확인</string>
 
+    <string name="permission_instruction_title">작업 필요</string>
+    <string name="grant_permissions_in_menu_first">먼저 권한 메뉴에서 권한을 허용해 주세요.</string>
 </resources>
 

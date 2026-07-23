@@ -65,4 +65,12 @@
     <string name="sensor_desc_eda">땀에 기반한 전기 피부 반응</string>
     <string name="sensor_desc_survey">사용자 설문조사 응답</string>
     <string name="sensor_desc_default">센서 데이터 수집</string>
+
+    <!-- Permission Instructions -->
+    <string name="instruction_bg_location">백그라운드에서 위치를 추적하려면 다음 화면에서 \'항상 허용\'을 선택해 주세요.</string>
+    <string name="instruction_accessibility">접근성 설정에서 앱을 찾아 \'사용\'으로 켜주세요.</string>
+    <string name="instruction_notification">알림 접근 허용 설정에서 앱을 찾아 \'알림 접근 허용\'을 켜주세요.</string>
+    <string name="instruction_usage_stats">사용 정보 접근 허용 설정에서 앱을 찾아 \'사용 추적 허용\'을 켜주세요.</string>
+    <string name="instruction_battery_opt">원활한 데이터 수집을 위해 배터리 설정에서 \'제한 없음\'을 선택해 주세요.</string>
+    <string name="instruction_samsung_health">삼성 헬스 권한 화면에서 \'모두 허용\'을 선택해 주세요.</string>
 </resources>

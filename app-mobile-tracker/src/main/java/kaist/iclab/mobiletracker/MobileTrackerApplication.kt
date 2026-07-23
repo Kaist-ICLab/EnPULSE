@@ -19,6 +19,7 @@ import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.controller.OffBodyDetector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
@@ -132,7 +133,9 @@ class MobileTrackerApplication : Application(), KoinComponent,
             sensors = koin.get(named("phoneSensors")),
             serviceNotification = koin.get(),
             allowPartialSensing = true,
-            offBodyDetector = koin.get()
+            offBodyDetector = OffBodyDetector(
+                context = this
+            )
         )
     }
 }
