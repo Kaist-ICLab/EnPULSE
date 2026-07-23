@@ -18,7 +18,6 @@ internal class AndroidBasicApplicationPlugin : Plugin<Project> {
 
             with(pluginManager) {
                 apply(libs.findPlugin("androidApplication").get().get().pluginId)
-                apply(libs.findPlugin("jetbrainsKotlinAndroid").get().get().pluginId)
             }
 
             extensions.configure<ApplicationExtension> {

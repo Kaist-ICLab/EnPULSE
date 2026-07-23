@@ -5,7 +5,7 @@ firebaseMessaging = "25.1.1"
 kotlin = "2.4.10"
 kotlinxCoroutines = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
-ksp = "2.2.10-2.0.2"
+ksp = "2.3.10"
 coreKtx = "1.19.0"
 ktorClientCore = "3.5.1"
 ktorClientOkhttp = "3.5.1"
@@ -176,3 +176,4 @@ kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kot
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services-auth" }
 objectbox = { id = "io.objectbox", version.ref = "objectbox" }
+kapt = { id = "com.android.legacy-kapt", version.ref = "agp" }

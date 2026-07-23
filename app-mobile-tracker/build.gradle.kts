@@ -11,13 +11,18 @@ plugins {
 
     // ObjectBox (uses kapt; must be applied after the Android + Kotlin plugins).
     // kapt is applied version-less because the Kotlin plugin is already on the classpath.
-//    kotlin("kapt")
+    alias(libs.plugins.kapt) apply false
     alias(libs.plugins.objectbox)
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 android {
     namespace = "kaist.iclab.mobiletracker"
     compileSdk = libs.versions.compileSdk.get().toInt()
+
     lint {
         abortOnError = false
         disable.add("ExtraTranslation")
@@ -58,11 +63,7 @@ android {
     }
 
     sourceSets.getByName("androidTest") {
-        assets.srcDir("schemas")
-    }
-
-    kotlin {
-        jvmToolchain(17)
+        assets.directories.add("schemas")
     }
 
     buildFeatures {
@@ -94,20 +95,12 @@ android {
         }
     }
     buildToolsVersion = libs.versions.buildTools.get()
+}
 
-//    applicationVariants.all {
-//        outputs.all {
-//            val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-//            outputImpl.outputFileName = "EnPULSE-Mobile.apk"
-//        }
-//    }
-
-    androidComponents {
-        onVariants { variant ->
-            variant.outputs.forEach {
-                val outputImpl = it as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-                outputImpl.outputFileName = "EnPULSE-Mobile.apk"
-            }
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("EnPULSE-Mobile.apk")
         }
     }
 }
