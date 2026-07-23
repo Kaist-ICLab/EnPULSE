@@ -2,7 +2,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.androidApplication)
-//    alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.googleServices)
 
@@ -10,8 +9,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 
     // ObjectBox (uses kapt; must be applied after the Android + Kotlin plugins).
-    // kapt is applied version-less because the Kotlin plugin is already on the classpath.
-    alias(libs.plugins.kapt) apply false
+    alias(libs.plugins.kapt)
     alias(libs.plugins.objectbox)
 }
 
