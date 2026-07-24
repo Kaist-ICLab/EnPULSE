@@ -15,12 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.components.Toggle.Toggle
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.Styles
 import kaist.iclab.mobiletracker.ui.theme.AppColors
-import androidx.compose.ui.res.stringResource
 
 /**
  * Composable for the Enable Tracker card with toggle switch
