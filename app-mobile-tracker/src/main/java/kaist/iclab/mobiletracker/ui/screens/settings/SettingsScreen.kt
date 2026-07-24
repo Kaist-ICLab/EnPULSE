@@ -17,9 +17,13 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Storage
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
@@ -36,7 +41,9 @@ import kaist.iclab.mobiletracker.ui.components.AppMenuItem
 import kaist.iclab.mobiletracker.ui.components.FullScreenIntentPermissionDialog
 import kaist.iclab.mobiletracker.ui.screens.settings.main.EnableTrackerCard
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.NotificationHelper
+import kaist.iclab.mobiletracker.viewmodels.settings.SettingsUiEvent
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import org.koin.androidx.compose.koinViewModel
@@ -55,6 +62,16 @@ fun SettingsScreen(
     val isCollecting = controllerState.flag == ControllerState.FLAG.RUNNING
 
     var showFullScreenIntentWarning by remember { mutableStateOf(false) }
+
+    // Collect one-shot UI events (toasts) from the ViewModel
+    LaunchedEffect(Unit) {
+        settingsViewModel.uiEvent.collect { event ->
+            when (event) {
+                is SettingsUiEvent.ShowToast ->
+                    AppToast.show(context, event.messageResId)
+            }
+        }
+    }
 
     Box(
         modifier = modifier
@@ -81,7 +98,7 @@ fun SettingsScreen(
                             if (isChecked) {
                                 if (!NotificationHelper.canUseFullScreenIntent(context)) {
                                     showFullScreenIntentWarning = true
-                                } else if (settingsViewModel.hasNotificationPermission()) {
+                                } else if (hasNotificationPermission(context)) {
                                     settingsViewModel.startLogging()
                                 } else {
                                     settingsViewModel.requestNotificationPermission()
@@ -160,6 +177,17 @@ fun SettingsScreen(
             }
         )
     }
+}
+
+/**
+ * Checks whether the POST_NOTIFICATIONS permission is granted.
+ * On API levels below 33 this permission does not gate notifications, so the check returns granted.
+ */
+private fun hasNotificationPermission(context: Context): Boolean {
+    return ActivityCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
 }
 
 

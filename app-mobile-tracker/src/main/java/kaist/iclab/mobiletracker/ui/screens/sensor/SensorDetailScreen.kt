@@ -39,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -47,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,6 +63,8 @@ import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.ui.theme.Dimens
 import kaist.iclab.mobiletracker.ui.utils.getSensorDisplayName
+import kaist.iclab.mobiletracker.utils.AppToast
+import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailUiEvent
 import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailUiState
 import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import java.text.SimpleDateFormat
@@ -78,6 +82,17 @@ fun SensorDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+
+    // Collect one-shot UI events (toasts) from the ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is SensorDetailUiEvent.ShowToast ->
+                    AppToast.show(context, event.messageResId)
+            }
+        }
+    }
 
     var showUploadDialog by remember { mutableStateOf(false) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
@@ -834,7 +849,7 @@ private fun DateRangePickerDialog(
     onDismiss: () -> Unit,
     onConfirm: (Long, Long) -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val calendar = java.util.Calendar.getInstance()
 
     // Initialize with current values or today

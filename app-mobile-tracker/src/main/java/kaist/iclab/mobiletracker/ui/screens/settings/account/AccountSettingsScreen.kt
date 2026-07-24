@@ -54,6 +54,7 @@ import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
+import kaist.iclab.mobiletracker.viewmodels.settings.AccountSettingsUiEvent
 import kaist.iclab.mobiletracker.viewmodels.settings.AccountSettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 import kaist.iclab.mobiletracker.ui.screens.settings.Styles as SettingsStyles
@@ -89,6 +90,16 @@ fun AccountSettingsScreen(
 
     val isReloadingConfig by accountSettingsViewModel.isReloadingConfig.collectAsState()
     val isLeavingCampaign by accountSettingsViewModel.isLeavingCampaign.collectAsState()
+
+    // Collect one-shot UI events (toasts) from the ViewModel
+    LaunchedEffect(Unit) {
+        accountSettingsViewModel.uiEvent.collect { event ->
+            when (event) {
+                is AccountSettingsUiEvent.ShowToast ->
+                    AppToast.show(context, event.messageResId)
+            }
+        }
+    }
 
     // Fetch campaigns when dialog is shown (refresh in case new campaigns were added)
     // Note: Initial data (campaigns + user campaign) is already loaded in ViewModel init

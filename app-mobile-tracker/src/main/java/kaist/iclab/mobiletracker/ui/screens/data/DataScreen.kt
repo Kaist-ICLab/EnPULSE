@@ -38,6 +38,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +66,8 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.ui.theme.Dimens
 import kaist.iclab.mobiletracker.ui.utils.getSensorDisplayName
 import kaist.iclab.mobiletracker.ui.utils.getSensorIcon
+import kaist.iclab.mobiletracker.utils.AppToast
+import kaist.iclab.mobiletracker.viewmodels.data.DataUiEvent
 import kaist.iclab.mobiletracker.viewmodels.data.DataViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
@@ -81,7 +84,17 @@ fun DataScreen(
     viewModel: DataViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    LocalContext.current
+    val context = LocalContext.current
+
+    // Collect one-shot UI events (toasts) from the ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collect { event ->
+            when (event) {
+                is DataUiEvent.ShowToast ->
+                    AppToast.show(context, event.messageResId)
+            }
+        }
+    }
 
     var showUploadConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }

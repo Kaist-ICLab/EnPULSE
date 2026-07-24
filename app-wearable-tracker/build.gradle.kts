@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 
     // ObjectBox (uses kapt; must be applied after the Android + Kotlin plugins)
-    alias(libs.plugins.kapt) apply false
+    alias(libs.plugins.kapt)
     alias(libs.plugins.objectbox)
 }
 
