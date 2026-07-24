@@ -11,7 +11,7 @@ import java.util.Locale
  * Helper class for managing app language/locale.
  * Handles saving and applying language preferences.
  */
-class LanguageHelper(private val context: Context) {
+class LanguageHelper(context: Context) {
 
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(

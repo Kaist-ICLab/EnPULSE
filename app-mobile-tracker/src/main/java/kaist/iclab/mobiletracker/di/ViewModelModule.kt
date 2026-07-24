@@ -31,10 +31,10 @@ val viewModelModule = module {
         HomeViewModel(
             homeRepository = get(),
             backgroundController = get(),
-            syncTimestampService = get(),
+//            syncTimestampService = get(),
             userProfileRepository = get(),
-            campaignSensorRepository = get(),
-            surveyRepository = get()
+//            campaignSensorRepository = get(),
+//            surveyRepository = get()
         )
     }
 
@@ -45,11 +45,11 @@ val viewModelModule = module {
             permissionManager = get<AndroidPermissionManager>(),
             syncTimestampService = get(),
             campaignSensorRepository = get(),
-            bleHelper = get(),
-            surveyService = get(),
-            campaignRepository = get(),
-            userProfileRepository = get(),
-            microEmaConfigStorage = get(named("microEmaConfigStorage")),
+//            bleHelper = get(),
+//            surveyService = get(),
+//            campaignRepository = get(),
+//            userProfileRepository = get(),
+//            microEmaConfigStorage = get(named("microEmaConfigStorage")),
             context = androidContext()
         )
     }
@@ -108,8 +108,8 @@ val viewModelModule = module {
         kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel(
             campaignRepository = get<CampaignRepository>(),
             userProfileRepository = get<UserProfileRepository>(),
-            surveyRepository = get<SurveyRepository>(),
-            campaignSensorRepository = get()
+//            surveyRepository = get<SurveyRepository>(),
+//            campaignSensorRepository = get()
         )
     }
 }

@@ -17,6 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Data class to track the progress of uploading all sensors.
@@ -89,7 +90,7 @@ class DataViewModel(
                     lastWatchData = lastWatch,
                     lastSuccessfulUpload = lastUpload
                 )
-                kotlinx.coroutines.delay(1000L)
+                kotlinx.coroutines.delay(1000L.milliseconds)
             }
         }
     }
@@ -220,7 +221,7 @@ class DataViewModel(
                 dataRepository.deleteAllAllData()
                 AppToast.show(context, R.string.toast_data_deleted)
                 loadSensorInfo()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 AppToast.show(context, R.string.toast_error_generic)
             } finally {
                 _uiState.value = _uiState.value.copy(isDeleting = false)

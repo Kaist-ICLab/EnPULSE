@@ -100,21 +100,21 @@ class MediaSensor(
 
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     private val periodicScanIntent by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            PendingIntent.getBroadcast(
-                context,
-                REQUEST_CODE_MEDIA_SCAN_REQUEST,
-                Intent(ACTION_MEDIA_SCAN_REQUEST),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        } else {
-            PendingIntent.getBroadcast(
-                context,
-                REQUEST_CODE_MEDIA_SCAN_REQUEST,
-                Intent(ACTION_MEDIA_SCAN_REQUEST),
-                PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        PendingIntent.getBroadcast(
+            context,
+            REQUEST_CODE_MEDIA_SCAN_REQUEST,
+            Intent(ACTION_MEDIA_SCAN_REQUEST),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+//        } else {
+//            PendingIntent.getBroadcast(
+//                context,
+//                REQUEST_CODE_MEDIA_SCAN_REQUEST,
+//                Intent(ACTION_MEDIA_SCAN_REQUEST),
+//                PendingIntent.FLAG_UPDATE_CURRENT
+//            )
+//        }
     }
 
     private val receiver = object : BroadcastReceiver() {

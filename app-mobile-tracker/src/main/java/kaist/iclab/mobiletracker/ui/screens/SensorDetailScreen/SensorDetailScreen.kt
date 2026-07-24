@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,6 +66,7 @@ import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 /**
  * Sensor Detail screen - displays raw data for a specific sensor.
@@ -837,10 +839,10 @@ private fun DateRangePickerDialog(
 
     // Initialize with current values or today
     var startDate by remember {
-        mutableStateOf(initialStartDate ?: System.currentTimeMillis())
+        mutableLongStateOf(initialStartDate ?: System.currentTimeMillis())
     }
     var endDate by remember {
-        mutableStateOf(initialEndDate ?: System.currentTimeMillis())
+        mutableLongStateOf(initialEndDate ?: System.currentTimeMillis())
     }
 
     PopupDialog(
@@ -880,7 +882,7 @@ private fun DateRangePickerDialog(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(
+                            text = SimpleDateFormat("MMM d, yyyy", LocalLocale.current.platformLocale).format(
                                 Date(
                                     startDate
                                 )
@@ -922,7 +924,7 @@ private fun DateRangePickerDialog(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(
+                            text = SimpleDateFormat("MMM d, yyyy", LocalLocale.current.platformLocale).format(
                                 Date(
                                     endDate
                                 )

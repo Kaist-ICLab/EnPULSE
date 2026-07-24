@@ -29,9 +29,9 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 @Composable
 fun LoadingOverlay(
     isLoading: Boolean,
+    modifier: Modifier = Modifier,
     showOverlay: Boolean = true,
     blockNavigation: Boolean = true,
-    modifier: Modifier = Modifier
 ) {
     if (isLoading && showOverlay) {
         Dialog(

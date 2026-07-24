@@ -23,13 +23,13 @@ import android.util.Log
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import kaist.iclab.tracker.R
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.MainThread
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.samsung.android.sdk.health.data.HealthDataService
@@ -39,10 +39,10 @@ import com.samsung.android.sdk.health.data.error.PlatformInternalException
 import com.samsung.android.sdk.health.data.error.ResolvablePlatformException
 import com.samsung.android.sdk.health.data.permission.AccessType
 import com.samsung.android.sdk.health.data.request.DataTypes
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.listener.AccessibilityListener
 import kaist.iclab.tracker.listener.NotificationListener
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
-import androidx.core.net.toUri
 
 class AndroidPermissionManager(
     private val context: Context,
@@ -258,7 +257,7 @@ class AndroidPermissionManager(
             // Read cached state if available to avoid flicker while querying SDK
             val cachedState = permissionTrackingPrefs.getString("$KEY_PREFIX_HEALTH_STATE$permission", null)
             if (cachedState != null) {
-                return try { PermissionState.valueOf(cachedState) } catch (e: Exception) { PermissionState.NOT_REQUESTED }
+                return try { PermissionState.valueOf(cachedState) } catch (_: Exception) { PermissionState.NOT_REQUESTED }
             }
             
             // For Samsung devices, return NOT_REQUESTED initially if no cache
@@ -532,11 +531,8 @@ class AndroidPermissionManager(
             Log.e(TAG, "Failed to get HealthDataService store", e)
             return
         }
-        
-        val activity = getActivity()
-        if (activity == null) {
-            return
-        }
+
+        val activity = getActivity() ?: return
 
         val possiblePermission = permissions
             .mapNotNull { id ->
@@ -591,11 +587,8 @@ class AndroidPermissionManager(
                 Log.w(TAG, "AuthorizationException: Samsung Health Data Developer mode might be needed")
                 Handler(Looper.getMainLooper()).post {
                     val activity = getActivity()
-                    val message = if (activity != null) {
-                        activity.getString(R.string.msg_samsung_health_dev_mode_needed)
-                    } else {
-                        context.getString(R.string.msg_samsung_health_dev_mode_needed)
-                    }
+                    val message = activity?.getString(R.string.msg_samsung_health_dev_mode_needed)
+                        ?: context.getString(R.string.msg_samsung_health_dev_mode_needed)
                     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 }
             }
@@ -636,6 +629,7 @@ class AndroidPermissionManager(
         getActivity()?.startActivity(createScheduleExactAlarmIntent())
     }
 
+    @SuppressLint("BatteryLife")
     private fun requestIgnoreBatteryOptimizations() {
         if (getPermissionState(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) == PermissionState.GRANTED) return
         val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
@@ -670,49 +664,44 @@ class AndroidPermissionManager(
      * @param permissionId The permission ID to open settings for
      */
     fun openPermissionSettings(permissionId: String) {
-        val intent = when {
-            permissionId == Manifest.permission.PACKAGE_USAGE_STATS -> {
+        val intent = when (permissionId) {
+            Manifest.permission.PACKAGE_USAGE_STATS -> {
                 createUsageAccessSettingsIntent().apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }
-
-            permissionId == Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> {
+            Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> {
                 Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }
-
-            permissionId == Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> {
+            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> {
                 Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }
-
-            permissionId == Manifest.permission.SYSTEM_ALERT_WINDOW -> {
+            Manifest.permission.SYSTEM_ALERT_WINDOW -> {
                 Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
                     data = "package:${context.packageName}".toUri()
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }
-
-            permissionId in healthDataPermission.keys -> {
+            in healthDataPermission.keys -> {
                 // For Samsung Health permissions, try to open Samsung Health
                 try {
                     context.packageManager.getLaunchIntentForPackage("com.sec.android.app.shealth")?.apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     } ?: createAppDetailsIntent()
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     createAppDetailsIntent()
                 }
             }
-
             else -> createAppDetailsIntent()
         }
 
         try {
             context.startActivity(intent)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Fallback: open general app settings
             context.startActivity(createAppDetailsIntent())
         }

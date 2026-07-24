@@ -18,12 +18,12 @@ object Styles {
     val NAME_FONT_SIZE = 24.sp
 
     // Sign out button
-    val BUTTON_WIDTH_RATIO = 0.3f
+    const val BUTTON_WIDTH_RATIO = 0.3f
     val BUTTON_CORNER_RADIUS = 20.dp
     val BUTTON_TEXT_FONT_SIZE = 14.sp
 
     // Info card
-    val INFO_CARD_WIDTH_RATIO = 0.9f
+    const val INFO_CARD_WIDTH_RATIO = 0.9f
     val INFO_CARD_PADDING = 16.dp
     val INFO_ROW_VERTICAL_PADDING = 12.dp
     val INFO_LABEL_FONT_SIZE = 14.sp

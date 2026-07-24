@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,9 @@ fun OnboardingScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showPasswordDialog by remember { mutableStateOf(false) }
 
+    val surveyErrorString = stringResource(R.string.onboarding_survey_fetch_error)
+    val dataCollectionRunningString = stringResource(R.string.turn_off_data_collection_first)
+
     // Navigate to home when onboarding is complete
     LaunchedEffect(uiState.isComplete) {
         if (uiState.isComplete) {
@@ -75,8 +79,8 @@ fun OnboardingScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             val message = when (error) {
-                "onboarding_survey_fetch_error" -> context.getString(R.string.onboarding_survey_fetch_error)
-                "turn_off_data_collection_first" -> context.getString(R.string.turn_off_data_collection_first)
+                "onboarding_survey_fetch_error" -> surveyErrorString
+                "turn_off_data_collection_first" -> dataCollectionRunningString
                 else -> error
             }
             AppToast.show(context, message)
@@ -101,7 +105,7 @@ fun OnboardingScreen(
                 // Logo - smaller
                 ImageAsset(
                     assetPath = "icon.png",
-                    contentDescription = context.getString(R.string.mobile_tracker_logo),
+                    contentDescription = stringResource(R.string.mobile_tracker_logo),
                     modifier = Modifier.size(Styles.LOGO_SIZE)
                 )
 
@@ -109,7 +113,7 @@ fun OnboardingScreen(
 
                 // Welcome Title
                 Text(
-                    text = context.getString(R.string.onboarding_welcome),
+                    text = stringResource(R.string.onboarding_welcome),
                     fontSize = Styles.WELCOME_FONT_SIZE,
                     fontWeight = FontWeight.Bold,
                     color = AppColors.TextPrimary,
@@ -120,7 +124,7 @@ fun OnboardingScreen(
 
                 // Description
                 Text(
-                    text = context.getString(R.string.onboarding_description),
+                    text = stringResource(R.string.onboarding_description),
                     fontSize = Styles.DESCRIPTION_FONT_SIZE,
                     color = AppColors.TextSecondary,
                     textAlign = TextAlign.Center
@@ -143,7 +147,7 @@ fun OnboardingScreen(
                     if (uiState.isLoading) {
                         Box(modifier = Modifier.padding(Styles.SPACING_L)) {
                             Text(
-                                text = context.getString(R.string.onboarding_loading),
+                                text = stringResource(R.string.onboarding_loading),
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
                                 color = AppColors.TextSecondary
@@ -153,7 +157,7 @@ fun OnboardingScreen(
                         Box(modifier = Modifier.padding(Styles.SPACING_L)) {
                             Text(
                                 text = uiState.error
-                                    ?: context.getString(R.string.onboarding_no_campaigns),
+                                    ?: stringResource(R.string.onboarding_no_campaigns),
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
                                 color = if (uiState.error != null) AppColors.ErrorColor else AppColors.TextSecondary
@@ -184,7 +188,7 @@ fun OnboardingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = context.getString(R.string.onboarding_help_text_config),
+                    text = stringResource(R.string.onboarding_help_text_config),
                     fontSize = Styles.HELP_FONT_SIZE,
                     color = AppColors.TextPrimary,
                     textAlign = TextAlign.Center,
@@ -216,7 +220,7 @@ fun OnboardingScreen(
                         shape = RoundedCornerShape(Styles.CORNER_RADIUS)
                     ) {
                         Text(
-                            text = context.getString(R.string.onboarding_start),
+                            text = stringResource(R.string.onboarding_start),
                             fontSize = Styles.START_BUTTON_FONT_SIZE,
                             fontWeight = FontWeight.Bold
                         )
@@ -235,7 +239,7 @@ fun OnboardingScreen(
                         shape = RoundedCornerShape(Styles.CORNER_RADIUS)
                     ) {
                         Text(
-                            text = context.getString(R.string.logout_title),
+                            text = stringResource(R.string.logout_title),
                             fontSize = Styles.LOGOUT_BUTTON_FONT_SIZE,
                             fontWeight = FontWeight.Bold
                         )
@@ -326,7 +330,7 @@ private suspend fun checkConnection(urlStr: String, anonKey: String): Boolean = 
 
         val responseCode = conn.responseCode
         responseCode == 200
-    } catch (e: java.lang.Exception) {
+    } catch (_: Exception) {
         false
     }
 }

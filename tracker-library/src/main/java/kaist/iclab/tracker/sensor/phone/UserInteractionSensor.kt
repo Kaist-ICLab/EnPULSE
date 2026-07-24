@@ -22,7 +22,7 @@ import java.util.UUID
 class UserInteractionSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<UserInteractionSensor.Config, UserInteractionSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
     titleResId = R.string.sensor_user_interaction,

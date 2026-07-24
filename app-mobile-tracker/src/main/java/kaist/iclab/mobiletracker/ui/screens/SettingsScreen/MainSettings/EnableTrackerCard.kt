@@ -20,6 +20,7 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.components.Toggle.Toggle
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.Styles
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import androidx.compose.ui.res.stringResource
 
 /**
  * Composable for the Enable Tracker card with toggle switch
@@ -31,8 +32,6 @@ fun EnableTrackerCard(
     onToggle: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -60,14 +59,14 @@ fun EnableTrackerCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = context.getString(R.string.enable_tracker_title),
+                    text = stringResource(R.string.enable_tracker_title),
                     color = AppColors.TextPrimary,
                     fontSize = Styles.TEXT_FONT_SIZE,
                     lineHeight = Styles.TEXT_LINE_HEIGHT,
                     modifier = Modifier.padding(top = Styles.TEXT_TOP_PADDING)
                 )
                 Text(
-                    text = context.getString(R.string.enable_tracker_description),
+                    text = stringResource(R.string.enable_tracker_description),
                     color = AppColors.TextSecondary,
                     fontSize = Styles.DESCRIPTION_FONT_SIZE,
                     lineHeight = Styles.DESCRIPTION_LINE_HEIGHT,

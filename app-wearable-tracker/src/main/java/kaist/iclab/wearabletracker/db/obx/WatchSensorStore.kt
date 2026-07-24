@@ -3,7 +3,6 @@ package kaist.iclab.wearabletracker.db.obx
 import io.objectbox.Box
 import io.objectbox.BoxStore
 import io.objectbox.Property
-import io.objectbox.query.QueryBuilder
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.entity.WatchBaseEntity

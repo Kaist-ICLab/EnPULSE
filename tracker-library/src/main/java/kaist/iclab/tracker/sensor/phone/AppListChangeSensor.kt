@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration.Companion.milliseconds
 
 class AppListChangeSensor(
     context: Context,
@@ -94,10 +95,10 @@ class AppListChangeSensor(
             while (isMonitoring) {
                 try {
                     checkForAppChanges()
-                    delay(configStateFlow.value.periodicIntervalMillis)
+                    delay(configStateFlow.value.periodicIntervalMillis.milliseconds)
                 } catch (e: Exception) {
                     Log.e(TAG, "Error in periodic monitoring", e)
-                    delay(configStateFlow.value.periodicIntervalMillis)
+                    delay(configStateFlow.value.periodicIntervalMillis.milliseconds)
                 }
             }
         }
@@ -233,7 +234,7 @@ class AppListChangeSensor(
                 isEnabled = isEnabled,
                 installerPackage = try {
                     packageManager.getInstallSourceInfo(packageName).installingPackageName
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     null
                 }
             )

@@ -33,7 +33,7 @@ class UserProfileRepositoryImpl(
         private const val TAG = "UserProfileRepo"
     }
 
-    private val _profile = MutableStateFlow<ProfileData?>(
+    private val _profile = MutableStateFlow(
         persistentStorage.get().takeIf { it.uuid.isNotEmpty() }
     )
     override val profileFlow: StateFlow<ProfileData?> = _profile.asStateFlow()

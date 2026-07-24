@@ -8,6 +8,7 @@ import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
 @Entity
 @Serializable
@@ -55,7 +56,7 @@ class WatchStressEntity : BaseEntity, CsvSerializable, RecordSerializable {
         id = id,
         timestamp = timestamp,
         fields = mapOf(
-            "RMSSD" to String.format("%.3f", rmssd),
+            "RMSSD" to String.format(Locale.getDefault(), "%.3f", rmssd),
             "IBI Count" to ibiCount.toString(),
             "Stressed" to isStressed.toString()
         )

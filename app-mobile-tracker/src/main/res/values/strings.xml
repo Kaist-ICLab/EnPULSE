@@ -14,7 +14,10 @@
     <string name="home_status_running">Running</string>
     <string name="home_status_stopped">Stopped</string>
     <string name="home_daily_highlights">Today\'s Data Snapshot</string>
-    <string name="home_logs_unit">%1$d logs</string>
+    <plurals name="home_logs_unit">
+        <item quantity="one">%1$d log</item>
+        <item quantity="other">%1$d logs</item>
+    </plurals>
     <string name="home_empty_state_message">Start collecting to see data</string>
     <string name="home_watch_status_label">Galaxy Watch Device</string>
     <string name="home_watch_connected">Connected</string>
@@ -357,7 +360,7 @@
     <string name="copy_url_desc">Copy URL</string>
     <string name="copy_key_desc">Copy Key</string>
     <string name="server_config_test_connection">Test Connection</string>
-    <string name="server_config_testing_connection">Testing Connection...</string>
+    <string name="server_config_testing_connection">Testing Connection…</string>
     <string name="server_config_connection_success">Connection successful!</string>
     <string name="server_config_connection_failed">Connection failed. Please check URL and Key.</string>
 

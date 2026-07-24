@@ -1,5 +1,6 @@
 package kaist.iclab.wearabletracker.ema
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -57,8 +58,8 @@ class MicroEmaResponseManager(
                 Log.d(TAG, "Received JIT trigger payload: $jsonElement")
 
                 val triggerObj = when (jsonElement) {
-                    is kotlinx.serialization.json.JsonObject -> jsonElement
-                    is kotlinx.serialization.json.JsonPrimitive ->
+                    is JsonObject -> jsonElement
+                    is JsonPrimitive ->
                         json.parseToJsonElement(jsonElement.content).jsonObject
                     else -> json.parseToJsonElement(jsonElement.toString()).jsonObject
                 }
@@ -87,10 +88,11 @@ class MicroEmaResponseManager(
         }
     }
 
+    @SuppressLint("WearRecents")
     private fun launchMicroEma() {
         try {
             // Trigger a double-buzz vibration to physically alert the user
-            val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
             } else {
                 @Suppress("DEPRECATION")
@@ -99,8 +101,7 @@ class MicroEmaResponseManager(
             vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 200, 100, 200), -1))
 
             val intent = Intent(context, WatchSurveyActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
             context.startActivity(intent)
         } catch (e: Exception) {
@@ -159,7 +160,7 @@ class MicroEmaResponseManager(
 
     private fun buildSyncPayload(responses: List<MicroEmaResponse>, ids: List<Long>): String {
         val payloadItems = responses.mapIndexed { index, r ->
-            buildMap<String, String?> {
+            buildMap {
                 put("id", ids.getOrNull(index)?.toString())
                 put("surveyId", r.surveyId.toString())
                 put("questionId", r.questionId.toString())

@@ -28,13 +28,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -49,11 +48,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
@@ -68,7 +69,6 @@ import kaist.iclab.mobiletracker.viewmodels.data.DataViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -488,8 +488,7 @@ private fun SummaryCard(
                         text = when {
                             isUploading -> stringResource(R.string.sync_status_uploading)
                             isDeleting -> stringResource(R.string.sync_status_deleting)
-                            true -> stringResource(R.string.sync_status_exporting)
-                            else -> ""
+                            else -> stringResource(R.string.sync_status_exporting)
                         },
                         fontSize = 12.sp,
                         color = AppColors.TextSecondary
@@ -746,7 +745,7 @@ private fun formatLastRecorded(timestamp: Long?): String {
         }
 
         else -> {
-            val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+            val dateFormat = SimpleDateFormat("MMM d, yyyy", LocalLocale.current.platformLocale)
             dateFormat.format(Date(timestamp))
         }
     }

@@ -2,6 +2,7 @@ package kaist.iclab.wearabletracker.helpers
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 /**
  * Helper utility for managing MicroEMA survey state using SharedPreferences.
@@ -17,9 +18,9 @@ class MicroEmaPreferencesHelper(context: Context) {
      * Save the last shown question ID for a specific survey.
      */
     fun saveLastQuestionId(surveyId: Int, questionId: Int) {
-        sharedPreferences.edit()
-            .putInt(KEY_LAST_QUESTION_ID_PREFIX + surveyId, questionId)
-            .apply()
+        sharedPreferences.edit {
+            putInt(KEY_LAST_QUESTION_ID_PREFIX + surveyId, questionId)
+        }
     }
 
     /**
@@ -34,9 +35,9 @@ class MicroEmaPreferencesHelper(context: Context) {
      * Clear the last shown question ID for a specific survey.
      */
     fun clearLastQuestionId(surveyId: Int) {
-        sharedPreferences.edit()
-            .remove(KEY_LAST_QUESTION_ID_PREFIX + surveyId)
-            .apply()
+        sharedPreferences.edit {
+            remove(KEY_LAST_QUESTION_ID_PREFIX + surveyId)
+        }
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings
 
+import android.content.res.Resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,8 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,14 +61,12 @@ fun ServerSyncSettingsScreen(
     navController: NavController,
     syncTimestampService: SyncTimestampService = koinInject()
 ) {
-    val context = LocalContext.current
-
     // Automatic sync interval and network settings
     var selectedIntervalMs by remember {
-        mutableStateOf(syncTimestampService.getAutoSyncIntervalMs())
+        mutableLongStateOf(syncTimestampService.getAutoSyncIntervalMs())
     }
     var selectedNetworkMode by remember {
-        mutableStateOf(syncTimestampService.getAutoSyncNetworkMode())
+        mutableIntStateOf(syncTimestampService.getAutoSyncNetworkMode())
     }
 
     // Dialog states
@@ -97,7 +100,7 @@ fun ServerSyncSettingsScreen(
                     )
                 }
                 Text(
-                    text = context.getString(R.string.menu_server_sync),
+                    text = stringResource(R.string.menu_server_sync),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
@@ -105,7 +108,7 @@ fun ServerSyncSettingsScreen(
 
             // Description text
             Text(
-                text = context.getString(R.string.sync_automatic_sync_description),
+                text = stringResource(R.string.sync_automatic_sync_description),
                 color = AppColors.TextSecondary,
                 fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE,
                 modifier = Modifier
@@ -131,20 +134,20 @@ fun ServerSyncSettingsScreen(
                     settingsItems.forEachIndexed { index, item ->
                         val isLast = index == settingsItems.size - 1
                         val currentValue = when (item) {
-                            SettingItem.Interval -> getIntervalLabel(context, selectedIntervalMs)
-                            SettingItem.Network -> getNetworkLabel(context, selectedNetworkMode)
+                            SettingItem.Interval -> getIntervalLabel(LocalResources.current, selectedIntervalMs)
+                            SettingItem.Network -> getNetworkLabel(LocalResources.current, selectedNetworkMode)
                         }
                         val icon = when (item) {
                             SettingItem.Interval -> Icons.Filled.Schedule
                             SettingItem.Network -> Icons.Filled.NetworkCheck
                         }
                         val title = when (item) {
-                            SettingItem.Interval -> context.getString(R.string.sync_interval_title)
-                            SettingItem.Network -> context.getString(R.string.sync_network_title)
+                            SettingItem.Interval -> stringResource(R.string.sync_interval_title)
+                            SettingItem.Network -> stringResource(R.string.sync_network_title)
                         }
                         val description = when (item) {
-                            SettingItem.Interval -> context.getString(R.string.sync_interval_description)
-                            SettingItem.Network -> context.getString(R.string.sync_network_description)
+                            SettingItem.Interval -> stringResource(R.string.sync_interval_description)
+                            SettingItem.Network -> stringResource(R.string.sync_network_description)
                         }
 
                         AutomaticSyncSettingCard(
@@ -299,7 +302,6 @@ private fun IntervalSelectionDialog(
     onDismiss: () -> Unit,
     onSelect: (Long) -> Unit
 ) {
-    val context = LocalContext.current
     val options = listOf(
         Constants.AutoSync.INTERVAL_NONE,
         Constants.AutoSync.INTERVAL_5_MIN,
@@ -309,10 +311,10 @@ private fun IntervalSelectionDialog(
         Constants.AutoSync.INTERVAL_6_HOUR,
         Constants.AutoSync.INTERVAL_12_HOUR
     )
-    var selected by remember { mutableStateOf(selectedIntervalMs) }
+    var selected by remember { mutableLongStateOf(selectedIntervalMs) }
 
     PopupDialog(
-        title = context.getString(R.string.sync_interval_title),
+        title = stringResource(R.string.sync_interval_title),
         content = {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -336,7 +338,7 @@ private fun IntervalSelectionDialog(
                             )
                         )
                         Text(
-                            text = getIntervalLabel(context, intervalMs),
+                            text = getIntervalLabel(LocalResources.current, intervalMs),
                             fontSize = Styles.STATUS_TEXT_FONT_SIZE,
                             color = AppColors.TextPrimary
                         )
@@ -345,7 +347,7 @@ private fun IntervalSelectionDialog(
             }
         },
         primaryButton = DialogButtonConfig(
-            text = context.getString(R.string.campaign_dialog_select),
+            text = stringResource(R.string.campaign_dialog_select),
             onClick = {
                 onSelect(selected)
                 onDismiss()
@@ -353,7 +355,7 @@ private fun IntervalSelectionDialog(
             enabled = true
         ),
         secondaryButton = DialogButtonConfig(
-            text = context.getString(R.string.campaign_dialog_cancel),
+            text = stringResource(R.string.campaign_dialog_cancel),
             onClick = onDismiss,
             isPrimary = false
         ),
@@ -367,16 +369,15 @@ private fun NetworkSelectionDialog(
     onDismiss: () -> Unit,
     onSelect: (Int) -> Unit
 ) {
-    val context = LocalContext.current
     val options = listOf(
         Constants.AutoSync.NETWORK_WIFI_MOBILE,
         Constants.AutoSync.NETWORK_WIFI_ONLY,
         Constants.AutoSync.NETWORK_MOBILE_ONLY
     )
-    var selected by remember { mutableStateOf(selectedMode) }
+    var selected by remember { mutableIntStateOf(selectedMode) }
 
     PopupDialog(
-        title = context.getString(R.string.sync_network_title),
+        title = stringResource(R.string.sync_network_title),
         content = {
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -400,7 +401,7 @@ private fun NetworkSelectionDialog(
                             )
                         )
                         Text(
-                            text = getNetworkLabel(context, mode),
+                            text = getNetworkLabel(LocalResources.current, mode),
                             fontSize = Styles.STATUS_TEXT_FONT_SIZE,
                             color = AppColors.TextPrimary
                         )
@@ -409,7 +410,7 @@ private fun NetworkSelectionDialog(
             }
         },
         primaryButton = DialogButtonConfig(
-            text = context.getString(R.string.campaign_dialog_select),
+            text = stringResource(R.string.campaign_dialog_select),
             onClick = {
                 onSelect(selected)
                 onDismiss()
@@ -417,7 +418,7 @@ private fun NetworkSelectionDialog(
             enabled = true
         ),
         secondaryButton = DialogButtonConfig(
-            text = context.getString(R.string.campaign_dialog_cancel),
+            text = stringResource(R.string.campaign_dialog_cancel),
             onClick = onDismiss,
             isPrimary = false
         ),
@@ -425,24 +426,24 @@ private fun NetworkSelectionDialog(
     )
 }
 
-private fun getIntervalLabel(context: android.content.Context, intervalMs: Long): String {
+private fun getIntervalLabel(resources: Resources, intervalMs: Long): String {
     return when (intervalMs) {
-        Constants.AutoSync.INTERVAL_NONE -> context.getString(R.string.sync_interval_option_none)
-        Constants.AutoSync.INTERVAL_5_MIN -> context.getString(R.string.sync_interval_option_5_min)
-        Constants.AutoSync.INTERVAL_30_MIN -> context.getString(R.string.sync_interval_option_30_min)
-        Constants.AutoSync.INTERVAL_60_MIN -> context.getString(R.string.sync_interval_option_60_min)
-        Constants.AutoSync.INTERVAL_2_HOUR -> context.getString(R.string.sync_interval_option_2_hour)
-        Constants.AutoSync.INTERVAL_6_HOUR -> context.getString(R.string.sync_interval_option_6_hour)
-        Constants.AutoSync.INTERVAL_12_HOUR -> context.getString(R.string.sync_interval_option_12_hour)
-        else -> context.getString(R.string.sync_interval_option_none)
+        Constants.AutoSync.INTERVAL_NONE -> resources.getString(R.string.sync_interval_option_none)
+        Constants.AutoSync.INTERVAL_5_MIN -> resources.getString(R.string.sync_interval_option_5_min)
+        Constants.AutoSync.INTERVAL_30_MIN -> resources.getString(R.string.sync_interval_option_30_min)
+        Constants.AutoSync.INTERVAL_60_MIN -> resources.getString(R.string.sync_interval_option_60_min)
+        Constants.AutoSync.INTERVAL_2_HOUR -> resources.getString(R.string.sync_interval_option_2_hour)
+        Constants.AutoSync.INTERVAL_6_HOUR -> resources.getString(R.string.sync_interval_option_6_hour)
+        Constants.AutoSync.INTERVAL_12_HOUR -> resources.getString(R.string.sync_interval_option_12_hour)
+        else -> resources.getString(R.string.sync_interval_option_none)
     }
 }
 
-private fun getNetworkLabel(context: android.content.Context, mode: Int): String {
+private fun getNetworkLabel(resources: Resources, mode: Int): String {
     return when (mode) {
-        Constants.AutoSync.NETWORK_WIFI_MOBILE -> context.getString(R.string.sync_network_option_all)
-        Constants.AutoSync.NETWORK_WIFI_ONLY -> context.getString(R.string.sync_network_option_wifi_only)
-        Constants.AutoSync.NETWORK_MOBILE_ONLY -> context.getString(R.string.sync_network_option_mobile_only)
-        else -> context.getString(R.string.sync_network_option_all)
+        Constants.AutoSync.NETWORK_WIFI_MOBILE -> resources.getString(R.string.sync_network_option_all)
+        Constants.AutoSync.NETWORK_WIFI_ONLY -> resources.getString(R.string.sync_network_option_wifi_only)
+        Constants.AutoSync.NETWORK_MOBILE_ONLY -> resources.getString(R.string.sync_network_option_mobile_only)
+        else -> resources.getString(R.string.sync_network_option_all)
     }
 }

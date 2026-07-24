@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * ViewModel for the single-question microEMA survey on the watch.
@@ -192,7 +193,7 @@ class MicroEmaViewModel(
             var remaining = totalMs
             while (remaining > 0) {
                 _remainingTimeMs.value = remaining
-                delay(COUNTDOWN_TICK_MS)
+                delay(COUNTDOWN_TICK_MS.milliseconds)
                 remaining -= COUNTDOWN_TICK_MS
             }
             _remainingTimeMs.value = 0L

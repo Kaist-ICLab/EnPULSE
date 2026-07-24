@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -64,7 +65,7 @@ fun LanguageScreen(
                     )
                 }
                 Text(
-                    text = context.getString(R.string.menu_language),
+                    text = stringResource(R.string.menu_language),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
@@ -72,7 +73,7 @@ fun LanguageScreen(
 
             // Description text
             Text(
-                text = context.getString(R.string.language_screen_description),
+                text = stringResource(R.string.language_screen_description),
                 color = AppColors.TextSecondary,
                 fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE,
                 modifier = Modifier
@@ -104,8 +105,8 @@ fun LanguageScreen(
                         LanguageItem(
                             number = index + 1,
                             languageName = when (languageCode) {
-                                "en" -> context.getString(R.string.language_english_full)
-                                "ko" -> context.getString(R.string.language_korean_full)
+                                "en" -> stringResource(R.string.language_english_full)
+                                "ko" -> stringResource(R.string.language_korean_full)
                                 else -> ""
                             },
                             isSelected = isSelected,

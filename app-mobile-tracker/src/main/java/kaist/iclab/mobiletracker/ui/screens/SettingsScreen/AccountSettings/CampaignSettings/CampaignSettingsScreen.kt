@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -41,7 +42,6 @@ fun CampaignSettingsScreen(
     navController: NavController,
     viewModel: AccountSettingsViewModel = koinViewModel()
 ) {
-    val context = LocalContext.current
     val selectedCampaignName by viewModel.selectedCampaignName.collectAsState()
     val activeSensors by viewModel.activeSensors.collectAsState()
 
@@ -66,7 +66,7 @@ fun CampaignSettingsScreen(
                     )
                 }
                 Text(
-                    text = context.getString(R.string.menu_campaign),
+                    text = stringResource(R.string.menu_campaign),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )

@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kaist.iclab.mobiletracker.helpers.ImageAsset
@@ -74,14 +75,14 @@ fun LoginScreen(
                 containerColor = AppColors.Background
             ) {
                 DropdownMenuItem(
-                    text = { Text(context.getString(R.string.menu_language)) },
+                    text = { Text(stringResource(R.string.menu_language)) },
                     onClick = {
                         expanded = false
                         onNavigateToLanguage()
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text(context.getString(R.string.server_config_title)) },
+                    text = { Text(stringResource(R.string.server_config_title)) },
                     onClick = {
                         expanded = false
                         onNavigateToServerConnection()
@@ -105,12 +106,12 @@ fun LoginScreen(
             ) {
                 ImageAsset(
                     assetPath = "icon.png",
-                    contentDescription = context.getString(R.string.mobile_tracker_logo),
+                    contentDescription = stringResource(R.string.mobile_tracker_logo),
                     modifier = Modifier.size(Styles.LOGO_SIZE)
                 )
                 Spacer(modifier = Modifier.width(Styles.LOGO_TITLE_SPACING))
                 Text(
-                    text = context.getString(R.string.mobile_tracker),
+                    text = stringResource(R.string.mobile_tracker),
                     fontSize = Styles.TITLE_FONT_SIZE,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     color = Color.Black,
@@ -151,7 +152,7 @@ fun LoginScreen(
                     )
                     Spacer(modifier = Modifier.width(Styles.BUTTON_ICON_TITLE_SPACING))
                     Text(
-                        text = context.getString(R.string.sign_in_with_google),
+                        text = stringResource(R.string.sign_in_with_google),
                         fontSize = Styles.BUTTON_TEXT_FONT_SIZE,
                         color = Color.Black
                     )

@@ -35,6 +35,7 @@ import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.getValue
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Service that handles automatic synchronization of sensor data to Supabase
@@ -113,11 +114,11 @@ class AutoSyncService : LifecycleService(), KoinComponent {
             while (isActive) {
                 try {
                     checkAndSyncIfNeeded()
-                    delay(Constants.AutoSync.CHECK_INTERVAL_MS)
+                    delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
                     Log.e(TAG, "Error in auto-sync loop: ${e.message}", e)
-                    delay(Constants.AutoSync.CHECK_INTERVAL_MS)
+                    delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
                 }
             }
         }
@@ -131,10 +132,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         val currentTime = System.currentTimeMillis()
 
         // Check if data collection is running
-        val dataCollectionStarted = syncTimestampService.getDataCollectionStarted()
-        if (dataCollectionStarted == null) {
-            return
-        }
+        syncTimestampService.getDataCollectionStarted() ?: return
 
         // Get auto-sync settings
         val intervalMs = syncTimestampService.getAutoSyncIntervalMs()

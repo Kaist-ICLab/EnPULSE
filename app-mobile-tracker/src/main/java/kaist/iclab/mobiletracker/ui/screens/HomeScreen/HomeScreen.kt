@@ -52,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -329,7 +330,7 @@ fun HomeScreen(
                 ) { sensor ->
                     InsightRow(
                         title = getSensorDisplayName(sensor.sensorId),
-                        value = stringResource(R.string.home_logs_unit, sensor.count),
+                        value = pluralStringResource(R.plurals.home_logs_unit, sensor.count),
                         icon = sensor.icon,
                         iconColor = sensor.iconColor
                     )

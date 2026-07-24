@@ -55,7 +55,7 @@ object Styles {
     val SPACER_WIDTH = 10.dp
 
     // Divider
-    val DIVIDER_WIDTH_RATIO = 0.9f
+    const val DIVIDER_WIDTH_RATIO = 0.9f
 
     // Menu item (used in main SettingsScreen)
     val MENU_ITEM_HORIZONTAL_PADDING = 16.dp

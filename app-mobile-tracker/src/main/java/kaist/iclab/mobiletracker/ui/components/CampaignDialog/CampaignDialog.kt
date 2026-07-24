@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,7 +42,6 @@ fun CampaignDialog(
     onSelect: (String) -> Unit,
     onJoinCampaign: suspend (String, String) -> Boolean
 ) {
-    val context = LocalContext.current
     var selected by remember { mutableStateOf(selectedCampaignId) }
 
     // Password verification state
@@ -68,7 +68,7 @@ fun CampaignDialog(
         }
     } else {
         PopupDialog(
-            title = context.getString(R.string.campaign_dialog_title),
+            title = stringResource(R.string.campaign_dialog_title),
             content = {
                 when {
                     isLoading -> {
@@ -87,7 +87,7 @@ fun CampaignDialog(
 
                     error != null -> {
                         val displayError = when (error) {
-                            "turn_off_data_collection_first" -> context.getString(R.string.turn_off_data_collection_first)
+                            "turn_off_data_collection_first" -> stringResource(R.string.turn_off_data_collection_first)
                             else -> error
                         }
                         Text(
@@ -103,7 +103,7 @@ fun CampaignDialog(
 
                     campaigns.isEmpty() -> {
                         Text(
-                            text = context.getString(R.string.campaign_no_campaign_joined),
+                            text = stringResource(R.string.campaign_no_campaign_joined),
                             fontSize = Styles.ExperimentNameFontSize,
                             color = AppColors.TextSecondary,
                             textAlign = TextAlign.Center,
@@ -149,7 +149,7 @@ fun CampaignDialog(
                 }
             },
             primaryButton = DialogButtonConfig(
-                text = context.getString(R.string.campaign_dialog_select),
+                text = stringResource(R.string.campaign_dialog_select),
                 onClick = {
                     selected?.let {
                         showPasswordInput = true
@@ -158,7 +158,7 @@ fun CampaignDialog(
                 enabled = selected != null && !isLoading && error == null
             ),
             secondaryButton = DialogButtonConfig(
-                text = context.getString(R.string.campaign_dialog_cancel),
+                text = stringResource(R.string.campaign_dialog_cancel),
                 onClick = onDismiss,
                 isPrimary = false
             ),

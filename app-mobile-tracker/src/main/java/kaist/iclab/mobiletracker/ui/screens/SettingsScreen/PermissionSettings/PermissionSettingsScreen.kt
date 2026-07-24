@@ -115,7 +115,7 @@ fun PermissionSettingsScreen(
                     )
                 }
                 Text(
-                    text = context.getString(R.string.menu_permission),
+                    text = stringResource(R.string.menu_permission),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )

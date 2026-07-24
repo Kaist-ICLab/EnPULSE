@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import kaist.iclab.mobiletracker.R
@@ -36,25 +37,23 @@ fun BottomNavigationBar(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     // Define destinations with localized strings
     val destinations = listOf(
         Destination(
             Screen.Data.route,
-            context.getString(R.string.nav_data),
+            stringResource(R.string.nav_data),
             Icons.Outlined.Info,
             Icons.Filled.Info
         ),
         Destination(
             Screen.Home.route,
-            context.getString(R.string.nav_home),
+            stringResource(R.string.nav_home),
             Icons.Outlined.Home,
             Icons.Filled.Home
         ),
         Destination(
             Screen.Setting.route,
-            context.getString(R.string.nav_settings),
+            stringResource(R.string.nav_settings),
             Icons.Outlined.Settings,
             Icons.Filled.Settings
         )
@@ -76,9 +75,9 @@ fun BottomNavigationBar(
 
     // Determine which tab should be highlighted
     // First check if current route is a root tab, otherwise check if it's a sub-route
-    val activeTabRoute = when {
-        currentRoute in destinations.map { it.route } -> currentRoute
-        currentRoute in subRouteToTabMap -> subRouteToTabMap[currentRoute]
+    val activeTabRoute = when (currentRoute) {
+        in destinations.map { it.route } -> currentRoute
+        in subRouteToTabMap -> subRouteToTabMap[currentRoute]
         else -> null
     }
 

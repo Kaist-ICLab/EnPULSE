@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -71,7 +72,7 @@ fun PhoneSensorConfigSettingsScreen(
                     )
                 }
                 Text(
-                    text = context.getString(R.string.menu_phone_sensor),
+                    text = stringResource(R.string.menu_phone_sensor),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
@@ -79,7 +80,7 @@ fun PhoneSensorConfigSettingsScreen(
 
             // Description text
             Text(
-                text = context.getString(R.string.phone_sensor_screen_description),
+                text = stringResource(R.string.phone_sensor_screen_description),
                 color = AppColors.TextSecondary,
                 fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE,
                 modifier = Modifier
@@ -105,7 +106,7 @@ fun PhoneSensorConfigSettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = context.getString(R.string.phone_sensor_empty_config),
+                            text = stringResource(R.string.phone_sensor_empty_config),
                             textAlign = TextAlign.Center,
                             color = AppColors.TextSecondary,
                             modifier = Modifier.padding(16.dp)

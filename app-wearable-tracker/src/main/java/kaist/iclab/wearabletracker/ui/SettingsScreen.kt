@@ -64,7 +64,6 @@ fun SettingsScreen(
     val context = LocalContext.current
     val sensorMap = settingsViewModel.sensorMap
     val controllerStateValue = settingsViewModel.controllerState.collectAsState().value
-    val isCollecting = controllerStateValue
     val isPaused = controllerStateValue.flag == ControllerState.FLAG.PAUSED
     val sensorState = settingsViewModel.sensorState
 
@@ -85,7 +84,7 @@ fun SettingsScreen(
      * Reduces code duplication across different features (upload, flush, startLogging).
      */
     fun handleNotificationPermissionCheck(onGranted: () -> Unit) {
-        when (PermissionHelper.checkNotificationPermission(context, androidPermissionManager)) {
+        when (PermissionHelper.checkNotificationPermission(androidPermissionManager)) {
             PermissionCheckResult.Granted -> {
                 onGranted()
             }
@@ -126,7 +125,7 @@ fun SettingsScreen(
 
         // Check notification permission at app startup (will request if needed, but won't show dialog for permanent denial)
         // The permanent denial dialog will only show when user tries to perform an action
-        PermissionHelper.checkNotificationPermission(context, androidPermissionManager)
+        PermissionHelper.checkNotificationPermission(androidPermissionManager)
     }
 
     // Observe last sync timestamp
@@ -149,8 +148,8 @@ fun SettingsScreen(
         onDismissSdkPolicyError = { settingsViewModel.clearSdkPolicyError() },
         showConnectionError = showConnectionError,
         onRetryConnection = { showConnectionError = false },
-        isCollecting = (isCollecting.flag == ControllerState.FLAG.RUNNING ||
-            isCollecting.flag == ControllerState.FLAG.PAUSED),
+        isCollecting = (controllerStateValue.flag == ControllerState.FLAG.RUNNING ||
+                controllerStateValue.flag == ControllerState.FLAG.PAUSED),
         isPaused = isPaused,
         hasEnabledSensors = hasEnabledSensors,
         onUpload = { handleNotificationPermissionCheck { settingsViewModel.upload() } },

@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class DataSyncSettingsViewModel(
     private val phoneSensorRepository: PhoneSensorRepository,
@@ -52,7 +53,7 @@ class DataSyncSettingsViewModel(
         // Update current time every second
         viewModelScope.launch {
             while (true) {
-                kotlinx.coroutines.delay(1000)
+                kotlinx.coroutines.delay(1000.milliseconds)
                 _currentTime.value = DateTimeFormatter.getCurrentTimeFormatted()
             }
         }
@@ -63,7 +64,7 @@ class DataSyncSettingsViewModel(
         // Refresh timestamps periodically (every 5 seconds)
         viewModelScope.launch {
             while (true) {
-                kotlinx.coroutines.delay(5000)
+                kotlinx.coroutines.delay(5000.milliseconds)
                 loadTimestamps()
             }
         }

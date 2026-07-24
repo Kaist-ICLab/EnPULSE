@@ -15,7 +15,7 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 
-class SupabaseHelper(private val context: Context) {
+class SupabaseHelper(context: Context) {
     private val settings = SharedPreferencesSettings(
         context.getSharedPreferences("supabase_session", Context.MODE_PRIVATE)
     )

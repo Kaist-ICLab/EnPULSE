@@ -40,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -64,6 +66,7 @@ fun ServerConnectionScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val configManager = remember { SupabaseConfigManager(context) }
 
     var url by remember { mutableStateOf(configManager.getCustomUrlRaw()) }
@@ -90,11 +93,11 @@ fun ServerConnectionScreen(
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = context.getString(R.string.back_desc)
+                        contentDescription = stringResource(R.string.back_desc)
                     )
                 }
                 Text(
-                    text = context.getString(R.string.menu_server_connection),
+                    text = stringResource(R.string.menu_server_connection),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
@@ -107,7 +110,7 @@ fun ServerConnectionScreen(
                     .padding(bottom = 24.dp)
             ) {
                 Text(
-                    text = context.getString(R.string.server_config_description),
+                    text = stringResource(R.string.server_config_description),
                     color = AppColors.TextSecondary,
                     fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE,
                     modifier = Modifier
@@ -132,7 +135,7 @@ fun ServerConnectionScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = context.getString(R.string.server_config_current_title),
+                            text = stringResource(R.string.server_config_current_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = AppColors.TextPrimary
@@ -149,7 +152,7 @@ fun ServerConnectionScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = context.getString(
+                                text = stringResource(
                                     R.string.server_config_current_url,
                                     currentUrl
                                 ),
@@ -165,14 +168,14 @@ fun ServerConnectionScreen(
                                     clipboard.setPrimaryClip(clip)
                                     AppToast.show(
                                         context,
-                                        context.getString(R.string.copied_to_clipboard)
+                                        resources.getString(R.string.copied_to_clipboard)
                                     )
                                 },
                                 modifier = Modifier.size(24.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = context.getString(R.string.copy_url_desc),
+                                    contentDescription = stringResource(R.string.copy_url_desc),
                                     tint = AppColors.TextSecondary,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -184,7 +187,7 @@ fun ServerConnectionScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = context.getString(
+                                text = stringResource(
                                     R.string.server_config_current_key,
                                     truncatedKey
                                 ),
@@ -201,14 +204,14 @@ fun ServerConnectionScreen(
                                     clipboard.setPrimaryClip(clip)
                                     AppToast.show(
                                         context,
-                                        context.getString(R.string.copied_to_clipboard)
+                                        resources.getString(R.string.copied_to_clipboard)
                                     )
                                 },
                                 modifier = Modifier.size(24.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = context.getString(R.string.copy_key_desc),
+                                    contentDescription = stringResource(R.string.copy_key_desc),
                                     tint = AppColors.TextSecondary,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -233,7 +236,7 @@ fun ServerConnectionScreen(
                             },
                             label = {
                                 Text(
-                                    context.getString(R.string.server_config_url_label),
+                                    stringResource(R.string.server_config_url_label),
                                     fontSize = 12.sp
                                 )
                             },
@@ -260,7 +263,7 @@ fun ServerConnectionScreen(
                             },
                             label = {
                                 Text(
-                                    context.getString(R.string.server_config_key_label),
+                                    stringResource(R.string.server_config_key_label),
                                     fontSize = 12.sp
                                 )
                             },
@@ -306,14 +309,14 @@ fun ServerConnectionScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    context.getString(R.string.server_config_testing_connection),
+                                    stringResource(R.string.server_config_testing_connection),
                                     color = Color.White,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             } else {
                                 Text(
-                                    context.getString(R.string.server_config_test_connection),
+                                    stringResource(R.string.server_config_test_connection),
                                     color = Color.White,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
@@ -325,9 +328,9 @@ fun ServerConnectionScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = if (success) {
-                                    context.getString(R.string.server_config_connection_success)
+                                    stringResource(R.string.server_config_connection_success)
                                 } else {
-                                    context.getString(R.string.server_config_connection_failed)
+                                    stringResource(R.string.server_config_connection_failed)
                                 },
                                 color = if (success) AppColors.PrimaryColor else AppColors.ErrorColor,
                                 fontSize = 14.sp,
@@ -353,7 +356,7 @@ fun ServerConnectionScreen(
                                 .height(40.dp)
                         ) {
                             Text(
-                                text = context.getString(R.string.server_config_save_restart),
+                                text = stringResource(R.string.server_config_save_restart),
                                 color = if (connectionCheckResult == true) Color.White else AppColors.TextSecondary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
@@ -367,16 +370,16 @@ fun ServerConnectionScreen(
 
     if (showConfirmationDialog) {
         PopupDialog(
-            title = context.getString(R.string.server_config_restart_confirm_title),
+            title = stringResource(R.string.server_config_restart_confirm_title),
             content = {
                 Text(
-                    text = context.getString(R.string.server_config_restart_confirm_message),
+                    text = stringResource(R.string.server_config_restart_confirm_message),
                     color = AppColors.TextSecondary,
                     fontSize = 15.sp
                 )
             },
             primaryButton = DialogButtonConfig(
-                text = context.getString(R.string.server_config_restart_confirm_button),
+                text = stringResource(R.string.server_config_restart_confirm_button),
                 onClick = {
                     showConfirmationDialog = false
                     configManager.saveCredentials(url, anonKey)
@@ -388,7 +391,7 @@ fun ServerConnectionScreen(
                 }
             ),
             secondaryButton = DialogButtonConfig(
-                text = context.getString(R.string.cancel),
+                text = stringResource(R.string.cancel),
                 onClick = { showConfirmationDialog = false },
                 isPrimary = false
             ),
@@ -413,7 +416,7 @@ private suspend fun checkConnection(urlStr: String, anonKey: String): Boolean =
 
             val responseCode = conn.responseCode
             responseCode == 200
-        } catch (e: java.lang.Exception) {
+        } catch (_: Exception) {
             false
         }
     }

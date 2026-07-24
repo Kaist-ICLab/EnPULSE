@@ -22,6 +22,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -46,6 +48,7 @@ fun PasswordDialog(
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var isVerifying by remember { mutableStateOf(false) }
@@ -53,11 +56,11 @@ fun PasswordDialog(
     val coroutineScope = rememberCoroutineScope()
 
     PopupDialog(
-        title = context.getString(R.string.campaign_password_title),
+        title = stringResource(R.string.campaign_password_title),
         content = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = context.getString(R.string.campaign_password_description),
+                    text = stringResource(R.string.campaign_password_description),
                     fontSize = Styles.ExperimentNameFontSize,
                     color = AppColors.TextSecondary,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -69,7 +72,7 @@ fun PasswordDialog(
                         password = it
                         passwordError = null
                     },
-                    label = { Text(context.getString(R.string.campaign_password_input_label)) },
+                    label = { Text(stringResource(R.string.campaign_password_input_label)) },
                     singleLine = true,
                     isError = passwordError != null,
                     leadingIcon = {
@@ -121,23 +124,24 @@ fun PasswordDialog(
             }
         },
         primaryButton = DialogButtonConfig(
-            text = context.getString(R.string.campaign_password_verify),
+            text = stringResource(R.string.campaign_password_verify),
             onClick = {
                 if (password.isNotEmpty()) {
                     isVerifying = true
                     passwordError = null
+
                     coroutineScope.launch {
                         try {
                             val isValid = onVerify(password)
                             if (isValid) {
                                 onSuccess()
                             } else {
-                                passwordError =
-                                    context.getString(R.string.campaign_password_invalid)
+                                passwordError = resources.getString(R.string.campaign_password_invalid)
+
                                 AppToast.show(context, R.string.campaign_password_invalid)
                             }
-                        } catch (e: Exception) {
-                            passwordError = context.getString(R.string.campaign_password_error)
+                        } catch (_: Exception) {
+                            passwordError = resources.getString(R.string.campaign_password_error)
                         } finally {
                             isVerifying = false
                         }
@@ -147,7 +151,7 @@ fun PasswordDialog(
             enabled = !isVerifying && password.isNotEmpty()
         ),
         secondaryButton = DialogButtonConfig(
-            text = context.getString(R.string.campaign_dialog_cancel),
+            text = stringResource(R.string.campaign_dialog_cancel),
             onClick = {
                 onDismiss()
             },

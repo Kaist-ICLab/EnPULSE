@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
@@ -35,11 +36,11 @@ fun SupabaseConfigDialog(
     var anonKey by remember { mutableStateOf(configManager.getCustomAnonKeyRaw()) }
 
     PopupDialog(
-        title = context.getString(R.string.server_config_title),
+        title = stringResource(R.string.server_config_title),
         content = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = context.getString(R.string.server_config_description),
+                    text = stringResource(R.string.server_config_description),
                     fontSize = Styles.ExperimentNameFontSize,
                     color = AppColors.TextSecondary,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -48,7 +49,7 @@ fun SupabaseConfigDialog(
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text(context.getString(R.string.server_config_url_label)) },
+                    label = { Text(stringResource(R.string.server_config_url_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -66,7 +67,7 @@ fun SupabaseConfigDialog(
                 OutlinedTextField(
                     value = anonKey,
                     onValueChange = { anonKey = it },
-                    label = { Text(context.getString(R.string.server_config_key_label)) },
+                    label = { Text(stringResource(R.string.server_config_key_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(Dimens.CornerRadiusMedium),
@@ -81,12 +82,12 @@ fun SupabaseConfigDialog(
             }
         },
         primaryButton = DialogButtonConfig(
-            text = context.getString(R.string.server_config_save),
+            text = stringResource(R.string.server_config_save),
             onClick = { onSave(url, anonKey) },
             enabled = url.isNotBlank() && anonKey.isNotBlank()
         ),
         secondaryButton = DialogButtonConfig(
-            text = context.getString(R.string.cancel),
+            text = stringResource(R.string.cancel),
             onClick = onDismiss,
             isPrimary = false
         ),

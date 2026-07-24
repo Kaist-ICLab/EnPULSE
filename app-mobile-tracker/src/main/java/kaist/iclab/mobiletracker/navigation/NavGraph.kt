@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.integerResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -54,7 +55,7 @@ fun NavGraph(
     val activity = context as? Activity
 
     // Track previous error message to prevent duplicate toasts
-    var previousErrorMessage by remember { mutableStateOf<String?>(userState.message) }
+    var previousErrorMessage by remember { mutableStateOf(userState.message) }
 
     // Show toast when authentication error occurs via UserState
     LaunchedEffect(userState.message) {
@@ -81,13 +82,15 @@ fun NavGraph(
     }
 
     // Get system animation duration (respects user's animation speed settings)
-    // Fallback to 300ms if system value is unavailable or invalid
-    val animationDuration = try {
-        val systemDuration = context.resources.getInteger(android.R.integer.config_mediumAnimTime)
-        if (systemDuration > 0) systemDuration else 400
-    } catch (_: Exception) {
-        400 // Fallback to 300ms if system resource is unavailable
-    }
+    // Fallback to 400ms if system value is unavailable or invalid
+//    val animationDuration = try {
+//        val systemDuration = integerResource(android.R.integer.config_mediumAnimTime)
+//        if (systemDuration > 0) systemDuration else 400
+//    } catch (_: Exception) {
+//        400 // Fallback to 300ms if system resource is unavailable
+//    }
+
+    val animationDuration = integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
 
     // Handle language change by recreating activity
     val onLanguageChanged: () -> Unit = {

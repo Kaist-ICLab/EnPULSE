@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
@@ -61,7 +62,7 @@ fun SettingsScreen(
             .background(AppColors.Background)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            AppHeader(title = context.getString(R.string.nav_settings))
+            AppHeader(title = stringResource(R.string.nav_settings))
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -102,44 +103,44 @@ fun SettingsScreen(
                         shape = Styles.CARD_SHAPE
                     ) {
                         AppMenuItem(
-                            title = context.getString(R.string.menu_account),
+                            title = stringResource(R.string.menu_account),
                             icon = Icons.Filled.AccountBox,
                             onClick = { navController.navigate(Screen.Account.route) },
                             iconTint = AppColors.IconAccount
                         )
                         AppMenuItem(
-                            title = context.getString(R.string.menu_server_sync),
+                            title = stringResource(R.string.menu_server_sync),
                             icon = Icons.Filled.CloudSync,
                             onClick = { navController.navigate(Screen.ServerSync.route) },
                             iconTint = AppColors.IconSync
                         )
                         AppMenuItem(
-                            title = context.getString(R.string.menu_server_connection),
+                            title = stringResource(R.string.menu_server_connection),
                             icon = Icons.Filled.Storage,
                             onClick = { navController.navigate(Screen.ServerConnection.route) },
                             iconTint = AppColors.IconSync
                         )
                         AppMenuItem(
-                            title = context.getString(R.string.menu_language),
+                            title = stringResource(R.string.menu_language),
                             icon = Icons.Filled.Language,
                             onClick = { navController.navigate(Screen.Language.route) },
                             iconTint = AppColors.IconLanguage
                         )
                         AppMenuItem(
-                            title = context.getString(R.string.menu_permission),
+                            title = stringResource(R.string.menu_permission),
                             icon = Icons.Filled.Security,
                             onClick = { navController.navigate(Screen.Permission.route) },
                             iconTint = AppColors.IconSecurity
                         )
                         AppMenuItem(
-                            title = context.getString(R.string.menu_phone_sensor),
+                            title = stringResource(R.string.menu_phone_sensor),
                             icon = Icons.Filled.PhoneAndroid,
                             onClick = { navController.navigate(Screen.PhoneSensor.route) },
                             iconTint = AppColors.IconPhone
                         )
 
                         AppMenuItem(
-                            title = context.getString(R.string.menu_about),
+                            title = stringResource(R.string.menu_about),
                             icon = Icons.Filled.Info,
                             onClick = { navController.navigate(Screen.About.route) },
                             showDivider = false,

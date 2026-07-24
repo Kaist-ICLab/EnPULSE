@@ -5,9 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
 import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.CampaignRepository
-import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
@@ -36,8 +34,8 @@ data class OnboardingUiState(
 class OnboardingViewModel(
     private val campaignRepository: CampaignRepository,
     private val userProfileRepository: UserProfileRepository,
-    private val surveyRepository: SurveyRepository,
-    private val campaignSensorRepository: CampaignSensorRepository
+//    private val surveyRepository: SurveyRepository,
+//    private val campaignSensorRepository: CampaignSensorRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OnboardingUiState())

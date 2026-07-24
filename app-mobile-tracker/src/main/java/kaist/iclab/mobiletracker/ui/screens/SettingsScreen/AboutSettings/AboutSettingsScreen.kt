@@ -27,6 +27,7 @@ import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.helpers.ImageAsset
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import androidx.compose.ui.res.stringResource
 
 /**
  * About settings screen
@@ -44,7 +45,7 @@ fun AboutSettingsScreen(
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             packageInfo.versionName ?: "Unknown"
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "Unknown"
         }
     }
@@ -70,7 +71,7 @@ fun AboutSettingsScreen(
                     )
                 }
                 Text(
-                    text = context.getString(R.string.menu_about),
+                    text = stringResource(R.string.menu_about),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.TITLE_FONT_SIZE
                 )
@@ -86,7 +87,7 @@ fun AboutSettingsScreen(
                 // App logo
                 ImageAsset(
                     assetPath = "icon.png",
-                    contentDescription = context.getString(R.string.mobile_tracker_logo),
+                    contentDescription = stringResource(R.string.mobile_tracker_logo),
                     modifier = Modifier.size(Styles.LOGO_SIZE)
                 )
 
@@ -94,7 +95,7 @@ fun AboutSettingsScreen(
 
                 // App name
                 Text(
-                    text = context.getString(R.string.app_name),
+                    text = stringResource(R.string.app_name),
                     fontWeight = FontWeight.Bold,
                     fontSize = Styles.NAME_FONT_SIZE,
                     color = AppColors.TextPrimary
@@ -103,7 +104,7 @@ fun AboutSettingsScreen(
 
                 // Description text
                 Text(
-                    text = context.getString(R.string.about_description),
+                    text = stringResource(R.string.about_description),
                     fontSize = Styles.DESCRIPTION_FONT_SIZE,
                     color = AppColors.TextPrimary,
                     textAlign = TextAlign.Center,
@@ -122,7 +123,7 @@ fun AboutSettingsScreen(
                 ) {
                     // Version row
                     InfoRow(
-                        label = context.getString(R.string.version_label),
+                        label = stringResource(R.string.version_label),
                         value = appVersion
                     )
                 }
