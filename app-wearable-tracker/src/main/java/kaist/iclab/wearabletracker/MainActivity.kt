@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         permissionManager.bind(this)
 
         // Check notification permission at app start
-        PermissionHelper.checkNotificationPermission(this, permissionManager)
+        PermissionHelper.checkNotificationPermission(permissionManager)
         setContent {
             WearableTrackerTheme {
                 SettingsScreen(androidPermissionManager = permissionManager)

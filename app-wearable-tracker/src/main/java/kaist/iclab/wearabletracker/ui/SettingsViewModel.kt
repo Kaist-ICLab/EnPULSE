@@ -38,6 +38,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.time.Duration.Companion.milliseconds
 
 class SettingsViewModel(
     private val sensorController: BackgroundController,
@@ -48,7 +49,7 @@ class SettingsViewModel(
     private val applicationContext: Context,
     private val autoSyncManager: AutoSyncManager,
     private val ecgSensor: ECGSensor,
-    private val campaignSensorConfigRepository: CampaignSensorConfigRepository
+    campaignSensorConfigRepository: CampaignSensorConfigRepository
 ) : ViewModel() {
     companion object {
         private val TAG = SettingsViewModel::class.simpleName
@@ -183,7 +184,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             while (true) {
                 refreshRecordCount()
-                delay(RECORD_COUNT_REFRESH_MS)
+                delay(RECORD_COUNT_REFRESH_MS.milliseconds)
             }
         }
 
@@ -191,7 +192,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             while (true) {
                 refreshBatteryLevel()
-                delay(BATTERY_REFRESH_MS)
+                delay(BATTERY_REFRESH_MS.milliseconds)
             }
         }
 
@@ -199,7 +200,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             while (true) {
                 refreshPhoneConnectionStatus()
-                delay(PHONE_STATUS_REFRESH_MS)
+                delay(PHONE_STATUS_REFRESH_MS.milliseconds)
             }
         }
     }

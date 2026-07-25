@@ -4,6 +4,7 @@ import kaist.iclab.mobiletracker.Constants
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Interceptor for tracking active Supabase operations to show/hide loading overlay.
@@ -61,7 +62,7 @@ object SupabaseLoadingInterceptor {
     suspend fun <T> withLoading(operation: suspend () -> T): T {
         startOperation()
         return try {
-            withTimeout(Constants.Network.SUPABASE_REQUEST_TIMEOUT_MS) {
+            withTimeout(Constants.Network.SUPABASE_REQUEST_TIMEOUT_MS.milliseconds) {
                 operation()
             }
         } finally {

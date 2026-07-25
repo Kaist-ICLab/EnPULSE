@@ -99,7 +99,7 @@ class SurveySensor(
     ): SensorConfig {
         companion object {
             fun fromJson(jsonString: String): Config {
-                val surveyConfigs = Json.Default.decodeFromString<Map<String, SurveyConfig>>(jsonString)
+                val surveyConfigs = Json.decodeFromString<Map<String, SurveyConfig>>(jsonString)
                 val surveys = surveyConfigs.mapValues { (_, config) ->
                     SurveyBuilder.build(config)
                 }
@@ -136,7 +136,7 @@ class SurveySensor(
         }
 
 
-        SurveyActivity.Companion.initSurvey = { id: String, scheduleId: String? ->
+        SurveyActivity.initSurvey = { id: String, scheduleId: String? ->
             val requestedSurvey = configStorage.get().survey[id]!!
             if(scheduleId != null) scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
             requestedSurvey.initSurveyResponse()
@@ -302,7 +302,7 @@ class SurveySensor(
     private fun setupNextSurveySchedule() {
         val currentTime = System.currentTimeMillis()
         val surveys = configStorage.get().survey
-        surveys.filter { it.value.scheduleMethod !is SurveyScheduleMethod.Manual }.forEach { id, survey ->
+        surveys.filter { it.value.scheduleMethod !is SurveyScheduleMethod.Manual }.forEach { (id, survey) ->
             val nextSchedule = scheduleStorage.getNextSchedule(surveyId = id)
 
             if(nextSchedule == null) {
@@ -395,7 +395,7 @@ class SurveySensor(
 
         scheduleStorage.setResponseSubmissionTime(scheduleId, responseTime)
         val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)!!
-        val resultJson = Json.Default.decodeFromString<JsonElement>(result)
+        val resultJson = Json.decodeFromString<JsonElement>(result)
 
         listeners.forEach { it.invoke(
             Entity(

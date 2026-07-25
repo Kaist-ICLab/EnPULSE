@@ -10,7 +10,6 @@ import kaist.iclab.tracker.permission.PermissionState
 
 object PermissionHelper {
     fun checkNotificationPermission(
-        context: Context,
         permissionManager: AndroidPermissionManager
     ): PermissionCheckResult {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
@@ -34,7 +33,6 @@ object PermissionHelper {
     }
 
     fun checkPermissions(
-        context: Context,
         permissionManager: AndroidPermissionManager,
         permissions: Array<String>
     ): PermissionCheckResult {

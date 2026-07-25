@@ -16,7 +16,6 @@ import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.SurveySettingsViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.phone.SurveySensor
-import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -31,10 +30,10 @@ val viewModelModule = module {
         HomeViewModel(
             homeRepository = get(),
             backgroundController = get(),
-            syncTimestampService = get(),
+//            syncTimestampService = get(),
             userProfileRepository = get(),
-            campaignSensorRepository = get(),
-            surveyRepository = get()
+//            campaignSensorRepository = get(),
+//            surveyRepository = get()
         )
     }
 
@@ -45,12 +44,12 @@ val viewModelModule = module {
             permissionManager = get<AndroidPermissionManager>(),
             syncTimestampService = get(),
             campaignSensorRepository = get(),
-            bleHelper = get(),
-            surveyService = get(),
-            campaignRepository = get(),
-            userProfileRepository = get(),
-            microEmaConfigStorage = get(named("microEmaConfigStorage")),
-            context = androidContext()
+//            bleHelper = get(),
+//            surveyService = get(),
+//            campaignRepository = get(),
+//            userProfileRepository = get(),
+//            microEmaConfigStorage = get(named("microEmaConfigStorage")),
+            autoSyncManager = get()
         )
     }
 
@@ -62,7 +61,6 @@ val viewModelModule = module {
             surveyRepository = get<SurveyRepository>(),
             campaignSensorRepository = get(),
             backgroundController = get(),
-            context = androidContext()
         )
     }
 
@@ -74,7 +72,6 @@ val viewModelModule = module {
             timestampService = get(),
             sensors = get(qualifier = named("phoneSensors")),
             sensorUploadService = get(),
-            context = androidContext()
         )
     }
 
@@ -83,7 +80,7 @@ val viewModelModule = module {
         DataViewModel(
             dataRepository = get<DataRepository>(),
             dataExportHelper = get<DataExportHelper>(),
-            context = androidContext()
+            syncTimestampService = get()
         )
     }
 
@@ -92,7 +89,7 @@ val viewModelModule = module {
         SensorDetailViewModel(
             dataRepository = get<DataRepository>(),
             sensorId = sensorId,
-            context = androidContext()
+            csvExportHelper = get()
         )
     }
 
@@ -108,8 +105,8 @@ val viewModelModule = module {
         kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel(
             campaignRepository = get<CampaignRepository>(),
             userProfileRepository = get<UserProfileRepository>(),
-            surveyRepository = get<SurveyRepository>(),
-            campaignSensorRepository = get()
+//            surveyRepository = get<SurveyRepository>(),
+//            campaignSensorRepository = get()
         )
     }
 }

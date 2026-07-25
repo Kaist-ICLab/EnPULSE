@@ -1,9 +1,8 @@
-package kaist.iclab.tracker.trigger.engine
+package kaist.iclab.tracker.trigger
 
 import android.content.Context
 import android.os.PowerManager
 import android.util.Log
-import kaist.iclab.tracker.trigger.TriggerConstants
 import kaist.iclab.tracker.trigger.eval.ConditionEvaluator
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
 import kaist.iclab.tracker.trigger.model.TriggerActionConfig
@@ -15,13 +14,17 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
+import androidx.core.content.edit
+import kaist.iclab.tracker.trigger.engine.TriggerActionHandler
+import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kotlin.collections.iterator
 
 /**
- * Default implementation of [TriggerEngine].
+ * Default implementation of [kaist.iclab.tracker.trigger.engine.TriggerEngine].
  *
  * Observes detection state changes from [DetectionStateTracker], evaluates
  * all loaded trigger condition trees using [ConditionEvaluator], applies
- * per-action throttling, and delegates action execution to a [TriggerActionHandler].
+ * per-action throttling, and delegates action execution to a [kaist.iclab.tracker.trigger.engine.TriggerActionHandler].
  *
  * ## Logging
  * Produces detailed log output under the tag "TriggerEngine" for debugging:
@@ -86,7 +89,7 @@ class DefaultTriggerEngine(
         
         if (currentIds.isNotEmpty() && currentIds != newIds) {
             lastActionTimes.clear()
-            prefs.edit().clear().apply()
+            prefs.edit { clear() }
             Log.d(TAG, "Trigger set changed, cleared throttle state")
         }
 
@@ -162,7 +165,7 @@ class DefaultTriggerEngine(
                             try {
                                 h.onAction(trigger, action)
                                 lastActionTimes[throttleKey] = now
-                                prefs.edit().putLong(throttleKey, now).apply()
+                                prefs.edit { putLong(throttleKey, now) }
                                 executed.add(actionDesc)
                             } catch (e: Exception) {
                                 Log.e(TAG, "  Action[$index] $actionDesc: ERROR - ${e.message}", e)

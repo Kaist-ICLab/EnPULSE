@@ -7,6 +7,7 @@ import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
+import java.util.Locale
 import java.util.UUID
 
 @Entity
@@ -35,5 +36,5 @@ class AmbientLightEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun csvHeader() = "eventId,uuid,received,timestamp,accuracy,value"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$accuracy,$value"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Value" to String.format("%.1f lux", value)))
+    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Value" to String.format(Locale.getDefault(), "%.1f lux", value)))
 }

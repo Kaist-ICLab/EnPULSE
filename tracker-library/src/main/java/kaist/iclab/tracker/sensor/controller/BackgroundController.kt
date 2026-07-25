@@ -236,31 +236,31 @@ class BackgroundController(
         private fun getNotificationProperties(): NotificationProperties {
             val channelId = try {
                 serviceNotification.channelId
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 "default_channel"
             }
 
             val notificationId = try {
                 serviceNotification.notificationId
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 1
             }
 
             val icon = try {
                 serviceNotification.icon
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 android.R.drawable.ic_dialog_info
             }
 
             val title = try {
                 serviceNotification.title
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 "Service"
             }
 
             val description = try {
                 serviceNotification.description
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 "Running"
             }
 
@@ -270,11 +270,11 @@ class BackgroundController(
         private fun ensureNotificationChannel(channelId: String) {
             try {
                 val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel(channelId) == null) {
                     val channelName = try {
                         serviceNotification.channelName
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         "Default Channel"
                     }
                     val channel = NotificationChannel(
@@ -284,7 +284,7 @@ class BackgroundController(
                     )
                     notificationManager.createNotificationChannel(channel)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Channel creation failed, will use default
             }
         }
@@ -333,7 +333,7 @@ class BackgroundController(
 
             return try {
                 requiredForegroundServiceType()
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 defaultServiceType
             }
         }
@@ -341,7 +341,7 @@ class BackgroundController(
         private fun postEmergencyNotification() {
             try {
                 val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 if (notificationManager.getNotificationChannel("default_channel") == null) {
                     val channel = NotificationChannel(
                         "default_channel",
@@ -390,7 +390,7 @@ class BackgroundController(
                         0
                     }
                 this.startForeground(1, notification, serviceType)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Failed to post emergency notification
             }
         }
@@ -410,19 +410,17 @@ class BackgroundController(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else 0
 
             // Get all service types from enabled sensors, but filter to only allowed types
-            val calculatedTypes = sensors.filter {
+            val calculatedTypes = sensors.asSequence().filter {
                 it.sensorStateFlow.value.flag in listOf(
                     SensorState.FLAG.ENABLED,
                     SensorState.FLAG.RUNNING
                 )
-            }
-                .map { it.foregroundServiceTypes.toList() }
-                .flatten()
+            }.flatMap { it.foregroundServiceTypes.toList() }
                 .toSet()
-                .filter { it in allowedServiceTypes } // Only keep types declared in manifest
+                .filter { it in allowedServiceTypes }.toList() // Only keep types declared in manifest
 
             // Combine allowed types with default
-            return calculatedTypes.fold(defaultServiceType, { acc, type -> acc or type })
+            return calculatedTypes.fold(defaultServiceType) { acc, type -> acc or type }
         }
     }
 }

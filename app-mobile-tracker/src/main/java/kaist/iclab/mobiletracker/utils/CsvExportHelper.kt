@@ -14,21 +14,22 @@ import java.util.Locale
 
 /**
  * Helper class for exporting sensor data to CSV format.
+ *
+ * Holds the application [Context] (injected via DI) so callers such as ViewModels
+ * don't need to keep a Context reference of their own.
  */
-object CsvExportHelper {
-
-    private const val TAG = "CsvExportHelper"
+class CsvExportHelper(
+    private val context: Context
+) {
 
     /**
      * Export sensor records to a CSV file.
      *
-     * @param context Android context
      * @param sensorName Name of the sensor (used in filename)
      * @param records List of sensor records to export
      * @return Uri of the created file, or null if export failed
      */
     fun exportToCsv(
-        context: Context,
         sensorName: String,
         records: List<SensorRecord>
     ): Uri? {
@@ -103,18 +104,17 @@ object CsvExportHelper {
      * Export multiple sensors to separate CSV files and return as a list of URIs.
      */
     fun exportMultipleSensorsToCsv(
-        context: Context,
         sensorData: Map<String, List<SensorRecord>>
     ): List<Uri> {
         return sensorData.mapNotNull { (sensorName, records) ->
-            exportToCsv(context, sensorName, records)
+            exportToCsv(sensorName, records)
         }
     }
 
     /**
      * Share a CSV file using Android's share intent.
      */
-    fun shareCsv(context: Context, uri: Uri, sensorName: String) {
+    fun shareCsv(uri: Uri, sensorName: String) {
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
             putExtra(Intent.EXTRA_STREAM, uri)
@@ -130,11 +130,11 @@ object CsvExportHelper {
     /**
      * Share multiple CSV files.
      */
-    fun shareMultipleCsv(context: Context, uris: List<Uri>, title: String = "Sensor Data Export") {
+    fun shareMultipleCsv(uris: List<Uri>, title: String = "Sensor Data Export") {
         if (uris.isEmpty()) return
 
         if (uris.size == 1) {
-            shareCsv(context, uris.first(), title)
+            shareCsv(uris.first(), title)
             return
         }
 
@@ -160,5 +160,9 @@ object CsvExportHelper {
         } else {
             value
         }
+    }
+
+    companion object {
+        private const val TAG = "CsvExportHelper"
     }
 }

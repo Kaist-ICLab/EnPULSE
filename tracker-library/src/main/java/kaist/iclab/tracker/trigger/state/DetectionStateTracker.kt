@@ -48,7 +48,7 @@ class DetectionStateTracker {
      */
     fun updateState(sensor: String, value: String, timestamp: Long) {
         val newState = DetectionState(value, timestamp)
-        states.put(sensor, newState)
+        states[sensor] = newState
         _stateChanges.tryEmit(sensor to newState)
     }
 

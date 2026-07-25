@@ -33,9 +33,9 @@ class Survey(
     }
 
     private fun getFlatQuestionsRec(question: List<Question<*>>): List<Question<*>> {
-        return question.map { q ->
+        return question.flatMap { q ->
             listOf(q) + getFlatQuestionsRec(q.children)
-        }.flatMap { it }
+        }
     }
 
     fun getSurveyResponse(): JsonElement {

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 sealed class EcgMeasurementUiState {
     data object Checking : EcgMeasurementUiState()
@@ -98,7 +99,7 @@ class EcgViewModel(
             var remaining = MEASUREMENT_DURATION_MS
             while (remaining > 0) {
                 _uiState.value = EcgMeasurementUiState.Running(remaining)
-                delay(COUNTDOWN_TICK_MS)
+                delay(COUNTDOWN_TICK_MS.milliseconds)
                 remaining -= COUNTDOWN_TICK_MS
             }
             finishMeasurement()

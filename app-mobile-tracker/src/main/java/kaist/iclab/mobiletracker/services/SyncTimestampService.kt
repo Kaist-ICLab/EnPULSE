@@ -10,7 +10,7 @@ import kaist.iclab.mobiletracker.utils.DateTimeFormatter
  * Service for tracking and retrieving sync-related timestamps.
  * Uses SharedPreferences for persistent storage of timestamps.
  */
-class SyncTimestampService(private val context: Context) {
+class SyncTimestampService(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences(
         Constants.Prefs.SYNC_PREFS_NAME,
         Context.MODE_PRIVATE

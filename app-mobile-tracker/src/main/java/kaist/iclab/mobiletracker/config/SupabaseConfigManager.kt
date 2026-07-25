@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.config
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 
 /**
  * Manages the Supabase connection configuration, allowing users to override
@@ -69,7 +70,7 @@ class SupabaseConfigManager(context: Context) {
      * Saves custom credentials. If empty strings are passed, it clears the custom configuration.
      */
     fun saveCredentials(url: String, anonKey: String) {
-        prefs.edit().apply {
+        prefs.edit(commit = true) {
             if (url.isNotBlank()) {
                 putString(KEY_CUSTOM_URL, url.trim())
             } else {
@@ -81,13 +82,13 @@ class SupabaseConfigManager(context: Context) {
             } else {
                 remove(KEY_CUSTOM_ANON_KEY)
             }
-        }.commit()
+        }
     }
 
     /**
      * Clears any custom configurations, reverting back to the defaults.
      */
     fun clearCustomCredentials() {
-        prefs.edit().clear().commit()
+        prefs.edit(commit = true) { clear() }
     }
 }

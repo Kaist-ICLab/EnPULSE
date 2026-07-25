@@ -18,7 +18,7 @@ class NumberScaleQuestion(
 ) {
     override fun isAllowedResponse(response: Int?): Boolean {
         if (response == null) return true
-        return response >= min && response <= max
+        return response in min..max
     }
 
     override fun isEmpty(response: Int?) = (response == null)

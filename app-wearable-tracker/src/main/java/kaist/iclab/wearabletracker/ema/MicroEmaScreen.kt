@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,6 +91,7 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
+import kotlin.time.Duration.Companion.milliseconds
 
 // --- Color Palette ---
 private val AccentBlue = Color(0xFF8AB4F8)
@@ -215,7 +217,7 @@ private fun rememberActiveFocusRequester(
         if (!enabled) return@LaunchedEffect
 
         repeat(3) { attempt ->
-            delay(50L * (attempt + 1))
+            delay((50L * (attempt + 1)).milliseconds)
             try {
                 focusRequester.requestFocus()
                 return@LaunchedEffect
@@ -258,7 +260,7 @@ fun MicroEmaScreen(
     // Auto-close after completion with a brief delay
     LaunchedEffect(isComplete) {
         if (isComplete) {
-            delay(3000L) // show the "Done" state for 3s
+            delay(3000L.milliseconds) // show the "Done" state for 3s
             onFinish()
         }
     }
@@ -459,7 +461,7 @@ private fun SingleQuestionView(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            var fontSizeValue by remember { mutableStateOf(13f) }
+            var fontSizeValue by remember { mutableFloatStateOf(13f) }
             var readyToDraw by remember { mutableStateOf(false) }
 
             Text(
@@ -558,9 +560,9 @@ private fun SingleQuestionView(
             contentAlignment = Alignment.Center
         ) {
             // Show confirm for Likert, Categorical, Checkbox, and Number/Text
-            val showConfirm = when {
-                question.answerType == AnswerType.BINARY -> true
-                question.answerType == AnswerType.RADIO && question.options.size <= 2 -> true
+            val showConfirm = when (question.answerType) {
+                AnswerType.BINARY -> true
+                AnswerType.RADIO if question.options.size <= 2 -> true
                 else -> true
             }
 
@@ -790,7 +792,7 @@ private fun CheckboxInput(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         contentPadding = PaddingValues(horizontal = 10.dp)
     ) {
-        itemsIndexed(options) { index: Int, option: WatchOption ->
+        itemsIndexed(options) { _, option: WatchOption ->
             val isChecked = selectedIds.contains(option.id)
             ToggleChip(
                 checked = isChecked,

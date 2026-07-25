@@ -1,7 +1,9 @@
 package kaist.iclab.mobiletracker.helpers
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import androidx.core.content.FileProvider
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,10 +18,14 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 /**
- * Helper class to export all sensor data from the Room database to a ZIP file containing CSVs.
+ * Helper class to export all sensor data from the ObjectBox database to a ZIP file containing CSVs.
  * This provides a manual backup flow for researchers.
+ *
+ * Holds the application [Context] (injected via DI) so callers such as ViewModels don't need to
+ * keep a Context reference of their own.
  */
 class DataExportHelper(
+    private val context: Context,
     private val handlerRegistry: SensorUploadHandlerRegistry
 ) {
     companion object {
@@ -29,10 +35,9 @@ class DataExportHelper(
 
     /**
      * Export all sensor data to a ZIP file.
-     * @param context Android context
      * @return The resulting ZIP File, or null if export failed
      */
-    suspend fun exportAllData(context: Context): File? = withContext(Dispatchers.IO) {
+    suspend fun exportAllData(): File? = withContext(Dispatchers.IO) {
         val tempDir = File(context.cacheDir, "data_export_${System.currentTimeMillis()}")
         if (!tempDir.exists() && !tempDir.mkdirs()) {
             Log.e(TAG, "Failed to create temp directory for export")
@@ -110,6 +115,33 @@ class DataExportHelper(
             Log.e(TAG, "Failed to export sensor ${handler.sensorId}", e)
             false
         }
+    }
+
+    /**
+     * Share an exported ZIP file via Android's share sheet.
+     *
+     * Uses [FileProvider] to grant read access and launches a chooser. Runs from the application
+     * context (with [Intent.FLAG_ACTIVITY_NEW_TASK]) so it can be invoked outside an Activity.
+     *
+     * @throws Exception if the file cannot be shared; callers are expected to handle failures.
+     */
+    fun shareZip(file: File) {
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/zip"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "Mobile Tracker Data Export")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val chooser = Intent.createChooser(shareIntent, "Share Data Export")
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(chooser)
     }
 
     private fun createZip(files: List<File>, zipFile: File) {

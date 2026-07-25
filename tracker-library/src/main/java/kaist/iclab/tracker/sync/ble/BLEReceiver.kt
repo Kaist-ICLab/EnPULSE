@@ -96,7 +96,7 @@ internal class BLEReceiver : DataChannelReceiver() {
 
         private fun initializeLocalNodeId() {
             Wearable.getNodeClient(this).localNode.addOnSuccessListener { node ->
-                BLEReceiver.localNodeId = node.id
+                localNodeId = node.id
             }
         }
 
@@ -112,7 +112,7 @@ internal class BLEReceiver : DataChannelReceiver() {
                 // Try to parse as JSON, if it fails, wrap it as a JSON string
                 val jsonElement = try {
                     Json.parseToJsonElement(jsonString)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // If it's not valid JSON, wrap it properly as a JsonPrimitive string
                     JsonPrimitive(jsonString)
                 }
@@ -125,7 +125,7 @@ internal class BLEReceiver : DataChannelReceiver() {
             // Always get fresh callback list to ensure we have latest registered listeners
             // This fixes the race condition where service starts before listeners are registered
             val currentCallbackList = getSharedCallbackList()
-            val currentNodeId = BLEReceiver.localNodeId
+            val currentNodeId = localNodeId
 
             dataEvents.forEach { dataEvent ->
                 // Skip if this is a message from the same device
@@ -134,11 +134,7 @@ internal class BLEReceiver : DataChannelReceiver() {
                 }
 
                 val dataMapItem = DataMapItem.fromDataItem(dataEvent.dataItem)
-                val key = dataMapItem.dataMap.getString("key")
-
-                if (key == null) {
-                    return@forEach
-                }
+                val key = dataMapItem.dataMap.getString("key") ?: return@forEach
 
                 // Read from shared list (always up-to-date) instead of cached callbackList
                 val callbacks = synchronized(currentCallbackList) {

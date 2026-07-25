@@ -9,6 +9,7 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.math.roundToInt
 
 /**
  * Detects whether the watch is currently being worn on the user's wrist using the
@@ -39,7 +40,7 @@ class OffBodyDetector(context: Context) {
 
     private val listener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
-            val worn = Math.round(event.values[0]) == 1
+            val worn = event.values[0].roundToInt() == 1
             if (_isOnWrist.value != worn) {
                 Log.i(TAG, "Wrist state changed: ${if (worn) "ON-WRIST" else "OFF-WRIST"}")
             }

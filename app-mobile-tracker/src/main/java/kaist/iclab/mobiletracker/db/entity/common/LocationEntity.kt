@@ -6,6 +6,7 @@ import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
 /**
  * ObjectBox entity for location data from both phone and watch devices, differentiated by
@@ -52,9 +53,9 @@ class LocationEntity : BaseEntity, CsvSerializable, RecordSerializable {
         id = id,
         timestamp = timestamp,
         fields = mapOf(
-            "Latitude" to String.format("%.6f°", latitude),
-            "Longitude" to String.format("%.6f°", longitude),
-            "Accuracy" to String.format("%.1f m", accuracy)
+            "Latitude" to String.format(Locale.getDefault(), "%.6f°", latitude),
+            "Longitude" to String.format(Locale.getDefault(), "%.6f°", longitude),
+            "Accuracy" to String.format(Locale.getDefault(), "%.1f m", accuracy)
         )
     )
 }

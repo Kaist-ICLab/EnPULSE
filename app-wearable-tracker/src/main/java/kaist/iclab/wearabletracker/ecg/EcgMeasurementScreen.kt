@@ -43,6 +43,7 @@ import androidx.wear.tooling.preview.devices.WearDevices
 import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 private val TimerSafe = Color(0xFF81C995)
 private val TimerWarning = Color(0xFFF4B400)
@@ -74,7 +75,7 @@ fun EcgMeasurementScreen(
             is EcgMeasurementUiState.Completed,
             is EcgMeasurementUiState.Unavailable,
             is EcgMeasurementUiState.NeedsPermission -> {
-                delay(3000L)
+                delay(3000L.milliseconds)
                 onFinish()
             }
 

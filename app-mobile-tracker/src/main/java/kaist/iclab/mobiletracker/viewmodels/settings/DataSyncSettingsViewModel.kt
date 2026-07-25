@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.viewmodels.settings
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,16 +10,19 @@ import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
-import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.DateTimeFormatter
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.tracker.sensor.core.Sensor
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class DataSyncSettingsViewModel(
     private val phoneSensorRepository: PhoneSensorRepository,
@@ -28,9 +30,12 @@ class DataSyncSettingsViewModel(
     private val timestampService: SyncTimestampService,
     private val sensors: List<Sensor<*, *>>,
     private val sensorUploadService: SensorUploadService,
-    private val context: Context
 ) : ViewModel() {
     private val TAG = "ServerSyncSettingsViewModel"
+
+    // One-shot UI events (e.g. toasts), collected by the host screen.
+    private val _uiEvent = MutableSharedFlow<DataSyncSettingsUiEvent>()
+    val uiEvent: SharedFlow<DataSyncSettingsUiEvent> = _uiEvent.asSharedFlow()
 
     // Current time (updates every second)
     private val _currentTime = MutableStateFlow(DateTimeFormatter.getCurrentTimeFormatted())
@@ -52,7 +57,7 @@ class DataSyncSettingsViewModel(
         // Update current time every second
         viewModelScope.launch {
             while (true) {
-                kotlinx.coroutines.delay(1000)
+                kotlinx.coroutines.delay(1000.milliseconds)
                 _currentTime.value = DateTimeFormatter.getCurrentTimeFormatted()
             }
         }
@@ -63,7 +68,7 @@ class DataSyncSettingsViewModel(
         // Refresh timestamps periodically (every 5 seconds)
         viewModelScope.launch {
             while (true) {
-                kotlinx.coroutines.delay(5000)
+                kotlinx.coroutines.delay(5000.milliseconds)
                 loadTimestamps()
             }
         }
@@ -98,7 +103,7 @@ class DataSyncSettingsViewModel(
             timestampService.clearAllSyncTimestamps()
 
             if (phoneResult.isSuccess && watchResult.isSuccess) {
-                AppToast.show(context, R.string.toast_data_deleted)
+                _uiEvent.emit(DataSyncSettingsUiEvent.ShowToast(R.string.toast_data_deleted))
             }
 
             _isFlushing.value = false
@@ -140,24 +145,39 @@ class DataSyncSettingsViewModel(
                 // Show summary toast
                 when {
                     uploadedCount > 0 -> {
-                        AppToast.show(context, R.string.toast_upload_all_summary, uploadedCount)
+                        _uiEvent.emit(
+                            DataSyncSettingsUiEvent.ShowToast(
+                                R.string.toast_upload_all_summary,
+                                listOf(uploadedCount)
+                            )
+                        )
                     }
 
                     skippedCount == totalSensorsCount -> {
-                        AppToast.show(context, R.string.toast_no_data_to_upload)
+                        _uiEvent.emit(DataSyncSettingsUiEvent.ShowToast(R.string.toast_no_data_to_upload))
                     }
 
                     failedCount > 0 && uploadedCount == 0 -> {
-                        AppToast.show(context, R.string.toast_sensor_data_upload_error)
+                        _uiEvent.emit(DataSyncSettingsUiEvent.ShowToast(R.string.toast_sensor_data_upload_error))
                     }
                 }
 
                 loadTimestamps()
             } catch (e: Exception) {
                 Log.e(TAG, "Error uploading all sensor data: ${e.message}", e)
-                AppToast.show(context, R.string.toast_sensor_data_upload_error)
+                _uiEvent.emit(DataSyncSettingsUiEvent.ShowToast(R.string.toast_sensor_data_upload_error))
             }
         }
     }
+}
+
+/**
+ * One-shot UI events emitted by [DataSyncSettingsViewModel].
+ */
+sealed interface DataSyncSettingsUiEvent {
+    data class ShowToast(
+        val messageResId: Int,
+        val formatArgs: List<Any> = emptyList()
+    ) : DataSyncSettingsUiEvent
 }
 

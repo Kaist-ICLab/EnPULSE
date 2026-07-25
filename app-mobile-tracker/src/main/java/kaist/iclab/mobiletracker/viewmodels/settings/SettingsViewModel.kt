@@ -1,34 +1,27 @@
 package kaist.iclab.mobiletracker.viewmodels.settings
 
 import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.helpers.BLEHelper
-import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
-import kaist.iclab.mobiletracker.repository.UserProfileRepository
-import kaist.iclab.mobiletracker.services.AutoSyncService
-import kaist.iclab.mobiletracker.services.SurveyService
+import kaist.iclab.mobiletracker.services.AutoSyncManager
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
-import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -50,28 +43,32 @@ import kotlinx.coroutines.launch
  * @param permissionManager Manager for Android permission requests
  * @param syncTimestampService Service for tracking sync timestamps
  * @param campaignSensorRepository Repository for campaign-specific sensor configurations
- * @param bleHelper Helper for BLE communication
- * @param surveyService Service for fetching surveys from Supabase
- * @param campaignRepository Repository for campaign information
- * @param userProfileRepository Repository for user profile information (to get selected campaign)
- * @param microEmaConfigStorage Storage for MicroEMA sensor configuration
- * @param context Application context
+// * @param bleHelper Helper for BLE communication
+// * @param surveyService Service for fetching surveys from Supabase
+// * @param campaignRepository Repository for campaign information
+// * @param userProfileRepository Repository for user profile information (to get selected campaign)
+// * @param microEmaConfigStorage Storage for MicroEMA sensor configuration
+ * @param autoSyncManager Wrapper for starting/stopping the auto-sync service
  */
 class SettingsViewModel(
     private val backgroundController: BackgroundController,
     private val permissionManager: AndroidPermissionManager,
     private val syncTimestampService: SyncTimestampService,
     private val campaignSensorRepository: CampaignSensorRepository,
-    private val bleHelper: BLEHelper,
-    private val surveyService: SurveyService,
-    private val campaignRepository: CampaignRepository,
-    private val userProfileRepository: UserProfileRepository,
-    private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
-    private val context: Context
+//    private val bleHelper: BLEHelper,
+//    private val surveyService: SurveyService,
+//    private val campaignRepository: CampaignRepository,
+//    private val userProfileRepository: UserProfileRepository,
+//    private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
+    private val autoSyncManager: AutoSyncManager
 ) : ViewModel() {
     companion object {
         private const val TAG = "SettingsViewModel"
     }
+
+    // One-shot UI events (e.g. toasts), collected by the host screen.
+    private val _uiEvent = MutableSharedFlow<SettingsUiEvent>()
+    val uiEvent: SharedFlow<SettingsUiEvent> = _uiEvent.asSharedFlow()
 
 
     private val sensors = backgroundController.sensors
@@ -132,7 +129,9 @@ class SettingsViewModel(
         val permissionFlow = permissionManager.getPermissionFlow(sensor.permissions)
         val allGranted = permissionFlow.value.values.all { it == PermissionState.GRANTED }
         if (!allGranted) {
-            AppToast.show(context, R.string.grant_permissions_in_menu_first)
+            viewModelScope.launch {
+                _uiEvent.emit(SettingsUiEvent.ShowToast(R.string.grant_permissions_in_menu_first))
+            }
             return
         }
         
@@ -188,16 +187,6 @@ class SettingsViewModel(
     }
 
     /**
-     * Checks if notification permission is granted
-     */
-    fun hasNotificationPermission(): Boolean {
-        return ActivityCompat.checkSelfPermission(
-            context,
-            Manifest.permission.POST_NOTIFICATIONS
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-
-    /**
      * Requests notification permission and automatically starts logging when granted.
      * For Android versions below 13, starts logging directly as permission is not required.
      */
@@ -239,7 +228,7 @@ class SettingsViewModel(
             // Track when data collection starts
             syncTimestampService.updateDataCollectionStarted()
             // Start auto-sync service
-            AutoSyncService.start(context)
+            autoSyncManager.start()
         } catch (e: Exception) {
             Log.e(TAG, "Error starting logging: ${e.message}", e)
         }
@@ -254,11 +243,18 @@ class SettingsViewModel(
             // Clear data collection started timestamp
             syncTimestampService.clearDataCollectionStarted()
             // Stop auto-sync service
-            AutoSyncService.stop(context)
+            autoSyncManager.stop()
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping logging: ${e.message}", e)
         }
     }
 
+}
+
+/**
+ * One-shot UI events emitted by [SettingsViewModel].
+ */
+sealed interface SettingsUiEvent {
+    data class ShowToast(val messageResId: Int) : SettingsUiEvent
 }
 

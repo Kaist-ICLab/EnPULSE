@@ -3,13 +3,10 @@ package kaist.iclab.mobiletracker.viewmodels.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.data.sensors.ProfileData
-import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.HomeRepository
-import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchConnectionInfo
 import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
-import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +19,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * UI state for the Home screen.
@@ -81,23 +79,20 @@ data class HomeUiState(
  *
  * @param homeRepository Repository for home screen data operations
  * @param backgroundController Controller managing sensor background collection
- * @param syncTimestampService Service for tracking sync timestamps
+// * @param syncTimestampService Service for tracking sync timestamps
  * @param userProfileRepository Repository for user profile data
  */
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val backgroundController: BackgroundController,
-    private val syncTimestampService: SyncTimestampService,
+//    private val syncTimestampService: SyncTimestampService,
     private val userProfileRepository: UserProfileRepository,
-    private val campaignSensorRepository: CampaignSensorRepository,
-    private val surveyRepository: SurveyRepository,
+//    private val campaignSensorRepository: CampaignSensorRepository,
+//    private val surveyRepository: SurveyRepository,
 ) : ViewModel() {
-
-    init {
-        // Note: Full study configuration sync (profile, sensors, surveys) is handled by AuthViewModel 
-        // at startup/login and by AccountSettingsViewModel for manual reloads.
-        // HomeViewModel purely observes the resulting states.
-    }
+    // Note: Full study configuration sync (profile, sensors, surveys) is handled by AuthViewModel
+    // at startup/login and by AccountSettingsViewModel for manual reloads.
+    // HomeViewModel purely observes the resulting states.
 
     private fun getStartOfDay(): Long {
         return Calendar.getInstance().apply {
@@ -113,7 +108,7 @@ class HomeViewModel(
     private val startOfDayFlow = flow {
         while (true) {
             emit(getStartOfDay())
-            kotlinx.coroutines.delay(60000) // Refresh every minute
+            kotlinx.coroutines.delay(60000.milliseconds) // Refresh every minute
         }
     }.distinctUntilChanged()
 
