@@ -47,6 +47,7 @@ object AppColors {
     val IconSecurity = Color(0xFFF44336) // Red
     val IconPhone = Color(0xFF009688)    // Teal
     val IconInfo = Color(0xFF607D8B)     // Blue Grey
+    val IconWebApp = Color(0xFF7C4DFF)   // Deep Purple accent
 
     // Sensor Colors
     val ColorLocation = Color(0xFF4285F4)

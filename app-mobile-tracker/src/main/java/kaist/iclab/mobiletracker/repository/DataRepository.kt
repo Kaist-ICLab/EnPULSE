@@ -1,5 +1,7 @@
 package kaist.iclab.mobiletracker.repository
 
+import kotlinx.serialization.Serializable
+
 /**
  * Data class representing a sensor's summary information for the Data screen.
  */
@@ -29,6 +31,7 @@ data class SensorDetailInfo(
 /**
  * Data class representing a single sensor record for display.
  */
+@Serializable
 data class SensorRecord(
     val id: Long,
     val timestamp: Long,

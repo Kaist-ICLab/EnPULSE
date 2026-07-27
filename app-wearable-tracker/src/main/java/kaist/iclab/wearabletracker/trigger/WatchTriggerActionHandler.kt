@@ -16,6 +16,8 @@ import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kaist.iclab.wearabletracker.ema.WatchSurveyActivity
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Watch-specific implementation of [TriggerActionHandler].
@@ -71,10 +73,18 @@ class WatchTriggerActionHandler(
         }
     }
 
-    private fun handleBroadcast(
+    private suspend fun handleBroadcast(
         trigger: ParsedCampaignTrigger,
         action: TriggerActionConfig.Broadcast
     ) {
+        // The watch is the only place trigger conditions are evaluated (Step 0 of the EnPULSE
+        // WebView platform plan) — a local sendBroadcast() for this action would have no listener
+        // on the watch, so forward it to the phone over BLE instead.
+        if (action.action == Constants.Trigger.ACTION_OPEN_WEBAPP) {
+            forwardWebAppTriggerToPhone(trigger, action)
+            return
+        }
+
         Log.d(TAG, "Triggering Broadcast: action=${action.action}, trigger=${trigger.name}")
         try {
             val intent = Intent(action.action)
@@ -100,6 +110,34 @@ class WatchTriggerActionHandler(
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send broadcast for trigger ${trigger.name}: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Forwards an [Constants.Trigger.ACTION_OPEN_WEBAPP] broadcast's `survey_id`/`webapp_id`
+     * extras to the phone, where [kaist.iclab.mobiletracker.helpers.BLEHelper] picks it up and
+     * calls into `WebAppTriggerHandler.launch(...)`.
+     */
+    private suspend fun forwardWebAppTriggerToPhone(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Broadcast
+    ) {
+        val surveyId = action.extras.firstOrNull { it.key == "survey_id" }?.value
+        val webAppId = action.extras.firstOrNull { it.key == "webapp_id" }?.value
+        if (surveyId == null || webAppId == null) {
+            Log.e(TAG, "OPEN_WEBAPP broadcast missing survey_id/webapp_id extras (trigger: ${trigger.name})")
+            return
+        }
+
+        try {
+            val payload = buildJsonObject {
+                put("survey_id", surveyId)
+                put("webapp_id", webAppId)
+            }.toString()
+            bleChannel.send(Constants.BLE.KEY_WEBAPP_TRIGGER, payload)
+            Log.d(TAG, "Forwarded webapp trigger to phone: $payload")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to forward webapp trigger for trigger ${trigger.name}: ${e.message}", e)
         }
     }
 

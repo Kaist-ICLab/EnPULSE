@@ -2028,10 +2028,46 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "31:900034558956527981",
+      "lastPropertyId": "5:9080806713546086525",
+      "name": "WebAppStorageEntity",
+      "properties": [
+        {
+          "id": "1:5345812480564511116",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6874809433409518357",
+          "name": "storageKey",
+          "indexId": "89:7283958651965354149",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:3485269624104430166",
+          "name": "webAppId",
+          "type": 9
+        },
+        {
+          "id": "4:4993108071287026453",
+          "name": "key",
+          "type": 9
+        },
+        {
+          "id": "5:9080806713546086525",
+          "name": "valueJson",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "30:4821649951120164626",
-  "lastIndexId": "88:7952405308212291379",
+  "lastEntityId": "31:900034558956527981",
+  "lastIndexId": "89:7283958651965354149",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

@@ -81,6 +81,7 @@ object AppConfig {
         const val PHONE_EMA_TRIGGER = "phone_ema_trigger"
         const val DETECTION_STATE_UPDATE = "detection_state_update"
         const val ACTIVE_SENSOR_CONFIG = "active_sensor_config"
+        const val WEBAPP_TRIGGER = "webapp_trigger"
     }
 
     /**

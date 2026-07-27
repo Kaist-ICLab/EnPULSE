@@ -32,6 +32,7 @@ import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.Pe
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PhoneSensorConfigSettings.PhoneSensorConfigSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.ServerConnectionSettings.ServerConnectionScreen
 import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.WebAppsScreen.WebAppsScreen
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthUiEvent
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
@@ -210,6 +211,12 @@ fun NavGraph(
             DataScreen(navController = navController)
         }
 
+        composable(route = Screen.WebApps.route) {
+            BackHandler {
+                activity?.finish()
+            }
+            WebAppsScreen()
+        }
 
         composable(route = Screen.Setting.route) {
             BackHandler {
@@ -222,8 +229,6 @@ fun NavGraph(
         composable(route = Screen.PhoneSensor.route) {
             PhoneSensorConfigSettingsScreen(navController = navController)
         }
-
-
 
         composable(route = Screen.Language.route) {
             LanguageScreen(

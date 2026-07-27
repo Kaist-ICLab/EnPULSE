@@ -18,6 +18,21 @@ object Constants {
         const val KEY_PHONE_EMA_TRIGGER = "phone_ema_trigger"
         const val KEY_DETECTION_STATE_UPDATE = "detection_state_update"
         const val KEY_ACTIVE_SENSOR_CONFIG = "active_sensor_config"
+        const val KEY_WEBAPP_TRIGGER = "webapp_trigger"
+    }
+
+    /**
+     * Trigger action identifiers recognized by [kaist.iclab.wearabletracker.trigger.WatchTriggerActionHandler]
+     * beyond the generic [kaist.iclab.tracker.trigger.model.TriggerActionConfig.Broadcast] passthrough.
+     */
+    object Trigger {
+        /**
+         * Broadcast action id used by the Dashboard's "open webapp" trigger preset. The watch is
+         * the only place trigger conditions are evaluated (see Step 0 of the EnPULSE WebView
+         * platform plan), so a local `context.sendBroadcast()` here would have no listener — this
+         * action is recognized and forwarded to the phone over BLE instead.
+         */
+        const val ACTION_OPEN_WEBAPP = "kaist.iclab.mobiletracker.OPEN_WEBAPP"
     }
 
     /**

@@ -219,4 +219,43 @@ object NotificationHelper {
 
         showNotification(context, notificationId, notification)
     }
+
+    /**
+     * Show a notification for a webapp trigger (JIT). Same shape as [showSurveyTriggerNotification]
+     * but keyed by webAppId rather than surveyId, since a webapp trigger config is not itself a
+     * [kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig].
+     */
+    fun showWebAppTriggerNotification(
+        context: Context,
+        webAppId: String,
+        title: String,
+        text: String,
+        icon: Int,
+        pendingIntent: PendingIntent,
+        notificationId: Int
+    ) {
+        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_webapp_$webAppId"
+        ensureNotificationChannel(
+            context,
+            channelId,
+            Constants.Notification.CHANNEL_NAME_SURVEY_TRIGGER,
+            NotificationManager.IMPORTANCE_HIGH
+        )
+
+        val notification = buildNotification(
+            context = context,
+            channelId = channelId,
+            title = title,
+            text = text,
+            smallIcon = icon,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            ongoing = true,
+            pendingIntent = pendingIntent
+        ).apply {
+            setCategory(NotificationCompat.CATEGORY_ALARM)
+            setFullScreenIntent(pendingIntent, true)
+        }.build()
+
+        showNotification(context, notificationId, notification)
+    }
 }

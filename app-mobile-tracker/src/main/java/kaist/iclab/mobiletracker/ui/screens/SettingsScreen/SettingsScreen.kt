@@ -137,7 +137,6 @@ fun SettingsScreen(
                             onClick = { navController.navigate(Screen.PhoneSensor.route) },
                             iconTint = AppColors.IconPhone
                         )
-
                         AppMenuItem(
                             title = context.getString(R.string.menu_about),
                             icon = Icons.Filled.Info,

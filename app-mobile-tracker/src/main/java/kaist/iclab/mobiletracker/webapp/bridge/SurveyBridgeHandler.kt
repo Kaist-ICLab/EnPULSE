@@ -1,0 +1,67 @@
+package kaist.iclab.mobiletracker.webapp.bridge
+
+import android.content.Context
+import android.content.Intent
+import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
+import kaist.iclab.tracker.sensor.phone.SurveySensor
+import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
+import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+/**
+ * Handles the `getSurvey` / `setSurveyResponse` bridge actions.
+ *
+ * Reuses the same [SurveyConfig] the phone already persists from Supabase (design principle #3:
+ * no new storage/serialization pipeline needed) and the same [SurveyScheduleStorage] instance
+ * injected into [kaist.iclab.tracker.sensor.phone.SurveySensor], so `schedule_id` lookups agree.
+ */
+class SurveyBridgeHandler(
+    private val context: Context,
+    private val surveyConfigStorage: CouchbaseSurveyConfigStorage,
+    private val scheduleStorage: SurveyScheduleStorage
+) {
+    fun getSurvey(request: BridgeRequest): BridgeResponse {
+        val params = request.payload.jsonObject
+        val surveyId = params["survey_id"]?.jsonPrimitive?.content
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_id")
+        val scheduleId = params["schedule_id"]?.jsonPrimitive?.contentOrNull
+
+        // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
+        val survey = surveyConfigStorage.get().configs.firstOrNull {
+            it.id.toString() == surveyId && it.deviceType == 0
+        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey_id: $surveyId")
+
+        if (scheduleId != null) {
+            scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
+        }
+
+        return BridgeResponse(
+            request.requestId, "success",
+            data = Json.encodeToJsonElement(SurveyConfig.serializer(), survey)
+        )
+    }
+
+    fun setSurveyResponse(request: BridgeRequest): BridgeResponse {
+        val params = request.payload.jsonObject
+        val scheduleId = params["schedule_id"]?.jsonPrimitive?.content
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing schedule_id")
+        val answers = params["answers"]
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing answers")
+
+        // Same broadcast SurveyActivity.pushSurveyResult() sends — the existing
+        // SurveySensor.surveyResultCallback absorbs it with no new storage logic.
+        val intent = Intent(SurveySensor.RESULT_ACTION_NAME).apply {
+            putExtra("result", Json.encodeToString(answers))
+            putExtra("responseTime", System.currentTimeMillis())
+            putExtra("scheduleId", scheduleId)
+        }
+        context.sendBroadcast(intent)
+
+        return BridgeResponse(request.requestId, "success")
+    }
+}
