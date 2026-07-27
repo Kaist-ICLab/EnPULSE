@@ -30,6 +30,8 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
     private val storageBridgeHandler by inject<StorageBridgeHandler>()
     private val appScope by inject<AppCoroutineScope>()
 
+    private lateinit var webView: WebView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -43,8 +45,9 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
             return
         }
 
-        val webView = WebView(this).apply {
+        webView = WebView(this).apply {
             settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
             webViewClient = RestrictedWebViewClient(webApp.allowedOrigin)
         }
         setContentView(webView)
@@ -69,6 +72,27 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
         webView.loadUrl(url)
     }
 
+    override fun onPause() {
+        super.onPause()
+        if (::webView.isInitialized) {
+            webView.onPause()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::webView.isInitialized) {
+            webView.onResume()
+        }
+    }
+
+    override fun onDestroy() {
+        if (::webView.isInitialized) {
+            webView.destroy()
+        }
+        super.onDestroy()
+    }
+
     companion object {
         private val TAG = WebViewSurveyActivity::class.simpleName
         const val EXTRA_URL = "url"
@@ -86,11 +110,29 @@ private class RestrictedWebViewClient(allowedOrigin: String) : WebViewClient() {
     private val allowedHost: String? = Uri.parse(allowedOrigin).host
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+        val scheme = request.url.scheme
+        if (scheme != "http" && scheme != "https") {
+            Log.w(TAG, "Blocked non-http(s) scheme navigation: ${request.url}")
+            return true
+        }
+
         val host = request.url.host
         if (host != null && host == allowedHost) return false
 
         Log.w(TAG, "Blocked navigation to disallowed origin: ${request.url}")
         return true
+    }
+
+    override fun onReceivedError(
+        view: WebView,
+        request: WebResourceRequest,
+        error: android.webkit.WebResourceError
+    ) {
+        if (request.isForMainFrame) {
+            val htmlData = "<html><body style=\"display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;font-family:sans-serif;\"><h2>Failed to load</h2><p>Please check your connection and try again.</p></body></html>"
+            view.loadData(htmlData, "text/html", "UTF-8")
+        }
+        super.onReceivedError(view, request, error)
     }
 
     companion object {
