@@ -3,12 +3,16 @@ package kaist.iclab.mobiletracker.webapp
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Entry point shared by both trigger sources (BLE-forwarded from the watch, or a local phone
@@ -22,6 +26,67 @@ class WebAppTriggerHandler(
     private val scheduleStorage: SurveyScheduleStorage,
     private val webAppRegistry: WebAppRegistry
 ) {
+    /**
+     * Parses and processes incoming WEBAPP_TRIGGER payload forwarded from the watch.
+     */
+    fun handleWebAppTriggerPayload(json: JsonElement) {
+        try {
+            val obj = json.jsonObject
+            val surveyId = obj["survey_id"]?.jsonPrimitive?.content
+            val webAppId = obj["webapp_id"]?.jsonPrimitive?.content
+            if (surveyId == null || webAppId == null) {
+                Log.e(TAG, "Received WEBAPP_TRIGGER with missing survey_id/webapp_id: $json")
+                return
+            }
+            Log.d(TAG, "Handling WEBAPP_TRIGGER for surveyId=$surveyId webAppId=$webAppId")
+            launch(surveyId, webAppId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse WEBAPP_TRIGGER payload: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Parses and processes incoming NOTIFICATION_TRIGGER payload forwarded from the watch.
+     */
+    fun handleNotificationTriggerPayload(json: JsonElement) {
+        try {
+            val obj = json.jsonObject
+            val title = obj["title"]?.jsonPrimitive?.content ?: ""
+            val body = obj["body"]?.jsonPrimitive?.content ?: ""
+            val url = obj["url"]?.jsonPrimitive?.content
+            if (url == null) {
+                Log.e(TAG, "Received NOTIFICATION_TRIGGER with missing url: $json")
+                return
+            }
+            Log.d(TAG, "Handling NOTIFICATION_TRIGGER for url=$url")
+            launchNotification(title, body, url)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse NOTIFICATION_TRIGGER payload: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Parses and processes incoming BROADCAST_TRIGGER payload forwarded from the watch.
+     */
+    fun handleBroadcastTriggerPayload(json: JsonElement) {
+        try {
+            val obj = json.jsonObject
+            val action = obj["action"]?.jsonPrimitive?.content
+            if (action == null) {
+                Log.e(TAG, "Received BROADCAST_TRIGGER with missing action: $json")
+                return
+            }
+            Log.d(TAG, "Handling BROADCAST_TRIGGER action=$action")
+            val intent = Intent(action)
+            obj["extras"]?.jsonObject?.forEach { (key, value) ->
+                intent.putExtra(key, value.jsonPrimitive.content)
+            }
+            context.sendBroadcast(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send broadcast/parse payload for BROADCAST_TRIGGER: ${e.message}", e)
+        }
+    }
+
     fun launch(surveyId: String, webAppId: String) {
         val webApp = webAppRegistry.get(webAppId)
         if (webApp == null) {
@@ -39,7 +104,7 @@ class WebAppTriggerHandler(
 
         val intent = Intent(context, WebAppActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            data = android.net.Uri.parse("webapp://$webAppId")
+            data = Uri.parse("webapp://$webAppId")
             putExtra(WebAppActivity.EXTRA_URL, fullUrl)
             putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webAppId)
         }
@@ -71,7 +136,7 @@ class WebAppTriggerHandler(
     }
 
     fun launchNotification(title: String, body: String, url: String) {
-        val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val pendingIntent = PendingIntent.getActivity(
