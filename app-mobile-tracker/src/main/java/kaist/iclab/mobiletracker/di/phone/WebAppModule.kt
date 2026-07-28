@@ -3,7 +3,8 @@ package kaist.iclab.mobiletracker.di.phone
 import kaist.iclab.mobiletracker.BuildConfig
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
-import kaist.iclab.mobiletracker.webapp.StaticWebAppRegistry
+import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
+import kaist.iclab.mobiletracker.webapp.PersistentWebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
@@ -22,17 +23,12 @@ import org.koin.dsl.module
  * registered in [surveySensorModule] rather than creating a second one.
  */
 val webAppModule = module {
-    // Phase 1 stub — replace with a Supabase-backed registry in Phase 2 (see campaign_webapp table
-    // in the platform plan). Populate this map to register a webapp for local testing.
+    // Phase 2 implementation — Supabase-backed registry synced from `campaign_webapp` table.
     single<WebAppRegistry> {
-        StaticWebAppRegistry(configs = mapOf(
-            "test" to WebAppConfig(
-                id = "test",
-                url = BuildConfig.WEBAPP_DEV_URL,
-                allowedOrigin = BuildConfig.WEBAPP_DEV_URL.trimEnd('/')
-            )
-        ))
+        PersistentWebAppRegistry(storage = get())
     }
+
+    single { CouchbaseWebAppConfigStorage(couchbase = get()) }
 
     single { CouchbaseWebAppStorage(couchbase = get()) }
 

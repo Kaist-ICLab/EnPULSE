@@ -16,6 +16,8 @@ import kaist.iclab.mobiletracker.repository.TriggerRepository
 import kaist.iclab.mobiletracker.repository.TriggerRepositoryImpl
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepositoryImpl
+import kaist.iclab.mobiletracker.repository.WebAppRepository
+import kaist.iclab.mobiletracker.repository.WebAppRepositoryImpl
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
@@ -97,6 +99,14 @@ val repositoryModule = module {
         )
     }
 
+    // WebAppRepository for dynamic webapps
+    single<WebAppRepository> {
+        WebAppRepositoryImpl(
+            webAppService = get(),
+            persistentStorage = get()
+        )
+    }
+
     // UserProfileRepository for user profile management
     single {
         UserProfileStorage(
@@ -112,6 +122,7 @@ val repositoryModule = module {
             campaignSensorRepository = get(),
             surveyRepository = get(),
             triggerRepository = get(),
+            webAppRepository = get(),
             triggerConfigPusher = get(),
             backgroundController = get(),
             bleHelper = get()

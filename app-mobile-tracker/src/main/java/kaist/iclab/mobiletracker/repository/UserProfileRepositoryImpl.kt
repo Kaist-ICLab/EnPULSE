@@ -24,6 +24,7 @@ class UserProfileRepositoryImpl(
     private val campaignSensorRepository: CampaignSensorRepository,
     private val surveyRepository: SurveyRepository,
     private val triggerRepository: TriggerRepository,
+    private val webAppRepository: WebAppRepository,
     private val triggerConfigPusher: TriggerConfigPusher,
     private val backgroundController: BackgroundController,
     private val bleHelper: BLEHelper
@@ -54,6 +55,7 @@ class UserProfileRepositoryImpl(
         campaignSensorRepository.clearCache()
         surveyRepository.clearSurveys()
         triggerRepository.clearTriggers()
+        webAppRepository.clearWebApps()
     }
 
     override suspend fun refreshProfile(): Result<ProfileData?> {
@@ -99,6 +101,7 @@ class UserProfileRepositoryImpl(
             campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
             surveyRepository.fetchAndPersistSurveys(campaignId)
             triggerRepository.fetchAndPersistTriggers(campaignId)
+            webAppRepository.fetchAndPersistWebApps(campaignId)
 
             // 3. Push trigger config to watch via BLE
             val triggers = triggerRepository.triggersFlow.value.triggers
@@ -112,6 +115,7 @@ class UserProfileRepositoryImpl(
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()
             triggerRepository.clearTriggers()
+            webAppRepository.clearWebApps()
         }
 
         // 3. Publish the profile last, so observers (e.g. navigation reacting to

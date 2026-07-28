@@ -1,9 +1,22 @@
 package kaist.iclab.mobiletracker.webapp
+import kaist.iclab.mobiletracker.data.campaign.WebAppConfigList
+import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.serialization.Serializable
+
 /**
  * Metadata for a registered EnPULSE webapp.
  */
+@Serializable
 data class WebAppConfig(
     val id: String,
+    val name: String,
     val url: String,
 
     /** Origin (scheme + host [+ port]) this webapp is allowed to load and bridge from. */
@@ -12,21 +25,30 @@ data class WebAppConfig(
 
 /**
  * Lookup for registered webapps, keyed by the `webapp_id` used in trigger configs.
- *
- * Phase 1 stub; Phase 2 replaces [StaticWebAppRegistry] with a Supabase-backed implementation
- * (the `campaign_webapp` table), synced the same way [kaist.iclab.mobiletracker.repository.SurveyRepositoryImpl]
- * syncs surveys.
  */
 interface WebAppRegistry {
     fun get(webAppId: String): WebAppConfig?
     fun list(): List<WebAppConfig>
+
+    /** Observable list of all registered webapps. Emits whenever storage changes. */
+    val webAppsFlow: StateFlow<List<WebAppConfig>>
 }
 
 /**
- * Phase 1 implementation — a hardcoded, in-memory registry. Populate [configs] with the webapps
- * available to this build until the Phase 2 Supabase-backed registry replaces it.
+ * Phase 2 implementation — a Supabase-backed registry that reads from local Couchbase storage
+ * synced from the `campaign_webapp` table.
  */
-class StaticWebAppRegistry(private val configs: Map<String, WebAppConfig>) : WebAppRegistry {
-    override fun get(webAppId: String) = configs[webAppId]
-    override fun list() = configs.values.toList()
+class PersistentWebAppRegistry(private val storage: CouchbaseWebAppConfigStorage) : WebAppRegistry {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    override fun get(webAppId: String) = storage.get().configs.find { it.id == webAppId }
+    override fun list() = storage.get().configs
+
+    override val webAppsFlow: StateFlow<List<WebAppConfig>> = storage.stateFlow
+        .map { it.configs }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = storage.get().configs
+        )
 }

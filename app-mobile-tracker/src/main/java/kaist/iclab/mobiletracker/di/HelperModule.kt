@@ -9,6 +9,7 @@ import kaist.iclab.mobiletracker.services.ProfileService
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.TriggerConfigPusher
 import kaist.iclab.mobiletracker.services.TriggerService
+import kaist.iclab.mobiletracker.services.WebAppService
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -49,6 +50,13 @@ val helperModule = module {
     // TriggerService - injects SupabaseHelper
     single {
         TriggerService(
+            supabaseHelper = get()
+        )
+    }
+
+    // WebAppService - injects SupabaseHelper
+    single {
+        WebAppService(
             supabaseHelper = get()
         )
     }
