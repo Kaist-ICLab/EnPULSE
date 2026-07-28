@@ -258,4 +258,37 @@ object NotificationHelper {
 
         showNotification(context, notificationId, notification)
     }
+
+    /**
+     * Show a generic high-priority notification with a PendingIntent.
+     */
+    fun showGenericTriggerNotification(
+        context: Context,
+        title: String,
+        text: String,
+        pendingIntent: PendingIntent,
+        notificationId: Int
+    ) {
+        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_generic_${notificationId}"
+        ensureNotificationChannel(
+            context,
+            channelId,
+            Constants.Notification.CHANNEL_NAME_SURVEY_TRIGGER,
+            NotificationManager.IMPORTANCE_HIGH
+        )
+
+        val notification = buildNotification(
+            context = context,
+            channelId = channelId,
+            title = title,
+            text = text,
+            priority = NotificationCompat.PRIORITY_HIGH,
+            ongoing = false,
+            pendingIntent = pendingIntent
+        ).apply {
+            setCategory(NotificationCompat.CATEGORY_ALARM)
+        }.build()
+
+        showNotification(context, notificationId, notification)
+    }
 }

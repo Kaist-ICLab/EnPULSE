@@ -70,6 +70,7 @@ class WatchTriggerActionHandler(
             is TriggerActionConfig.Ema -> handleEma(trigger, action)
 
             is TriggerActionConfig.Broadcast -> handleBroadcast(trigger, action)
+            is TriggerActionConfig.Notification -> handleNotification(trigger, action)
         }
     }
 
@@ -77,39 +78,31 @@ class WatchTriggerActionHandler(
         trigger: ParsedCampaignTrigger,
         action: TriggerActionConfig.Broadcast
     ) {
-        // The watch is the only place trigger conditions are evaluated (Step 0 of the EnPULSE
-        // WebView platform plan) — a local sendBroadcast() for this action would have no listener
-        // on the watch, so forward it to the phone over BLE instead.
+        // Trigger conditions are only evaluated on the watch, but broadcast intents are only
+        // meaningful on the phone (no receiver apps run on Wear OS). Forward the broadcast
+        // payload to the phone via BLE so it can call context.sendBroadcast() there.
+        //
+        // The OPEN_WEBAPP action is still forwarded via the dedicated WEBAPP_TRIGGER key for
+        // backwards compatibility with the phone-side BLEHelper handler.
         if (action.action == Constants.Trigger.ACTION_OPEN_WEBAPP) {
             forwardWebAppTriggerToPhone(trigger, action)
             return
         }
 
-        Log.d(TAG, "Triggering Broadcast: action=${action.action}, trigger=${trigger.name}")
+        Log.d(TAG, "Forwarding broadcast to phone via BLE: action=${action.action}")
         try {
-            val intent = Intent(action.action)
-
-            // Note: If you want to make this an Explicit Intent in the future (targeting a specific app),
-            // you can add a 'packageName' field to the Supabase payload and call intent.setPackage(packageName).
-
-            // Attach all configured extras based on their specified type
-            for (extra in action.extras) {
-                when (extra.valueType.lowercase()) {
-                    "int", "integer" -> intent.putExtra(extra.key, extra.value.toIntOrNull() ?: 0)
-                    "long" -> intent.putExtra(extra.key, extra.value.toLongOrNull() ?: 0L)
-                    "float" -> intent.putExtra(extra.key, extra.value.toFloatOrNull() ?: 0f)
-                    "double" -> intent.putExtra(extra.key, extra.value.toDoubleOrNull() ?: 0.0)
-                    "bool", "boolean" -> intent.putExtra(extra.key, extra.value.toBoolean())
-                    else -> intent.putExtra(extra.key, extra.value) // Default to String
+            val extrasJson = buildJsonObject {
+                action.extras.forEach { extra ->
+                    put(extra.key, extra.value)
                 }
             }
-
-            // Send the broadcast to the Android system
-            context.sendBroadcast(intent)
-            Log.d(TAG, "Broadcast sent successfully: ${action.action}")
-
+            val payload = buildJsonObject {
+                put("action", action.action)
+                put("extras", extrasJson)
+            }.toString()
+            bleChannel.send(Constants.BLE.KEY_BROADCAST_TRIGGER, payload)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send broadcast for trigger ${trigger.name}: ${e.message}", e)
+            Log.e(TAG, "Failed to forward broadcast trigger: ${e.message}", e)
         }
     }
 
@@ -138,6 +131,24 @@ class WatchTriggerActionHandler(
             Log.d(TAG, "Forwarded webapp trigger to phone: $payload")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to forward webapp trigger for trigger ${trigger.name}: ${e.message}", e)
+        }
+    }
+
+    private suspend fun handleNotification(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Notification
+    ) {
+        Log.d(TAG, "Triggering Notification: title=${action.title}, url=${action.url}, trigger=${trigger.name}")
+        try {
+            val payload = buildJsonObject {
+                put("title", action.title)
+                put("body", action.body)
+                put("url", action.url)
+            }.toString()
+            bleChannel.send(Constants.BLE.KEY_NOTIFICATION_TRIGGER, payload)
+            Log.d(TAG, "Forwarded notification trigger to phone: $payload")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to forward notification trigger: ${e.message}", e)
         }
     }
 

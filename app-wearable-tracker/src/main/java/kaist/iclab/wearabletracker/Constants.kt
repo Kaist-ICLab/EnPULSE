@@ -19,6 +19,8 @@ object Constants {
         const val KEY_DETECTION_STATE_UPDATE = "detection_state_update"
         const val KEY_ACTIVE_SENSOR_CONFIG = "active_sensor_config"
         const val KEY_WEBAPP_TRIGGER = "webapp_trigger"
+        const val KEY_NOTIFICATION_TRIGGER = "notification_trigger"
+        const val KEY_BROADCAST_TRIGGER = "broadcast_trigger"
     }
 
     /**

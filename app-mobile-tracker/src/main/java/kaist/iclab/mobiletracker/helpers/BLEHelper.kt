@@ -131,6 +131,41 @@ class BLEHelper(
             Log.d(AppConfig.LogTags.PHONE_BLE, "Received WEBAPP_TRIGGER for surveyId=$surveyId webAppId=$webAppId")
             webAppTriggerHandler.launch(surveyId, webAppId)
         }
+
+        // Listen for generic notification triggers forwarded from the watch
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.NOTIFICATION_TRIGGER)) { _, json ->
+            val obj = json.jsonObject
+            val title = obj["title"]?.jsonPrimitive?.content ?: ""
+            val body = obj["body"]?.jsonPrimitive?.content ?: ""
+            val url = obj["url"]?.jsonPrimitive?.content
+            if (url == null) {
+                Log.e(AppConfig.LogTags.PHONE_BLE, "Received NOTIFICATION_TRIGGER with missing url: $json")
+                return@addOnReceivedListener
+            }
+            Log.d(AppConfig.LogTags.PHONE_BLE, "Received NOTIFICATION_TRIGGER for url=$url")
+            webAppTriggerHandler.launchNotification(title, body, url)
+        }
+
+        // Listen for generic broadcast triggers forwarded from the watch.
+        // The watch sends the broadcast action string + a flat extras object (all values as Strings).
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.BROADCAST_TRIGGER)) { _, json ->
+            val obj = json.jsonObject
+            val action = obj["action"]?.jsonPrimitive?.content
+            if (action == null) {
+                Log.e(AppConfig.LogTags.PHONE_BLE, "Received BROADCAST_TRIGGER with missing action: $json")
+                return@addOnReceivedListener
+            }
+            Log.d(AppConfig.LogTags.PHONE_BLE, "Received BROADCAST_TRIGGER action=$action")
+            try {
+                val intent = android.content.Intent(action)
+                obj["extras"]?.jsonObject?.forEach { (key, value) ->
+                    intent.putExtra(key, value.jsonPrimitive.content)
+                }
+                context.sendBroadcast(intent)
+            } catch (e: Exception) {
+                Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to send broadcast for action=$action: ${e.message}", e)
+            }
+        }
     }
 
     /**

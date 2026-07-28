@@ -74,6 +74,16 @@ sealed class TriggerActionConfig {
         val extras: List<BroadcastExtra>,
         override val minIntervalMillis: Long = 0
     ) : TriggerActionConfig()
+
+    /**
+     * Show a local notification.
+     */
+    data class Notification(
+        val title: String,
+        val body: String,
+        val url: String,
+        override val minIntervalMillis: Long = 0
+    ) : TriggerActionConfig()
 }
 
 /**
@@ -142,6 +152,16 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
                 minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
             )
 
+            "notification" -> TriggerActionConfig.Notification(
+                title = obj["title"]?.jsonPrimitive?.content
+                    ?: throw SerializationException("'notification' requires 'title'"),
+                body = obj["body"]?.jsonPrimitive?.content
+                    ?: throw SerializationException("'notification' requires 'body'"),
+                url = obj["url"]?.jsonPrimitive?.content
+                    ?: throw SerializationException("'notification' requires 'url'"),
+                minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
+            )
+
             else -> throw SerializationException("Unknown action kind: '$kind'")
         }
     }
@@ -172,6 +192,14 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
                         })
                     }
                 })
+                put("minIntervalMillis", action.minIntervalMillis)
+            }
+
+            is TriggerActionConfig.Notification -> buildJsonObject {
+                put("kind", "notification")
+                put("title", action.title)
+                put("body", action.body)
+                put("url", action.url)
                 put("minIntervalMillis", action.minIntervalMillis)
             }
         }

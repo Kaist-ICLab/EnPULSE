@@ -82,6 +82,8 @@ object AppConfig {
         const val DETECTION_STATE_UPDATE = "detection_state_update"
         const val ACTIVE_SENSOR_CONFIG = "active_sensor_config"
         const val WEBAPP_TRIGGER = "webapp_trigger"
+        const val NOTIFICATION_TRIGGER = "notification_trigger"
+        const val BROADCAST_TRIGGER = "broadcast_trigger"
     }
 
     /**
