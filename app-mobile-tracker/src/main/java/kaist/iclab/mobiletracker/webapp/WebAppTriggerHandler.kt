@@ -27,9 +27,30 @@ class WebAppTriggerHandler(
     private val webAppRegistry: WebAppRegistry
 ) {
     /**
+     * Helper to check if a forwarded BLE trigger has expired (stale).
+     * Prevents execution of outdated triggers queued while devices were disconnected.
+     */
+    private fun isStale(json: JsonElement, kind: String): Boolean {
+        try {
+            val timestamp = json.jsonObject["timestamp"]?.jsonPrimitive?.content?.toLongOrNull()
+            if (timestamp != null) {
+                val elapsed = System.currentTimeMillis() - timestamp
+                if (elapsed > Constants.Trigger.STALE_THRESHOLD_MS) {
+                    Log.w(TAG, "Discarded stale BLE $kind trigger: elapsed ${elapsed / 1000}s > ${Constants.Trigger.STALE_THRESHOLD_MS / 1000}s limit")
+                    return true
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking trigger staleness", e)
+        }
+        return false
+    }
+
+    /**
      * Parses and processes incoming WEBAPP_TRIGGER payload forwarded from the watch.
      */
     fun handleWebAppTriggerPayload(json: JsonElement) {
+        if (isStale(json, "WEBAPP")) return
         try {
             val obj = json.jsonObject
             val surveyId = obj["survey_id"]?.jsonPrimitive?.content
@@ -49,6 +70,7 @@ class WebAppTriggerHandler(
      * Parses and processes incoming NOTIFICATION_TRIGGER payload forwarded from the watch.
      */
     fun handleNotificationTriggerPayload(json: JsonElement) {
+        if (isStale(json, "NOTIFICATION")) return
         try {
             val obj = json.jsonObject
             val title = obj["title"]?.jsonPrimitive?.content ?: ""
@@ -69,6 +91,7 @@ class WebAppTriggerHandler(
      * Parses and processes incoming BROADCAST_TRIGGER payload forwarded from the watch.
      */
     fun handleBroadcastTriggerPayload(json: JsonElement) {
+        if (isStale(json, "BROADCAST")) return
         try {
             val obj = json.jsonObject
             val action = obj["action"]?.jsonPrimitive?.content

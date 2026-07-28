@@ -99,6 +99,7 @@ class WatchTriggerActionHandler(
             val payload = buildJsonObject {
                 put("action", action.action)
                 put("extras", extrasJson)
+                put("timestamp", System.currentTimeMillis())
             }.toString()
             bleChannel.send(Constants.BLE.KEY_BROADCAST_TRIGGER, payload)
         } catch (e: Exception) {
@@ -126,6 +127,7 @@ class WatchTriggerActionHandler(
             val payload = buildJsonObject {
                 put("survey_id", surveyId)
                 put("webapp_id", webAppId)
+                put("timestamp", System.currentTimeMillis())
             }.toString()
             bleChannel.send(Constants.BLE.KEY_WEBAPP_TRIGGER, payload)
             Log.d(TAG, "Forwarded webapp trigger to phone: $payload")
@@ -144,6 +146,7 @@ class WatchTriggerActionHandler(
                 put("title", action.title)
                 put("body", action.body)
                 put("url", action.url)
+                put("timestamp", System.currentTimeMillis())
             }.toString()
             bleChannel.send(Constants.BLE.KEY_NOTIFICATION_TRIGGER, payload)
             Log.d(TAG, "Forwarded notification trigger to phone: $payload")
