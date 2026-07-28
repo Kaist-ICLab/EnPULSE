@@ -10,6 +10,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebChromeClient
 import android.os.Message
+import android.webkit.WebSettings
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.webkit.WebViewCompat
@@ -87,6 +88,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            settings.cacheMode = WebSettings.LOAD_NO_CACHE
             settings.supportMultipleWindows() // Enable support for multiple windows / target="_blank"
             webViewClient = RestrictedWebViewClient(webApp.allowedOrigin)
             setDownloadListener { downloadUrl, _, _, _, _ ->
