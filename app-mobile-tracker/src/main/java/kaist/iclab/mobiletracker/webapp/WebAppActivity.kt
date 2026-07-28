@@ -21,6 +21,7 @@ import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
 import kaist.iclab.mobiletracker.webapp.client.RestrictedWebViewClient
 import kaist.iclab.mobiletracker.webapp.client.ExternalLinkWebChromeClient
+import kaist.iclab.mobiletracker.webapp.client.WebAppPermissionHelper
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import androidx.activity.result.contract.ActivityResultContracts
@@ -63,46 +64,11 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
 
     private lateinit var webView: WebView
     
-    /** Queue of incoming permission requests to prevent dropping callbacks when requests overlap. */
-    private val permissionRequestQueue = java.util.concurrent.ConcurrentLinkedQueue<Pair<List<String>, BridgeRequest>>()
-    
-    /** Currently active permission request awaiting user response. */
-    private var activePermissionRequest: BridgeRequest? = null
-
-    /**
-     * Launcher for system permission dialogs. Encodes the permission result into JSON, converts it to
-     * Base64, and dispatches a synthetic `MessageEvent` back to the WebView JS environment.
-     */
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { result ->
-        val request = activePermissionRequest
-        if (request != null) {
-            val responseData = buildJsonObject {
-                result.forEach { (perm, isGranted) -> put(perm, isGranted) }
-            }
-            val response = BridgeResponse(request.requestId, "success", data = responseData)
-            
-            // Send response back to WebView securely via Base64 encoding to prevent JS string injection crashes
-            if (::webView.isInitialized) {
-                val jsonStr = Json.encodeToString(BridgeResponse.serializer(), response)
-                val b64 = android.util.Base64.encodeToString(jsonStr.toByteArray(), android.util.Base64.NO_WRAP)
-                val js = "window.dispatchEvent(new MessageEvent('message', { data: decodeURIComponent(escape(window.atob('$b64'))) }));"
-                webView.evaluateJavascript(js, null)
-            }
-            activePermissionRequest = null
-            processNextPermissionRequest()
+    private val permissionHelper = WebAppPermissionHelper(this) { b64 ->
+        if (::webView.isInitialized) {
+            val js = "window.dispatchEvent(new MessageEvent('message', { data: decodeURIComponent(escape(window.atob('$b64'))) }));"
+            webView.evaluateJavascript(js, null)
         }
-    }
-
-    /**
-     * Processes the next permission request in [permissionRequestQueue] if no request is currently active.
-     */
-    private fun processNextPermissionRequest() {
-        if (activePermissionRequest != null) return
-        val next = permissionRequestQueue.poll() ?: return
-        activePermissionRequest = next.second
-        requestPermissionLauncher.launch(next.first.toTypedArray())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -138,8 +104,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         val appBridgeHandler = AppBridgeHandler(this) { finish() }
         
         val permissionBridgeHandler = PermissionBridgeHandler(this, permissionManager) { permissions, request ->
-            permissionRequestQueue.offer(Pair(permissions, request))
-            processNextPermissionRequest()
+            permissionHelper.requestPermissions(permissions, request)
         }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
