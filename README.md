@@ -61,6 +61,15 @@ The Samsung Health SDKs are required for collecting real-time biosignals from Ga
 2. Rename the downloaded `.aar` files to `samsung-health-sensor-api.aar` and `samsung-health-data-api.aar`.
 3. Place the `.aar` files into the `samsung-health-sensor-api/` and `samsung-health-data-api/` directories respectively.
 
+> [!IMPORTANT]
+> **Samsung Health Developer Mode Requirement:**
+> To build and test Samsung Health data access locally without an approved Partner license, you **MUST** enable Developer Mode on your testing device:
+> 1. Open the **Samsung Health** app on your phone.
+> 2. Go to **Settings** -> **About Samsung Health** (Settings page -> Scroll to the bottom).
+> 3. Tap the **Version** line 10 times consecutively.
+> 4. You will see a toast confirming developer mode has been enabled.
+> 5. Without this, you will encounter `AuthorizationException (Error 2003: Could not get policy)` during permission requests.
+
 #### 3. Add `google-services.json` (Firebase Configuration)
 Because `google-services.json` is untracked by Git for security, you must provide your own Firebase project configuration when building from source:
 

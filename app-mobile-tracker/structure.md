@@ -53,7 +53,12 @@ kaist.iclab.mobiletracker/
 │   ├── components/   # Reusable UI components
 │   └── screens/      # App screens
 ├── utils/            # Utility classes
-└── viewmodel/        # ViewModels
+├── viewmodel/        # ViewModels
+└── webapp/           # WebApp platform WebView host and JS bridge
+    ├── bridge/       # JavaScript JS bridge interfaces (Sensor, Survey, EnPulse)
+    ├── client/       # WebViewClient, WebChromeClient, and permission helpers
+    ├── WebAppActivity.kt  # WebView host container
+    └── WebAppNotificationBuilder.kt # Trigger notification utility
 ```
 
 ## Data Flow
