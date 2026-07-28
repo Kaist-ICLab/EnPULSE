@@ -101,7 +101,9 @@ fun PhoneSensorConfigSettingsScreen(
             ) {
                 if (sensorList.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
