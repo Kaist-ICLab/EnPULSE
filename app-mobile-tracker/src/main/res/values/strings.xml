@@ -44,6 +44,8 @@
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE Logo</string>
+    <string name="language_english">English</string>
+    <string name="language_korean">한국어</string>
 
     <!-- Settings Menu -->
     <string name="menu_account">Account</string>
@@ -319,6 +321,7 @@
 
     <string name="toast_no_data_to_export">No data to export</string>
     <string name="toast_export_failed">Failed to export data</string>
+    <string name="toast_request_timeout">Request timed out. Please check your connection and try again.</string>
     <string name="sensor_export_csv">Export CSV</string>
 
     <!-- Onboarding Screen -->

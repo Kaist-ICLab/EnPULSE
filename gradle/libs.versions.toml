@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.0"
+agp = "9.2.0"
 authKt = "3.7.0"
 firebaseMessaging = "25.1.1"
 kotlin = "2.4.10"
