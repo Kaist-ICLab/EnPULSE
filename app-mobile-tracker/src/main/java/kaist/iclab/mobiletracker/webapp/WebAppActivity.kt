@@ -118,6 +118,14 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = RestrictedWebViewClient(webApp.allowedOrigin)
+            setDownloadListener { downloadUrl, _, _, _, _ ->
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl))
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to delegate download URL to system browser: $downloadUrl", e)
+                }
+            }
         }
         setContentView(webView)
         
