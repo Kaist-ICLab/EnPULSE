@@ -179,8 +179,25 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         setIntent(intent) // Update the activity's intent
         val url = intent.getStringExtra(EXTRA_URL)
         if (url != null && ::webView.isInitialized) {
-            Log.d(TAG, "Received new intent, reloading URL: $url")
-            webView.loadUrl(url)
+            Log.d(TAG, "Received new intent, dispatching custom JS event for URL: $url")
+            try {
+                val uri = Uri.parse(url)
+                val paramsJson = buildJsonObject {
+                    uri.queryParameterNames.forEach { name ->
+                        put(name, uri.getQueryParameter(name) ?: "")
+                    }
+                    put("url", url)
+                }
+                
+                val jsonStr = paramsJson.toString()
+                val b64 = android.util.Base64.encodeToString(jsonStr.toByteArray(), android.util.Base64.NO_WRAP)
+                val js = "window.dispatchEvent(new CustomEvent('enpulseNewIntent', { detail: JSON.parse(decodeURIComponent(escape(window.atob('$b64')))) }));"
+                webView.evaluateJavascript(js, null)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to dispatch enpulseNewIntent event to WebView: ${e.message}", e)
+                // Fallback to hard reload if event dispatching fails
+                webView.loadUrl(url)
+            }
         }
     }
 
