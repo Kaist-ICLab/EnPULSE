@@ -381,5 +381,9 @@
 
     <string name="permission_instruction_title">작업 필요</string>
     <string name="grant_permissions_in_menu_first">먼저 권한 메뉴에서 권한을 허용해 주세요.</string>
+
+    <!-- WebView Error Strings -->
+    <string name="webview_failed_to_load">로드하지 못했습니다</string>
+    <string name="webview_check_connection">네트워크 연결 상태를 확인하고 다시 시도해 주세요.</string>
 </resources>
 

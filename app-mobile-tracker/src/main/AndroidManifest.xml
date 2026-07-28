@@ -193,7 +193,7 @@
 
         <!-- WebView container for third-party EnPULSE webapps (survey/sensor bridge) -->
         <activity
-            android:name=".webapp.WebViewSurveyActivity"
+            android:name=".webapp.WebAppActivity"
             android:exported="false"
             android:documentLaunchMode="intoExisting"
             android:theme="@style/Theme.MobileTracker" />

@@ -27,7 +27,7 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
-import kaist.iclab.mobiletracker.webapp.WebViewSurveyActivity
+import kaist.iclab.mobiletracker.webapp.WebAppActivity
 import org.koin.compose.koinInject
 
 /**
@@ -48,17 +48,17 @@ fun WebAppsScreen(
     val webApps = remember { webAppRegistry.list() }
 
     /**
-     * Launches the selected WebApp by firing an Intent to start [WebViewSurveyActivity].
+     * Launches the selected WebApp by firing an Intent to start [WebAppActivity].
      *
      * Passes the target WebApp's launch URL and unique identifier as intent extras.
      *
      * @param webApp Configuration of the WebApp to load.
      */
     fun launchWebApp(webApp: WebAppConfig) {
-        val intent = Intent(context, WebViewSurveyActivity::class.java).apply {
+        val intent = Intent(context, WebAppActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            putExtra(WebViewSurveyActivity.EXTRA_URL, webApp.url)
-            putExtra(WebViewSurveyActivity.EXTRA_WEBAPP_ID, webApp.id)
+            putExtra(WebAppActivity.EXTRA_URL, webApp.url)
+            putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webApp.id)
         }
         context.startActivity(intent)
     }

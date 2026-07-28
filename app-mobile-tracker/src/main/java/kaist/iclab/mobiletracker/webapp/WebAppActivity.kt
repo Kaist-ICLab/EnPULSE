@@ -1,5 +1,7 @@
 package kaist.iclab.mobiletracker.webapp
 
+import android.content.Context
+import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -40,7 +42,12 @@ import kotlinx.serialization.json.put
  * data URIs (`webapp://$webAppId`) in launch intents so each WebApp runs in its own distinct task card
  * in the Android recents menu.
  */
-class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
+class WebAppActivity : ComponentActivity(), KoinComponent {
+
+    override fun attachBaseContext(newBase: Context) {
+        val context = LanguageHelper(newBase).attachBaseContextWithLanguage(newBase)
+        super.attachBaseContext(context)
+    }
 
     private val webAppRegistry by inject<WebAppRegistry>()
     private val surveyBridgeHandler by inject<SurveyBridgeHandler>()
@@ -122,21 +129,39 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
         }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
-            WebViewCompat.addWebMessageListener(
-                webView,
-                BRIDGE_JS_OBJECT_NAME,
-                setOf(webApp.allowedOrigin),
-                EnPulseBridge(
-                    surveyHandler = surveyBridgeHandler,
-                    sensorHandler = sensorBridgeHandler,
-                    storageHandler = storageBridgeHandler,
-                    deviceHandler = deviceBridgeHandler,
-                    appHandler = appBridgeHandler,
-                    permissionHandler = permissionBridgeHandler,
-                    callerWebAppId = webApp.id,
-                    appScope = appScope
+            val sanitizedOrigin = try {
+                val uri = Uri.parse(webApp.allowedOrigin)
+                val scheme = uri.scheme
+                val host = uri.host
+                if (!scheme.isNullOrEmpty() && !host.isNullOrEmpty()) {
+                    val port = uri.port
+                    if (port != -1) "$scheme://$host:$port" else "$scheme://$host"
+                } else {
+                    webApp.allowedOrigin.trimEnd('/')
+                }
+            } catch (e: Exception) {
+                webApp.allowedOrigin.trimEnd('/')
+            }
+
+            try {
+                WebViewCompat.addWebMessageListener(
+                    webView,
+                    BRIDGE_JS_OBJECT_NAME,
+                    setOf(sanitizedOrigin),
+                    EnPulseBridge(
+                        surveyHandler = surveyBridgeHandler,
+                        sensorHandler = sensorBridgeHandler,
+                        storageHandler = storageBridgeHandler,
+                        deviceHandler = deviceBridgeHandler,
+                        appHandler = appBridgeHandler,
+                        permissionHandler = permissionBridgeHandler,
+                        callerWebAppId = webApp.id,
+                        appScope = appScope
+                    )
                 )
-            )
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Failed to add web message listener for origin '$sanitizedOrigin': ${e.message}", e)
+            }
         } else {
             Log.e(TAG, "WEB_MESSAGE_LISTENER unsupported on this WebView; native bridge disabled")
         }
@@ -181,7 +206,7 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
     }
 
     companion object {
-        private val TAG = WebViewSurveyActivity::class.simpleName
+        private val TAG = WebAppActivity::class.simpleName
         const val EXTRA_URL = "url"
         const val EXTRA_WEBAPP_ID = "webAppId"
         const val BRIDGE_JS_OBJECT_NAME = "EnPulseNative"
@@ -225,7 +250,9 @@ private class RestrictedWebViewClient(allowedOrigin: String) : WebViewClient() {
         error: android.webkit.WebResourceError
     ) {
         if (request.isForMainFrame) {
-            val htmlData = "<html><body style=\"display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;font-family:sans-serif;\"><h2>Failed to load</h2><p>Please check your connection and try again.</p></body></html>"
+            val failedToLoad = view.context.getString(kaist.iclab.mobiletracker.R.string.webview_failed_to_load)
+            val checkConnection = view.context.getString(kaist.iclab.mobiletracker.R.string.webview_check_connection)
+            val htmlData = "<html><body style=\"display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;\"><h2>$failedToLoad</h2><p>$checkConnection</p></body></html>"
             view.loadData(htmlData, "text/html", "UTF-8")
         }
         super.onReceivedError(view, request, error)

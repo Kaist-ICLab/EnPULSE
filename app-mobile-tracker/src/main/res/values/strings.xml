@@ -381,4 +381,8 @@
 
     <string name="permission_instruction_title">Action Required</string>
     <string name="grant_permissions_in_menu_first">Please grant permissions in the Permissions menu first.</string>
+
+    <!-- WebView Error Strings -->
+    <string name="webview_failed_to_load">Failed to load</string>
+    <string name="webview_check_connection">Please check your connection and try again.</string>
 </resources>

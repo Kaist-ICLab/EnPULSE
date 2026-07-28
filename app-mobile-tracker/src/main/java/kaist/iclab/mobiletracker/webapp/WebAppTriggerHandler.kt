@@ -15,7 +15,7 @@ import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
  * broadcast once the phone gets its own [kaist.iclab.tracker.trigger.TriggerEngine] instance —
  * see Step 0 of the platform plan). Issues a [SurveySchedule] the same way
  * [kaist.iclab.tracker.sensor.phone.SurveySensor.triggerSurveyNotification] does, then shows a
- * notification that opens [WebViewSurveyActivity].
+ * notification that opens [WebAppActivity].
  */
 class WebAppTriggerHandler(
     private val context: Context,
@@ -37,11 +37,11 @@ class WebAppTriggerHandler(
 
         val fullUrl = "${webApp.url}?survey_id=$surveyId&schedule_id=$scheduleId"
 
-        val intent = Intent(context, WebViewSurveyActivity::class.java).apply {
+        val intent = Intent(context, WebAppActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             data = android.net.Uri.parse("webapp://$webAppId")
-            putExtra(WebViewSurveyActivity.EXTRA_URL, fullUrl)
-            putExtra(WebViewSurveyActivity.EXTRA_WEBAPP_ID, webAppId)
+            putExtra(WebAppActivity.EXTRA_URL, fullUrl)
+            putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webAppId)
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
