@@ -46,7 +46,7 @@ fun WebAppRow(
     ) {
         Icon(
             imageVector = Icons.Filled.Public,
-            contentDescription = webApp.id,
+            contentDescription = webApp.name,
             modifier = Modifier.size(Styles.ICON_SIZE),
             tint = AppColors.IconWebApp
         )
@@ -55,7 +55,7 @@ fun WebAppRow(
             modifier = Modifier.weight(1f),
         ) {
             Text(
-                text = webApp.id,
+                text = webApp.name,
                 color = AppColors.TextPrimary,
                 fontSize = Styles.TEXT_FONT_SIZE,
                 lineHeight = Styles.TEXT_LINE_HEIGHT,

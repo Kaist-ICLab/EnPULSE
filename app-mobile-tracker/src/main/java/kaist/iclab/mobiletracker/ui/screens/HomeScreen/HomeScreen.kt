@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -76,10 +74,8 @@ fun HomeScreen(
             .padding(horizontal = Styles.SCREEN_HORIZONTAL_PADDING),
         verticalArrangement = Arrangement.spacedBy(Styles.SCREEN_VERTICAL_SPACING)
     ) {
-        Spacer(modifier = Modifier.height(Styles.TOP_SPACER_HEIGHT))
-
         // 1. Greeting Section
-        Column {
+        Column(modifier = Modifier.padding(top = Styles.TOP_SPACER_HEIGHT)) {
             Text(
                 text = stringResource(R.string.home_hello, uiState.userName ?: ""),
                 fontSize = Styles.GREETING_TITLE_FONT_SIZE,

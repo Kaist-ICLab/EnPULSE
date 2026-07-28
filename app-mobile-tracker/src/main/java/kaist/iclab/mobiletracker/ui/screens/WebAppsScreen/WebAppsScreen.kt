@@ -14,27 +14,28 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.ui.theme.Dimens
+import kaist.iclab.mobiletracker.webapp.WebAppActivity
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
-import kaist.iclab.mobiletracker.webapp.WebAppActivity
 import org.koin.compose.koinInject
 
 /**
  * Top-level tab listing webapps registered in [WebAppRegistry].
  *
- * Displays a white card container holding the list of webapps, where the card height wraps
- * content size dynamically if there are few webapps registered, instead of forcing full screen height.
+ * Header layout matches the DataScreen / HomeScreen style:
+ * a top spacer, bold title, and secondary description text.
  *
  * @param modifier Layout modifier applied to the screen root Column.
  * @param webAppRegistry Registry holding config options for registered WebApps.
@@ -44,16 +45,9 @@ fun WebAppsScreen(
     modifier: Modifier = Modifier,
     webAppRegistry: WebAppRegistry = koinInject()
 ) {
-    val context = LocalContext.current
-    val webApps = remember { webAppRegistry.list() }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val webApps by webAppRegistry.webAppsFlow.collectAsState()
 
-    /**
-     * Launches the selected WebApp by firing an Intent to start [WebAppActivity].
-     *
-     * Passes the target WebApp's launch URL and unique identifier as intent extras.
-     *
-     * @param webApp Configuration of the WebApp to load.
-     */
     fun launchWebApp(webApp: WebAppConfig) {
         val intent = Intent(context, WebAppActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -68,6 +62,7 @@ fun WebAppsScreen(
             .fillMaxSize()
             .background(AppColors.Background)
     ) {
+        // Header — same layout as DataScreen / HomeScreen
         Column(
             modifier = Modifier.padding(horizontal = Styles.SCREEN_HORIZONTAL_PADDING)
         ) {
@@ -83,17 +78,16 @@ fun WebAppsScreen(
                 text = stringResource(R.string.web_apps_screen_description),
                 fontSize = Styles.DESCRIPTION_FONT_SIZE,
                 color = AppColors.TextSecondary,
-                modifier = Modifier.padding(top = Styles.TOP_SPACER_HEIGHT / 4)
+                modifier = Modifier.padding(top = Dimens.SpacingMicro)
             )
+
+            Spacer(modifier = Modifier.height(Styles.CARD_CONTAINER_TOP_PADDING))
         }
 
+        // WebApp card container
         Box(
             modifier = Modifier
                 .padding(horizontal = Styles.SCREEN_HORIZONTAL_PADDING)
-                .padding(
-                    top = Styles.CARD_CONTAINER_TOP_PADDING,
-                    bottom = Styles.CARD_CONTAINER_TOP_PADDING
-                )
                 .weight(1f, fill = false)
                 .clip(Styles.CONTAINER_SHAPE)
                 .background(AppColors.White)
