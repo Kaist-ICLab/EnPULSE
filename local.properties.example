@@ -8,10 +8,5 @@ sdk.dir=/path/to/your/Android/sdk
 SUPABASE_URL=https://your-supabase-instance.url/
 SUPABASE_ANON_KEY=your_supabase_anon_public_key
 
-# WebApp local development server URL override
-# Default for Android Emulator: http://10.0.2.2:8080
-# For testing on a physical Android phone connected to the same Wi-Fi/LAN, use your local IP address:
-WEBAPP_DEV_URL=http://10.0.2.2:8080
-
 # Google Auth client id for the Android app (Optional)
 WEB_CLIENT_ID=your_google_web_client_id
