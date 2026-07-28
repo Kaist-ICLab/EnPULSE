@@ -39,6 +39,7 @@ class WebAppTriggerHandler(
 
         val intent = Intent(context, WebViewSurveyActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            data = android.net.Uri.parse("webapp://$webAppId")
             putExtra(WebViewSurveyActivity.EXTRA_URL, fullUrl)
             putExtra(WebViewSurveyActivity.EXTRA_WEBAPP_ID, webAppId)
         }

@@ -8,7 +8,11 @@ import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.provider.Settings
 import android.widget.Toast
+import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -48,10 +52,30 @@ class AppBridgeHandler(
         return BridgeResponse(request.requestId, "success")
     }
 
-    fun scheduleLocalNotification(request: BridgeRequest): BridgeResponse {
-        // Implementation for scheduling a notification would require WorkManager or AlarmManager.
-        // For simplicity in this demo, we'll just acknowledge it.
-        return BridgeResponse(request.requestId, "success", errorMessage = "Not fully implemented in this demo")
+    fun showNativeNotification(request: BridgeRequest): BridgeResponse {
+        val params = request.payload.jsonObject
+        val title = params["title"]?.jsonPrimitive?.content ?: "EnPULSE WebApp"
+        val message = params["message"]?.jsonPrimitive?.content ?: ""
+
+        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_webapp_notify"
+        NotificationHelper.ensureNotificationChannel(
+            context = context,
+            channelId = channelId,
+            channelName = "WebApp Notifications"
+        )
+        
+        val notification = NotificationHelper.buildNotification(
+            context = context,
+            channelId = channelId,
+            title = title,
+            text = message,
+            smallIcon = R.drawable.ic_launcher_foreground
+        ).build()
+        
+        val notificationId = message.hashCode()
+        NotificationHelper.showNotification(context, notificationId, notification)
+
+        return BridgeResponse(request.requestId, "success")
     }
 
     fun closeWebApp(request: BridgeRequest): BridgeResponse {
@@ -62,10 +86,7 @@ class AppBridgeHandler(
     }
 
     fun openNativeSettings(request: BridgeRequest): BridgeResponse {
-        val params = request.payload.jsonObject
-        val settingType = params["settingType"]?.jsonPrimitive?.content ?: ""
-        
-        val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
+        val intent = Intent(Settings.ACTION_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)

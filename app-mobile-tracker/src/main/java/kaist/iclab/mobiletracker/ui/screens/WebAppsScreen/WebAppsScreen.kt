@@ -31,9 +31,13 @@ import kaist.iclab.mobiletracker.webapp.WebViewSurveyActivity
 import org.koin.compose.koinInject
 
 /**
- * Top-level tab listing webapps registered in [WebAppRegistry] (currently the Phase 1
- * [kaist.iclab.mobiletracker.webapp.StaticWebAppRegistry] stub — Phase 2 replaces it with a
- * Supabase-backed registry, at which point this screen keeps working unchanged).
+ * Top-level tab listing webapps registered in [WebAppRegistry].
+ *
+ * Displays a white card container holding the list of webapps, where the card height wraps
+ * content size dynamically if there are few webapps registered, instead of forcing full screen height.
+ *
+ * @param modifier Layout modifier applied to the screen root Column.
+ * @param webAppRegistry Registry holding config options for registered WebApps.
  */
 @Composable
 fun WebAppsScreen(
@@ -43,6 +47,13 @@ fun WebAppsScreen(
     val context = LocalContext.current
     val webApps = remember { webAppRegistry.list() }
 
+    /**
+     * Launches the selected WebApp by firing an Intent to start [WebViewSurveyActivity].
+     *
+     * Passes the target WebApp's launch URL and unique identifier as intent extras.
+     *
+     * @param webApp Configuration of the WebApp to load.
+     */
     fun launchWebApp(webApp: WebAppConfig) {
         val intent = Intent(context, WebViewSurveyActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -89,7 +100,7 @@ fun WebAppsScreen(
         ) {
             if (webApps.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -100,7 +111,7 @@ fun WebAppsScreen(
                     )
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     itemsIndexed(
                         items = webApps,
                         key = { _, webApp -> webApp.id }

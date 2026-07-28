@@ -195,6 +195,7 @@
         <activity
             android:name=".webapp.WebViewSurveyActivity"
             android:exported="false"
+            android:documentLaunchMode="intoExisting"
             android:theme="@style/Theme.MobileTracker" />
 
         <!-- FileProvider for sharing exported CSV files -->

@@ -4,6 +4,7 @@ import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
+import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.builtins.ListSerializer
@@ -26,9 +27,10 @@ import kotlinx.serialization.json.put
  */
 class SensorBridgeHandler(
     private val handlerRegistry: SensorDataHandlerRegistry,
-    private val watchSensorRepository: WatchSensorRepository
+    private val watchSensorRepository: WatchSensorRepository,
+    private val webAppRegistry: WebAppRegistry
 ) {
-    suspend fun getSensorData(request: BridgeRequest): BridgeResponse {
+    suspend fun getSensorData(request: BridgeRequest, callerWebAppId: String): BridgeResponse {
         val params = request.payload.jsonObject
         val sensorId = params["sensor_id"]?.jsonPrimitive?.content
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing sensor_id")
@@ -36,6 +38,11 @@ class SensorBridgeHandler(
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing start_time")
         val endTime = params["end_time"]?.jsonPrimitive?.longOrNull
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing end_time")
+
+        val webApp = webAppRegistry.get(callerWebAppId)
+        if (webApp == null) {
+            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown caller webapp: $callerWebAppId")
+        }
 
         val handler = handlerRegistry.getHandler(sensorId)
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown sensor_id: $sensorId")
@@ -58,10 +65,15 @@ class SensorBridgeHandler(
         )
     }
 
-    suspend fun getLatestSensorReading(request: BridgeRequest): BridgeResponse {
+    suspend fun getLatestSensorReading(request: BridgeRequest, callerWebAppId: String): BridgeResponse {
         val params = request.payload.jsonObject
         val sensorId = params["sensor_id"]?.jsonPrimitive?.content
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing sensor_id")
+
+        val webApp = webAppRegistry.get(callerWebAppId)
+        if (webApp == null) {
+            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown caller webapp: $callerWebAppId")
+        }
 
         val handler = handlerRegistry.getHandler(sensorId)
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown sensor_id: $sensorId")

@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.webapp
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -29,8 +30,15 @@ import kotlinx.serialization.json.put
 
 /**
  * WebView container that hosts a third-party EnPULSE webapp and bridges it to native survey /
- * sensor / storage data via [EnPulseBridge]. Uses `WebMessageListener` (not `addJavascriptInterface`)
- * so the bridge is only reachable from the webapp's own registered origin.
+ * sensor / storage data via [EnPulseBridge].
+ *
+ * Uses `WebMessageListener` (not `addJavascriptInterface`) so the bridge is only reachable from the
+ * webapp's own registered origin.
+ *
+ * Multi-WebApp Task Isolation:
+ * Configured with `android:documentLaunchMode="intoExisting"` in `AndroidManifest.xml` alongside unique
+ * data URIs (`webapp://$webAppId`) in launch intents so each WebApp runs in its own distinct task card
+ * in the Android recents menu.
  */
 class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
 
@@ -44,9 +52,16 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
 
     private lateinit var webView: WebView
     
-    // For mapping active permission requests back to the Bridge Request ID
+    /** Queue of incoming permission requests to prevent dropping callbacks when requests overlap. */
+    private val permissionRequestQueue = java.util.concurrent.ConcurrentLinkedQueue<Pair<List<String>, BridgeRequest>>()
+    
+    /** Currently active permission request awaiting user response. */
     private var activePermissionRequest: BridgeRequest? = null
 
+    /**
+     * Launcher for system permission dialogs. Encodes the permission result into JSON, converts it to
+     * Base64, and dispatches a synthetic `MessageEvent` back to the WebView JS environment.
+     */
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
@@ -57,18 +72,26 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
             }
             val response = BridgeResponse(request.requestId, "success", data = responseData)
             
-            // Send response back to WebView
+            // Send response back to WebView securely via Base64 encoding to prevent JS string injection crashes
             if (::webView.isInitialized) {
-                // Find the bridge proxy to send it. Since we can't easily get the ReplyProxy here,
-                // we dispatch via JS. We used addWebMessageListener, so we can't just `postMessage` easily from the outside.
-                // Wait, WebMessageListener replies must be sent via JavaScriptReplyProxy. 
-                // Alternatively, we can inject a small JS function to receive async pushes.
-                // But a cleaner way: evaluateJavascript to dispatch a MessageEvent to the EnPulseNative.
-                val jsonStr = Json.encodeToString(BridgeResponse.serializer(), response).replace("'", "\\'")
-                webView.evaluateJavascript("window.dispatchEvent(new MessageEvent('message', { data: '$jsonStr' }));", null)
+                val jsonStr = Json.encodeToString(BridgeResponse.serializer(), response)
+                val b64 = android.util.Base64.encodeToString(jsonStr.toByteArray(), android.util.Base64.NO_WRAP)
+                val js = "window.dispatchEvent(new MessageEvent('message', { data: decodeURIComponent(escape(window.atob('$b64'))) }));"
+                webView.evaluateJavascript(js, null)
             }
             activePermissionRequest = null
+            processNextPermissionRequest()
         }
+    }
+
+    /**
+     * Processes the next permission request in [permissionRequestQueue] if no request is currently active.
+     */
+    private fun processNextPermissionRequest() {
+        if (activePermissionRequest != null) return
+        val next = permissionRequestQueue.poll() ?: return
+        activePermissionRequest = next.second
+        requestPermissionLauncher.launch(next.first.toTypedArray())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -94,8 +117,8 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
         val appBridgeHandler = AppBridgeHandler(this) { finish() }
         
         val permissionBridgeHandler = PermissionBridgeHandler(this, permissionManager) { permissions, request ->
-            activePermissionRequest = request
-            requestPermissionLauncher.launch(permissions.toTypedArray())
+            permissionRequestQueue.offer(Pair(permissions, request))
+            processNextPermissionRequest()
         }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
@@ -119,6 +142,21 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
         }
 
         webView.loadUrl(url)
+    }
+
+    /**
+     * Called when a new trigger/notification intent is delivered while this WebApp activity is already active
+     * (e.g. brought to front via `documentLaunchMode="intoExisting"`).
+     * Reloads the WebView with the new URL containing updated query parameters (such as `schedule_id`).
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent) // Update the activity's intent
+        val url = intent.getStringExtra(EXTRA_URL)
+        if (url != null && ::webView.isInitialized) {
+            Log.d(TAG, "Received new intent, reloading URL: $url")
+            webView.loadUrl(url)
+        }
     }
 
     override fun onPause() {
@@ -151,24 +189,33 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
 }
 
 /**
- * Blocks navigation away from [allowedOrigin] so a compromised or malicious page loaded inside
- * the webapp (e.g. via a redirect) can't smuggle the user to an untrusted origin that would still
- * render inside this trusted webapp chrome.
+ * Restricts WebView navigation to [allowedOrigin].
+ * External links (different origins or custom intent schemes like `intent://`, `mailto:`, `tel:`)
+ * are automatically delegated to the Android OS via [android.content.Intent.ACTION_VIEW] rather than rendering inside WebView.
  */
 private class RestrictedWebViewClient(allowedOrigin: String) : WebViewClient() {
     private val allowedHost: String? = Uri.parse(allowedOrigin).host
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         val scheme = request.url.scheme
-        if (scheme != "http" && scheme != "https") {
-            Log.w(TAG, "Blocked non-http(s) scheme navigation: ${request.url}")
-            return true
+        val host = request.url.host
+
+        if ((scheme == "http" || scheme == "https") && host == allowedHost) {
+            return false // Load internally in the WebView
         }
 
-        val host = request.url.host
-        if (host != null && host == allowedHost) return false
+        // Delegate external links and custom schemes to the OS
+        try {
+            val intent = if (scheme == "intent") {
+                android.content.Intent.parseUri(request.url.toString(), android.content.Intent.URI_INTENT_SCHEME)
+            } else {
+                android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)
+            }
+            view.context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to launch external intent for ${request.url}", e)
+        }
 
-        Log.w(TAG, "Blocked navigation to disallowed origin: ${request.url}")
         return true
     }
 

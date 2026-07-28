@@ -29,7 +29,7 @@ val webAppModule = module {
             "test" to WebAppConfig(
                 id = "test",
                 url = BuildConfig.WEBAPP_DEV_URL,
-                allowedOrigin = BuildConfig.WEBAPP_DEV_URL,
+                allowedOrigin = BuildConfig.WEBAPP_DEV_URL
             )
         ))
     }
@@ -55,7 +55,8 @@ val webAppModule = module {
     single {
         SensorBridgeHandler(
             handlerRegistry = get<SensorDataHandlerRegistry>(),
-            watchSensorRepository = get<WatchSensorRepository>()
+            watchSensorRepository = get<WatchSensorRepository>(),
+            webAppRegistry = get<WebAppRegistry>()
         )
     }
 

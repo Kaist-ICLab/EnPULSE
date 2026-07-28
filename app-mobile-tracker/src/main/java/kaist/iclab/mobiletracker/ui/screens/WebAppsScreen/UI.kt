@@ -20,6 +20,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 
+/**
+ * Composable row representing a single WebApp item within the list.
+ * Displays the WebApp name (ID), its URL, and a chevron pointing right to indicate clickability.
+ *
+ * @param webApp Configuration details of the WebApp to display.
+ * @param onClick Callback triggered when this row is clicked.
+ * @param modifier Layout modifier applied to the row.
+ */
 @Composable
 fun WebAppRow(
     webApp: WebAppConfig,
