@@ -139,9 +139,12 @@ class WebAppTriggerHandler(
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
+        val uniqueString = "$title|$body|$url"
+        val uniqueHash = uniqueString.hashCode()
+        
         val pendingIntent = PendingIntent.getActivity(
             context,
-            url.hashCode(),
+            uniqueHash,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -152,7 +155,7 @@ class WebAppTriggerHandler(
                 title = title,
                 text = body,
                 pendingIntent = pendingIntent,
-                notificationId = Constants.Notification.ID_SURVEY_BASE + url.hashCode()
+                notificationId = Constants.Notification.ID_SURVEY_BASE + uniqueHash
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to post notification", e)
