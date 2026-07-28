@@ -93,7 +93,10 @@ class WatchTriggerActionHandler(
         try {
             val extrasJson = buildJsonObject {
                 action.extras.forEach { extra ->
-                    put(extra.key, extra.value)
+                    put(extra.key, buildJsonObject {
+                        put("value", extra.value)
+                        put("type", extra.valueType)
+                    })
                 }
             }
             val payload = buildJsonObject {

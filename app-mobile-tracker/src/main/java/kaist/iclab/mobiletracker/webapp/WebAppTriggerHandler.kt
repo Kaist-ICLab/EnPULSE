@@ -101,8 +101,19 @@ class WebAppTriggerHandler(
             }
             Log.d(TAG, "Handling BROADCAST_TRIGGER action=$action")
             val intent = Intent(action)
-            obj["extras"]?.jsonObject?.forEach { (key, value) ->
-                intent.putExtra(key, value.jsonPrimitive.content)
+            obj["extras"]?.jsonObject?.forEach { (key, extraVal) ->
+                val extraObj = extraVal.jsonObject
+                val value = extraObj["value"]?.jsonPrimitive?.content ?: ""
+                val type = extraObj["type"]?.jsonPrimitive?.content?.lowercase() ?: "string"
+
+                when (type) {
+                    "int", "integer" -> intent.putExtra(key, value.toIntOrNull() ?: 0)
+                    "long" -> intent.putExtra(key, value.toLongOrNull() ?: 0L)
+                    "float" -> intent.putExtra(key, value.toFloatOrNull() ?: 0f)
+                    "double" -> intent.putExtra(key, value.toDoubleOrNull() ?: 0.0)
+                    "bool", "boolean" -> intent.putExtra(key, value.toBoolean())
+                    else -> intent.putExtra(key, value) // Default to String
+                }
             }
             context.sendBroadcast(intent)
         } catch (e: Exception) {
