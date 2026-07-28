@@ -19,6 +19,8 @@ import kaist.iclab.mobiletracker.webapp.bridge.EnPulseBridge
 import kaist.iclab.mobiletracker.webapp.bridge.SensorBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
+import kaist.iclab.mobiletracker.webapp.client.RestrictedWebViewClient
+import kaist.iclab.mobiletracker.webapp.client.ExternalLinkWebChromeClient
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import androidx.activity.result.contract.ActivityResultContracts
@@ -129,52 +131,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
                     Log.e(TAG, "Failed to delegate download URL to system browser: $downloadUrl", e)
                 }
             }
-            webChromeClient = object : WebChromeClient() {
-                override fun onCreateWindow(
-                    view: WebView,
-                    isDialog: Boolean,
-                    isUserGesture: Boolean,
-                    resultMsg: Message?
-                ): Boolean {
-                    // Try to resolve target="_blank" URL from requestNodeHref
-                    val hrefMessage = view.handler.obtainMessage()
-                    view.requestFocusNodeHref(hrefMessage)
-                    val targetUrl = hrefMessage.data.getString("url")
-                    if (!targetUrl.isNullOrEmpty()) {
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
-                            view.context.startActivity(intent)
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Failed to launch external window for URL: $targetUrl", e)
-                        }
-                        return true
-                    }
-                    
-                    // Fallback to transport webview intercepting redirects
-                    val transport = resultMsg?.obj as? WebView.WebViewTransport
-                    if (transport != null) {
-                        val tempWebView = WebView(view.context)
-                        tempWebView.webViewClient = object : WebViewClient() {
-                            override fun shouldOverrideUrlLoading(
-                                tempView: WebView,
-                                request: WebResourceRequest
-                            ): Boolean {
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, request.url)
-                                    tempView.context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "Failed to launch external window from transport: ${request.url}", e)
-                                }
-                                return true
-                            }
-                        }
-                        transport.webView = tempWebView
-                        resultMsg.sendToTarget()
-                        return true
-                    }
-                    return false
-                }
-            }
+            webChromeClient = ExternalLinkWebChromeClient()
         }
         setContentView(webView)
         
@@ -287,52 +244,3 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
     }
 }
 
-/**
- * Restricts WebView navigation to [allowedOrigin].
- * External links (different origins or custom intent schemes like `intent://`, `mailto:`, `tel:`)
- * are automatically delegated to the Android OS via [android.content.Intent.ACTION_VIEW] rather than rendering inside WebView.
- */
-private class RestrictedWebViewClient(allowedOrigin: String) : WebViewClient() {
-    private val allowedHost: String? = Uri.parse(allowedOrigin).host
-
-    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-        val scheme = request.url.scheme
-        val host = request.url.host
-
-        if ((scheme == "http" || scheme == "https") && host == allowedHost) {
-            return false // Load internally in the WebView
-        }
-
-        // Delegate external links and custom schemes to the OS
-        try {
-            val intent = if (scheme == "intent") {
-                android.content.Intent.parseUri(request.url.toString(), android.content.Intent.URI_INTENT_SCHEME)
-            } else {
-                android.content.Intent(android.content.Intent.ACTION_VIEW, request.url)
-            }
-            view.context.startActivity(intent)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to launch external intent for ${request.url}", e)
-        }
-
-        return true
-    }
-
-    override fun onReceivedError(
-        view: WebView,
-        request: WebResourceRequest,
-        error: android.webkit.WebResourceError
-    ) {
-        if (request.isForMainFrame) {
-            val failedToLoad = view.context.getString(kaist.iclab.mobiletracker.R.string.webview_failed_to_load)
-            val checkConnection = view.context.getString(kaist.iclab.mobiletracker.R.string.webview_check_connection)
-            val htmlData = "<html><body style=\"display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;\"><h2>$failedToLoad</h2><p>$checkConnection</p></body></html>"
-            view.loadData(htmlData, "text/html", "UTF-8")
-        }
-        super.onReceivedError(view, request, error)
-    }
-
-    companion object {
-        private const val TAG = "RestrictedWebViewClient"
-    }
-}
