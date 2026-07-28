@@ -10,6 +10,7 @@ import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.viewmodels.data.DataViewModel
 import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import kaist.iclab.mobiletracker.viewmodels.home.HomeViewModel
+import kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.AccountSettingsViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.DataSyncSettingsViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
@@ -105,7 +106,7 @@ val viewModelModule = module {
 
     // OnboardingViewModel
     viewModel {
-        kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel(
+        OnboardingViewModel(
             campaignRepository = get<CampaignRepository>(),
             userProfileRepository = get<UserProfileRepository>(),
             surveyRepository = get<SurveyRepository>(),

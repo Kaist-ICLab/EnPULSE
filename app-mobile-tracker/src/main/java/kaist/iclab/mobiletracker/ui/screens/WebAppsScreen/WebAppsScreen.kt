@@ -79,8 +79,11 @@ fun WebAppsScreen(
         Box(
             modifier = Modifier
                 .padding(horizontal = Styles.SCREEN_HORIZONTAL_PADDING)
-                .padding(top = Styles.CARD_CONTAINER_TOP_PADDING)
-                .weight(1f)
+                .padding(
+                    top = Styles.CARD_CONTAINER_TOP_PADDING,
+                    bottom = Styles.CARD_CONTAINER_TOP_PADDING
+                )
+                .weight(1f, fill = false)
                 .clip(Styles.CONTAINER_SHAPE)
                 .background(AppColors.White)
         ) {

@@ -58,6 +58,36 @@ class SensorBridgeHandler(
         )
     }
 
+    suspend fun getLatestSensorReading(request: BridgeRequest): BridgeResponse {
+        val params = request.payload.jsonObject
+        val sensorId = params["sensor_id"]?.jsonPrimitive?.content
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing sensor_id")
+
+        val handler = handlerRegistry.getHandler(sensorId)
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown sensor_id: $sensorId")
+
+        // Fetch just the single latest record
+        val latestRecord = handler.getRecordsPaginated(
+            afterTimestamp = 0,
+            isAscending = false,
+            limit = 1,
+            offset = 0
+        ).firstOrNull()
+
+        val syncStatus = if (handler.isWatchSensor) resolveWatchSyncStatus() else "fresh"
+
+        val records = if (latestRecord != null) listOf(latestRecord) else emptyList()
+
+        return BridgeResponse(
+            request.requestId, "success",
+            data = buildJsonObject {
+                put("records", Json.encodeToJsonElement(ListSerializer(SensorRecord.serializer()), records))
+                put("sync_status", syncStatus)
+            }
+        )
+    }
+
+
     /** "fresh" if the watch currently looks reachable, "stale_fallback" otherwise, "timeout" if the
      *  connection check itself doesn't resolve in time. */
     private suspend fun resolveWatchSyncStatus(): String {

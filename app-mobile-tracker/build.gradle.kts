@@ -51,8 +51,13 @@ android {
             ?: System.getenv("SUPABASE_ANON_KEY")
             ?: "MISSING_SUPABASE_ANON_KEY"
 
+        val webAppDevUrl: String = findProperty("WEBAPP_DEV_URL")?.toString()
+            ?: localProperties.getProperty("WEBAPP_DEV_URL")
+            ?: "http://10.0.2.2:8080" // Default to emulator loopback
+
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
+        buildConfigField("String", "WEBAPP_DEV_URL", "\"$webAppDevUrl\"")
     }
 
     compileOptions {

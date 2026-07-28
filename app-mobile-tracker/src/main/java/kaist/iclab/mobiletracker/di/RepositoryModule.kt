@@ -21,6 +21,7 @@ import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import kaist.iclab.mobiletracker.storage.CouchbaseTriggerConfigStorage
+import kaist.iclab.mobiletracker.storage.UserProfileStorage
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
@@ -98,7 +99,7 @@ val repositoryModule = module {
 
     // UserProfileRepository for user profile management
     single {
-        kaist.iclab.mobiletracker.storage.UserProfileStorage(
+        UserProfileStorage(
             couchbase = get()
         )
     }

@@ -7,6 +7,7 @@ import androidx.webkit.JavaScriptReplyProxy
 import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -22,6 +23,9 @@ class EnPulseBridge(
     private val surveyHandler: SurveyBridgeHandler,
     private val sensorHandler: SensorBridgeHandler,
     private val storageHandler: StorageBridgeHandler,
+    private val deviceHandler: DeviceBridgeHandler,
+    private val appHandler: AppBridgeHandler,
+    private val permissionHandler: PermissionBridgeHandler,
     private val callerWebAppId: String,
     private val appScope: AppCoroutineScope
 ) : WebViewCompat.WebMessageListener {
@@ -48,16 +52,29 @@ class EnPulseBridge(
                     "getSurvey" -> surveyHandler.getSurvey(request)
                     "setSurveyResponse" -> surveyHandler.setSurveyResponse(request)
                     "getSensorData" -> sensorHandler.getSensorData(request)
+                    "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(request)
                     "getStorageData" -> storageHandler.get(request, callerWebAppId)
                     "setStorageData" -> storageHandler.set(request, callerWebAppId)
+                    "getDeviceInfo" -> deviceHandler.getDeviceInfo(request)
+                    "getWatchConnectionStatus" -> deviceHandler.getWatchConnectionStatus(request)
+                    "checkPermissions" -> permissionHandler.checkPermissions(request)
+                    "requestPermissions" -> permissionHandler.requestPermissions(request)
+                    "showNativeToast" -> appHandler.showNativeToast(request)
+                    "vibrate" -> appHandler.vibrate(request)
+                    "scheduleLocalNotification" -> appHandler.scheduleLocalNotification(request)
+                    "closeWebApp" -> appHandler.closeWebApp(request)
+                    "openNativeSettings" -> appHandler.openNativeSettings(request)
                     else -> BridgeResponse(request.requestId, "error", errorMessage = "Unknown action: ${request.action}")
                 }
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Bridge action '${request.action}' failed: ${e.message}", e)
                 BridgeResponse(request.requestId, "error", errorMessage = e.message)
             }
 
-            replyProxy.postMessage(Json.encodeToString(BridgeResponse.serializer(), response))
+            if (response != null) {
+                replyProxy.postMessage(Json.encodeToString(BridgeResponse.serializer(), response))
+            }
         }
     }
 

@@ -1,11 +1,13 @@
 package kaist.iclab.mobiletracker.di.phone
 
+import kaist.iclab.mobiletracker.BuildConfig
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.webapp.StaticWebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
+import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SensorBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
@@ -26,8 +28,8 @@ val webAppModule = module {
         StaticWebAppRegistry(configs = mapOf(
             "test" to WebAppConfig(
                 id = "test",
-                url = "https://www.naver.com",
-                allowedOrigin = "https://www.naver.com",
+                url = BuildConfig.WEBAPP_DEV_URL,
+                allowedOrigin = BuildConfig.WEBAPP_DEV_URL,
             )
         ))
     }
@@ -62,4 +64,12 @@ val webAppModule = module {
             webAppStorageStore = get()
         )
     }
+
+    single {
+        DeviceBridgeHandler(
+            context = androidContext(),
+            watchSensorRepository = get()
+        )
+    }
+
 }

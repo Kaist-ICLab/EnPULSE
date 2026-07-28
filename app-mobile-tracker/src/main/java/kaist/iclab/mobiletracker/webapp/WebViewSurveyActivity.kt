@@ -16,6 +16,16 @@ import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import androidx.activity.result.contract.ActivityResultContracts
+import kaist.iclab.mobiletracker.webapp.bridge.AppBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.BridgeRequest
+import kaist.iclab.mobiletracker.webapp.bridge.BridgeResponse
+import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.PermissionBridgeHandler
+import kaist.iclab.tracker.permission.AndroidPermissionManager
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * WebView container that hosts a third-party EnPULSE webapp and bridges it to native survey /
@@ -28,9 +38,38 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
     private val surveyBridgeHandler by inject<SurveyBridgeHandler>()
     private val sensorBridgeHandler by inject<SensorBridgeHandler>()
     private val storageBridgeHandler by inject<StorageBridgeHandler>()
+    private val deviceBridgeHandler by inject<DeviceBridgeHandler>()
+    private val permissionManager by inject<AndroidPermissionManager>()
     private val appScope by inject<AppCoroutineScope>()
 
     private lateinit var webView: WebView
+    
+    // For mapping active permission requests back to the Bridge Request ID
+    private var activePermissionRequest: BridgeRequest? = null
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val request = activePermissionRequest
+        if (request != null) {
+            val responseData = buildJsonObject {
+                result.forEach { (perm, isGranted) -> put(perm, isGranted) }
+            }
+            val response = BridgeResponse(request.requestId, "success", data = responseData)
+            
+            // Send response back to WebView
+            if (::webView.isInitialized) {
+                // Find the bridge proxy to send it. Since we can't easily get the ReplyProxy here,
+                // we dispatch via JS. We used addWebMessageListener, so we can't just `postMessage` easily from the outside.
+                // Wait, WebMessageListener replies must be sent via JavaScriptReplyProxy. 
+                // Alternatively, we can inject a small JS function to receive async pushes.
+                // But a cleaner way: evaluateJavascript to dispatch a MessageEvent to the EnPulseNative.
+                val jsonStr = Json.encodeToString(BridgeResponse.serializer(), response).replace("'", "\\'")
+                webView.evaluateJavascript("window.dispatchEvent(new MessageEvent('message', { data: '$jsonStr' }));", null)
+            }
+            activePermissionRequest = null
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +90,13 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
             webViewClient = RestrictedWebViewClient(webApp.allowedOrigin)
         }
         setContentView(webView)
+        
+        val appBridgeHandler = AppBridgeHandler(this) { finish() }
+        
+        val permissionBridgeHandler = PermissionBridgeHandler(this, permissionManager) { permissions, request ->
+            activePermissionRequest = request
+            requestPermissionLauncher.launch(permissions.toTypedArray())
+        }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             WebViewCompat.addWebMessageListener(
@@ -61,6 +107,9 @@ class WebViewSurveyActivity : ComponentActivity(), KoinComponent {
                     surveyHandler = surveyBridgeHandler,
                     sensorHandler = sensorBridgeHandler,
                     storageHandler = storageBridgeHandler,
+                    deviceHandler = deviceBridgeHandler,
+                    appHandler = appBridgeHandler,
+                    permissionHandler = permissionBridgeHandler,
                     callerWebAppId = webApp.id,
                     appScope = appScope
                 )

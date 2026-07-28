@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.helpers
 
 import android.content.Context
 import android.util.Log
+import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -81,7 +82,7 @@ class DataExportHelper(
     }
 
     private suspend fun exportSensorToCsv(
-        handler: kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler,
+        handler: SensorUploadHandler,
         file: File
     ): Boolean {
         return try {
