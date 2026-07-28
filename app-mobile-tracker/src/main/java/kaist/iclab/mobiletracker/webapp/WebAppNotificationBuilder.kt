@@ -37,6 +37,12 @@ object WebAppNotificationBuilder {
 
     /**
      * Shows a notification that triggers a specific WebApp.
+     * 
+     * [Use Case]
+     * Used for internal EnPULSE survey campaigns (e.g., EMA questionnaires).
+     * Opens WebAppActivity (WebView container) with survey_id and schedule_id query params.
+     * This keeps the interaction completely inside the app and allows communication with native
+     * features via the EnPulseBridge.
      */
     fun showWebAppTriggerNotification(
         context: Context,
@@ -70,6 +76,11 @@ object WebAppNotificationBuilder {
 
     /**
      * Shows a generic URL/notification trigger forwarded from Wearable.
+     * 
+     * [Use Case]
+     * Used for general/external links (e.g., reading an article on WebMD or a university page).
+     * Dispatches an Intent.ACTION_VIEW which opens the URL in the system default browser (e.g., Chrome),
+     * rather than opening WebAppActivity inside the EnPULSE app.
      */
     fun showGenericTriggerNotification(
         context: Context,
