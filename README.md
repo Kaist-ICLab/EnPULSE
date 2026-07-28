@@ -22,6 +22,13 @@ Locally-hosted Supabase-based backend component for storing sensor data and camp
 ### [Dashboard](https://github.com/Kaist-ICLab/EnPULSE-dashboard)
 Web-based dashboard for campaign configuration, management, and data monitoring.
 
+### WebApp Platform (EnPULSE WebApps)
+EnPULSE supports dynamic, remote-configured web applications (WebApps) that can be triggered dynamically from sensor state evaluations:
+- **Dynamic Campaign Fetching**: WebApps are fetched dynamically from the `campaign_webapp` database table on campaign selection and synced locally to Couchbase storage on the mobile phone.
+- **BLE Trigger Forwarding**: Trigger conditions are evaluated continuously on the Wearable Watch. When conditions are met, actions are forwarded to the Mobile Phone via BLE:
+  - **Notification Action**: Displays a phone notification that launches the target WebApp on tap (e.g. for user intervention).
+  - **Broadcast Action**: Dispatches local Android broadcasts (`sendBroadcast`) on the phone with customizable extras payload to interact with 3rd-party local phone applications.
+
 ---
 
 ## Installation & Setup
