@@ -144,7 +144,7 @@ class WatchTriggerActionHandler(
         try {
             val payload = buildJsonObject {
                 put("title", action.title)
-                put("body", action.body)
+                put("body", action.description)
                 put("url", action.url)
                 put("timestamp", System.currentTimeMillis())
             }.toString()

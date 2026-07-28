@@ -80,7 +80,7 @@ sealed class TriggerActionConfig {
      */
     data class Notification(
         val title: String,
-        val body: String,
+        val description: String,
         val url: String,
         override val minIntervalMillis: Long = 0
     ) : TriggerActionConfig()
@@ -155,8 +155,8 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
             "notification" -> TriggerActionConfig.Notification(
                 title = obj["title"]?.jsonPrimitive?.content
                     ?: throw SerializationException("'notification' requires 'title'"),
-                body = obj["body"]?.jsonPrimitive?.content
-                    ?: throw SerializationException("'notification' requires 'body'"),
+                description = obj["description"]?.jsonPrimitive?.content
+                    ?: throw SerializationException("'notification' requires 'description'"),
                 url = obj["url"]?.jsonPrimitive?.content
                     ?: throw SerializationException("'notification' requires 'url'"),
                 minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
@@ -198,7 +198,7 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
             is TriggerActionConfig.Notification -> buildJsonObject {
                 put("kind", "notification")
                 put("title", action.title)
-                put("body", action.body)
+                put("description", action.description)
                 put("url", action.url)
                 put("minIntervalMillis", action.minIntervalMillis)
             }
