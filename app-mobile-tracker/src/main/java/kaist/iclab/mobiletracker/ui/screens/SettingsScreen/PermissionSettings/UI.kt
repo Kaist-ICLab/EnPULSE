@@ -68,20 +68,14 @@ private fun PermissionRow(
         PermissionState.RATIONALE_REQUIRED -> AppColors.ErrorColor
     }
 
-    // Card is clickable and shows arrow only if not unsupported
+    // Card is clickable so that unsupported permissions can trigger their respective toast messages (e.g., Samsung Health Dev Mode)
     val isSupported = permissionState != PermissionState.UNSUPPORTED
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
-            .then(
-                if (isSupported) {
-                    Modifier.clickable { onRequest() }
-                } else {
-                    Modifier
-                }
-            )
+            .clickable { onRequest() }
             .padding(
                 horizontal = Styles.CARD_HORIZONTAL_PADDING,
                 vertical = Styles.CARD_VERTICAL_PADDING
@@ -123,15 +117,13 @@ private fun PermissionRow(
                     )
             )
         }
-        if (isSupported) {
-            Spacer(Modifier.width(Styles.SPACER_WIDTH))
-            Icon(
-                imageVector = Icons.Filled.ChevronRight,
-                contentDescription = null,
-                tint = AppColors.TextSecondary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        Spacer(Modifier.width(Styles.SPACER_WIDTH))
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = AppColors.TextSecondary,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 
