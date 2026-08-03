@@ -75,14 +75,25 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val url = intent.getStringExtra(EXTRA_URL)
+        val originalUrl = intent.getStringExtra(EXTRA_URL)
         val webAppId = intent.getStringExtra(EXTRA_WEBAPP_ID)
         val webApp = webAppId?.let { webAppRegistry.get(it) }
 
-        if (url == null || webApp == null) {
+        if (originalUrl == null || webApp == null) {
             Log.e(TAG, "Missing url or unknown webAppId=$webAppId; closing")
             finish()
             return
+        }
+
+        var url = originalUrl
+
+        // Validate URL host against allowedOrigin to prevent phishing/spoofing attacks from malicious intents
+        val intentHost = try { Uri.parse(url).host } catch (e: Exception) { null }
+        val allowedHost = try { Uri.parse(webApp.allowedOrigin).host } catch (e: Exception) { null }
+        
+        if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
+            Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
+            url = webApp.url
         }
 
         webView = WebView(this).apply {
@@ -158,7 +169,20 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent) // Update the activity's intent
-        val url = intent.getStringExtra(EXTRA_URL)
+        val originalUrl = intent.getStringExtra(EXTRA_URL)
+        val webAppId = intent.getStringExtra(EXTRA_WEBAPP_ID)
+        val webApp = webAppId?.let { webAppRegistry.get(it) }
+
+        var url = originalUrl
+        if (url != null && webApp != null) {
+            val intentHost = try { Uri.parse(url).host } catch (e: Exception) { null }
+            val allowedHost = try { Uri.parse(webApp.allowedOrigin).host } catch (e: Exception) { null }
+            if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
+                Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
+                url = webApp.url
+            }
+        }
+
         if (url != null && ::webView.isInitialized) {
             Log.d(TAG, "Received new intent, dispatching custom JS event for URL: $url")
             try {

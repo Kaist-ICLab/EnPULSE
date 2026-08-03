@@ -96,6 +96,8 @@ fun WebAppRow(
                 onClick = {
                     val intent = Intent(context, WebAppActivity::class.java).apply {
                         action = Intent.ACTION_VIEW
+                        data = android.net.Uri.parse("webapp://${webApp.id}")
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                         putExtra(WebAppActivity.EXTRA_URL, webApp.url)
                         putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webApp.id)
                     }
