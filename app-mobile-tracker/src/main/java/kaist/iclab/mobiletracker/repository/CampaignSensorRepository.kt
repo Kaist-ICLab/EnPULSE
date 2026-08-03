@@ -46,7 +46,7 @@ class CampaignSensorRepositoryImpl(
     }
 
     private val _activeSensorsFlow =
-        MutableStateFlow<List<CampaignTableData>>(persistentStorage.get().sensors)
+        MutableStateFlow(persistentStorage.get().sensors)
     override val activeSensorsFlow = _activeSensorsFlow.asStateFlow()
 
     override suspend fun fetchActiveSensors(campaignId: Long): Result<List<CampaignTableData>> {

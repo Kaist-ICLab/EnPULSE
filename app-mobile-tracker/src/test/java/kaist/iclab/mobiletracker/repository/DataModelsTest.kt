@@ -125,7 +125,7 @@ class DataModelsTest {
 
     @Test
     fun `DateFilter has all expected values`() {
-        val values = DateFilter.values()
+        val values = DateFilter.entries.toTypedArray()
         assertEquals(5, values.size)
         assertTrue(values.contains(DateFilter.TODAY))
         assertTrue(values.contains(DateFilter.LAST_7_DAYS))
@@ -154,14 +154,14 @@ class DataModelsTest {
 
     @Test
     fun `PageSize has 6 options`() {
-        assertEquals(6, PageSize.values().size)
+        assertEquals(6, PageSize.entries.size)
     }
 
     // ========== SortOrder Tests ==========
 
     @Test
     fun `SortOrder has exactly 2 values`() {
-        val values = SortOrder.values()
+        val values = SortOrder.entries.toTypedArray()
         assertEquals(2, values.size)
         assertTrue(values.contains(SortOrder.NEWEST_FIRST))
         assertTrue(values.contains(SortOrder.OLDEST_FIRST))

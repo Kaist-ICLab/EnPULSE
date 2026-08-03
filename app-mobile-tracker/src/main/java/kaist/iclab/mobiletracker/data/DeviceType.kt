@@ -13,7 +13,7 @@ enum class DeviceType(val value: Int) {
          * Get DeviceType from integer value
          */
         fun fromInt(value: Int): DeviceType {
-            return values().find { it.value == value } ?: PHONE
+            return entries.find { it.value == value } ?: PHONE
         }
     }
 }

@@ -27,6 +27,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.android.ext.android.inject
 import org.koin.core.qualifier.named
+import kotlin.time.Duration.Companion.milliseconds
 
 class SensorDataReceiver(
     private val context: Context,
@@ -61,7 +62,6 @@ class SensorDataReceiver(
             it.id to { e: SensorEntity ->
                 eventChannel.trySend(it.id to e)
 //                Log.v(it.id, e.toString())
-                Unit
             }
         }
 
@@ -116,7 +116,7 @@ class SensorDataReceiver(
                             FLUSH_INTERVAL_MS - (System.currentTimeMillis() - lastFlushTime)
                         )
 
-                        val result = withTimeoutOrNull(nextFlushDelay) {
+                        val result = withTimeoutOrNull(nextFlushDelay.milliseconds) {
                             eventChannel.receive()
                         }
 
@@ -216,7 +216,7 @@ class SensorDataReceiver(
             }
             if (buffer.isNotEmpty()) {
                 runBlocking {
-                    withTimeoutOrNull(3000L) {
+                    withTimeoutOrNull(3000L.milliseconds) {
                         flushBuffer(buffer)
                     } ?: Log.w("SensorDataReceiver", "Flush timed out during onDestroy")
                 }

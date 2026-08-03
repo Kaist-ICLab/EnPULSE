@@ -6,8 +6,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.ui.components.Popup.DialogButtonConfig
-import kaist.iclab.mobiletracker.ui.components.Popup.PopupDialog
+import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
+import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 
 @Composable
 fun FullScreenIntentPermissionDialog(

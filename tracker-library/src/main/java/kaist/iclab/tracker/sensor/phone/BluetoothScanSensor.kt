@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration.Companion.milliseconds
 
 class BluetoothScanSensor(
     context: Context,
@@ -120,7 +121,7 @@ class BluetoothScanSensor(
             extras.getParcelable(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
         } else {
             @Suppress("DEPRECATION")
-            extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+            extras.getParcelable(BluetoothDevice.EXTRA_DEVICE)
         } ?: return@BroadcastListener
         handleDeviceFound(device, System.currentTimeMillis(), rssi, false)
     }
@@ -134,7 +135,7 @@ class BluetoothScanSensor(
                 adapter.bluetoothLeScanner?.startScan(scanCallback)
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    delay(configStateFlow.value.scanDuration) // 5 seconds delay
+                    delay(configStateFlow.value.scanDuration.milliseconds) // 5 seconds delay
                     adapter.bluetoothLeScanner?.stopScan(scanCallback)
                     adapter.cancelDiscovery()
                 }

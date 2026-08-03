@@ -28,15 +28,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Supabase-based authentication implementation using Google Sign-In.
  * Uses CredentialManager to get Google ID token and authenticates with Supabase Auth.
  */
 class SupabaseAuth(
-    private val context: Context,
+    context: Context,
     private val clientId: String,
-    private val supabaseHelper: SupabaseHelper,
+    supabaseHelper: SupabaseHelper,
     private val syncTimestampService: SyncTimestampService
 ) : Authentication {
 
@@ -48,7 +49,7 @@ class SupabaseAuth(
     private val credentialManager = CredentialManager.create(context)
     private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
-    private val _userStateFlow = MutableStateFlow<UserState>(
+    private val _userStateFlow = MutableStateFlow(
         UserState(isLoggedIn = false, user = null, token = null)
     )
     override val userStateFlow: StateFlow<UserState> = _userStateFlow.asStateFlow()
@@ -67,7 +68,7 @@ class SupabaseAuth(
         authScope.launch {
             try {
                 // Small delay to ensure Supabase client is fully initialized and has loaded persisted session
-                delay(200)
+                delay(200.milliseconds)
 
                 // Get current session (Supabase automatically loads from persisted storage)
                 val session = supabaseClient.auth.currentSessionOrNull()
@@ -122,9 +123,9 @@ class SupabaseAuth(
             Log.e(TAG, "Login failed: ${e.message}", e)
 
             // Handle specific error cases
-            val errorMessage = when {
-                // Check for reauth error in both errorMessage and exception message
-                e is GetCredentialCancellationException && (
+            // Check for reauth error in both errorMessage and exception message
+            val errorMessage = when (e) {
+                is GetCredentialCancellationException if (
                         e.errorMessage?.contains("reauth", ignoreCase = true) == true ||
                                 e.message?.contains("reauth", ignoreCase = true) == true ||
                                 e.message?.contains("[16]", ignoreCase = false) == true
@@ -132,7 +133,7 @@ class SupabaseAuth(
                     "Login failed. Please try again"
                 }
 
-                e is GetCredentialCancellationException -> {
+                is GetCredentialCancellationException -> {
                     "Login was cancelled. Please try again."
                 }
 

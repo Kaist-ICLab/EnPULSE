@@ -107,8 +107,6 @@ class SurveyService(
             .select { filter { isIn("survey_id", surveyIds) } }
             .decodeList<SurveyQuestionEntity>()
 
-        val questionIds = questions.map { it.id }
-
         // 3. Bulk fetch all conditional triggers associated with the questions
         val triggerIds = questions.mapNotNull { it.triggeredBy }
         val triggers = if (triggerIds.isNotEmpty()) {

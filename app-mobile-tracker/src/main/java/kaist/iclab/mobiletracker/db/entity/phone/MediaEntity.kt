@@ -5,7 +5,6 @@ import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.entity.RecordSerializable
-import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

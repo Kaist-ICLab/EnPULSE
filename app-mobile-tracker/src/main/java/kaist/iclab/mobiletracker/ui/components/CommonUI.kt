@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.Styles
+import kaist.iclab.mobiletracker.ui.screens.settings.Styles
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 
 /**

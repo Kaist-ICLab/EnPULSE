@@ -280,7 +280,7 @@ object SurveyBuilder {
 
             "Contains" -> {
                 val target = value?.jsonPrimitive?.content?.toDoubleOrNull()?.toInt() ?: return null
-                SetPredicate.Contains<Int, Set<Int>>(target)
+                SetPredicate.Contains(target)
             }
 
             else -> null

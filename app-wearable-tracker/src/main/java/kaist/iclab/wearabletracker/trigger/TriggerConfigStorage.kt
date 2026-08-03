@@ -3,6 +3,7 @@ package kaist.iclab.wearabletracker.trigger
 import android.content.Context
 import android.util.Log
 import kotlinx.serialization.json.Json
+import androidx.core.content.edit
 
 /**
  * Persists the trigger configuration and associated survey configs to disk.
@@ -28,7 +29,7 @@ class TriggerConfigStorage(context: Context) {
     fun saveConfig(payload: TriggerConfigPayload) {
         try {
             val jsonString = json.encodeToString(payload)
-            prefs.edit().putString(KEY_CONFIG, jsonString).apply()
+            prefs.edit { putString(KEY_CONFIG, jsonString) }
             Log.d(TAG, "Persisted trigger config to disk (${jsonString.length} bytes)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to persist trigger config: ${e.message}", e)
@@ -53,7 +54,7 @@ class TriggerConfigStorage(context: Context) {
      * Clear the persisted configuration.
      */
     fun clearConfig() {
-        prefs.edit().remove(KEY_CONFIG).apply()
+        prefs.edit { remove(KEY_CONFIG) }
         Log.d(TAG, "Cleared persisted trigger config")
     }
 }

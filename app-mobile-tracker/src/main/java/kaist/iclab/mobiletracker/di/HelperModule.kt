@@ -4,11 +4,13 @@ import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.DataExportHelper
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
+import kaist.iclab.mobiletracker.services.AutoSyncManager
 import kaist.iclab.mobiletracker.services.CampaignService
 import kaist.iclab.mobiletracker.services.ProfileService
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.TriggerConfigPusher
 import kaist.iclab.mobiletracker.services.TriggerService
+import kaist.iclab.mobiletracker.utils.CsvExportHelper
 import kaist.iclab.mobiletracker.services.WebAppService
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import org.koin.android.ext.koin.androidContext
@@ -64,7 +66,22 @@ val helperModule = module {
     // DataExportHelper
     single {
         DataExportHelper(
+            context = androidContext(),
             handlerRegistry = get()
+        )
+    }
+
+    // CsvExportHelper - holds application context for CSV export/share
+    single {
+        CsvExportHelper(
+            context = androidContext()
+        )
+    }
+
+    // AutoSyncManager - wraps AutoSyncService start/stop
+    single {
+        AutoSyncManager(
+            context = androidContext()
         )
     }
 

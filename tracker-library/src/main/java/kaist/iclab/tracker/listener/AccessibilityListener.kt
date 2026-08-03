@@ -1,6 +1,7 @@
 package kaist.iclab.tracker.listener
 
 import android.accessibilityservice.AccessibilityService
+import android.annotation.SuppressLint
 import android.view.accessibility.AccessibilityEvent
 import kaist.iclab.tracker.listener.core.AccessibilityEventInfo
 import kaist.iclab.tracker.listener.core.Listener
@@ -9,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AccessibilityListener : Listener<AccessibilityEventInfo> {
+    @SuppressLint("AccessibilityPolicy")
     class AccessibilityServiceAdaptor : AccessibilityService() {
         companion object {
             val receivers = mutableListOf<(AccessibilityEventInfo) -> Unit>()

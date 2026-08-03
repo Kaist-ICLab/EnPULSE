@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +40,9 @@ import kaist.iclab.wearabletracker.theme.AppSpacing
 import kaist.iclab.wearabletracker.theme.DeviceNameText
 import kaist.iclab.wearabletracker.theme.SyncStatusText
 import kotlinx.coroutines.delay
+import java.util.Date
+import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun DeviceStatusInfo(
@@ -219,7 +223,7 @@ private fun RecordingDuration(startTime: Long) {
     LaunchedEffect(startTime) {
         while (true) {
             now = System.currentTimeMillis()
-            delay(1000L)
+            delay(1000L.milliseconds)
         }
     }
 
@@ -229,9 +233,9 @@ private fun RecordingDuration(startTime: Long) {
     val seconds = elapsed % 60
 
     val durationText = if (hours > 0) {
-        String.format("%d:%02d:%02d", hours, minutes, seconds)
+        String.format(LocalLocale.current.platformLocale, "%d:%02d:%02d", hours, minutes, seconds)
     } else {
-        String.format("%02d:%02d", minutes, seconds)
+        String.format(LocalLocale.current.platformLocale, "%02d:%02d", minutes, seconds)
     }
 
     StatusChip(
@@ -256,6 +260,6 @@ private fun formatCount(count: Int): String {
  * Format the sync timestamp to "YYYY/MM/DD HH.mm" format.
  */
 private fun formatSyncTimestamp(timestamp: Long): String {
-    val dateFormat = java.text.SimpleDateFormat("yyyy/MM/dd HH.mm", java.util.Locale.getDefault())
-    return dateFormat.format(java.util.Date(timestamp))
+    val dateFormat = java.text.SimpleDateFormat("yyyy/MM/dd HH.mm", Locale.getDefault())
+    return dateFormat.format(Date(timestamp))
 }

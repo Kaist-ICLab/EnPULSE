@@ -20,7 +20,7 @@ class DefaultSurveyActivity : SurveyActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     SurveyScreen(
                         survey = survey,
-                        pushSurveyResult = { it -> pushSurveyResult(it); finish() },
+                        pushSurveyResult = { pushSurveyResult(it); finish() },
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

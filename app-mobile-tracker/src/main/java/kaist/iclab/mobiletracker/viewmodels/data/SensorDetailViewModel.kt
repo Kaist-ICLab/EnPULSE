@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.viewmodels.data
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,10 +10,12 @@ import kaist.iclab.mobiletracker.repository.PageSize
 import kaist.iclab.mobiletracker.repository.SensorDetailInfo
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.SortOrder
-import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.CsvExportHelper
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -45,11 +46,15 @@ data class SensorDetailUiState(
 class SensorDetailViewModel(
     private val dataRepository: DataRepository,
     private val sensorId: String,
-    private val context: Context
+    private val csvExportHelper: CsvExportHelper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SensorDetailUiState())
     val uiState: StateFlow<SensorDetailUiState> = _uiState.asStateFlow()
+
+    // One-shot UI events (e.g. toasts), collected by the host screen.
+    private val _uiEvent = MutableSharedFlow<SensorDetailUiEvent>()
+    val uiEvent: SharedFlow<SensorDetailUiEvent> = _uiEvent.asSharedFlow()
 
     init {
         loadSensorDetail()
@@ -196,10 +201,10 @@ class SensorDetailViewModel(
                 )
                 _uiState.value = _uiState.value.copy(sensorInfo = updatedInfo)
                 // Show success toast
-                AppToast.show(context, R.string.record_deleted_success)
-            } catch (e: Exception) {
+                _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.record_deleted_success))
+            } catch (_: Exception) {
                 // Show error toast
-                AppToast.show(context, R.string.record_deleted_error)
+                _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.record_deleted_error))
             }
         }
     }
@@ -216,22 +221,22 @@ class SensorDetailViewModel(
                 val result = dataRepository.uploadSensorData(sensorId)
                 when {
                     result > 0 -> {
-                        AppToast.show(context, R.string.toast_sensor_data_uploaded)
+                        _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_uploaded))
                         // Refresh to update sync timestamp
                         loadSensorDetail()
                     }
 
                     result == 0 -> {
-                        AppToast.show(context, R.string.toast_no_data_to_upload)
+                        _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_upload))
                     }
 
                     else -> {
-                        AppToast.show(context, R.string.toast_sensor_data_upload_error)
+                        _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_upload_error))
                     }
                 }
             } catch (e: Exception) {
                 Log.e("SensorDetailViewModel", "Error uploading data", e)
-                AppToast.show(context, R.string.toast_sensor_data_upload_error)
+                _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_upload_error))
             } finally {
                 _uiState.value = _uiState.value.copy(isUploading = false)
             }
@@ -248,12 +253,12 @@ class SensorDetailViewModel(
             _uiState.value = _uiState.value.copy(isDeleting = true)
             try {
                 dataRepository.deleteAllSensorData(sensorId)
-                AppToast.show(context, R.string.toast_sensor_data_deleted)
+                _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_deleted))
                 // Refresh list
                 loadSensorDetail()
             } catch (e: Exception) {
                 Log.e("SensorDetailViewModel", "Error deleting data", e)
-                AppToast.show(context, R.string.toast_error_generic)
+                _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_error_generic))
             } finally {
                 _uiState.value = _uiState.value.copy(isDeleting = false)
             }
@@ -275,23 +280,30 @@ class SensorDetailViewModel(
                 )
 
                 if (records.isEmpty()) {
-                    AppToast.show(context, R.string.toast_no_data_to_export)
+                    _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_export))
                 } else {
                     val sensorName = _uiState.value.sensorInfo?.displayName ?: sensorId
-                    val uri = CsvExportHelper.exportToCsv(context, sensorName, records)
+                    val uri = csvExportHelper.exportToCsv(sensorName, records)
 
                     if (uri != null) {
-                        CsvExportHelper.shareCsv(context, uri, sensorName)
+                        csvExportHelper.shareCsv(uri, sensorName)
                     } else {
-                        AppToast.show(context, R.string.toast_export_failed)
+                        _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_export_failed))
                     }
                 }
             } catch (e: Exception) {
                 Log.e("SensorDetailViewModel", "Error exporting CSV", e)
-                AppToast.show(context, R.string.toast_export_failed)
+                _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_export_failed))
             } finally {
                 _uiState.value = _uiState.value.copy(isExporting = false)
             }
         }
     }
+}
+
+/**
+ * One-shot UI events emitted by [SensorDetailViewModel].
+ */
+sealed interface SensorDetailUiEvent {
+    data class ShowToast(val messageResId: Int) : SensorDetailUiEvent
 }

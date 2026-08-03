@@ -4,15 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
 import com.samsung.android.sdk.health.data.request.DataType
 import com.samsung.android.sdk.health.data.request.DataTypes
 import com.samsung.android.sdk.health.data.request.LocalTimeFilter
 import com.samsung.android.sdk.health.data.request.Ordering
+import kaist.iclab.tracker.R
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bedtime
-import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
@@ -28,7 +28,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
-import kotlin.time.toDuration
 
 class SleepSensor(
     context: Context,

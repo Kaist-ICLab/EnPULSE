@@ -24,7 +24,7 @@ class ConnectivitySensor(
     private val context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<ConnectivitySensor.Config, ConnectivitySensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
     titleResId = R.string.sensor_connectivity,

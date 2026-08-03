@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">EnPULSE</string>
     <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
 
@@ -15,7 +15,9 @@
     <string name="home_status_running">실행 중</string>
     <string name="home_status_stopped">중지됨</string>
     <string name="home_daily_highlights">오늘의 데이터 현황</string>
-    <string name="home_logs_unit">%1$d개 로그</string>
+    <plurals name="home_logs_unit" tools:ignore="UnusedQuantity">
+        <item quantity="other">%1$d개 로그</item>
+    </plurals>
     <string name="home_empty_state_message">데이터 수집을 시작해주세요</string>
     <string name="home_watch_status_label">갤럭시 워치 기기</string>
     <string name="home_watch_connected">연결됨</string>
@@ -241,7 +243,7 @@
     <string name="copy_url_desc">URL 복사</string>
     <string name="copy_key_desc">Key 복사</string>
     <string name="server_config_test_connection">연결 테스트</string>
-    <string name="server_config_testing_connection">연결 테스트 중...</string>
+    <string name="server_config_testing_connection">연결 테스트 중…</string>
     <string name="server_config_connection_success">연결에 성공했습니다!</string>
     <string name="server_config_connection_failed">연결에 실패했습니다. URL과 Key를 확인해주세요.</string>
 

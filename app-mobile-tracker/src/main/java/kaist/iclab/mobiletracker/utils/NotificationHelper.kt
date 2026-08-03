@@ -73,15 +73,15 @@ object NotificationHelper {
         channelName: String,
         importance: Int = NotificationManager.IMPORTANCE_DEFAULT
     ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = context.getSystemService(NotificationManager::class.java)
-            if (notificationManager.getNotificationChannel(channelId) == null) {
-                val channel = NotificationChannel(channelId, channelName, importance).apply {
-                    description = channelName
-                }
-                notificationManager.createNotificationChannel(channel)
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val notificationManager = context.getSystemService(NotificationManager::class.java)
+        if (notificationManager.getNotificationChannel(channelId) == null) {
+            val channel = NotificationChannel(channelId, channelName, importance).apply {
+                description = channelName
             }
+            notificationManager.createNotificationChannel(channel)
         }
+//        }
     }
 
     /**

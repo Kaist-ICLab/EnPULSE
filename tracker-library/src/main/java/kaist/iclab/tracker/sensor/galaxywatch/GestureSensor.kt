@@ -305,11 +305,11 @@ class GestureSensor(
         }
 
         if (shouldClassify) {
-            classify(entity.timestamp)
+            classify()
         }
     }
 
-    private fun classify(timestamp: Long) {
+    private fun classify() {
         val imuInput = synchronized(dataLock) {
             val result = FloatArray(CLASSIFIER_WINDOW_FRAMES * CHANNELS)
             var offset = 0

@@ -252,8 +252,7 @@ class CouchbaseSensorDataStorage(
      * whatever comes out onto the JSON tree.
      */
     private fun Any?.toJsonElement(): JsonElement {
-        val value = this
-        return when (value) {
+        return when (val value = this) {
             null -> JsonNull
             is String -> JsonPrimitive(value)
             is Boolean -> JsonPrimitive(value)

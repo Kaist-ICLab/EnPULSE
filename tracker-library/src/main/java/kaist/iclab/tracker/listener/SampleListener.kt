@@ -7,6 +7,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class SampleListener(
     val duration: Long
@@ -22,7 +23,7 @@ class SampleListener(
             job = CoroutineScope(Dispatchers.IO).launch {
                 while (isActive) {
                     listeners.forEach { it(System.currentTimeMillis()) }
-                    delay(duration)
+                    delay(duration.milliseconds)
                 }
             }
         }

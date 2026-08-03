@@ -11,7 +11,7 @@ import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
  * Service for handling campaign trigger operations with Supabase.
  */
 class TriggerService(
-    private val supabaseHelper: SupabaseHelper
+    supabaseHelper: SupabaseHelper
 ) {
     private val supabaseClient = supabaseHelper.supabaseClient
     private val tableName = "campaign_trigger"

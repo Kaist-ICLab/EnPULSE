@@ -29,7 +29,7 @@ internal fun Project.configureKotlinAndroid(
     }
 }
 
-internal fun Project.configureKotlinCompilerOption(
+internal fun configureKotlinCompilerOption(
     extension: KotlinAndroidProjectExtension
 ) {
     extension.apply {

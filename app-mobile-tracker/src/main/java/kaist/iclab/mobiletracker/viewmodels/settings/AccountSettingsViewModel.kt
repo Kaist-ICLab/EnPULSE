@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.viewmodels.settings
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
@@ -14,12 +13,14 @@ import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
-import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -32,8 +33,11 @@ class AccountSettingsViewModel(
     private val surveyRepository: SurveyRepository,
     campaignSensorRepository: CampaignSensorRepository,
     backgroundController: BackgroundController,
-    private val context: Context
 ) : ViewModel() {
+
+    // One-shot UI events (e.g. toasts), collected by the host screen.
+    private val _uiEvent = MutableSharedFlow<AccountSettingsUiEvent>()
+    val uiEvent: SharedFlow<AccountSettingsUiEvent> = _uiEvent.asSharedFlow()
 
     // Campaign state from repository
     val campaigns: StateFlow<List<CampaignData>> = campaignRepository.campaignsFlow
@@ -125,13 +129,13 @@ class AccountSettingsViewModel(
         val syncResult = userProfileRepository.syncFullStudyConfig()
 
         if (syncResult.isSuccess) {
-            AppToast.show(context, R.string.toast_experiment_group_selected)
+            _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_experiment_group_selected))
         } else {
             val exception = (syncResult as? Result.Error)?.exception
             if (exception is AppError.CollectionRunning) {
-                AppToast.show(context, R.string.turn_off_data_collection_first)
+                _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.turn_off_data_collection_first))
             } else {
-                AppToast.show(context, R.string.toast_experiment_group_selected_partial_error)
+                _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_experiment_group_selected_partial_error))
             }
         }
     }
@@ -154,11 +158,11 @@ class AccountSettingsViewModel(
                         // Clear cached sensors/surveys and refresh the profile so the
                         // UI reflects that no campaign is joined.
                         userProfileRepository.syncFullStudyConfig()
-                        AppToast.show(context, R.string.toast_campaign_left)
+                        _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_campaign_left))
                     }
 
                     is Result.Error -> {
-                        AppToast.show(context, R.string.error_generic)
+                        _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.error_generic))
                     }
                 }
             } finally {
@@ -176,13 +180,13 @@ class AccountSettingsViewModel(
                 val result = userProfileRepository.syncFullStudyConfig()
 
                 if (result.isSuccess) {
-                    AppToast.show(context, R.string.toast_success_saved)
+                    _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_success_saved))
                 } else {
                     val exception = (result as? Result.Error)?.exception
                     if (exception is AppError.CollectionRunning) {
-                        AppToast.show(context, R.string.turn_off_data_collection_first)
+                        _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.turn_off_data_collection_first))
                     } else {
-                        AppToast.show(context, R.string.error_generic)
+                        _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.error_generic))
                     }
                 }
             } finally {
@@ -190,4 +194,11 @@ class AccountSettingsViewModel(
             }
         }
     }
+}
+
+/**
+ * One-shot UI events emitted by [AccountSettingsViewModel].
+ */
+sealed interface AccountSettingsUiEvent {
+    data class ShowToast(val messageResId: Int) : AccountSettingsUiEvent
 }

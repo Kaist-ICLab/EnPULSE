@@ -15,24 +15,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.integerResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import kaist.iclab.mobiletracker.ui.screens.DataScreen.DataScreen
-import kaist.iclab.mobiletracker.ui.screens.HomeScreen.HomeScreen
-import kaist.iclab.mobiletracker.ui.screens.LoginScreen.LoginScreen
-import kaist.iclab.mobiletracker.ui.screens.OnboardingScreen.OnboardingScreen
-import kaist.iclab.mobiletracker.ui.screens.SensorDetailScreen.SensorDetailScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AboutSettings.AboutSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.AccountSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.AccountSettings.CampaignSettings.CampaignSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.DataSyncSettings.ServerSyncSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.LanguageSettings.LanguageScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PermissionSettings.PermissionSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.PhoneSensorConfigSettings.PhoneSensorConfigSettingsScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.ServerConnectionSettings.ServerConnectionScreen
-import kaist.iclab.mobiletracker.ui.screens.SettingsScreen.SettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.WebAppsScreen.WebAppsScreen
+import kaist.iclab.mobiletracker.ui.screens.data.DataScreen
+import kaist.iclab.mobiletracker.ui.screens.home.HomeScreen
+import kaist.iclab.mobiletracker.ui.screens.login.LoginScreen
+import kaist.iclab.mobiletracker.ui.screens.onboarding.OnboardingScreen
+import kaist.iclab.mobiletracker.ui.screens.sensor.SensorDetailScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.SettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.about.AboutSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.account.AccountSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.account.CampaignSettings.CampaignSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.language.LanguageScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.permission.PermissionSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.sensor.PhoneSensorConfigSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.server.ServerConnectionScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.sync.ServerSyncSettingsScreen
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthUiEvent
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
@@ -55,7 +56,7 @@ fun NavGraph(
     val activity = context as? Activity
 
     // Track previous error message to prevent duplicate toasts
-    var previousErrorMessage by remember { mutableStateOf<String?>(userState.message) }
+    var previousErrorMessage by remember { mutableStateOf(userState.message) }
 
     // Show toast when authentication error occurs via UserState
     LaunchedEffect(userState.message) {
@@ -82,13 +83,15 @@ fun NavGraph(
     }
 
     // Get system animation duration (respects user's animation speed settings)
-    // Fallback to 300ms if system value is unavailable or invalid
-    val animationDuration = try {
-        val systemDuration = context.resources.getInteger(android.R.integer.config_mediumAnimTime)
-        if (systemDuration > 0) systemDuration else 400
-    } catch (_: Exception) {
-        400 // Fallback to 300ms if system resource is unavailable
-    }
+    // Fallback to 400ms if system value is unavailable or invalid
+//    val animationDuration = try {
+//        val systemDuration = integerResource(android.R.integer.config_mediumAnimTime)
+//        if (systemDuration > 0) systemDuration else 400
+//    } catch (_: Exception) {
+//        400 // Fallback to 300ms if system resource is unavailable
+//    }
+
+    val animationDuration = integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
 
     // Handle language change by recreating activity
     val onLanguageChanged: () -> Unit = {

@@ -1,22 +1,25 @@
 package kaist.iclab.mobiletracker.viewmodels.data
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.repository.DataRepository
 import kaist.iclab.mobiletracker.repository.SensorInfo
-import kaist.iclab.mobiletracker.utils.AppToast
+import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Data class to track the progress of uploading all sensors.
@@ -58,13 +61,16 @@ data class DataUiState(
 class DataViewModel(
     private val dataRepository: DataRepository,
     private val dataExportHelper: kaist.iclab.mobiletracker.helpers.DataExportHelper,
-    private val context: Context
+    private val syncTimestampService: SyncTimestampService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DataUiState())
     val uiState: StateFlow<DataUiState> = _uiState.asStateFlow()
 
-    private val prefs = context.getSharedPreferences("sync_timestamps", Context.MODE_PRIVATE)
+    // One-shot UI events (e.g. toasts, share sheet), collected by the host screen.
+    private val _uiEvent = MutableSharedFlow<DataUiEvent>()
+    val uiEvent: SharedFlow<DataUiEvent> = _uiEvent.asSharedFlow()
+
     private val dateFormat =
         java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
 
@@ -76,20 +82,12 @@ class DataViewModel(
     private fun startTimestampUpdates() {
         viewModelScope.launch {
             while (true) {
-                val currentTime = dateFormat.format(java.util.Date())
-                val lastWatch = prefs.getLong("last_watch_data", 0L).let {
-                    if (it > 0) dateFormat.format(java.util.Date(it)) else null
-                }
-                val lastUpload = prefs.getLong("last_successful_upload", 0L).let {
-                    if (it > 0) dateFormat.format(java.util.Date(it)) else null
-                }
-
                 _uiState.value = _uiState.value.copy(
-                    currentTime = currentTime,
-                    lastWatchData = lastWatch,
-                    lastSuccessfulUpload = lastUpload
+                    currentTime = dateFormat.format(java.util.Date()),
+                    lastWatchData = syncTimestampService.getLastWatchDataReceived(),
+                    lastSuccessfulUpload = syncTimestampService.getLastSuccessfulUpload()
                 )
-                kotlinx.coroutines.delay(1000L)
+                kotlinx.coroutines.delay(1000L.milliseconds)
             }
         }
     }
@@ -133,7 +131,7 @@ class DataViewModel(
         viewModelScope.launch {
             val sensorsToUpload = _uiState.value.sensors.filter { it.recordCount > 0 }
             if (sensorsToUpload.isEmpty()) {
-                AppToast.show(context, R.string.toast_no_data_to_upload)
+                _uiEvent.emit(DataUiEvent.ShowToast(R.string.toast_no_data_to_upload))
                 return@launch
             }
 
@@ -218,10 +216,10 @@ class DataViewModel(
             _uiState.value = _uiState.value.copy(isDeleting = true)
             try {
                 dataRepository.deleteAllAllData()
-                AppToast.show(context, R.string.toast_data_deleted)
+                _uiEvent.emit(DataUiEvent.ShowToast(R.string.toast_data_deleted))
                 loadSensorInfo()
-            } catch (e: Exception) {
-                AppToast.show(context, R.string.toast_error_generic)
+            } catch (_: Exception) {
+                _uiEvent.emit(DataUiEvent.ShowToast(R.string.toast_error_generic))
             } finally {
                 _uiState.value = _uiState.value.copy(isDeleting = false)
             }
@@ -238,43 +236,26 @@ class DataViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isExporting = true)
             try {
-                val zipFile = dataExportHelper.exportAllData(context)
+                val zipFile = dataExportHelper.exportAllData()
 
                 if (zipFile != null && zipFile.exists()) {
-                    shareExportFile(zipFile)
+                    dataExportHelper.shareZip(zipFile)
                 } else {
-                    AppToast.show(context, R.string.toast_export_failed)
+                    _uiEvent.emit(DataUiEvent.ShowToast(R.string.toast_export_failed))
                 }
             } catch (e: Exception) {
                 Log.e("DataViewModel", "Error exporting all data", e)
-                AppToast.show(context, R.string.toast_export_failed)
+                _uiEvent.emit(DataUiEvent.ShowToast(R.string.toast_export_failed))
             } finally {
                 _uiState.value = _uiState.value.copy(isExporting = false)
             }
         }
     }
+}
 
-    private fun shareExportFile(file: java.io.File) {
-        try {
-            val uri = androidx.core.content.FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
-
-            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "application/zip"
-                putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                putExtra(android.content.Intent.EXTRA_SUBJECT, "Mobile Tracker Data Export")
-                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
-            val chooser = android.content.Intent.createChooser(shareIntent, "Share Data Export")
-            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(chooser)
-        } catch (e: Exception) {
-            Log.e("DataViewModel", "Error sharing export file", e)
-            AppToast.show(context, R.string.toast_export_failed)
-        }
-    }
+/**
+ * One-shot UI events emitted by [DataViewModel].
+ */
+sealed interface DataUiEvent {
+    data class ShowToast(val messageResId: Int) : DataUiEvent
 }

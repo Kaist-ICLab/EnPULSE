@@ -18,7 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.navigation.Screen
-import kaist.iclab.mobiletracker.ui.screens.MainScreen.MainScreen
+import kaist.iclab.mobiletracker.ui.screens.main.MainScreen
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import org.koin.android.ext.android.inject

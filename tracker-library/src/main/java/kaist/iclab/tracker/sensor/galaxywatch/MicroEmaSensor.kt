@@ -30,7 +30,7 @@ import kotlinx.serialization.json.encodeToJsonElement
  */
 class MicroEmaSensor(
     permissionManager: PermissionManager,
-    private val configStorage: StateStorage<Config>,
+    configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
     private val bleChannel: BLEDataChannel
 ): BaseSensor<MicroEmaSensor.Config, SurveySensor.Entity>(
@@ -46,7 +46,7 @@ class MicroEmaSensor(
     ) : SensorConfig {
         companion object {
             fun fromJson(jsonString: String): Config {
-                return Json.Default.decodeFromString<Config>(jsonString)
+                return Json.decodeFromString<Config>(jsonString)
             }
         }
     }

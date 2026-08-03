@@ -19,7 +19,7 @@ class BatterySensor(
     context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
+    stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<BatterySensor.Config, BatterySensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
     titleResId = R.string.sensor_battery,
