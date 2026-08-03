@@ -1,7 +1,9 @@
 package kaist.iclab.mobiletracker.ui.screens.WebAppsScreen
 
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,13 +13,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
+import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.webapp.WebAppActivity
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 
 /**
@@ -34,6 +46,9 @@ fun WebAppRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+    val isPinSupported = ShortcutManagerCompat.isRequestPinShortcutSupported(context)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -75,6 +90,40 @@ fun WebAppRow(
                     )
             )
         }
+        
+        if (isPinSupported) {
+            TextButton(
+                onClick = {
+                    val intent = Intent(context, WebAppActivity::class.java).apply {
+                        action = Intent.ACTION_VIEW
+                        putExtra(WebAppActivity.EXTRA_URL, webApp.url)
+                        putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webApp.id)
+                    }
+                    val shortcutInfo = ShortcutInfoCompat.Builder(context, "webapp_${webApp.id}")
+                        .setShortLabel(webApp.name)
+                        .setLongLabel(webApp.name)
+                        .setIcon(IconCompat.createWithResource(context, R.mipmap.ic_launcher))
+                        .setIntent(intent)
+                        .build()
+                    ShortcutManagerCompat.requestPinShortcut(context, shortcutInfo, null)
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Home,
+                    contentDescription = "Add to Home Screen",
+                    modifier = Modifier.size(18.dp),
+                    tint = AppColors.TextSecondary
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = stringResource(R.string.web_app_add_to_home),
+                    fontSize = Styles.CARD_DESCRIPTION_FONT_SIZE,
+                    color = AppColors.TextSecondary
+                )
+            }
+        }
+
         Icon(
             imageVector = Icons.Filled.ChevronRight,
             contentDescription = null,
