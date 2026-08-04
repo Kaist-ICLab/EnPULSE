@@ -6,6 +6,7 @@ import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
 import kaist.iclab.mobiletracker.webapp.PersistentWebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
+import kaist.iclab.mobiletracker.webapp.WebAppIconCache
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
 import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
@@ -31,6 +32,8 @@ val webAppModule = module {
     single { CouchbaseWebAppConfigStorage(couchbase = get()) }
 
     single { CouchbaseWebAppStorage(couchbase = get()) }
+
+    single { WebAppIconCache(webAppService = get()) }
 
     single {
         WebAppTriggerHandler(

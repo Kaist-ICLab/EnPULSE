@@ -13,6 +13,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.storage.Storage
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 
 class SupabaseHelper(context: Context) {
@@ -43,6 +44,7 @@ class SupabaseHelper(context: Context) {
                 sessionManager = io.github.jan.supabase.auth.SettingsSessionManager(settings)
             }
             install(Functions)
+            install(Storage)
         }
     }
 

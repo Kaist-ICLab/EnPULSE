@@ -139,6 +139,7 @@ dependencies {
     implementation(libs.postgrest.kt)
     implementation(libs.functions.kt)
     implementation(libs.realtime.kt)
+    implementation(libs.storage.kt)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.core)
 
