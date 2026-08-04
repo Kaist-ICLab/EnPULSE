@@ -17,6 +17,7 @@ import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
+import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
@@ -51,6 +52,7 @@ class BLEHelper(
     private val surveyService by inject<SurveyService>()
     private val surveySensor by inject<SurveySensor>()
     private val userProfileRepository by inject<UserProfileRepository>()
+    private val webAppTriggerHandler by inject<WebAppTriggerHandler>()
 
     private var isInitialized = false
 
@@ -114,6 +116,22 @@ class BLEHelper(
             }
             Log.d(AppConfig.LogTags.PHONE_BLE, "Received PHONE_EMA_TRIGGER for surveyId=$surveyId")
             surveySensor.triggerSurveyNotification(surveyId)
+        }
+
+        // Listen for webapp-open triggers forwarded from the watch (the watch is the only place
+        // trigger conditions are evaluated; see WatchTriggerActionHandler.forwardWebAppTriggerToPhone)
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.WEBAPP_TRIGGER)) { _, json ->
+            webAppTriggerHandler.handleWebAppTriggerPayload(json)
+        }
+
+        // Listen for generic notification triggers forwarded from the watch
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.NOTIFICATION_TRIGGER)) { _, json ->
+            webAppTriggerHandler.handleNotificationTriggerPayload(json)
+        }
+
+        // Listen for generic broadcast triggers forwarded from the watch.
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.BROADCAST_TRIGGER)) { _, json ->
+            webAppTriggerHandler.handleBroadcastTriggerPayload(json)
         }
     }
 

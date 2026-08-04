@@ -202,8 +202,14 @@ class AndroidPermissionManager(
                 setHealthDataPermissionState(healthDataPermissionSet, res)
             },
             { error: Throwable ->
-                Log.e(TAG, "Error in getGrantedPermissionsAsync for Samsung Health", error)
-                // In case of a serious platform error, mark as unsupported to prevent infinite loading/retries
+                if (error is AuthorizationException) {
+                    Log.w(TAG, "Samsung Health SDK Authorization Error (2003): Could not get policy. App not registered as partner. Awaiting Developer Mode.")
+                    // DO NOT set as unsupported here, so the user can still trigger the Toast and request it once dev mode is on.
+                } else {
+                    Log.e(TAG, "Error in getGrantedPermissionsAsync for Samsung Health", error)
+                }
+                
+                // In case of a serious platform error, mark as unsupported
                 if (error is PlatformInternalException) {
                     setSamsungHealthPermissionsUnsupported()
                 }

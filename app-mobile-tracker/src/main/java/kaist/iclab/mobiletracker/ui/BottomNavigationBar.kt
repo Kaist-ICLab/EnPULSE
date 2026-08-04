@@ -3,9 +3,11 @@ package kaist.iclab.mobiletracker.ui
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -28,7 +30,7 @@ import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 
 /**
- * Bottom navigation bar with three tabs: Home, Data, and Settings
+ * Bottom navigation bar with four tabs: Data, Home, Web Apps, and Settings
  * Following Android official documentation: https://developer.android.com/develop/ui/compose/components/navigation-bar
  */
 @Composable
@@ -49,6 +51,12 @@ fun BottomNavigationBar(
             stringResource(R.string.nav_home),
             Icons.Outlined.Home,
             Icons.Filled.Home
+        ),
+        Destination(
+            Screen.WebApps.route,
+            stringResource(R.string.nav_web_apps),
+            Icons.Outlined.Public,
+            Icons.Filled.Public
         ),
         Destination(
             Screen.Setting.route,

@@ -1,9 +1,12 @@
 ## Local Configuration Template
-# Copy this file to local.properties and fill in your SDK directory and Supabase credentials.
+# Copy this file to local.properties and fill in your SDK directory, Supabase credentials, and WebApp dev server URL.
 
-# Location of the Android SDK.
+# Location of the Android SDK
 sdk.dir=/path/to/your/Android/sdk
 
 # Supabase backend credentials (used for data collection sync and authentication)
 SUPABASE_URL=https://your-supabase-instance.url/
 SUPABASE_ANON_KEY=your_supabase_anon_public_key
+
+# Google Auth client id for the Android app (Optional)
+WEB_CLIENT_ID=your_google_web_client_id

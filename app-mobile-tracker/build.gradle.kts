@@ -107,6 +107,10 @@ dependencies {
     /* Android Tracker Library */
     implementation(project(":tracker-library"))
 
+    /* Couchbase Lite - tracker-library exposes CouchbaseDB but not the underlying com.couchbase.lite
+       types, needed directly here by CouchbaseWebAppStorage */
+    implementation(libs.couchbase)
+
     /* Android Compose */
     implementation(libs.compose.activity)
     implementation(libs.compose.ui)
@@ -145,6 +149,9 @@ dependencies {
 
     /* Security - Encrypted SharedPreferences */
     implementation(libs.androidx.security.crypto)
+
+    /* WebView bridge (WebMessageListener) for EnPULSE webapps */
+    implementation(libs.androidx.webkit)
 
     /* Kotlin Serialization */
     implementation(libs.kotlinx.serialization.json)

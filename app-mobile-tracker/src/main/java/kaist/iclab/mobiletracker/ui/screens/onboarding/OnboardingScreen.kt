@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.helpers.ImageAsset
+import kaist.iclab.mobiletracker.ui.components.campaign.PasswordDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel
@@ -251,7 +252,7 @@ fun OnboardingScreen(
     }
 
     if (showPasswordDialog && uiState.selectedCampaign != null) {
-        kaist.iclab.mobiletracker.ui.components.campaign.PasswordDialog(
+        PasswordDialog(
             campaignName = uiState.selectedCampaign!!.name,
             onDismiss = { showPasswordDialog = false },
             onVerify = { password ->

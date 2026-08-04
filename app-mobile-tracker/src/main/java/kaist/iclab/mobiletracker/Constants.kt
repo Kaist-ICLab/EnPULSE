@@ -121,4 +121,12 @@ object Constants {
         const val ENGLISH = "en"
         const val KOREAN = "ko"
     }
+
+    /**
+     * Trigger Constants
+     */
+    object Trigger {
+        /** Threshold for discarding stale BLE triggers (5 minutes) */
+        const val STALE_THRESHOLD_MS = 5 * 60 * 1000L
+    }
 }

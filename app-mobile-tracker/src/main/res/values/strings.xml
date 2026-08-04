@@ -5,6 +5,7 @@
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_data">Data</string>
+    <string name="nav_web_apps">Web Apps</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Home Screen -->
@@ -46,6 +47,8 @@
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE Logo</string>
+    <string name="language_english">English</string>
+    <string name="language_korean">한국어</string>
 
     <!-- Settings Menu -->
     <string name="menu_account">Account</string>
@@ -75,6 +78,10 @@
     <string name="language_screen_description">Select your preferred language for the app interface. The app will display all text and menus in the selected language.</string>
     <string name="phone_sensor_screen_description">Enable or disable individual phone sensors for data collection. Toggle each sensor on or off to control what data is being tracked.</string>
     <string name="phone_sensor_empty_config">No sensors have been configured for your campaign by the researcher.</string>
+    <string name="web_apps_screen_title">Web Apps</string>
+    <string name="web_apps_screen_description">Third-party webapps registered for your campaign. Trigger conditions can open these directly on your phone.</string>
+    <string name="web_apps_empty_config">No webapps have been registered yet.</string>
+    <string name="web_app_add_to_home">Add to Home</string>
     <string name="permission_screen_description">Grant the permissions for the data you wish to track. Denying a permission will simply disable tracking for that specific sensor without affecting the rest of the app.</string>
     <string name="restricted_settings_title">Restricted Settings</string>
     <string name="restricted_settings_desc">Since you installed this app manually, Android restricts this setting.\n\nTo enable it:\n1. Go to App Info (we\'ll open it for you)\n2. Tap the top-right menu (3 dots)\n3. Select \'Allow restricted settings\'\n4. Return here to enable the permission.</string>
@@ -318,6 +325,7 @@
 
     <string name="toast_no_data_to_export">No data to export</string>
     <string name="toast_export_failed">Failed to export data</string>
+    <string name="toast_request_timeout">Request timed out. Please check your connection and try again.</string>
     <string name="sensor_export_csv">Export CSV</string>
 
     <!-- Onboarding Screen -->
@@ -377,4 +385,8 @@
 
     <string name="permission_instruction_title">Action Required</string>
     <string name="grant_permissions_in_menu_first">Please grant permissions in the Permissions menu first.</string>
+
+    <!-- WebView Error Strings -->
+    <string name="webview_failed_to_load">Failed to load</string>
+    <string name="webview_check_connection">Please check your connection and try again.</string>
 </resources>

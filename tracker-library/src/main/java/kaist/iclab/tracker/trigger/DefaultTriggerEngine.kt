@@ -206,6 +206,7 @@ class DefaultTriggerEngine(
             is TriggerActionConfig.WatchEma -> "watch_ema(surveyId=${action.surveyId})"
             is TriggerActionConfig.Ema -> "ema(surveyId=${action.surveyId})"
             is TriggerActionConfig.Broadcast -> "broadcast(${action.action})"
+            is TriggerActionConfig.Notification -> "notification(url=${action.url})"
         }
     }
 }

@@ -12,13 +12,13 @@ object Styles {
     // Layout spacings
     val SCREEN_HORIZONTAL_PADDING = 16.dp
     val SCREEN_VERTICAL_SPACING = 8.dp
-    val TOP_SPACER_HEIGHT = 16.dp
+    val TOP_SPACER_HEIGHT = 12.dp
     val BOTTOM_SPACER_HEIGHT = 8.dp
 
     // Greeting Section
     val GREETING_TITLE_FONT_SIZE = 22.sp
     val GREETING_SUBTITLE_FONT_SIZE = 14.sp
-    val GREETING_SUBTITLE_TOP_PADDING = 4.dp
+    val GREETING_SUBTITLE_TOP_PADDING = 2.dp
 
     // Grid Spacing
     val GRID_SECTION_TITLE_FONT_SIZE = 16.sp

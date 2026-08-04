@@ -4,6 +4,7 @@
 
     <!-- Permissions for sensor collection -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission
@@ -189,6 +190,13 @@
                 android:name="com.google.android.gms.auth.api.signin.client_id"
                 android:value="@string/default_web_client_id" />
         </activity>
+
+        <!-- WebView container for third-party EnPULSE webapps (survey/sensor bridge) -->
+        <activity
+            android:name=".webapp.WebAppActivity"
+            android:exported="true"
+            android:documentLaunchMode="intoExisting"
+            android:theme="@style/Theme.MobileTracker" />
 
         <!-- FileProvider for sharing exported CSV files -->
         <provider
