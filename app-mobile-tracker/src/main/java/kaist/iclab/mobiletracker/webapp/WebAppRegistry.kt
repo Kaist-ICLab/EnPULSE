@@ -20,7 +20,10 @@ data class WebAppConfig(
     val url: String,
 
     /** Origin (scheme + host [+ port]) this webapp is allowed to load and bridge from. */
-    val allowedOrigin: String
+    val allowedOrigin: String,
+
+    /** Path of the uploaded icon within the `campaign-webapp-icons` Storage bucket, if set. */
+    val iconPath: String? = null
 )
 
 /**
