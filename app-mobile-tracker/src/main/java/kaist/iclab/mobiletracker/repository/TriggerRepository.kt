@@ -15,6 +15,11 @@ interface TriggerRepository {
     val triggersFlow: StateFlow<CampaignTriggerList>
 
     /**
+     * Get the current trigger configurations directly from persisted storage.
+     */
+    fun getCachedTriggers(): CampaignTriggerList
+
+    /**
      * Fetch triggers for a campaign from Supabase and persist locally.
      * @param campaignId The campaign ID to fetch triggers for.
      * @return Result containing the count of triggers fetched, or error.
@@ -37,6 +42,8 @@ class TriggerRepositoryImpl(
 
     override val triggersFlow: StateFlow<CampaignTriggerList>
         get() = persistentStorage.stateFlow
+
+    override fun getCachedTriggers(): CampaignTriggerList = persistentStorage.get()
 
     override suspend fun fetchAndPersistTriggers(campaignId: Int): Result<Int> {
         return ErrorClassifier.runClassified(TAG, "fetch and persist triggers") {

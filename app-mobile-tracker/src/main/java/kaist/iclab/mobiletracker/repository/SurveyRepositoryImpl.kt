@@ -34,6 +34,8 @@ class SurveyRepositoryImpl(
     override val surveysFlow: StateFlow<SurveyConfigList>
         get() = persistentStorage.stateFlow
 
+    override fun getCachedSurveys(): SurveyConfigList = persistentStorage.get()
+
     override suspend fun fetchAndPersistSurveys(campaignId: Int): Result<Int> {
         return ErrorClassifier.runClassified(TAG, "fetch and persist surveys") {
             when (val result = surveyService.getCampaignSurveys(campaignId)) {
