@@ -62,6 +62,10 @@
     <string name="sdk_policy_error_title">Developer Mode Required</string>
     <string name="sdk_policy_error_message">Please enable developer mode in Health Platform app settings</string>
 
+    <!-- Phone Sync Required -->
+    <string name="phone_sync_required_title">Phone Sync Required</string>
+    <string name="phone_sync_required_message">Please open the EnPULSE app on your phone to sync the campaign configuration</string>
+
     <!-- Status Dashboard -->
     <string name="status_battery_format">🔋%1$d%%</string>
     <string name="status_records_format">📊%1$s</string>
