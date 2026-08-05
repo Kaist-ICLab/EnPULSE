@@ -113,15 +113,15 @@ class GestureSensor(
     ) : SensorEntity()
 
     override val id: String = "Gesture"
-    override val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
+    override val permissions: Array<String> get() = (arrayOf(Manifest.permission.RECORD_AUDIO) + imuSensor.permissions + audioSensor.permissions).distinct().toTypedArray()
 
-    override val foregroundServiceTypes: Array<Int> = listOfNotNull(
+    override val foregroundServiceTypes: Array<Int> get() = (listOfNotNull(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
         } else {
             null
         }
-    ).toTypedArray()
+    ) + imuSensor.foregroundServiceTypes.toList() + audioSensor.foregroundServiceTypes.toList()).distinct().toTypedArray()
 
     private val imuWindow = ArrayDeque<IMUSensor.Entity>(CLASSIFIER_WINDOW_FRAMES)
     private val eventWindow = ArrayDeque<IMUSensor.Entity>(EVENT_WINDOW_FRAMES)

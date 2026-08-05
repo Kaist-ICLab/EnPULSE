@@ -191,12 +191,20 @@
                 android:value="@string/default_web_client_id" />
         </activity>
 
-        <!-- WebView container for third-party EnPULSE webapps (survey/sensor bridge) -->
         <activity
             android:name=".webapp.WebAppActivity"
             android:exported="true"
             android:documentLaunchMode="intoExisting"
             android:theme="@style/Theme.MobileTracker" />
+
+        <!-- Developer test receiver to trigger WebApp notifications via ADB -->
+        <receiver
+            android:name=".webapp.WebAppTestReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="kaist.iclab.mobiletracker.test.TRIGGER_WEBAPP" />
+            </intent-filter>
+        </receiver>
 
         <!-- FileProvider for sharing exported CSV files -->
         <provider

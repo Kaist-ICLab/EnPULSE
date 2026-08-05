@@ -12,14 +12,18 @@ import android.webkit.WebViewClient
  * External links (different origins or custom intent schemes like `intent://`, `mailto:`, `tel:`)
  * are automatically delegated to the Android OS via [Intent.ACTION_VIEW] rather than rendering inside WebView.
  */
-class RestrictedWebViewClient(allowedOrigin: String) : WebViewClient() {
+class RestrictedWebViewClient(
+    allowedOrigin: String,
+    private val onExternalRedirect: () -> Unit = {}
+) : WebViewClient() {
     private val allowedHost: String? = Uri.parse(allowedOrigin).host
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         val scheme = request.url.scheme
         val host = request.url.host
 
-        if ((scheme == "http" || scheme == "https") && host == allowedHost) {
+        val isAllowedHost = host == allowedHost || (allowedHost != null && host?.endsWith(".$allowedHost") == true)
+        if ((scheme == "http" || scheme == "https") && isAllowedHost) {
             return false // Load internally in the WebView
         }
 
@@ -31,6 +35,10 @@ class RestrictedWebViewClient(allowedOrigin: String) : WebViewClient() {
                 Intent(Intent.ACTION_VIEW, request.url)
             }
             view.context.startActivity(intent)
+
+            if (request.isForMainFrame) {
+                onExternalRedirect()
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch external intent for ${request.url}", e)
         }

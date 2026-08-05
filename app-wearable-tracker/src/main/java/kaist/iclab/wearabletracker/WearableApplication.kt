@@ -9,6 +9,8 @@ import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
+import kaist.iclab.wearabletracker.trigger.TriggerConfigReceiver
+import kaist.iclab.tracker.trigger.engine.TriggerEngine
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -31,6 +33,8 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<SyncAckListener>().startListening()
         get<MicroEmaResponseManager>().startListening()
         get<CampaignSensorConfigRepository>().startListening()
+        get<TriggerConfigReceiver>().startListening()
+        get<TriggerEngine>().start()
     }
 
     override fun provideBackgroundControllerDependencies(): BackgroundControllerDependencies {

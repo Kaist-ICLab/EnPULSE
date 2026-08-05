@@ -16,6 +16,11 @@ interface SurveyRepository {
     val surveysFlow: StateFlow<SurveyConfigList>
 
     /**
+     * Get the current survey configurations directly from persisted storage.
+     */
+    fun getCachedSurveys(): SurveyConfigList
+
+    /**
      * Fetch surveys for a campaign from Supabase and persist locally.
      * Also applies the configuration to the in-memory SurveySensor.
      *

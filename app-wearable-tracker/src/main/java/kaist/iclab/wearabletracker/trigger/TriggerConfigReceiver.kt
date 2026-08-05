@@ -82,6 +82,18 @@ class TriggerConfigReceiver(
         ) { _, jsonElement ->
             handleDetectionStateUpdate(jsonElement)
         }
+
+        // Load persisted configuration on startup if it exists
+        try {
+            val cachedConfig = storage.loadConfig()
+            if (cachedConfig != null) {
+                Log.d(TAG, "Loading cached trigger config from disk: ${cachedConfig.triggers.size} triggers")
+                actionHandler.updateSurveyConfigs(cachedConfig.surveyConfigs)
+                triggerEngine.loadTriggers(cachedConfig.triggers)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load cached trigger config: ${e.message}", e)
+        }
     }
 
     private fun handleTriggerConfig(jsonElement: JsonElement) {

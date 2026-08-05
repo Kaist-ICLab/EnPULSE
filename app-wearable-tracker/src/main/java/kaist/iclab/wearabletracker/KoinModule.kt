@@ -43,6 +43,12 @@ import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
 import kaist.iclab.wearabletracker.storage.ObjectBoxRmssdHistory
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
 import kaist.iclab.wearabletracker.ui.SettingsViewModel
+import kaist.iclab.tracker.trigger.DefaultTriggerEngine
+import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
+import kaist.iclab.wearabletracker.trigger.WatchTriggerActionHandler
+import kaist.iclab.wearabletracker.trigger.TriggerConfigStorage
+import kaist.iclab.wearabletracker.trigger.TriggerConfigReceiver
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -377,6 +383,45 @@ val koinModule = module {
             ecgSensor = get(),
             watchSensorStores = get(),
             permissionManager = get<AndroidPermissionManager>()
+        )
+    }
+
+    // --- Trigger Engine ---
+
+    single {
+        DetectionStateTracker()
+    }
+
+    single<TriggerEngine> {
+        DefaultTriggerEngine(
+            context = androidContext(),
+            detectionStateTracker = get(),
+            coroutineScope = get()
+        ).apply {
+            setActionHandler(get<WatchTriggerActionHandler>())
+        }
+    }
+
+    single {
+        WatchTriggerActionHandler(
+            context = androidContext(),
+            microEmaRepository = get(),
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel()
+        )
+    }
+
+    single {
+        TriggerConfigStorage(context = androidContext())
+    }
+
+    single {
+        TriggerConfigReceiver(
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
+            triggerEngine = get(),
+            actionHandler = get(),
+            backgroundController = get(),
+            detectionStateTracker = get(),
+            storage = get()
         )
     }
 }
