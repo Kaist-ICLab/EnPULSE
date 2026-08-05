@@ -107,7 +107,7 @@ object Constants {
         const val EDA = "EDA"
         const val PPG = "PPG"
         const val SKIN_TEMPERATURE = "SkinTemperature"
-        const val LOCATION = "WatchLocation"
+        const val LOCATION = "Location"
         const val ECG = "ECG"
         const val IMU = "IMU"
         const val GESTURE = "Gesture"
