@@ -111,6 +111,7 @@ class WebAppTriggerHandler(
                     else -> intent.putExtra(key, value) // Default to String
                 }
             }
+            intent.setPackage(context.packageName)
             context.sendBroadcast(intent)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send broadcast/parse payload for BROADCAST_TRIGGER: ${e.message}", e)

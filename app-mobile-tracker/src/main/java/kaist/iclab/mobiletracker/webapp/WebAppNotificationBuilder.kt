@@ -26,9 +26,17 @@ object WebAppNotificationBuilder {
         scheduleId: String,
         baseUrl: String
     ): Intent {
-        val fullUrl = "$baseUrl?survey_id=$surveyId&schedule_id=$scheduleId"
+        val fullUrl = try {
+            Uri.parse(baseUrl).buildUpon()
+                .appendQueryParameter("survey_id", surveyId)
+                .appendQueryParameter("schedule_id", scheduleId)
+                .build()
+                .toString()
+        } catch (e: Exception) {
+            "$baseUrl?survey_id=$surveyId&schedule_id=$scheduleId"
+        }
         return Intent(context, WebAppActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
             data = Uri.parse("webapp://$webAppId")
             putExtra(WebAppActivity.EXTRA_URL, fullUrl)
             putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webAppId)

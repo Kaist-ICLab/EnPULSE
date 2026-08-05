@@ -48,6 +48,7 @@ import kaist.iclab.wearabletracker.ui.components.DeviceStatusInfo
 import kaist.iclab.wearabletracker.ui.components.EcgInstructionDialog
 import kaist.iclab.wearabletracker.ui.components.FlushConfirmationDialog
 import kaist.iclab.wearabletracker.ui.components.PermissionPermanentlyDeniedDialog
+import kaist.iclab.wearabletracker.ui.components.PhoneSyncRequiredScreen
 import kaist.iclab.wearabletracker.ui.components.SamsungHealthConnectionErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SdkPolicyErrorScreen
 import kaist.iclab.wearabletracker.ui.components.SensorToggleChip
@@ -144,6 +145,7 @@ fun SettingsScreen(
     val autoSyncInterval by settingsViewModel.autoSyncInterval.collectAsState()
 
     SettingsScreenContent(
+        hasNeverSynced = activeCampaignSensorNames == null,
         hasSdkPolicyError = hasSdkPolicyError,
         onDismissSdkPolicyError = { settingsViewModel.clearSdkPolicyError() },
         showConnectionError = showConnectionError,
@@ -212,6 +214,7 @@ fun SettingsScreen(
  */
 @Composable
 fun SettingsScreenContent(
+    hasNeverSynced: Boolean,
     hasSdkPolicyError: Boolean,
     onDismissSdkPolicyError: () -> Unit,
     showConnectionError: Boolean,
@@ -247,6 +250,11 @@ fun SettingsScreenContent(
     onStartEcgMeasurement: () -> Unit,
 ) {
     when {
+        hasNeverSynced -> {
+            // Block the entire UI until the phone pushes campaign configuration
+            PhoneSyncRequiredScreen()
+        }
+
         hasSdkPolicyError -> {
             // Show error screen when SDK Policy Error (dev mode not enabled)
             SdkPolicyErrorScreen(onDismiss = onDismissSdkPolicyError)
@@ -376,6 +384,7 @@ private val previewAvailableSensors: Map<String, StateFlow<SensorState>> = linke
 private fun SettingsScreenContentIdlePreview() {
     WearableTrackerTheme {
         SettingsScreenContent(
+            hasNeverSynced = false,
             hasSdkPolicyError = false,
             onDismissSdkPolicyError = {},
             showConnectionError = false,
@@ -418,6 +427,7 @@ private fun SettingsScreenContentIdlePreview() {
 private fun SettingsScreenContentRecordingPreview() {
     WearableTrackerTheme {
         SettingsScreenContent(
+            hasNeverSynced = false,
             hasSdkPolicyError = false,
             onDismissSdkPolicyError = {},
             showConnectionError = false,
@@ -460,6 +470,7 @@ private fun SettingsScreenContentRecordingPreview() {
 private fun SettingsScreenContentFlushDialogPreview() {
     WearableTrackerTheme {
         SettingsScreenContent(
+            hasNeverSynced = false,
             hasSdkPolicyError = false,
             onDismissSdkPolicyError = {},
             showConnectionError = false,
@@ -502,6 +513,7 @@ private fun SettingsScreenContentFlushDialogPreview() {
 private fun SettingsScreenContentSdkPolicyErrorPreview() {
     WearableTrackerTheme {
         SettingsScreenContent(
+            hasNeverSynced = false,
             hasSdkPolicyError = true,
             onDismissSdkPolicyError = {},
             showConnectionError = false,
@@ -544,6 +556,7 @@ private fun SettingsScreenContentSdkPolicyErrorPreview() {
 private fun SettingsScreenContentConnectionErrorPreview() {
     WearableTrackerTheme {
         SettingsScreenContent(
+            hasNeverSynced = false,
             hasSdkPolicyError = false,
             onDismissSdkPolicyError = {},
             showConnectionError = true,

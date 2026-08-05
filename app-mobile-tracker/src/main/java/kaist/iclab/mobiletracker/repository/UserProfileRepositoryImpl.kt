@@ -104,8 +104,8 @@ class UserProfileRepositoryImpl(
             webAppRepository.fetchAndPersistWebApps(campaignId)
 
             // 3. Push trigger config to watch via BLE
-            val triggers = triggerRepository.triggersFlow.value.triggers
-            val surveys = surveyRepository.surveysFlow.value.configs
+            val triggers = triggerRepository.getCachedTriggers().triggers
+            val surveys = surveyRepository.getCachedSurveys().configs
             if (triggers.isNotEmpty()) {
                 triggerConfigPusher.pushToWatch(triggers, surveys)
             }

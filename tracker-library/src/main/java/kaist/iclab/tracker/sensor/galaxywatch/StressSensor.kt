@@ -76,8 +76,8 @@ class StressSensor(
     ) : SensorEntity()
 
     override val id: String = "Stress"
-    override val permissions: Array<String> = emptyArray()
-    override val foregroundServiceTypes: Array<Int> = emptyArray()
+    override val permissions: Array<String> get() = heartRateSensor.permissions
+    override val foregroundServiceTypes: Array<Int> get() = heartRateSensor.foregroundServiceTypes
 
     private val dataLock = Any()
     private val ibiTimestampsMs = ArrayDeque<Long>()

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -128,6 +129,46 @@ fun SdkPolicyErrorScreen(
                     modifier = Modifier.size(AppSizes.iconMedium)
                 )
             }
+        }
+    }
+}
+
+/**
+ * Full-screen blocking screen displayed when the watch app has never synced
+ * with the phone. Prevents the user from toggling sensors or starting
+ * data collection until the phone pushes the campaign configuration.
+ */
+@Composable
+fun PhoneSyncRequiredScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.PhoneAndroid,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colors.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.phone_sync_required_title),
+                style = MaterialTheme.typography.body1,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.phone_sync_required_message),
+                style = MaterialTheme.typography.caption2,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+            )
         }
     }
 }

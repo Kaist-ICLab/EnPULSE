@@ -77,3 +77,9 @@ Because `google-services.json` is untracked by Git for security, you must provid
 2. Add an Android App registered with package name `kaist.iclab.trackerSystem`.
 3. Download `google-services.json` and place it inside the `app-mobile-tracker/` directory.
 4. (Optional) Enable Google Sign-In under Firebase Authentication settings.
+
+---
+
+## Testing & Verification
+
+For detailed instructions on how to test sensor triggers, simulate states, grant Wear OS background permissions, and verify BLE communications, refer to the [Testing Guide](TESTING.md).
