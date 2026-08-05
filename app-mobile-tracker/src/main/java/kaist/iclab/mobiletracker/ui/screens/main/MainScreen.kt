@@ -90,9 +90,11 @@ fun MainScreen(
         }
 
         // Loading overlay - placed after Scaffold so it has higher z-index (appears on top of navbar)
-        // Shows automatically when Supabase operations are active
+        // Shows automatically when Supabase operations are active, and also while the initial
+        // session-restore check (userState.isInitializing) is still pending on cold start, to
+        // avoid flashing the Login screen before the real auth state is known.
         LoadingOverlay(
-            isLoading = isLoading,
+            isLoading = isLoading || userState.isInitializing,
             showOverlay = true,
             blockNavigation = true
         )

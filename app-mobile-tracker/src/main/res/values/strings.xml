@@ -349,6 +349,9 @@
     <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
     <string name="perm_fullscreen_intent_action">Allow Reminders</string>
     <string name="cancel">Cancel</string>
+    <string name="disabled_sensors_warning_title">Some Sensors Are Not Enabled</string>
+    <string name="disabled_sensors_warning_message">The following sensors are not enabled and won\'t collect data:</string>
+    <string name="disabled_sensors_warning_start_anyway">Start Anyway</string>
     <string name="menu_server_connection">Server Connection</string>
     <string name="server_config_title">Server Configuration</string>
     <string name="server_config_description">Set a custom Supabase backend URL and Anonymous Key.</string>

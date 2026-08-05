@@ -38,14 +38,17 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.components.AppHeader
 import kaist.iclab.mobiletracker.ui.components.AppMenuItem
+import kaist.iclab.mobiletracker.ui.components.DisabledSensorsWarningDialog
 import kaist.iclab.mobiletracker.ui.components.FullScreenIntentPermissionDialog
 import kaist.iclab.mobiletracker.ui.screens.settings.main.EnableTrackerCard
+import kaist.iclab.mobiletracker.ui.screens.settings.sensor.getLocalizedSensorTitle
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsUiEvent
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.core.SensorState
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -60,8 +63,11 @@ fun SettingsScreen(
     val context = LocalContext.current
     val controllerState = settingsViewModel.controllerState.collectAsState().value
     val isCollecting = controllerState.flag == ControllerState.FLAG.RUNNING
+    val sensorStateMap = settingsViewModel.sensorState.collectAsState().value
 
     var showFullScreenIntentWarning by remember { mutableStateOf(false) }
+    var showDisabledSensorsWarning by remember { mutableStateOf(false) }
+    var pendingDisabledSensorKeys by remember { mutableStateOf<List<String>>(emptyList()) }
 
     // Collect one-shot UI events (toasts) from the ViewModel
     LaunchedEffect(Unit) {
@@ -98,10 +104,18 @@ fun SettingsScreen(
                             if (isChecked) {
                                 if (!NotificationHelper.canUseFullScreenIntent(context)) {
                                     showFullScreenIntentWarning = true
-                                } else if (hasNotificationPermission(context)) {
-                                    settingsViewModel.startLogging()
                                 } else {
-                                    settingsViewModel.requestNotificationPermission()
+                                    val notEnabled = sensorStateMap.filter { (_, stateFlow) ->
+                                        val flag = stateFlow.value.flag
+                                        flag == SensorState.FLAG.DISABLED || flag == SensorState.FLAG.UNAVAILABLE
+                                    }.keys.toList()
+
+                                    if (notEnabled.isNotEmpty()) {
+                                        pendingDisabledSensorKeys = notEnabled
+                                        showDisabledSensorsWarning = true
+                                    } else {
+                                        proceedToNotificationCheck(context, settingsViewModel)
+                                    }
                                 }
                             } else {
                                 settingsViewModel.stopLogging()
@@ -175,6 +189,16 @@ fun SettingsScreen(
                 NotificationHelper.openFullScreenIntentSettings(context)
             }
         )
+
+        DisabledSensorsWarningDialog(
+            showDialog = showDisabledSensorsWarning,
+            sensorNames = pendingDisabledSensorKeys.map { getLocalizedSensorTitle(it) },
+            onDismiss = { showDisabledSensorsWarning = false },
+            onConfirm = {
+                showDisabledSensorsWarning = false
+                proceedToNotificationCheck(context, settingsViewModel)
+            }
+        )
     }
 }
 
@@ -187,6 +211,19 @@ private fun hasNotificationPermission(context: Context): Boolean {
         context,
         Manifest.permission.POST_NOTIFICATIONS
     ) == PackageManager.PERMISSION_GRANTED
+}
+
+/**
+ * Requests the notification permission if needed, then starts logging. This is the final
+ * step of the "Enable Tracker" toggle flow, reached either directly (no disabled sensors) or
+ * after the user confirms "Start Anyway" on the disabled-sensors warning dialog.
+ */
+private fun proceedToNotificationCheck(context: Context, settingsViewModel: SettingsViewModel) {
+    if (hasNotificationPermission(context)) {
+        settingsViewModel.startLogging()
+    } else {
+        settingsViewModel.requestNotificationPermission()
+    }
 }
 
 

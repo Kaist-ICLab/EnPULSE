@@ -23,12 +23,10 @@ import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.tracker.auth.Authentication
 import kaist.iclab.tracker.auth.User
 import kaist.iclab.tracker.auth.UserState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Supabase-based authentication implementation using Google Sign-In.
@@ -50,7 +48,7 @@ class SupabaseAuth(
     private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
     private val _userStateFlow = MutableStateFlow(
-        UserState(isLoggedIn = false, user = null, token = null)
+        UserState(isLoggedIn = false, user = null, token = null, isInitializing = true)
     )
     override val userStateFlow: StateFlow<UserState> = _userStateFlow.asStateFlow()
 
@@ -60,15 +58,20 @@ class SupabaseAuth(
     }
 
     /**
-     * Check if there's an existing Supabase session asynchronously
-     * This allows Supabase to load the persisted session from storage.
-     * Supabase-kt automatically persists sessions on Android using SharedPreferences.
+     * Check if there's an existing Supabase session asynchronously.
+     * Waits for the Supabase Auth plugin to finish restoring the persisted session
+     * (including a network refresh-token call if the stored access token has expired)
+     * before deciding whether the user is logged in. A fixed delay here is not safe:
+     * on a slow/cold start or an expired token requiring a network round trip, a short
+     * delay can lose the race and incorrectly report "logged out" even though a valid
+     * session exists on disk.
      */
     private fun checkCurrentSessionAsync() {
         authScope.launch {
             try {
-                // Small delay to ensure Supabase client is fully initialized and has loaded persisted session
-                delay(200.milliseconds)
+                // Suspend until the Auth plugin has finished restoring/refreshing the
+                // persisted session, so currentSessionOrNull() below reflects the truth.
+                supabaseClient.auth.awaitInitialization()
 
                 // Get current session (Supabase automatically loads from persisted storage)
                 val session = supabaseClient.auth.currentSessionOrNull()
@@ -83,9 +86,13 @@ class SupabaseAuth(
                 } else {
                     // Clear cached UUID if no session
                     syncTimestampService.clearUserUuid()
+                    _userStateFlow.value =
+                        UserState(isLoggedIn = false, user = null, token = null, isInitializing = false)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error checking current session: ${e.message}", e)
+                _userStateFlow.value =
+                    UserState(isLoggedIn = false, user = null, token = null, isInitializing = false)
             }
         }
     }

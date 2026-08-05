@@ -70,11 +70,13 @@ fun ServerConnectionScreen(
     val configManager = remember { SupabaseConfigManager(context) }
 
     var url by remember { mutableStateOf(configManager.getCustomUrlRaw()) }
-    var anonKey by remember { mutableStateOf(configManager.getCustomAnonKeyRaw()) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var isCheckingConnection by remember { mutableStateOf(false) }
     var connectionCheckResult by remember { mutableStateOf<Boolean?>(null) }
+    // Anon key fetched from the server-side edge function during the last successful
+    // "Test Connection" check; persisted on Save & Restart alongside the URL.
+    var fetchedAnonKey by remember { mutableStateOf<String?>(null) }
 
     Box(
         modifier = Modifier
@@ -233,6 +235,7 @@ fun ServerConnectionScreen(
                             onValueChange = {
                                 url = it
                                 connectionCheckResult = null
+                                fetchedAnonKey = null
                             },
                             label = {
                                 Text(
@@ -255,43 +258,21 @@ fun ServerConnectionScreen(
                             )
                         )
 
-                        OutlinedTextField(
-                            value = anonKey,
-                            onValueChange = {
-                                anonKey = it
-                                connectionCheckResult = null
-                            },
-                            label = {
-                                Text(
-                                    stringResource(R.string.server_config_key_label),
-                                    fontSize = 12.sp
-                                )
-                            },
-                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(kaist.iclab.mobiletracker.ui.theme.Dimens.CornerRadiusMedium),
-                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = AppColors.PrimaryColor,
-                                unfocusedBorderColor = AppColors.TextSecondary.copy(alpha = 0.5f),
-                                errorBorderColor = AppColors.ErrorColor,
-                                focusedLabelColor = AppColors.PrimaryColor,
-                                unfocusedLabelColor = AppColors.TextSecondary
-                            )
-                        )
-
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
                             onClick = {
                                 isCheckingConnection = true
                                 connectionCheckResult = null
+                                fetchedAnonKey = null
                                 coroutineScope.launch {
-                                    val success = checkConnection(url, anonKey)
-                                    connectionCheckResult = success
+                                    val result = checkConnectionAndFetchKey(configManager, url)
+                                    connectionCheckResult = result.success
+                                    fetchedAnonKey = result.fetchedKey
                                     isCheckingConnection = false
                                 }
                             },
-                            enabled = !isCheckingConnection && url.isNotBlank() && anonKey.isNotBlank(),
+                            enabled = !isCheckingConnection && url.isNotBlank(),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = AppColors.PrimaryColor,
                                 disabledContainerColor = AppColors.BorderLight
@@ -382,7 +363,8 @@ fun ServerConnectionScreen(
                 text = stringResource(R.string.server_config_restart_confirm_button),
                 onClick = {
                     showConfirmationDialog = false
-                    configManager.saveCredentials(url, anonKey)
+                    configManager.saveCustomUrl(url)
+                    fetchedAnonKey?.let { configManager.saveFetchedAnonKey(it) }
                     val intent = Intent(context, MainActivity::class.java).apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     }
@@ -400,8 +382,20 @@ fun ServerConnectionScreen(
     }
 }
 
-private suspend fun checkConnection(urlStr: String, anonKey: String): Boolean =
-    withContext(Dispatchers.IO) {
+private data class ConnectionCheckResult(val success: Boolean, val fetchedKey: String?)
+
+/**
+ * Fetches the Anonymous Key from the candidate URL's `anon_key` edge function, then uses
+ * that key to verify the REST endpoint is reachable. The key never comes from user input.
+ */
+private suspend fun checkConnectionAndFetchKey(
+    configManager: SupabaseConfigManager,
+    urlStr: String
+): ConnectionCheckResult {
+    val fetchedKey = configManager.fetchAnonKeyFromServer(urlStr).getOrNull()
+        ?: return ConnectionCheckResult(success = false, fetchedKey = null)
+
+    val success = withContext(Dispatchers.IO) {
         try {
             val cleanedUrl = urlStr.trim().removeSuffix("/")
             val restUrl = "$cleanedUrl/rest/v1/"
@@ -411,8 +405,8 @@ private suspend fun checkConnection(urlStr: String, anonKey: String): Boolean =
             conn.requestMethod = "GET"
             conn.connectTimeout = 5000
             conn.readTimeout = 5000
-            conn.setRequestProperty("apikey", anonKey.trim())
-            conn.setRequestProperty("Authorization", "Bearer ${anonKey.trim()}")
+            conn.setRequestProperty("apikey", fetchedKey.trim())
+            conn.setRequestProperty("Authorization", "Bearer ${fetchedKey.trim()}")
 
             val responseCode = conn.responseCode
             responseCode == 200
@@ -420,3 +414,5 @@ private suspend fun checkConnection(urlStr: String, anonKey: String): Boolean =
             false
         }
     }
+    return ConnectionCheckResult(success = success, fetchedKey = fetchedKey)
+}
