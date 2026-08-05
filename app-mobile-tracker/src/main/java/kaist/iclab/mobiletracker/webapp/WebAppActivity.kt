@@ -101,7 +101,11 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
             settings.domStorageEnabled = true
             settings.cacheMode = WebSettings.LOAD_NO_CACHE
             settings.supportMultipleWindows() // Enable support for multiple windows / target="_blank"
-            webViewClient = RestrictedWebViewClient(webApp.allowedOrigin)
+            webViewClient = RestrictedWebViewClient(webApp.allowedOrigin) {
+                if (!canGoBack()) {
+                    finish()
+                }
+            }
             setDownloadListener { downloadUrl, _, _, _, _ ->
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl))
