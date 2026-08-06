@@ -13,14 +13,16 @@ import kaist.iclab.tracker.trigger.model.TriggerActionConfig
  * and throttling logic, while the app decides what to do with the result
  * (e.g., launch a MicroEMA survey, send a BLE message, fire a broadcast).
  *
- * Example implementation:
+ * Example implementation — the trigger engine runs on the phone, so its handler executes most
+ * actions directly and only needs one BLE hop out to the watch for `WatchEma`:
  * ```kotlin
- * class WatchTriggerActionHandler(...) : TriggerActionHandler {
+ * class PhoneTriggerActionHandler(...) : TriggerActionHandler {
  *     override suspend fun onAction(trigger: ParsedCampaignTrigger, action: TriggerActionConfig) {
  *         when (action) {
- *             is TriggerActionConfig.WatchEma -> launchMicroEma(action.surveyId)
- *             is TriggerActionConfig.Ema -> sendToPhone(action.surveyId)
- *             is TriggerActionConfig.Broadcast -> sendBroadcast(action)
+ *             is TriggerActionConfig.Ema -> surveySensor.triggerSurveyNotification(action.surveyId)
+ *             is TriggerActionConfig.WatchEma -> bleChannel.send(KEY_WATCH_EMA_TRIGGER, action.surveyId)
+ *             is TriggerActionConfig.Broadcast -> context.sendBroadcast(...)
+ *             is TriggerActionConfig.Notification -> showNotification(action)
  *         }
  *     }
  * }

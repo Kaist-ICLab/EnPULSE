@@ -4,11 +4,14 @@ import kaist.iclab.mobiletracker.data.sensors.ProfileData
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.ProfileService
-import kaist.iclab.mobiletracker.services.TriggerConfigPusher
+import kaist.iclab.mobiletracker.services.WatchSurveyConfigPusher
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.phone.TimingSensor
+import kaist.iclab.tracker.storage.core.StateStorage
+import kaist.iclab.tracker.trigger.engine.TriggerEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,8 +27,10 @@ class UserProfileRepositoryImpl(
     private val campaignSensorRepository: CampaignSensorRepository,
     private val surveyRepository: SurveyRepository,
     private val triggerRepository: TriggerRepository,
+    private val timingSensorConfigStorage: StateStorage<TimingSensor.Config>,
     private val webAppRepository: WebAppRepository,
-    private val triggerConfigPusher: TriggerConfigPusher,
+    private val watchSurveyConfigPusher: WatchSurveyConfigPusher,
+    private val triggerEngine: TriggerEngine,
     private val backgroundController: BackgroundController,
     private val bleHelper: BLEHelper
 ) : UserProfileRepository {
@@ -55,6 +60,7 @@ class UserProfileRepositoryImpl(
         campaignSensorRepository.clearCache()
         surveyRepository.clearSurveys()
         triggerRepository.clearTriggers()
+        timingSensorConfigStorage.set(TimingSensor.Config())
         webAppRepository.clearWebApps()
     }
 
@@ -103,18 +109,39 @@ class UserProfileRepositoryImpl(
             triggerRepository.fetchAndPersistTriggers(campaignId)
             webAppRepository.fetchAndPersistWebApps(campaignId)
 
-            // 3. Push trigger config to watch via BLE
-            val triggers = triggerRepository.getCachedTriggers().triggers
+            // 3. Apply TimingSensor's config from the campaign_table row we just fetched above
+            //    (name = TimingSensor.CAMPAIGN_TABLE_NAME) — same generic per-sensor config
+            //    column every sensor will eventually read from, not a dedicated table.
+            val timingConfigJson = campaignSensorRepository.getSensorConfig(TimingSensor.CAMPAIGN_TABLE_NAME)
+            timingSensorConfigStorage.set(
+                if (timingConfigJson != null) {
+                    try {
+                        TimingSensor.Config.fromJson(timingConfigJson.toString())
+                    } catch (e: Exception) {
+                        TimingSensor.Config()
+                    }
+                } else {
+                    TimingSensor.Config()
+                }
+            )
+
+            // 4. Load triggers into the phone-local trigger engine — the engine now lives
+            //    entirely on the phone, so there's no more BLE trigger/condition push to the
+            //    watch at all.
+            triggerEngine.loadTriggers(triggerRepository.getParsedTriggers())
+
+            // 5. Push watch survey (question content) configs to the watch via BLE — the watch
+            //    still needs these to render WatchSurveyActivity once told (over BLE) which
+            //    survey to launch, but no longer needs trigger/condition data.
             val surveys = surveyRepository.getCachedSurveys().configs
-            if (triggers.isNotEmpty()) {
-                triggerConfigPusher.pushToWatch(triggers, surveys)
-            }
-            
+            watchSurveyConfigPusher.pushToWatch(surveys)
+
             bleHelper.sendActiveSensorConfig(SensorTypeHelper.activeWatchSensorIds(campaignSensorRepository))
         } else {
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()
             triggerRepository.clearTriggers()
+            timingSensorConfigStorage.set(TimingSensor.Config())
             webAppRepository.clearWebApps()
         }
 

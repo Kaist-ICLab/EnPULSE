@@ -24,6 +24,7 @@ import kaist.iclab.tracker.sensor.phone.ScreenSensor
 import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.SurveySensor
+import kaist.iclab.tracker.sensor.phone.TimingSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kaist.iclab.tracker.storage.core.StateStorage
@@ -60,6 +61,7 @@ val controllerModule = module {
             get<UserInteractionSensor>(),
             get<WifiScanSensor>(),
             get<SurveySensor>(),
+            get<TimingSensor>(),
             get<MicroEmaSensor>(),
         )
     }

@@ -122,8 +122,10 @@ val repositoryModule = module {
             campaignSensorRepository = get(),
             surveyRepository = get(),
             triggerRepository = get(),
+            timingSensorConfigStorage = get(named("timingSensorConfigStorage")),
             webAppRepository = get(),
-            triggerConfigPusher = get(),
+            watchSurveyConfigPusher = get(),
+            triggerEngine = get(),
             backgroundController = get(),
             bleHelper = get()
         )

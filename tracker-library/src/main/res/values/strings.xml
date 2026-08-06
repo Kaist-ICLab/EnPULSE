@@ -33,6 +33,7 @@
     <string name="sensor_skin_temperature">Skin Temperature</string>
     <string name="sensor_ecg">ECG</string>
     <string name="sensor_survey">Survey</string>
+    <string name="sensor_timing">Timing</string>
 
     <string name="sensor_desc_activity_recognition">Recognize user physical activity</string>
     <string name="sensor_desc_ambient_light">Light sensor data</string>
@@ -64,6 +65,7 @@
     <string name="sensor_desc_skin_temperature">Skin temperature measurement</string>
     <string name="sensor_desc_eda">Galvanic skin response based on sweat</string>
     <string name="sensor_desc_survey">User survey responses</string>
+    <string name="sensor_desc_timing">Named schedule firings used as trigger conditions</string>
     <string name="sensor_desc_default">Sensor data collection</string>
 
     <!-- Permission Instructions -->

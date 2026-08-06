@@ -9,8 +9,11 @@ import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
-import kaist.iclab.wearabletracker.trigger.TriggerConfigReceiver
-import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.wearabletracker.trigger.DetectionStateForwarder
+import kaist.iclab.wearabletracker.trigger.WatchEmaTriggerReceiver
+import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigReceiver
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -33,8 +36,15 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<SyncAckListener>().startListening()
         get<MicroEmaResponseManager>().startListening()
         get<CampaignSensorConfigRepository>().startListening()
-        get<TriggerConfigReceiver>().startListening()
-        get<TriggerEngine>().start()
+
+        // Trigger condition sources: feed the local DetectionStateTracker, then forward it to
+        // the phone-hosted trigger engine. WatchSurveyConfigReceiver caches survey question
+        // content; WatchEmaTriggerReceiver executes the phone's "launch this survey" commands.
+        get<StressDetectionAdapter>().start()
+        get<GestureDetectionAdapter>().start()
+        get<DetectionStateForwarder>().start()
+        get<WatchSurveyConfigReceiver>().startListening()
+        get<WatchEmaTriggerReceiver>().startListening()
     }
 
     override fun provideBackgroundControllerDependencies(): BackgroundControllerDependencies {

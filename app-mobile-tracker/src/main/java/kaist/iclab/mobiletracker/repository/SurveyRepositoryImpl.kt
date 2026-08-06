@@ -16,9 +16,10 @@ import kotlinx.coroutines.flow.StateFlow
  * Implementation of SurveyRepository.
  * Manages survey configurations from Supabase and persists them to Couchbase.
  *
- * Note: Watch trigger rules are no longer created here. Dynamic trigger
- * configurations are fetched separately and pushed to the watch via
- * [TriggerConfigPusher] in [UserProfileRepositoryImpl.syncFullStudyConfig].
+ * Note: trigger rules are no longer created here. Dynamic trigger configurations are fetched
+ * separately by [TriggerRepository] and loaded into the phone-local trigger engine directly in
+ * [UserProfileRepositoryImpl.syncFullStudyConfig]. This repository still owns pushing watch
+ * survey (question content) configs to the watch, via [WatchSurveyConfigPusher].
  */
 class SurveyRepositoryImpl(
     private val surveyService: SurveyService,

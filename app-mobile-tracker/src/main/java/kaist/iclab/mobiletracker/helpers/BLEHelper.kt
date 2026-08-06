@@ -22,6 +22,7 @@ import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
@@ -44,7 +45,8 @@ class BLEHelper(
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
     private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
-    private val microEmaResponseStore: MicroEmaResponseStore
+    private val microEmaResponseStore: MicroEmaResponseStore,
+    private val detectionStateTracker: DetectionStateTracker,
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
@@ -118,20 +120,48 @@ class BLEHelper(
             surveySensor.triggerSurveyNotification(surveyId)
         }
 
-        // Listen for webapp-open triggers forwarded from the watch (the watch is the only place
-        // trigger conditions are evaluated; see WatchTriggerActionHandler.forwardWebAppTriggerToPhone)
+        // Legacy listeners: the trigger engine now lives entirely on the phone
+        // (PhoneTriggerActionHandler executes Ema/WatchEma/Broadcast/Notification actions
+        // in-process), so nothing forwards these BLE keys from the watch anymore. Left in place
+        // as harmless backward-compat handling per the migration plan, not actively exercised.
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.WEBAPP_TRIGGER)) { _, json ->
             webAppTriggerHandler.handleWebAppTriggerPayload(json)
         }
 
-        // Listen for generic notification triggers forwarded from the watch
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.NOTIFICATION_TRIGGER)) { _, json ->
             webAppTriggerHandler.handleNotificationTriggerPayload(json)
         }
 
-        // Listen for generic broadcast triggers forwarded from the watch.
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.BROADCAST_TRIGGER)) { _, json ->
             webAppTriggerHandler.handleBroadcastTriggerPayload(json)
+        }
+
+        // Listen for sensor detection state updates forwarded live from the watch's
+        // StressDetectionAdapter/GestureDetectionAdapter (via the watch's DetectionStateForwarder)
+        // — the trigger engine now runs on the phone, so these feed its DetectionStateTracker
+        // directly. The same key is also used by TriggerDebugReceiver-style ADB/dashboard test
+        // tooling to simulate states in the opposite direction; a real incoming payload here is
+        // just another producer of the same {sensor: value} shape.
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.DETECTION_STATE_UPDATE)) { _, json ->
+            handleDetectionStateUpdate(json)
+        }
+    }
+
+    private fun handleDetectionStateUpdate(json: kotlinx.serialization.json.JsonElement) {
+        try {
+            val payload = when (json) {
+                is kotlinx.serialization.json.JsonObject -> json
+                is kotlinx.serialization.json.JsonPrimitive -> Json.parseToJsonElement(json.content).jsonObject
+                else -> Json.parseToJsonElement(json.toString()).jsonObject
+            }
+
+            val now = System.currentTimeMillis()
+            payload.forEach { (sensor, valueElement) ->
+                val value = valueElement.jsonPrimitive.content
+                detectionStateTracker.updateState(sensor, value, now)
+            }
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "[TRIGGER] Error applying detection state update: ${e.message}", e)
         }
     }
 

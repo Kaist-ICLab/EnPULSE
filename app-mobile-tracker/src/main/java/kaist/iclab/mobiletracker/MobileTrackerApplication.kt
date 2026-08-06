@@ -103,6 +103,17 @@ class MobileTrackerApplication : Application(), KoinComponent,
             Log.e("MobileTrackerApplication", "Error initializing BLEHelper: ${e.message}")
         }
 
+        // Start the trigger engine and its detection adapters. Unlike the sensors it evaluates
+        // conditions from (e.g. TimingSensor, gated by the "collection running" lifecycle via
+        // BackgroundController), the engine itself runs continuously — mirrors how the watch used
+        // to start its DefaultTriggerEngine unconditionally in WearableApplication.onCreate().
+        try {
+            getKoin().get<kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter>().start()
+            getKoin().get<kaist.iclab.tracker.trigger.engine.TriggerEngine>().start()
+        } catch (e: Exception) {
+            Log.e("MobileTrackerApplication", "Error starting trigger engine: ${e.message}", e)
+        }
+
         // Additional initialization can be added here:
         // - Crash reporting
         // - Analytics
