@@ -65,6 +65,9 @@ object AppConfig {
         const val WIFI_SCAN_SENSOR = "wifi_scan_sensor"
         const val EXERCISE_SENSOR = "exercise_sensor"
         const val SLEEP_SENSOR = "sleep_sensor"
+
+        // Webapp-bridge table names
+        const val WEB_APP_LOG_SENSOR = "web_app_log_sensor"
     }
 
     /**

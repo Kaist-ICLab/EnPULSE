@@ -26,6 +26,7 @@ class EnPulseBridge(
     private val deviceHandler: DeviceBridgeHandler,
     private val appHandler: AppBridgeHandler,
     private val permissionHandler: PermissionBridgeHandler,
+    private val logHandler: LogBridgeHandler,
     private val callerWebAppId: String,
     private val appScope: AppCoroutineScope
 ) : WebViewCompat.WebMessageListener {
@@ -64,6 +65,7 @@ class EnPulseBridge(
                     "showNativeNotification" -> appHandler.showNativeNotification(request)
                     "closeWebApp" -> appHandler.closeWebApp(request)
                     "openNativeSettings" -> appHandler.openNativeSettings(request)
+                    "logEvent" -> logHandler.logEvent(request, callerWebAppId)
                     else -> BridgeResponse(request.requestId, "error", errorMessage = "Unknown action: ${request.action}")
                 }
             } catch (e: Exception) {

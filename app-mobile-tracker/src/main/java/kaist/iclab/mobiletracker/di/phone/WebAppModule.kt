@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.di.phone
 
 import kaist.iclab.mobiletracker.BuildConfig
+import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
@@ -9,6 +10,7 @@ import kaist.iclab.mobiletracker.webapp.WebAppConfig
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
 import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SensorBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
@@ -66,6 +68,13 @@ val webAppModule = module {
         DeviceBridgeHandler(
             context = androidContext(),
             watchSensorRepository = get()
+        )
+    }
+
+    single {
+        LogBridgeHandler(
+            phoneSensorRepository = get<PhoneSensorRepository>(),
+            webAppRegistry = get<WebAppRegistry>()
         )
     }
 

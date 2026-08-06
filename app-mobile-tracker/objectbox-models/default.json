@@ -2028,10 +2028,70 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "32:4725045231195002542",
+      "lastPropertyId": "9:4175196156749532230",
+      "name": "WebAppLogEntity",
+      "properties": [
+        {
+          "id": "1:4927339135559248651",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3324792136346605933",
+          "name": "eventId",
+          "indexId": "90:7762986945984105412",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:7217326629480786369",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:6904234097274457800",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:9120375436054718047",
+          "name": "timestamp",
+          "indexId": "91:9035194989631791911",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:4418610109325922842",
+          "name": "deviceType",
+          "indexId": "92:5909284604926564229",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:5786193507507738622",
+          "name": "webAppId",
+          "type": 9
+        },
+        {
+          "id": "8:9097634029779304150",
+          "name": "eventName",
+          "type": 9
+        },
+        {
+          "id": "9:4175196156749532230",
+          "name": "propertiesJson",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "31:900034558956527981",
-  "lastIndexId": "89:7283958651965354149",
+  "lastEntityId": "32:4725045231195002542",
+  "lastIndexId": "92:5909284604926564229",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

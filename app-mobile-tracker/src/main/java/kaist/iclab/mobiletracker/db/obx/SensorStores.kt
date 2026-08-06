@@ -20,6 +20,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
+import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
@@ -56,6 +57,7 @@ class SensorStores(boxStore: BoxStore) {
     val step = SensorStore(boxStore, StepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
     val userInteraction = SensorStore(boxStore, UserInteractionEntity::class.java)
     val wifiScan = SensorStore(boxStore, WifiScanEntity::class.java)
+    val webAppLog = SensorStore(boxStore, WebAppLogEntity::class.java)
 
     // Shared between phone-native GPS fixes (no eventId) and watch-forwarded rows (real eventId) -
     // SensorStore.applyExistingIdsByEventId skips blank eventIds so phone-native fixes always

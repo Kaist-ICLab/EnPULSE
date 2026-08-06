@@ -24,6 +24,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
+import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
@@ -64,6 +65,7 @@ import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
+import kaist.iclab.mobiletracker.webapp.bridge.WebAppLogRecord
 import kotlinx.serialization.KSerializer
 
 /**
@@ -378,6 +380,21 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as WifiScanSensor.Entity
                 WifiScanEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, ssid = e.ssid, bssid = e.bssid, frequency = e.frequency, level = e.level)
+            }
+        ),
+        // Not a real sensor — a generic event logged by a webapp via the `logEvent` bridge action
+        // (LogBridgeHandler). fromSensorEntity converts the WebAppLogRecord the handler builds
+        // straight from the JS payload, same as every other sensor's entity conversion above.
+        SensorDescriptor(
+            sensorId = "WebAppLog",
+            displayName = "WebApp Log",
+            isWatchSensor = false,
+            store = s.webAppLog,
+            supabaseTable = AppConfig.SupabaseTables.WEB_APP_LOG_SENSOR,
+            serializer = WebAppLogEntity.serializer(),
+            fromSensorEntity = { e, uuid ->
+                e as WebAppLogRecord
+                WebAppLogEntity(uuid = uuid ?: "", received = System.currentTimeMillis(), timestamp = e.timestamp, webAppId = e.webAppId, eventName = e.eventName, propertiesJson = e.propertiesJson)
             }
         ),
         // Watch sensors — written via WatchSensorRepository (BLE), no phone-side store needed
