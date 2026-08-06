@@ -77,11 +77,14 @@ sealed class TriggerActionConfig {
 
     /**
      * Show a local notification.
+     *
+     * @param url Optional deep link/URL to open when the notification is tapped. If absent, the
+     *   notification just opens the EnPULSE app (its main activity) instead.
      */
     data class Notification(
         val title: String,
         val description: String,
-        val url: String,
+        val url: String? = null,
         override val minIntervalMillis: Long = 0
     ) : TriggerActionConfig()
 }
@@ -157,8 +160,7 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
                     ?: throw SerializationException("'notification' requires 'title'"),
                 description = obj["description"]?.jsonPrimitive?.content
                     ?: throw SerializationException("'notification' requires 'description'"),
-                url = obj["url"]?.jsonPrimitive?.content
-                    ?: throw SerializationException("'notification' requires 'url'"),
+                url = obj["url"]?.jsonPrimitive?.content,
                 minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
             )
 
