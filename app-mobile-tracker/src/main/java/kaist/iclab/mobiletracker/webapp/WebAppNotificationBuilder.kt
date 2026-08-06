@@ -88,8 +88,9 @@ object WebAppNotificationBuilder {
      *
      * [Use Case]
      * Used for general/external links (e.g., reading an article on WebMD or a university page).
-     * Dispatches an Intent.ACTION_VIEW which opens the URL in the system default browser (e.g., Chrome),
-     * rather than opening WebAppActivity inside the EnPULSE app.
+     * Opens the URL in-app via [SimpleWebViewActivity] (a bridge-free, unrestricted WebView —
+     * unlike [WebAppActivity], no native bridge access, since this URL isn't a registered/trusted
+     * WebApp), rather than the system browser or [WebAppActivity].
      *
      * If [url] is null (the dashboard didn't set one), the notification just opens the EnPULSE
      * app itself (`MainActivity`) instead of a URL.
@@ -101,7 +102,9 @@ object WebAppNotificationBuilder {
         url: String?
     ) {
         val intent = if (url != null) {
-            Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            Intent(context, SimpleWebViewActivity::class.java).apply {
+                putExtra(SimpleWebViewActivity.EXTRA_URL, url)
+            }
         } else {
             Intent(context, MainActivity::class.java)
         }.apply {

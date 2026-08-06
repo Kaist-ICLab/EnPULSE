@@ -11,6 +11,7 @@ import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesPro
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.trigger.DetectionStateForwarder
 import kaist.iclab.wearabletracker.trigger.WatchEmaTriggerReceiver
+import kaist.iclab.wearabletracker.trigger.WatchNotificationTriggerReceiver
 import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigReceiver
 import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
 import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
@@ -45,6 +46,7 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<DetectionStateForwarder>().start()
         get<WatchSurveyConfigReceiver>().startListening()
         get<WatchEmaTriggerReceiver>().startListening()
+        get<WatchNotificationTriggerReceiver>().startListening()
     }
 
     override fun provideBackgroundControllerDependencies(): BackgroundControllerDependencies {

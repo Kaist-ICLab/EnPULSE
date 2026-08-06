@@ -48,6 +48,7 @@ import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.trigger.DetectionStateForwarder
 import kaist.iclab.wearabletracker.trigger.WatchEmaTriggerReceiver
+import kaist.iclab.wearabletracker.trigger.WatchNotificationTriggerReceiver
 import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigStorage
 import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigReceiver
 import org.koin.android.ext.koin.androidContext
@@ -390,8 +391,9 @@ val koinModule = module {
     // --- Trigger condition sources ---
     // The trigger engine now lives entirely on the phone (see
     // kaist.iclab.mobiletracker.di.phone.triggerModule). The watch only: (1) keeps its local
-    // DetectionStateTracker fed by sensor adapters and forwards it to the phone, and (2) executes
-    // WatchEma commands the phone sends back.
+    // DetectionStateTracker fed by sensor adapters and forwards it to the phone, (2) executes
+    // WatchEma commands the phone sends back, and (3) shows notification-action alerts the phone
+    // sends over BLE (native Wear OS bridging was tried for this and didn't reliably show up).
 
     single {
         DetectionStateTracker()
@@ -437,6 +439,13 @@ val koinModule = module {
             bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
             microEmaRepository = get(),
             surveyConfigReceiver = get()
+        )
+    }
+
+    single {
+        WatchNotificationTriggerReceiver(
+            context = androidContext(),
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel()
         )
     }
 }

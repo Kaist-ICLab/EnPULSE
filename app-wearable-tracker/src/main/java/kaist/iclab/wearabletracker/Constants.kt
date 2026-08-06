@@ -17,6 +17,8 @@ object Constants {
         const val KEY_TRIGGER_CONFIG = "trigger_config"
         const val KEY_PHONE_EMA_TRIGGER = "phone_ema_trigger"
         const val KEY_WATCH_EMA_TRIGGER = "watch_ema_trigger"
+        const val KEY_WATCH_NOTIFICATION_TRIGGER = "watch_notification_trigger"
+        const val KEY_PHONE_OPEN_URL_TRIGGER = "phone_open_url_trigger"
         const val KEY_DETECTION_STATE_UPDATE = "detection_state_update"
         const val KEY_ACTIVE_SENSOR_CONFIG = "active_sensor_config"
         const val KEY_WEBAPP_TRIGGER = "webapp_trigger"
@@ -78,6 +80,7 @@ object Constants {
         const val FLUSH_DATA_SUCCESS = 1003
         const val FLUSH_DATA_FAILURE = 1004
         const val TRIGGER = 1005
+        const val GENERIC_TRIGGER = 1006
         const val ERROR = 2000 // Base ID for errors, will be incremented for multiple errors
     }
 

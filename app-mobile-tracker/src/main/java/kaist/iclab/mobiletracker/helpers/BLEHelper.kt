@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.helpers
 
 import kotlinx.coroutines.CancellationException
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
@@ -136,6 +137,18 @@ class BLEHelper(
             webAppTriggerHandler.handleBroadcastTriggerPayload(json)
         }
 
+        // Listen for the watch relaying a tapped watch-notification's url back to the phone
+        // (see PhoneTriggerActionHandler.handleWatchNotification / the watch's
+        // WatchNotificationTapReceiver) — the watch has no browser, so it just asks the phone to
+        // open the url on its behalf.
+        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.PHONE_OPEN_URL_TRIGGER)) { _, json ->
+            val url = when (json) {
+                is kotlinx.serialization.json.JsonPrimitive -> json.content
+                else -> json.toString()
+            }
+            handleOpenUrlTrigger(url)
+        }
+
         // Listen for sensor detection state updates forwarded live from the watch's
         // StressDetectionAdapter/GestureDetectionAdapter (via the watch's DetectionStateForwarder)
         // — the trigger engine now runs on the phone, so these feed its DetectionStateTracker
@@ -144,6 +157,19 @@ class BLEHelper(
         // just another producer of the same {sensor: value} shape.
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.DETECTION_STATE_UPDATE)) { _, json ->
             handleDetectionStateUpdate(json)
+        }
+    }
+
+    private fun handleOpenUrlTrigger(url: String) {
+        try {
+            val intent = Intent(context, kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity::class.java).apply {
+                putExtra(kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity.EXTRA_URL, url)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            context.startActivity(intent)
+            Log.d(AppConfig.LogTags.PHONE_BLE, "Opened url relayed from watch (in-app): $url")
+        } catch (e: Exception) {
+            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to open url relayed from watch: ${e.message}", e)
         }
     }
 

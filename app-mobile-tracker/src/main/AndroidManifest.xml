@@ -197,6 +197,11 @@
             android:documentLaunchMode="intoExisting"
             android:theme="@style/Theme.MobileTracker" />
 
+        <activity
+            android:name=".webapp.SimpleWebViewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MobileTracker" />
+
         <!-- Developer test receiver to trigger WebApp notifications via ADB -->
         <receiver
             android:name=".webapp.WebAppTestReceiver"
