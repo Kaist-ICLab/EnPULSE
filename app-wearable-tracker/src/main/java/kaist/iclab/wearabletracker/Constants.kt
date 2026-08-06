@@ -110,6 +110,11 @@ object Constants {
         const val WAKELOCK_TAG = "EnPulse:AutoSyncWakeLock"
         const val WAKELOCK_TIMEOUT_MS = 5 * 60 * 1000L // 5 minutes
         const val MIN_SYNC_INTERVAL_MS = 60 * 1000L // Minimum 1 minute between syncs
+
+        // How long a sent-but-unacked chunk stays "in flight" before a sync attempt is allowed
+        // to treat it as lost and resend it. Must comfortably exceed a normal BLE round trip
+        // (send + phone-side parse/store + ACK) so a merely-slow ACK isn't mistaken for a lost one.
+        const val PENDING_ACK_TIMEOUT_MS = 45 * 1000L
     }
 }
 

@@ -25,6 +25,8 @@ import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.add
@@ -58,6 +60,10 @@ class BLEHelper(
     private val webAppTriggerHandler by inject<WebAppTriggerHandler>()
 
     private var isInitialized = false
+
+    // One mutex per sensorId so chunks for the same sensor are processed (and ACKed) strictly
+    // in the order they were received - see parseAndStoreWatchData/computeAckEndTimestamp.
+    private val sensorProcessingMutexes = java.util.concurrent.ConcurrentHashMap<String, Mutex>()
 
     private val parserBySensorId: Map<String, (String) -> List<BaseEntity>> = mapOf(
         Constants.SensorId.LOCATION to { csv -> SensorDataCsvParser.parseLocationCsv(csv) },
@@ -421,9 +427,22 @@ class BLEHelper(
      * current watermark). If there's a gap - an earlier chunk was lost or arrived out of order -
      * re-affirms the old watermark instead of advancing past the hole, so the watch's cumulative
      * ACK matching never prunes data the phone doesn't actually have a contiguous copy of.
+     *
+     * Bootstrap case: if the phone has *no* watermark at all for this sensor yet (fresh install,
+     * cleared app data, etc.), there's nothing to check contiguity against - trust the watch's
+     * own resume cursor (chunkStartTs) as the starting baseline instead of implicitly demanding
+     * a chunk starting at epoch 0. Without this, a phone-side reset that happens after the watch
+     * has already advanced (and pruned up to) a non-zero watermark is unrecoverable: the watch
+     * has nothing left below its cursor to (re)send, so the phone's gap back to "0" can never
+     * close and every future chunk for that sensor ACKs 0 forever.
      */
     private fun computeAckEndTimestamp(sensorId: String, chunkStartTs: Long?, chunkEndTs: Long?): Long {
-        val contiguousUpTo = timestampService.getBleContiguousTimestamp(sensorId) ?: 0L
+        val contiguousUpTo = timestampService.getBleContiguousTimestamp(sensorId)
+        if (contiguousUpTo == null) {
+            val bootstrapped = chunkEndTs ?: chunkStartTs ?: 0L
+            timestampService.setBleContiguousTimestamp(sensorId, bootstrapped)
+            return bootstrapped
+        }
         return if (chunkStartTs != null && chunkStartTs <= contiguousUpTo) {
             val advanced = maxOf(contiguousUpTo, chunkEndTs ?: contiguousUpTo)
             timestampService.setBleContiguousTimestamp(sensorId, advanced)
@@ -438,53 +457,68 @@ class BLEHelper(
      * Uses managed coroutine scope for proper lifecycle management.
      */
     private fun parseAndStoreWatchData(csvData: String) {
+        val sensorId = parseSensorId(csvData)
+        if (sensorId == null) {
+            Log.w(AppConfig.LogTags.PHONE_BLE, "No SENSOR header found in chunk, dropping")
+            return
+        }
+
         appScope.io.launch {
-            val sensorId = parseSensorId(csvData)
-            if (sensorId == null) {
-                Log.w(AppConfig.LogTags.PHONE_BLE, "No SENSOR header found in chunk, dropping")
-                return@launch
+            // Serialize processing per sensor. computeAckEndTimestamp's gap-detection assumes
+            // chunks are stored - and ACKed - in the same order the watch sent them. Without
+            // this, every incoming chunk was its own unawaited coroutine racing on the IO
+            // dispatcher: a later chunk could finish (and get ACKed) before an earlier one still
+            // mid-insert, which looks exactly like a lost/out-of-order chunk to the gap check.
+            // That permanently pinned the ACK at the last-confirmed watermark (often 0) instead
+            // of advancing, which is why watermark-advance-gated resend throttling alone doesn't
+            // fix it - the phone never stops reporting a gap in the first place.
+            val mutex = sensorProcessingMutexes.computeIfAbsent(sensorId) { Mutex() }
+            mutex.withLock {
+                processSensorChunk(sensorId, csvData)
             }
+        }
+    }
 
-            val chunkStartTs = parseChunkStartTimestamp(csvData)
-            val chunkEndTs = parseChunkEndTimestamp(csvData)
+    private suspend fun processSensorChunk(sensorId: String, csvData: String) {
+        val chunkStartTs = parseChunkStartTimestamp(csvData)
+        val chunkEndTs = parseChunkEndTimestamp(csvData)
 
-            try {
-                val parser = parserBySensorId[sensorId]
-                if (parser == null) {
-                    Log.e(AppConfig.LogTags.PHONE_BLE, "Unknown sensorId in chunk: $sensorId")
-                    sendAck(sensorId, success = false, endTimestamp = null)
-                    return@launch
-                }
-
-                val entities = parser(csvData)
-
-                if (entities.isEmpty()) {
-                    Log.w(AppConfig.LogTags.PHONE_BLE, "No rows parsed for $sensorId chunk")
-                    // Still ACK - an empty but valid chunk still needs its range confirmed.
-                    sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
-                    return@launch
-                }
-
-                when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
-                    is Result.Success -> {
-                        timestampService.updateLastWatchDataReceived()
-                        Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} $sensorId entries locally")
-                        sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
-                    }
-                    is Result.Error -> {
-                        Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store $sensorId data: ${result.message}", result.exception)
-                        sendAck(sensorId, success = false, endTimestamp = null)
-                    }
-                }
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Log.e(
-                    AppConfig.LogTags.PHONE_BLE,
-                    "Error parsing or storing $sensorId data: ${e.message}",
-                    e
-                )
+        try {
+            val parser = parserBySensorId[sensorId]
+            if (parser == null) {
+                Log.e(AppConfig.LogTags.PHONE_BLE, "Unknown sensorId in chunk: $sensorId")
                 sendAck(sensorId, success = false, endTimestamp = null)
+                return
             }
+
+            val entities = parser(csvData)
+
+            if (entities.isEmpty()) {
+                Log.w(AppConfig.LogTags.PHONE_BLE, "No rows parsed for $sensorId chunk")
+                // Still ACK - an empty but valid chunk still needs its range confirmed.
+                sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
+                return
+            }
+
+            when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
+                is Result.Success -> {
+                    timestampService.updateLastWatchDataReceived()
+                    Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} $sensorId entries locally")
+                    sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
+                }
+                is Result.Error -> {
+                    Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store $sensorId data: ${result.message}", result.exception)
+                    sendAck(sensorId, success = false, endTimestamp = null)
+                }
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Log.e(
+                AppConfig.LogTags.PHONE_BLE,
+                "Error parsing or storing $sensorId data: ${e.message}",
+                e
+            )
+            sendAck(sensorId, success = false, endTimestamp = null)
         }
     }
 }

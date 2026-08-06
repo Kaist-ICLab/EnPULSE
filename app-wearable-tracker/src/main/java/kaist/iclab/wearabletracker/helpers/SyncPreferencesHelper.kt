@@ -46,6 +46,66 @@ class SyncPreferencesHelper(context: Context) {
     private fun sensorWatermarkKey(sensorId: String) = "$KEY_SENSOR_WATERMARK_PREFIX$sensorId"
 
     /**
+     * A sensor's in-flight marker: the highest timestamp already transmitted to the phone but
+     * not yet ACK-confirmed, and when that transmission happened.
+     */
+    data class SensorPending(val upToTimestamp: Long, val sentAt: Long)
+
+    /**
+     * Get a sensor's in-flight marker (see [SensorPending]), or null if nothing is currently
+     * in flight for it.
+     */
+    fun getSensorPending(sensorId: String): SensorPending? {
+        val upTo = sharedPreferences.getLong(sensorPendingUpToKey(sensorId), -1L)
+        val sentAt = sharedPreferences.getLong(sensorPendingSentAtKey(sensorId), -1L)
+        if (upTo == -1L || sentAt == -1L) return null
+        return SensorPending(upTo, sentAt)
+    }
+
+    /**
+     * Record that data up to [upToTimestamp] was just sent for [sensorId], so a sync attempt
+     * that fires before the phone ACKs it can skip past this range instead of resending it from
+     * scratch. Used together with [getSensorPending]/[Constants.AutoSync.PENDING_ACK_TIMEOUT_MS]
+     * by [kaist.iclab.wearabletracker.data.PhoneCommunicationManager] to avoid unbounded resend
+     * loops while an ACK is still in flight.
+     */
+    fun setSensorPending(sensorId: String, upToTimestamp: Long, sentAt: Long) {
+        sharedPreferences.edit {
+            putLong(sensorPendingUpToKey(sensorId), upToTimestamp)
+            putLong(sensorPendingSentAtKey(sensorId), sentAt)
+        }
+    }
+
+    /**
+     * Clear a sensor's in-flight marker unconditionally - used when an ACK definitively fails
+     * (status != OK), so the next sync attempt retries immediately rather than waiting out
+     * [Constants.AutoSync.PENDING_ACK_TIMEOUT_MS].
+     */
+    fun clearSensorPending(sensorId: String) {
+        sharedPreferences.edit {
+            remove(sensorPendingUpToKey(sensorId))
+            remove(sensorPendingSentAtKey(sensorId))
+        }
+    }
+
+    /**
+     * Clear a sensor's in-flight marker if [endTimestamp] - a cumulative ACK's confirmed
+     * watermark - covers it, i.e. the phone has now confirmed receipt at least up through what
+     * was still marked in flight. Safe to call for every OK ACK, stale/duplicate or not: a stale
+     * ACK's endTimestamp is by definition <= the current watermark, which is itself only ever
+     * advanced past a pending marker that a *newer* ACK already covered.
+     */
+    fun clearSensorPendingIfCovered(sensorId: String, endTimestamp: Long) {
+        val pending = getSensorPending(sensorId) ?: return
+        if (endTimestamp >= pending.upToTimestamp) {
+            clearSensorPending(sensorId)
+        }
+    }
+
+    private fun sensorPendingUpToKey(sensorId: String) = "$KEY_SENSOR_PENDING_UPTO_PREFIX$sensorId"
+    private fun sensorPendingSentAtKey(sensorId: String) = "$KEY_SENSOR_PENDING_SENT_AT_PREFIX$sensorId"
+
+    /**
      * Derived "last synced" value for UI display and the auto-sync interval gate: the max
      * confirmed watermark across all sensors, i.e. the most recent confirmation event. Not the
      * min - a single stuck/disabled/new sensor should not stall this indicator or the auto-sync
@@ -158,6 +218,8 @@ class SyncPreferencesHelper(context: Context) {
     companion object {
         private const val PREFS_NAME = "sync_preferences"
         private const val KEY_SENSOR_WATERMARK_PREFIX = "sensor_watermark_"
+        private const val KEY_SENSOR_PENDING_UPTO_PREFIX = "sensor_pending_upto_"
+        private const val KEY_SENSOR_PENDING_SENT_AT_PREFIX = "sensor_pending_sent_at_"
         private const val KEY_LAST_SYNC_ATTEMPT_AT = "last_sync_attempt_at"
 
         private const val KEY_AUTO_SYNC_ENABLED = "auto_sync_enabled"
