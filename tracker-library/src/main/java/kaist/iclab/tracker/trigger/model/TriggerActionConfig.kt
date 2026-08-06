@@ -80,12 +80,16 @@ sealed class TriggerActionConfig {
      *
      * @param url Optional deep link/URL to open when the notification is tapped. If absent, the
      *   notification just opens the EnPULSE app (its main activity) instead.
+     * @param minIntervalMillis Required, no default — same as [Ema]/[WatchEma] — so constructing
+     *   one in code always forces a deliberate choice rather than silently getting no throttling.
+     *   Dashboard-authored JSON that omits `minIntervalMillis` still falls back to `0` at parse
+     *   time (see [TriggerActionConfigSerializer]), matching [Ema]/[WatchEma]'s own JSON handling.
      */
     data class Notification(
         val title: String,
         val description: String,
         val url: String? = null,
-        override val minIntervalMillis: Long = 0
+        override val minIntervalMillis: Long
     ) : TriggerActionConfig()
 }
 
