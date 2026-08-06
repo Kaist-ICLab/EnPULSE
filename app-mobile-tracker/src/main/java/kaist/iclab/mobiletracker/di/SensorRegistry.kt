@@ -84,7 +84,8 @@ class SensorDescriptor<T>(
         displayName = displayName,
         isWatchSensor = isWatchSensor,
         supabaseTableName = supabaseTable,
-        store = store
+        store = store,
+        serializer = serializer
     )
 
     fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler = SensorUploadHandlerImpl(
