@@ -53,7 +53,7 @@ class SurveyBridgeHandler(
             (resolvedSurveyId.isNullOrBlank() || config.id.toString() == resolvedSurveyId)
         } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey (title=$surveyTitle, id=$resolvedSurveyId)")
 
-        if (scheduleId != null) {
+        if (!scheduleId.isNullOrBlank()) {
             scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
         }
 
