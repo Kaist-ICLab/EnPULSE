@@ -65,7 +65,9 @@ class EnPulseBridge(
                     "showNativeNotification" -> appHandler.showNativeNotification(request)
                     "closeWebApp" -> appHandler.closeWebApp(request)
                     "openNativeSettings" -> appHandler.openNativeSettings(request)
-                    "logEvent" -> logHandler.logEvent(request, callerWebAppId)
+                    // Accepts both names: the TS client posts action "log" with a payload that also
+                    // carries `action: "logEvent"`, so either reading of the envelope dispatches here.
+                    "log", "logEvent" -> logHandler.log(request, callerWebAppId)
                     else -> BridgeResponse(request.requestId, "error", errorMessage = "Unknown action: ${request.action}")
                 }
             } catch (e: Exception) {

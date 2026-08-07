@@ -1,9 +1,9 @@
 package kaist.iclab.mobiletracker.di.phone
 
 import kaist.iclab.mobiletracker.BuildConfig
-import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
+import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
 import kaist.iclab.mobiletracker.webapp.PersistentWebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
@@ -71,10 +71,22 @@ val webAppModule = module {
         )
     }
 
+    // Webapp analytics logs — kept off the sensor pipeline entirely (own store, own uploader),
+    // so they are neither campaign-gated nor tied to sensor collection being started.
+    single {
+        WebAppLogUploader(
+            store = get(),
+            supabaseHelper = get(),
+            syncTimestampService = get()
+        )
+    }
+
     single {
         LogBridgeHandler(
-            phoneSensorRepository = get<PhoneSensorRepository>(),
-            webAppRegistry = get<WebAppRegistry>()
+            webAppLogStore = get(),
+            webAppLogUploader = get<WebAppLogUploader>(),
+            webAppRegistry = get<WebAppRegistry>(),
+            appScope = get()
         )
     }
 

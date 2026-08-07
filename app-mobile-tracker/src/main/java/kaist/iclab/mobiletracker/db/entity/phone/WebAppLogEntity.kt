@@ -1,62 +1,34 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
 import io.objectbox.annotation.Entity
-import kaist.iclab.mobiletracker.data.DeviceType
-import kaist.iclab.mobiletracker.db.entity.BaseEntity
-import kaist.iclab.mobiletracker.db.entity.CsvSerializable
-import kaist.iclab.mobiletracker.db.entity.RecordSerializable
-import kaist.iclab.mobiletracker.db.obx.JsonStringElementSerializer
-import kaist.iclab.mobiletracker.repository.SensorRecord
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import java.util.UUID
+import io.objectbox.annotation.Id
+import io.objectbox.annotation.Index
 
 /**
- * A generic event logged by a third-party webapp via the `logEvent` bridge action
- * ([kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler]). Stored and uploaded to Supabase
- * through the same [kaist.iclab.mobiletracker.di.SensorDescriptor] machinery as every other sensor.
+ * A generic event logged by a third-party webapp via the `log` bridge action
+ * ([kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler]).
+ *
+ * Deliberately **not** a sensor: it does not extend
+ * [kaist.iclab.mobiletracker.db.entity.BaseEntity], is absent from
+ * [kaist.iclab.mobiletracker.db.obx.SensorStores]/[kaist.iclab.mobiletracker.di.SensorRegistry],
+ * and never rides the campaign-gated sensor upload path. It follows the
+ * [MicroEmaResponseEntity] pattern instead — a small dedicated store keyed on [isSynced], drained
+ * by [kaist.iclab.mobiletracker.services.upload.WebAppLogUploader] into the `web_app_log` table
+ * regardless of whether sensor collection is running.
  */
 @Entity
-@Serializable
-class WebAppLogEntity : BaseEntity, CsvSerializable, RecordSerializable {
-    @SerialName("web_app_id")
-    var webAppId: String = ""
+data class WebAppLogEntity(
+    @Id var id: Long = 0,
 
-    @SerialName("event_name")
-    var eventName: String = ""
+    /** When the webapp emitted the event (epoch millis); stamped natively on receipt. */
+    var timestamp: Long = 0,
 
-    @SerialName("properties")
-    @Serializable(with = JsonStringElementSerializer::class)
-    var propertiesJson: String? = null
+    var webAppId: String = "",
 
-    constructor() : super()
+    var eventType: String = "",
 
-    constructor(
-        id: Long = 0,
-        eventId: String = UUID.randomUUID().toString(),
-        uuid: String = "",
-        received: Long = 0,
-        timestamp: Long = 0,
-        deviceType: Int = DeviceType.PHONE.value,
-        webAppId: String = "",
-        eventName: String = "",
-        propertiesJson: String? = null
-    ) {
-        initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
-        this.webAppId = webAppId
-        this.eventName = eventName
-        this.propertiesJson = propertiesJson
-    }
+    /** Valid JSON text for the `properties` jsonb column; null when the webapp sent none. */
+    var propertiesJson: String? = null,
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,webAppId,eventName,propertiesJson"
-    override fun toCsvRow(): String {
-        val escapedProperties = propertiesJson?.replace("\"", "\"\"") ?: ""
-        return "$eventId,$uuid,$received,$timestamp,$webAppId,$eventName,\"$escapedProperties\""
-    }
-
-    override fun toRecord() = SensorRecord(
-        id = id,
-        timestamp = timestamp,
-        fields = mapOf("Event" to eventName, "WebApp" to webAppId)
-    )
-}
+    @Index var isSynced: Boolean = false
+)

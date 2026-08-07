@@ -66,8 +66,8 @@ object AppConfig {
         const val EXERCISE_SENSOR = "exercise_sensor"
         const val SLEEP_SENSOR = "sleep_sensor"
 
-        // Webapp-bridge table names
-        const val WEB_APP_LOG_SENSOR = "web_app_log_sensor"
+        // Webapp-bridge tables — not sensor tables: no campaign_table gating, own uploader
+        const val WEB_APP_LOG = "web_app_log"
     }
 
     /**

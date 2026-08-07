@@ -73,6 +73,7 @@ val viewModelModule = module {
             timestampService = get(),
             sensors = get(qualifier = named("phoneSensors")),
             sensorUploadService = get(),
+            webAppLogStore = get(),
         )
     }
 
