@@ -7,7 +7,6 @@ import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.encodeToJsonElement
@@ -28,16 +27,9 @@ class SurveyBridgeHandler(
 ) {
     fun getSurvey(request: BridgeRequest): BridgeResponse {
         val params = request.payload.jsonObject
-        val surveyId = params["survey_id"]?.jsonPrimitive?.contentOrNull
+        val surveyId = params["survey_id"]?.jsonPrimitive?.content
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_id")
         val scheduleId = params["schedule_id"]?.jsonPrimitive?.contentOrNull
-
-        if (surveyId == null) {
-            val allSurveys = surveyConfigStorage.get().configs.filter { it.deviceType == 0 }
-            return BridgeResponse(
-                request.requestId, "success",
-                data = Json.encodeToJsonElement(ListSerializer(SurveyConfig.serializer()), allSurveys)
-            )
-        }
 
         // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
         val survey = surveyConfigStorage.get().configs.firstOrNull {
