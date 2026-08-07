@@ -43,7 +43,7 @@ class SurveyBridgeHandler(
         }
 
         if (surveyTitle.isNullOrBlank() && resolvedSurveyId.isNullOrBlank()) {
-            return BridgeResponse(request.requestId, "error", errorMessage = "Could not resolve survey identifier (must provide valid survey_title, survey_id, or schedule_id)")
+            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey")
         }
 
         // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
@@ -51,7 +51,7 @@ class SurveyBridgeHandler(
             config.deviceType == 0 &&
             (surveyTitle.isNullOrBlank() || config.title == surveyTitle) &&
             (resolvedSurveyId.isNullOrBlank() || config.id.toString() == resolvedSurveyId)
-        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey (title=$surveyTitle, id=$resolvedSurveyId)")
+        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey")
 
         if (!scheduleId.isNullOrBlank()) {
             scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
