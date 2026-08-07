@@ -43,12 +43,14 @@ import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
 import kaist.iclab.wearabletracker.storage.ObjectBoxRmssdHistory
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
 import kaist.iclab.wearabletracker.ui.SettingsViewModel
-import kaist.iclab.tracker.trigger.DefaultTriggerEngine
-import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
-import kaist.iclab.wearabletracker.trigger.WatchTriggerActionHandler
-import kaist.iclab.wearabletracker.trigger.TriggerConfigStorage
-import kaist.iclab.wearabletracker.trigger.TriggerConfigReceiver
+import kaist.iclab.wearabletracker.trigger.DetectionStateForwarder
+import kaist.iclab.wearabletracker.trigger.WatchEmaTriggerReceiver
+import kaist.iclab.wearabletracker.trigger.WatchNotificationTriggerReceiver
+import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigStorage
+import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigReceiver
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -386,42 +388,64 @@ val koinModule = module {
         )
     }
 
-    // --- Trigger Engine ---
+    // --- Trigger condition sources ---
+    // The trigger engine now lives entirely on the phone (see
+    // kaist.iclab.mobiletracker.di.phone.triggerModule). The watch only: (1) keeps its local
+    // DetectionStateTracker fed by sensor adapters and forwards it to the phone, (2) executes
+    // WatchEma commands the phone sends back, and (3) shows notification-action alerts the phone
+    // sends over BLE (native Wear OS bridging was tried for this and didn't reliably show up).
 
     single {
         DetectionStateTracker()
     }
 
-    single<TriggerEngine> {
-        DefaultTriggerEngine(
-            context = androidContext(),
-            detectionStateTracker = get(),
-            coroutineScope = get()
-        ).apply {
-            setActionHandler(get<WatchTriggerActionHandler>())
-        }
-    }
-
     single {
-        WatchTriggerActionHandler(
-            context = androidContext(),
-            microEmaRepository = get(),
-            bleChannel = get<PhoneCommunicationManager>().getBleChannel()
+        StressDetectionAdapter(
+            stressSensor = get(),
+            tracker = get()
         )
     }
 
     single {
-        TriggerConfigStorage(context = androidContext())
+        GestureDetectionAdapter(
+            gestureSensor = get(),
+            tracker = get()
+        )
     }
 
     single {
-        TriggerConfigReceiver(
+        DetectionStateForwarder(
             bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
-            triggerEngine = get(),
-            actionHandler = get(),
-            backgroundController = get(),
             detectionStateTracker = get(),
+            coroutineScope = get()
+        )
+    }
+
+    single {
+        WatchSurveyConfigStorage(context = androidContext())
+    }
+
+    single {
+        WatchSurveyConfigReceiver(
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
+            microEmaRepository = get(),
             storage = get()
+        )
+    }
+
+    single {
+        WatchEmaTriggerReceiver(
+            context = androidContext(),
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
+            microEmaRepository = get(),
+            surveyConfigReceiver = get()
+        )
+    }
+
+    single {
+        WatchNotificationTriggerReceiver(
+            context = androidContext(),
+            bleChannel = get<PhoneCommunicationManager>().getBleChannel()
         )
     }
 }

@@ -1,16 +1,13 @@
 package kaist.iclab.mobiletracker.webapp.bridge
 
-import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
@@ -19,11 +16,11 @@ import kotlinx.serialization.json.put
 /**
  * Handles the `getSensorData` bridge action.
  *
- * Only exposes the same derived [SensorRecord] projection the Data screen already shows (design
- * principle #5 — no raw sensor table access), read from local storage. Per design principle #6,
- * this does not drive any new watch sync — the watch already pushes sensor data over BLE in the
- * background; this only reports whether that background pipeline currently looks connected, as a
- * `sync_status` hint for the webapp.
+ * Returns the raw serialized sensor entities (the same `@Serializable` shape used for Supabase
+ * upload) from local storage, via [getRecordsJsonPaginated]. Per design principle #6, this does not
+ * drive any new watch sync — the watch already pushes sensor data over BLE in the background; this
+ * only reports whether that background pipeline currently looks connected, as a `sync_status` hint
+ * for the webapp.
  */
 class SensorBridgeHandler(
     private val handlerRegistry: SensorDataHandlerRegistry,
@@ -47,19 +44,20 @@ class SensorBridgeHandler(
         val handler = handlerRegistry.getHandler(sensorId)
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown sensor_id: $sensorId")
 
-        val records = handler.getRecordsPaginated(
+        val records = handler.getRecordsJsonPaginated(
             afterTimestamp = startTime,
+            beforeTimestamp = endTime,
             isAscending = true,
             limit = MAX_RECORDS,
             offset = 0
-        ).filter { it.timestamp <= endTime }
+        )
 
         val syncStatus = if (handler.isWatchSensor) resolveWatchSyncStatus() else "fresh"
 
         return BridgeResponse(
             request.requestId, "success",
             data = buildJsonObject {
-                put("records", Json.encodeToJsonElement(ListSerializer(SensorRecord.serializer()), records))
+                put("records", JsonArray(records))
                 put("sync_status", syncStatus)
             }
         )
@@ -79,21 +77,20 @@ class SensorBridgeHandler(
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown sensor_id: $sensorId")
 
         // Fetch just the single latest record
-        val latestRecord = handler.getRecordsPaginated(
+        val records = handler.getRecordsJsonPaginated(
             afterTimestamp = 0,
+            beforeTimestamp = Long.MAX_VALUE,
             isAscending = false,
             limit = 1,
             offset = 0
-        ).firstOrNull()
+        )
 
         val syncStatus = if (handler.isWatchSensor) resolveWatchSyncStatus() else "fresh"
-
-        val records = if (latestRecord != null) listOf(latestRecord) else emptyList()
 
         return BridgeResponse(
             request.requestId, "success",
             data = buildJsonObject {
-                put("records", Json.encodeToJsonElement(ListSerializer(SensorRecord.serializer()), records))
+                put("records", JsonArray(records))
                 put("sync_status", syncStatus)
             }
         )

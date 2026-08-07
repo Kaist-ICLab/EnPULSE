@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.PowerManager
 import android.util.Log
 import kaist.iclab.tracker.trigger.eval.ConditionEvaluator
+import kaist.iclab.tracker.trigger.model.DetectionState
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
 import kaist.iclab.tracker.trigger.model.TriggerActionConfig
 import kaist.iclab.tracker.trigger.model.TriggerEvaluationEvent
@@ -111,7 +112,7 @@ class DefaultTriggerEngine(
         job = coroutineScope.launch {
             detectionStateTracker.stateChanges.collect { (sensor, state) ->
                 Log.d(TAG, "State changed: $sensor → ${state.value}")
-                evaluateAllTriggers()
+                evaluateAllTriggers(sensor, state)
             }
         }
     }
@@ -122,7 +123,19 @@ class DefaultTriggerEngine(
         Log.d(TAG, "Stopped trigger evaluation loop")
     }
 
-    private suspend fun evaluateAllTriggers() {
+    /**
+     * @param triggeringSensor/[triggeringState] the specific state change that caused this
+     *   evaluation cycle. Evaluation is forced to see this exact pair even if
+     *   [DetectionStateTracker.getAllStates] already reflects a *later* write by the time this
+     *   coroutine runs — collection off a [kotlinx.coroutines.flow.SharedFlow] is decoupled from
+     *   emission, so a producer that fires two updates back-to-back with no suspension in
+     *   between (e.g. a momentary "fired" pulse immediately followed by an "idle" reset, as
+     *   [kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter] does) can otherwise race
+     *   ahead of this collector and make the "fired" state never observably visible to any
+     *   evaluation cycle at all. Without this override, `getAllStates()` alone is the map's
+     *   *current* value, not the value *at the time of the emission that triggered this cycle*.
+     */
+    private suspend fun evaluateAllTriggers(triggeringSensor: String? = null, triggeringState: DetectionState? = null) {
         // Acquire a WakeLock to ensure the CPU doesn't sleep during evaluation
         val wakeLock = powerManager.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
@@ -132,7 +145,13 @@ class DefaultTriggerEngine(
         wakeLock.acquire(TriggerConstants.WakeLock.TIMEOUT_MS)
 
         try {
-            val currentStates = detectionStateTracker.getAllStates()
+            val currentStates = detectionStateTracker.getAllStates().let { states ->
+                if (triggeringSensor != null && triggeringState != null) {
+                    states + (triggeringSensor to triggeringState)
+                } else {
+                    states
+                }
+            }
             val h = handler
 
             if (h == null) {

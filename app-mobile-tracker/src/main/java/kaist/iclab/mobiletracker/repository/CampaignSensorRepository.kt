@@ -9,6 +9,7 @@ import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Repository for fetching and caching sensors allowed for a specific campaign.
@@ -28,6 +29,13 @@ interface CampaignSensorRepository {
      * Get the cached active sensors synchronously.
      */
     fun getActiveSensors(): List<CampaignTableData>
+
+    /**
+     * Get the cached `campaign_table.config` JSON for a specific sensor by its campaign-table
+     * `name` (e.g. `"timing_sensor"`), or null if that sensor has no row / no config for the
+     * current campaign.
+     */
+    fun getSensorConfig(sensorName: String): JsonElement?
 
     /**
      * Clear the cache (e.g., on logout).
@@ -70,6 +78,10 @@ class CampaignSensorRepositoryImpl(
 
     override fun getActiveSensors(): List<CampaignTableData> {
         return _activeSensorsFlow.value
+    }
+
+    override fun getSensorConfig(sensorName: String): JsonElement? {
+        return _activeSensorsFlow.value.find { it.name == sensorName }?.config
     }
 
     override fun clearCache() {

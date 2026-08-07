@@ -71,20 +71,6 @@ val surveySensorModule = module {
             scheduleStorage = get<SurveyScheduleStorage>(),
         ).apply {
             notificationHandler = object : SurveySensor.NotificationHandler {
-                override fun showScheduledNotification(
-                    surveyId: String,
-                    scheduleId: String,
-                    config: SurveyNotificationConfig
-                ) {
-                    NotificationHelper.showSurveyNotification(
-                        context = androidContext(),
-                        surveyId = surveyId,
-                        scheduleId = scheduleId,
-                        config = config,
-                        notificationId = Constants.Notification.ID_SURVEY_BASE
-                    )
-                }
-
                 override fun showTriggeredNotification(
                     surveyId: String,
                     scheduleId: String,

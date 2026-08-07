@@ -61,8 +61,28 @@ class PhoneCommunicationManager(
             }
             try {
                 val result = ErrorClassifier.runClassified(TAG, "send data to phone") {
+                    val now = System.currentTimeMillis()
+
+                    // Per-sensor cursor to send from: the ACK-confirmed watermark, unless a
+                    // previous attempt already sent data past it that's still within its ACK
+                    // timeout - in which case skip past that in-flight range instead of blindly
+                    // retransmitting data the phone may already have but hasn't ACKed yet. This
+                    // is what keeps a slow/backlogged ACK from turning every subsequent
+                    // AutoSyncManager tick into a full resend of the same backlog.
+                    val effectiveStartBySensor = stores.keys.associateWith { sensorId ->
+                        val confirmed = syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L
+                        val pending = syncPreferencesHelper.getSensorPending(sensorId)
+                        if (pending != null &&
+                            now - pending.sentAt < Constants.AutoSync.PENDING_ACK_TIMEOUT_MS
+                        ) {
+                            maxOf(confirmed, pending.upToTimestamp)
+                        } else {
+                            confirmed
+                        }
+                    }
+
                     val totalRecordsToSync = stores.entries.sumOf { (sensorId, store) ->
-                        store.getCountSince(syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L)
+                        store.getCountSince(effectiveStartBySensor.getValue(sensorId))
                     }
                     if (totalRecordsToSync == 0) {
                         return@runClassified false
@@ -73,7 +93,8 @@ class PhoneCommunicationManager(
                     var totalRecordsSentSoFar = 0
 
                     stores.forEach { (sensorId, store) ->
-                        var currentSensorLastTimestamp = syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L
+                        val effectiveStart = effectiveStartBySensor.getValue(sensorId)
+                        var currentSensorLastTimestamp = effectiveStart
 
                         while (coroutineContext.isActive) {
                             val data = store.getDataSince(
@@ -111,6 +132,13 @@ class PhoneCommunicationManager(
                                 Log.e(TAG, "[$sensorId] Error sending chunk: ${e.message}", e)
                                 throw e
                             }
+                        }
+
+                        // Mark whatever we actually transmitted this round as in-flight so the
+                        // next sync attempt - which may fire before the phone ACKs this - skips
+                        // past it instead of resending it from scratch.
+                        if (currentSensorLastTimestamp > effectiveStart) {
+                            syncPreferencesHelper.setSensorPending(sensorId, currentSensorLastTimestamp, now)
                         }
                     }
 

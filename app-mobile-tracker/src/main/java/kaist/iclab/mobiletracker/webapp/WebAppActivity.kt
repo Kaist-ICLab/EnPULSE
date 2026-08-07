@@ -30,6 +30,7 @@ import kaist.iclab.mobiletracker.webapp.bridge.AppBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.BridgeRequest
 import kaist.iclab.mobiletracker.webapp.bridge.BridgeResponse
 import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.PermissionBridgeHandler
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kotlinx.serialization.json.Json
@@ -60,6 +61,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
     private val sensorBridgeHandler by inject<SensorBridgeHandler>()
     private val storageBridgeHandler by inject<StorageBridgeHandler>()
     private val deviceBridgeHandler by inject<DeviceBridgeHandler>()
+    private val logBridgeHandler by inject<LogBridgeHandler>()
     private val permissionManager by inject<AndroidPermissionManager>()
     private val appScope by inject<AppCoroutineScope>()
 
@@ -151,6 +153,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
                         deviceHandler = deviceBridgeHandler,
                         appHandler = appBridgeHandler,
                         permissionHandler = permissionBridgeHandler,
+                        logHandler = logBridgeHandler,
                         callerWebAppId = webApp.id,
                         appScope = appScope
                     )

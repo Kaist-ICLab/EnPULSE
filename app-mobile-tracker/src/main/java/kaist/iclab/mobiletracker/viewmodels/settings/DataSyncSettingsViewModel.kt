@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.onFailure
@@ -30,6 +31,7 @@ class DataSyncSettingsViewModel(
     private val timestampService: SyncTimestampService,
     private val sensors: List<Sensor<*, *>>,
     private val sensorUploadService: SensorUploadService,
+    private val webAppLogStore: WebAppLogStore,
 ) : ViewModel() {
     private val TAG = "ServerSyncSettingsViewModel"
 
@@ -91,6 +93,10 @@ class DataSyncSettingsViewModel(
 
             val phoneResult = phoneSensorRepository.flushAllData()
             val watchResult = watchSensorRepository.flushAllData()
+
+            // WebApp logs live outside the sensor stores, so they need clearing explicitly —
+            // before the split they were covered by phoneSensorRepository.flushAllData().
+            webAppLogStore.removeAll()
 
             phoneResult.onFailure { e ->
                 Log.e(TAG, "Error flushing phone sensor data: ${e.message}", e)

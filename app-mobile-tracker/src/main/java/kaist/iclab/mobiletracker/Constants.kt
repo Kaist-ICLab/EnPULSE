@@ -107,7 +107,7 @@ object Constants {
         const val EDA = "EDA"
         const val PPG = "PPG"
         const val SKIN_TEMPERATURE = "SkinTemperature"
-        const val LOCATION = "WatchLocation"
+        const val LOCATION = "Location"
         const val ECG = "ECG"
         const val IMU = "IMU"
         const val GESTURE = "Gesture"
@@ -128,5 +128,15 @@ object Constants {
     object Trigger {
         /** Threshold for discarding stale BLE triggers (5 minutes) */
         const val STALE_THRESHOLD_MS = 5 * 60 * 1000L
+
+        /**
+         * Broadcast action id used by the Dashboard's "open webapp" trigger preset. Recognized by
+         * [kaist.iclab.mobiletracker.trigger.PhoneTriggerActionHandler] and routed to
+         * [kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler.launch] directly instead of a
+         * real `context.sendBroadcast()`, since no receiver is registered for it — this is a
+         * dashboard authoring convention, not an actual Android broadcast contract. Must match
+         * the watch's `Constants.Trigger.ACTION_OPEN_WEBAPP` string value exactly.
+         */
+        const val ACTION_OPEN_WEBAPP = "kaist.iclab.mobiletracker.OPEN_WEBAPP"
     }
 }

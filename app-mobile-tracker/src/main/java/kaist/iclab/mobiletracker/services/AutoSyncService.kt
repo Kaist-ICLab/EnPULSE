@@ -17,6 +17,7 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
+import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.tracker.sensor.core.Sensor
@@ -71,6 +72,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
     private val surveyService: SurveyService by inject()
     private val microEmaResponseDao by inject<MicroEmaResponseStore>()
+    private val webAppLogUploader by inject<WebAppLogUploader>()
 
     private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
@@ -78,6 +80,9 @@ class AutoSyncService : LifecycleService(), KoinComponent {
 
     /** Guards against duplicate sync loops from repeated onStartCommand calls */
     private var syncLoopJob: Job? = null
+
+    /** Independent loop for webapp logs; see [startWebAppLogSync] */
+    private var webAppLogSyncJob: Job? = null
 
     /** Prevents overlapping sync cycles when uploads take longer than the interval */
     private val isSyncing = AtomicBoolean(false)
@@ -98,6 +103,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
      * Uses lifecycleScope for automatic cancellation on service destruction.
      */
     private fun startAutoSync() {
+        startWebAppLogSync()
         if (syncLoopJob?.isActive == true) return
         Log.d(TAG, "Starting auto sync service")
         // Create notification channel
@@ -120,6 +126,32 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                     Log.e(TAG, "Error in auto-sync loop: ${e.message}", e)
                     delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
                 }
+            }
+        }
+    }
+
+    /**
+     * WebApp logs are not sensor data, so they drain on their own loop instead of through
+     * [checkAndSyncIfNeeded]: no `getDataCollectionStarted()` gate and no campaign active-sensor
+     * check, so a webapp keeps logging — and its logs keep reaching Supabase — while sensor
+     * collection is stopped. The user's network preference is still honoured.
+     */
+    private fun startWebAppLogSync() {
+        if (webAppLogSyncJob?.isActive == true) return
+
+        webAppLogSyncJob = lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                try {
+                    if (isNetworkConditionMet()) {
+                        webAppLogUploader.flush().onFailure { e ->
+                            Log.e(TAG, "WebApp log upload failed: ${e.message}", e)
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    Log.e(TAG, "Error in webapp log sync loop: ${e.message}", e)
+                }
+                delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
             }
         }
     }

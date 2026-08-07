@@ -71,11 +71,9 @@ class WebAppTriggerHandler(
             val obj = json.jsonObject
             val title = obj["title"]?.jsonPrimitive?.content ?: ""
             val body = obj["body"]?.jsonPrimitive?.content ?: ""
+            // Absent url just opens the app itself — see launchNotification/
+            // WebAppNotificationBuilder.showGenericTriggerNotification.
             val url = obj["url"]?.jsonPrimitive?.content
-            if (url == null) {
-                Log.e(TAG, "Received NOTIFICATION_TRIGGER with missing url: $json")
-                return
-            }
             Log.d(TAG, "Handling NOTIFICATION_TRIGGER for url=$url")
             launchNotification(title, body, url)
         } catch (e: Exception) {
@@ -140,7 +138,7 @@ class WebAppTriggerHandler(
         )
     }
 
-    fun launchNotification(title: String, body: String, url: String) {
+    fun launchNotification(title: String, body: String, url: String?) {
         WebAppNotificationBuilder.showGenericTriggerNotification(
             context = context,
             title = title,

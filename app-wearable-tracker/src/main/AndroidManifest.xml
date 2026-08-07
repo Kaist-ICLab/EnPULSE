@@ -64,6 +64,13 @@
             </intent-filter>
         </receiver>
 
+        <!-- Fired only via an explicit PendingIntent from WatchNotificationTriggerReceiver
+             (a tapped watch notification relaying its url back to the phone) — no intent-filter,
+             not meant to be reachable from outside the app. -->
+        <receiver
+            android:name=".trigger.WatchNotificationTapReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".helpers.BootCompletedReceiver"
             android:exported="true">

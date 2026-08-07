@@ -13,7 +13,9 @@ import kaist.iclab.mobiletracker.di.phoneSensorModule
 import kaist.iclab.mobiletracker.di.repositoryModule
 import kaist.iclab.mobiletracker.di.viewModelModule
 import kaist.iclab.mobiletracker.di.watchSensorModule
+import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
+import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
@@ -87,6 +89,12 @@ class MobileTrackerApplication : Application(), KoinComponent,
         // Activity/ViewModel recreations (navigation, config changes, etc.).
         observeControllerStateForService()
 
+        // Refresh the Supabase Anonymous Key from the server-side edge function in the
+        // background. SupabaseHelper builds its client synchronously at cold start using
+        // whatever key was last cached (or the build-time default), so this keeps that
+        // cache up to date without blocking startup.
+        refreshAnonKeyFromServer()
+
         // Initialize BLEHelper for watch communication
         try {
             val bleHelper = getKoin().get<kaist.iclab.mobiletracker.helpers.BLEHelper>()
@@ -95,11 +103,51 @@ class MobileTrackerApplication : Application(), KoinComponent,
             Log.e("MobileTrackerApplication", "Error initializing BLEHelper: ${e.message}")
         }
 
+        // Start the trigger engine and its detection adapters. Unlike the sensors it evaluates
+        // conditions from (e.g. TimingSensor, gated by the "collection running" lifecycle via
+        // BackgroundController), the engine itself runs continuously — mirrors how the watch used
+        // to start its DefaultTriggerEngine unconditionally in WearableApplication.onCreate().
+        try {
+            getKoin().get<kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter>().start()
+            getKoin().get<kaist.iclab.tracker.trigger.engine.TriggerEngine>().start()
+        } catch (e: Exception) {
+            Log.e("MobileTrackerApplication", "Error starting trigger engine: ${e.message}", e)
+        }
+
         // Additional initialization can be added here:
         // - Crash reporting
         // - Analytics
         // - Global error handlers
         // - Third-party SDK initialization
+    }
+
+    /**
+     * Fetches the latest Anonymous Key from the server-side `anon_key` edge function and,
+     * if it differs from the currently cached key, persists it and rebuilds the Supabase
+     * client via [SupabaseHelper.reinitialize] so subsequent requests use the fresh key.
+     * Runs on the process lifecycle scope so it isn't cancelled by Activity recreation.
+     */
+    private fun refreshAnonKeyFromServer() {
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val configManager = SupabaseConfigManager(this@MobileTrackerApplication)
+                val url = configManager.getUrl()
+                configManager.fetchAnonKeyFromServer(url).onSuccess { newKey ->
+                    if (newKey != configManager.getAnonKey()) {
+                        configManager.saveFetchedAnonKey(newKey)
+                        getKoin().get<SupabaseHelper>().reinitialize()
+                    }
+                }.onFailure { e ->
+                    Log.e("MobileTrackerApplication", "Error fetching anon key: ${e.message}")
+                }
+            } catch (e: Exception) {
+                Log.e(
+                    "MobileTrackerApplication",
+                    "Error refreshing anon key: ${e.message}",
+                    e
+                )
+            }
+        }
     }
 
     /**

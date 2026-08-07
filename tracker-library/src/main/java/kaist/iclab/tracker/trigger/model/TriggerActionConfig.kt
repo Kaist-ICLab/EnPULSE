@@ -77,12 +77,23 @@ sealed class TriggerActionConfig {
 
     /**
      * Show a local notification.
+     *
+     * @param url Optional deep link/URL to open when the notification is tapped (phone only — see
+     *   [deviceType]). If absent, the notification just opens the EnPULSE app instead.
+     * @param deviceType Which device shows the notification: `0` = phone (default), `1` = watch.
+     *   A watch notification ignores [url] (there's no in-app browser there) and just opens the
+     *   watch app when tapped.
+     * @param minIntervalMillis Required, no default — same as [Ema]/[WatchEma] — so constructing
+     *   one in code always forces a deliberate choice rather than silently getting no throttling.
+     *   Dashboard-authored JSON that omits `minIntervalMillis` still falls back to `0` at parse
+     *   time (see [TriggerActionConfigSerializer]), matching [Ema]/[WatchEma]'s own JSON handling.
      */
     data class Notification(
         val title: String,
         val description: String,
-        val url: String,
-        override val minIntervalMillis: Long = 0
+        val url: String? = null,
+        val deviceType: Int = 0,
+        override val minIntervalMillis: Long
     ) : TriggerActionConfig()
 }
 
@@ -157,8 +168,8 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
                     ?: throw SerializationException("'notification' requires 'title'"),
                 description = obj["description"]?.jsonPrimitive?.content
                     ?: throw SerializationException("'notification' requires 'description'"),
-                url = obj["url"]?.jsonPrimitive?.content
-                    ?: throw SerializationException("'notification' requires 'url'"),
+                url = obj["url"]?.jsonPrimitive?.content,
+                deviceType = (obj["deviceType"] ?: obj["device_type"])?.jsonPrimitive?.int ?: 0,
                 minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
             )
 
@@ -200,6 +211,7 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
                 put("title", action.title)
                 put("description", action.description)
                 put("url", action.url)
+                put("deviceType", action.deviceType)
                 put("minIntervalMillis", action.minIntervalMillis)
             }
         }

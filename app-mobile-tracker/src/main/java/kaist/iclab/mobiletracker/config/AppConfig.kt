@@ -65,6 +65,9 @@ object AppConfig {
         const val WIFI_SCAN_SENSOR = "wifi_scan_sensor"
         const val EXERCISE_SENSOR = "exercise_sensor"
         const val SLEEP_SENSOR = "sleep_sensor"
+
+        // Webapp-bridge tables — not sensor tables: no campaign_table gating, own uploader
+        const val WEB_APP_LOG = "web_app_log"
     }
 
     /**
@@ -79,6 +82,9 @@ object AppConfig {
         const val MICRO_EMA_TRIGGER = "micro_ema_trigger"
         const val TRIGGER_CONFIG = "trigger_config"
         const val PHONE_EMA_TRIGGER = "phone_ema_trigger"
+        const val WATCH_EMA_TRIGGER = "watch_ema_trigger"
+        const val WATCH_NOTIFICATION_TRIGGER = "watch_notification_trigger"
+        const val PHONE_OPEN_URL_TRIGGER = "phone_open_url_trigger"
         const val DETECTION_STATE_UPDATE = "detection_state_update"
         const val ACTIVE_SENSOR_CONFIG = "active_sensor_config"
         const val WEBAPP_TRIGGER = "webapp_trigger"

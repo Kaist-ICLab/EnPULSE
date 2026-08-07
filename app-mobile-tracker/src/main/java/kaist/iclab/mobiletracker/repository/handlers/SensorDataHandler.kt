@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.repository.handlers
 
 import kaist.iclab.mobiletracker.repository.SensorRecord
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Interface for handling sensor-specific data operations.
@@ -36,6 +37,22 @@ interface SensorDataHandler {
         limit: Int,
         offset: Int
     ): List<SensorRecord>
+
+    /**
+     * Get paginated records as raw serialized sensor entities (JSON), for the webapp bridge.
+     *
+     * Unlike [getRecordsPaginated], this exposes the full entity via its `@Serializable` shape (the
+     * same one used for Supabase upload) rather than the [SensorRecord] display projection. Records
+     * are filtered to `timestamp in [afterTimestamp, beforeTimestamp]`; pass [Long.MAX_VALUE] for
+     * [beforeTimestamp] to impose no upper bound.
+     */
+    suspend fun getRecordsJsonPaginated(
+        afterTimestamp: Long,
+        beforeTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<JsonElement>
 
     /** Delete all records for this sensor */
     suspend fun deleteAll()

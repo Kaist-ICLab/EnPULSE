@@ -4,6 +4,7 @@ import io.objectbox.BoxStore
 import kaist.iclab.mobiletracker.db.entity.MyObjectBox
 import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
+import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -26,4 +27,7 @@ val databaseModule = module {
 
     // Store for locally cached microEMA responses
     single { MicroEmaResponseStore(get()) }
+
+    // Store for webapp analytics logs — not a sensor, so it lives outside SensorStores
+    single { WebAppLogStore(get()) }
 }

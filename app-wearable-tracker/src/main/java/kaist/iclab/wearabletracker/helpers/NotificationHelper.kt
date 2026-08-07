@@ -329,6 +329,36 @@ object NotificationHelper {
     }
 
     /**
+     * Show a generic (non-survey) trigger notification — a `notification` trigger action
+     * authored with `deviceType=1`. Uses a distinct notification id/channel slot from
+     * [showSurveyTriggerNotification] so the two don't clobber each other.
+     */
+    fun showGenericTriggerNotification(
+        context: Context,
+        pendingIntent: PendingIntent,
+        title: String,
+        text: String
+    ) {
+        ensureNotificationChannel(context, NotificationChannelConfig.TRIGGER)
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val notification =
+            NotificationCompat.Builder(context, NotificationChannelConfig.TRIGGER.channelId)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+
+        notificationManager.notify(Constants.NotificationId.GENERIC_TRIGGER, notification)
+    }
+
+    /**
      * Build a notification for a background service.
      */
     fun buildServiceNotification(

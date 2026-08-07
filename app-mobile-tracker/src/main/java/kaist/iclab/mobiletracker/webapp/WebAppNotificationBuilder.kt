@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.MainActivity
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 
@@ -84,19 +85,29 @@ object WebAppNotificationBuilder {
 
     /**
      * Shows a generic URL/notification trigger forwarded from Wearable.
-     * 
+     *
      * [Use Case]
      * Used for general/external links (e.g., reading an article on WebMD or a university page).
-     * Dispatches an Intent.ACTION_VIEW which opens the URL in the system default browser (e.g., Chrome),
-     * rather than opening WebAppActivity inside the EnPULSE app.
+     * Opens the URL in-app via [SimpleWebViewActivity] (a bridge-free, unrestricted WebView —
+     * unlike [WebAppActivity], no native bridge access, since this URL isn't a registered/trusted
+     * WebApp), rather than the system browser or [WebAppActivity].
+     *
+     * If [url] is null (the dashboard didn't set one), the notification just opens the EnPULSE
+     * app itself (`MainActivity`) instead of a URL.
      */
     fun showGenericTriggerNotification(
         context: Context,
         title: String,
         body: String,
-        url: String
+        url: String?
     ) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+        val intent = if (url != null) {
+            Intent(context, SimpleWebViewActivity::class.java).apply {
+                putExtra(SimpleWebViewActivity.EXTRA_URL, url)
+            }
+        } else {
+            Intent(context, MainActivity::class.java)
+        }.apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val uniqueString = "$title|$body|$url"

@@ -33,7 +33,7 @@ class StressEntity : WatchBaseEntity, CsvSerializable {
     }
 
     override fun csvHeader(): String =
-        "eventId,received,timestamp,windowStart,windowEnd,rmssd,ibiCount,threshold,isStressed"
+        "eventId,received,timestamp,windowStartMs,windowEndMs,rmssd,ibiCount,threshold,isStressed"
 
     override fun toCsvRow(): String =
         "$eventId,$received,$timestamp,$windowStart,$windowEnd,$rmssd,$ibiCount,$threshold,$isStressed"

@@ -16,6 +16,9 @@ object Constants {
         const val KEY_MICRO_EMA_TRIGGER = "micro_ema_trigger"
         const val KEY_TRIGGER_CONFIG = "trigger_config"
         const val KEY_PHONE_EMA_TRIGGER = "phone_ema_trigger"
+        const val KEY_WATCH_EMA_TRIGGER = "watch_ema_trigger"
+        const val KEY_WATCH_NOTIFICATION_TRIGGER = "watch_notification_trigger"
+        const val KEY_PHONE_OPEN_URL_TRIGGER = "phone_open_url_trigger"
         const val KEY_DETECTION_STATE_UPDATE = "detection_state_update"
         const val KEY_ACTIVE_SENSOR_CONFIG = "active_sensor_config"
         const val KEY_WEBAPP_TRIGGER = "webapp_trigger"
@@ -24,16 +27,14 @@ object Constants {
     }
 
     /**
-     * Trigger action identifiers recognized by [kaist.iclab.wearabletracker.trigger.WatchTriggerActionHandler]
-     * beyond the generic [kaist.iclab.tracker.trigger.model.TriggerActionConfig.Broadcast] passthrough.
+     * Trigger action identifiers. The trigger engine now lives entirely on the phone (see
+     * [kaist.iclab.mobiletracker.di.phone.triggerModule]) — this constant is kept here only
+     * because [kaist.iclab.wearabletracker.Constants.Trigger.ACTION_OPEN_WEBAPP]'s string value
+     * must stay in sync with the phone's copy
+     * ([kaist.iclab.mobiletracker.Constants.Trigger.ACTION_OPEN_WEBAPP]) for reference/dashboard
+     * documentation purposes; the watch no longer inspects trigger actions at all.
      */
     object Trigger {
-        /**
-         * Broadcast action id used by the Dashboard's "open webapp" trigger preset. The watch is
-         * the only place trigger conditions are evaluated (see Step 0 of the EnPULSE WebView
-         * platform plan), so a local `context.sendBroadcast()` here would have no listener — this
-         * action is recognized and forwarded to the phone over BLE instead.
-         */
         const val ACTION_OPEN_WEBAPP = "kaist.iclab.mobiletracker.OPEN_WEBAPP"
     }
 
@@ -79,6 +80,7 @@ object Constants {
         const val FLUSH_DATA_SUCCESS = 1003
         const val FLUSH_DATA_FAILURE = 1004
         const val TRIGGER = 1005
+        const val GENERIC_TRIGGER = 1006
         const val ERROR = 2000 // Base ID for errors, will be incremented for multiple errors
     }
 
@@ -108,6 +110,11 @@ object Constants {
         const val WAKELOCK_TAG = "EnPulse:AutoSyncWakeLock"
         const val WAKELOCK_TIMEOUT_MS = 5 * 60 * 1000L // 5 minutes
         const val MIN_SYNC_INTERVAL_MS = 60 * 1000L // Minimum 1 minute between syncs
+
+        // How long a sent-but-unacked chunk stays "in flight" before a sync attempt is allowed
+        // to treat it as lost and resend it. Must comfortably exceed a normal BLE round trip
+        // (send + phone-side parse/store + ACK) so a merely-slow ACK isn't mistaken for a lost one.
+        const val PENDING_ACK_TIMEOUT_MS = 45 * 1000L
     }
 }
 
