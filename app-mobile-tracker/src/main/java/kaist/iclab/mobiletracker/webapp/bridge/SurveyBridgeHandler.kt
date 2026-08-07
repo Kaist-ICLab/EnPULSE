@@ -32,19 +32,26 @@ class SurveyBridgeHandler(
         val params = request.payload.jsonObject
         val surveyTitle = params["survey_title"]?.jsonPrimitive?.content
         val surveyId = params["survey_id"]?.jsonPrimitive?.content
-        
-        if (surveyTitle.isNullOrBlank() && surveyId.isNullOrBlank()) {
-            return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_title or survey_id")
+        val scheduleId = params["schedule_id"]?.jsonPrimitive?.content
+
+        var resolvedSurveyId = surveyId
+        if (resolvedSurveyId.isNullOrBlank() && !scheduleId.isNullOrBlank()) {
+            val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)
+            if (schedule != null && !schedule.surveyId.isNullOrBlank()) {
+                resolvedSurveyId = schedule.surveyId
+            }
         }
-        val scheduleId = params["schedule_id"]?.jsonPrimitive?.contentOrNull
+
+        if (surveyTitle.isNullOrBlank() && resolvedSurveyId.isNullOrBlank() && scheduleId.isNullOrBlank()) {
+            return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey identifier (must provide survey_title, survey_id, or schedule_id)")
+        }
 
         // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
-        val survey = surveyConfigStorage.get().configs.firstOrNull {
-            it.deviceType == 0 && (
-                (!surveyTitle.isNullOrBlank() && it.title == surveyTitle) ||
-                (!surveyId.isNullOrBlank() && it.id.toString() == surveyId)
-            )
-        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey (title=$surveyTitle, id=$surveyId)")
+        val survey = surveyConfigStorage.get().configs.firstOrNull { config ->
+            config.deviceType == 0 &&
+            (surveyTitle.isNullOrBlank() || config.title == surveyTitle) &&
+            (resolvedSurveyId.isNullOrBlank() || config.id.toString() == resolvedSurveyId)
+        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey (title=$surveyTitle, id=$resolvedSurveyId)")
 
         if (scheduleId != null) {
             scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
