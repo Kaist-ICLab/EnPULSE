@@ -68,8 +68,9 @@ class EnPulseBridge(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Log.e(TAG, "Bridge action '${request.action}' failed: ${e.message}", e)
-                BridgeResponse(request.requestId, "error", errorMessage = e.message)
+                val errorMessage = e.message ?: "Native error: ${e.javaClass.simpleName}"
+                Log.e(TAG, "Bridge action '${request.action}' failed: $errorMessage", e)
+                BridgeResponse(request.requestId, "error", errorMessage = errorMessage)
             }
 
             if (response != null) {
