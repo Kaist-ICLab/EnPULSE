@@ -30,14 +30,14 @@ class SurveyBridgeHandler(
 ) {
     fun getSurvey(request: BridgeRequest): BridgeResponse {
         val params = request.payload.jsonObject
-        val surveyId = params["survey_id"]?.jsonPrimitive?.content
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_id")
+        val surveyTitle = params["survey_title"]?.jsonPrimitive?.content
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_title")
         val scheduleId = params["schedule_id"]?.jsonPrimitive?.contentOrNull
 
         // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
         val survey = surveyConfigStorage.get().configs.firstOrNull {
-            it.id.toString() == surveyId && it.deviceType == 0
-        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey_id: $surveyId")
+            it.title == surveyTitle && it.deviceType == 0
+        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey_title: $surveyTitle")
 
         if (scheduleId != null) {
             scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
