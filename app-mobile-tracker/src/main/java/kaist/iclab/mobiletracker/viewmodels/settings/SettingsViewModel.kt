@@ -129,9 +129,21 @@ class SettingsViewModel(
         val permissionFlow = permissionManager.getPermissionFlow(sensor.permissions)
         val allGranted = permissionFlow.value.values.all { it == PermissionState.GRANTED }
         if (!allGranted) {
-            viewModelScope.launch {
-                _uiEvent.emit(SettingsUiEvent.ShowToast(R.string.grant_permissions_in_menu_first))
-            }
+            // Automatically request the missing permissions
+            permissionManager.request(sensor.permissions)
+            
+            // Wait for permissions to be granted, then enable the sensor
+            observePermissionFlow(
+                permissions = sensor.permissions,
+                onGranted = {
+                    try {
+                        sensor.enable()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error enabling sensor $sensorName: ${e.message}", e)
+                    }
+                },
+                errorContext = sensorName
+            )
             return
         }
         

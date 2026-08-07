@@ -288,8 +288,7 @@ class AndroidPermissionManager(
         grantedPermission: Set<com.samsung.android.sdk.health.data.permission.Permission>
     ) {
         val permissionMap = requestedPermission.associate { p ->
-            val isGranted = grantedPermission.any { it.dataType.name == p.dataType.name && it.accessType == p.accessType }
-            val state = if (isGranted) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+            val state = if (p in grantedPermission) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
             p.dataType.name to state
         }
 
@@ -558,11 +557,7 @@ class AndroidPermissionManager(
             Looper.getMainLooper(),
             { res: Set<com.samsung.android.sdk.health.data.permission.Permission> ->
                 Log.v(TAG, "Granted permissions check result: ${res.size}/${possiblePermission.size}")
-                val allGranted = possiblePermission.all { req -> 
-                    res.any { it.dataType.name == req.dataType.name && it.accessType == req.accessType }
-                }
-                
-                if (allGranted) {
+                if (res.containsAll(possiblePermission)) {
                     setHealthDataPermissionState(possiblePermission, res)
                 } else {
                     Log.v(TAG, "Requesting missing health permissions...")
