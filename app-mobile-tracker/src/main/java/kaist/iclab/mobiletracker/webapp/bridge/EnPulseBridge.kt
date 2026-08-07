@@ -50,6 +50,7 @@ class EnPulseBridge(
             val response = try {
                 when (request.action) {
                     "getSurvey" -> surveyHandler.getSurvey(request)
+                    "getAllSurvey" -> surveyHandler.getAllSurvey(request)
                     "setSurveyResponse" -> surveyHandler.setSurveyResponse(request)
                     "getSensorData" -> sensorHandler.getSensorData(request, callerWebAppId)
                     "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(request, callerWebAppId)
