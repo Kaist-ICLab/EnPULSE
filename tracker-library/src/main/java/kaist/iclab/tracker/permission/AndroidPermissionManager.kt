@@ -173,7 +173,7 @@ class AndroidPermissionManager(
             .filter { it !in healthDataPermission.keys }.associateWith { getPermissionState(it) }
 
         // Query Samsung Health permissions only on Samsung devices if they have been registered
-        val hasRegisteredHealthPermissions = permissionStateFlow.value.keys.any { it in healthDataPermission.keys }
+        val hasRegisteredHealthPermissions = permissions.any { it in healthDataPermission.keys }
         if (hasRegisteredHealthPermissions) {
             if (HardwareAvailabilityChecker.isSamsungDevice()) {
                 querySamsungHealthPermissions()
