@@ -51,12 +51,14 @@ class EnPulseBridge(
             val response = try {
                 when (request.action) {
                     "getSurvey" -> surveyHandler.getSurvey(request)
+                    "getAllSurvey" -> surveyHandler.getAllSurvey(request)
                     "setSurveyResponse" -> surveyHandler.setSurveyResponse(request)
                     "getSensorData" -> sensorHandler.getSensorData(request, callerWebAppId)
                     "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(request, callerWebAppId)
                     "getStorageData" -> storageHandler.get(request, callerWebAppId)
                     "setStorageData" -> storageHandler.set(request, callerWebAppId)
                     "getDeviceInfo" -> deviceHandler.getDeviceInfo(request)
+                    "getCampaignId" -> deviceHandler.getCampaignId(request)
                     "getWatchConnectionStatus" -> deviceHandler.getWatchConnectionStatus(request)
                     "checkPermissions" -> permissionHandler.checkPermissions(request)
                     "requestPermissions" -> permissionHandler.requestPermissions(request)
@@ -72,8 +74,9 @@ class EnPulseBridge(
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                Log.e(TAG, "Bridge action '${request.action}' failed: ${e.message}", e)
-                BridgeResponse(request.requestId, "error", errorMessage = e.message)
+                val errorMessage = e.message ?: "Native error: ${e.javaClass.simpleName}"
+                Log.e(TAG, "Bridge action '${request.action}' failed: $errorMessage", e)
+                BridgeResponse(request.requestId, "error", errorMessage = errorMessage)
             }
 
             if (response != null) {

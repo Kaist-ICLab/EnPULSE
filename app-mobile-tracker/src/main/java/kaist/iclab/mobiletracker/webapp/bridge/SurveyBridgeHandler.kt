@@ -3,10 +3,12 @@ package kaist.iclab.mobiletracker.webapp.bridge
 import android.content.Context
 import android.content.Intent
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
+import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.encodeToJsonElement
@@ -23,26 +25,52 @@ import kotlinx.serialization.json.jsonPrimitive
 class SurveyBridgeHandler(
     private val context: Context,
     private val surveyConfigStorage: CouchbaseSurveyConfigStorage,
-    private val scheduleStorage: SurveyScheduleStorage
+    private val scheduleStorage: SurveyScheduleStorage,
+    private val userProfileRepository: UserProfileRepository
 ) {
     fun getSurvey(request: BridgeRequest): BridgeResponse {
         val params = request.payload.jsonObject
+        val surveyTitle = params["survey_title"]?.jsonPrimitive?.content
         val surveyId = params["survey_id"]?.jsonPrimitive?.content
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_id")
-        val scheduleId = params["schedule_id"]?.jsonPrimitive?.contentOrNull
+        val scheduleId = params["schedule_id"]?.jsonPrimitive?.content
+
+        var resolvedSurveyId = surveyId
+        if (resolvedSurveyId.isNullOrBlank() && !scheduleId.isNullOrBlank()) {
+            val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)
+            if (schedule != null && !schedule.surveyId.isNullOrBlank()) {
+                resolvedSurveyId = schedule.surveyId
+            }
+        }
+
+        if (surveyTitle.isNullOrBlank() && resolvedSurveyId.isNullOrBlank()) {
+            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey: No valid identifier provided (survey_title=$surveyTitle, survey_id=$surveyId, schedule_id=$scheduleId)")
+        }
 
         // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
-        val survey = surveyConfigStorage.get().configs.firstOrNull {
-            it.id.toString() == surveyId && it.deviceType == 0
-        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey_id: $surveyId")
+        val survey = surveyConfigStorage.get().configs.firstOrNull { config ->
+            config.deviceType == 0 &&
+            (surveyTitle.isNullOrBlank() || config.title == surveyTitle) &&
+            (resolvedSurveyId.isNullOrBlank() || config.id.toString() == resolvedSurveyId)
+        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey: Config not found matching criteria (survey_title=$surveyTitle, resolved_survey_id=$resolvedSurveyId, schedule_id=$scheduleId)")
 
-        if (scheduleId != null) {
+        if (!scheduleId.isNullOrBlank()) {
             scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
         }
 
         return BridgeResponse(
             request.requestId, "success",
             data = Json.encodeToJsonElement(SurveyConfig.serializer(), survey)
+        )
+    }
+
+    fun getAllSurvey(request: BridgeRequest): BridgeResponse {
+        val userCampaignId = userProfileRepository.profileFlow.value?.campaignId
+        val allSurveys = surveyConfigStorage.get().configs.filter {
+            it.deviceType == 0 && (userCampaignId == null || it.campaignId == userCampaignId)
+        }
+        return BridgeResponse(
+            request.requestId, "success",
+            data = Json.encodeToJsonElement(ListSerializer(SurveyConfig.serializer()), allSurveys)
         )
     }
 

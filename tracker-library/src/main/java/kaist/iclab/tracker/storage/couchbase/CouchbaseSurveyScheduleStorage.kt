@@ -129,19 +129,28 @@ class CouchbaseSurveyScheduleStorage(
     }
 
     override fun setActualTriggerTime(scheduleId: String, timestamp: Long) {
-        val doc = collection.getDocument(scheduleId)?.toMutable()!!
+        val doc = collection.getDocument(scheduleId)?.toMutable() ?: run {
+            Log.w(TAG, "Cannot setActualTriggerTime: Schedule $scheduleId not found")
+            return
+        }
         doc.setLong("actualTriggerTime", timestamp)
         collection.save(doc)
     }
 
     override fun setSurveyStartTime(scheduleId: String, timestamp: Long) {
-        val doc = collection.getDocument(scheduleId)?.toMutable()!!
+        val doc = collection.getDocument(scheduleId)?.toMutable() ?: run {
+            Log.w(TAG, "Cannot setSurveyStartTime: Schedule $scheduleId not found")
+            return
+        }
         doc.setLong("surveyStartTime", timestamp)
         collection.save(doc)
     }
 
     override fun setResponseSubmissionTime(scheduleId: String, timestamp: Long) {
-        val doc = collection.getDocument(scheduleId)?.toMutable()!!
+        val doc = collection.getDocument(scheduleId)?.toMutable() ?: run {
+            Log.w(TAG, "Cannot setResponseSubmissionTime: Schedule $scheduleId not found")
+            return
+        }
         doc.setLong("responseSubmissionTime", timestamp)
         collection.save(doc)
     }

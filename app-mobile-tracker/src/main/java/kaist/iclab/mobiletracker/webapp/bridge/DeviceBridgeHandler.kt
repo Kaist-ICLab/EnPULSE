@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.webapp.bridge
 import android.content.Context
 import android.os.BatteryManager
 import android.os.Build
+import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kotlinx.coroutines.flow.first
@@ -12,7 +13,8 @@ import kotlinx.serialization.json.put
 
 class DeviceBridgeHandler(
     private val context: Context,
-    private val watchSensorRepository: WatchSensorRepository
+    private val watchSensorRepository: WatchSensorRepository,
+    private val userProfileRepository: UserProfileRepository
 ) {
     fun getDeviceInfo(request: BridgeRequest): BridgeResponse {
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
@@ -26,6 +28,18 @@ class DeviceBridgeHandler(
             put("sdkInt", Build.VERSION.SDK_INT)
         }
 
+        return BridgeResponse(request.requestId, "success", data = data)
+    }
+
+    fun getCampaignId(request: BridgeRequest): BridgeResponse {
+        val campaignId = userProfileRepository.profileFlow.value?.campaignId
+        val data = buildJsonObject {
+            if (campaignId != null) {
+                put("campaignId", campaignId)
+            } else {
+                put("campaignId", kotlinx.serialization.json.JsonNull)
+            }
+        }
         return BridgeResponse(request.requestId, "success", data = data)
     }
 
