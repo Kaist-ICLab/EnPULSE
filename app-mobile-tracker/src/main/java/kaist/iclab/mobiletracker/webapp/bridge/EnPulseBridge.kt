@@ -57,6 +57,7 @@ class EnPulseBridge(
                     "getStorageData" -> storageHandler.get(request, callerWebAppId)
                     "setStorageData" -> storageHandler.set(request, callerWebAppId)
                     "getDeviceInfo" -> deviceHandler.getDeviceInfo(request)
+                    "getCampaignId" -> deviceHandler.getCampaignId(request)
                     "getWatchConnectionStatus" -> deviceHandler.getWatchConnectionStatus(request)
                     "checkPermissions" -> permissionHandler.checkPermissions(request)
                     "requestPermissions" -> permissionHandler.requestPermissions(request)

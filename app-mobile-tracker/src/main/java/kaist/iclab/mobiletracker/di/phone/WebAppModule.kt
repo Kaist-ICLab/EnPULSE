@@ -44,7 +44,8 @@ val webAppModule = module {
         SurveyBridgeHandler(
             context = androidContext(),
             surveyConfigStorage = get(),
-            scheduleStorage = get<SurveyScheduleStorage>()
+            scheduleStorage = get<SurveyScheduleStorage>(),
+            userProfileRepository = get()
         )
     }
 
@@ -65,7 +66,8 @@ val webAppModule = module {
     single {
         DeviceBridgeHandler(
             context = androidContext(),
-            watchSensorRepository = get()
+            watchSensorRepository = get(),
+            userProfileRepository = get()
         )
     }
 

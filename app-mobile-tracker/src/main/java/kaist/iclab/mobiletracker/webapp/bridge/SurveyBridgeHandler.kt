@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.webapp.bridge
 import android.content.Context
 import android.content.Intent
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
+import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
@@ -24,7 +25,8 @@ import kotlinx.serialization.json.jsonPrimitive
 class SurveyBridgeHandler(
     private val context: Context,
     private val surveyConfigStorage: CouchbaseSurveyConfigStorage,
-    private val scheduleStorage: SurveyScheduleStorage
+    private val scheduleStorage: SurveyScheduleStorage,
+    private val userProfileRepository: UserProfileRepository
 ) {
     fun getSurvey(request: BridgeRequest): BridgeResponse {
         val params = request.payload.jsonObject
@@ -48,7 +50,10 @@ class SurveyBridgeHandler(
     }
 
     fun getAllSurvey(request: BridgeRequest): BridgeResponse {
-        val allSurveys = surveyConfigStorage.get().configs.filter { it.deviceType == 0 }
+        val userCampaignId = userProfileRepository.profileFlow.value?.campaignId
+        val allSurveys = surveyConfigStorage.get().configs.filter {
+            it.deviceType == 0 && (userCampaignId == null || it.campaignId == userCampaignId)
+        }
         return BridgeResponse(
             request.requestId, "success",
             data = Json.encodeToJsonElement(ListSerializer(SurveyConfig.serializer()), allSurveys)
