@@ -42,8 +42,8 @@ class SurveyBridgeHandler(
             }
         }
 
-        if (surveyTitle.isNullOrBlank() && resolvedSurveyId.isNullOrBlank() && scheduleId.isNullOrBlank()) {
-            return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey identifier (must provide survey_title, survey_id, or schedule_id)")
+        if (surveyTitle.isNullOrBlank() && resolvedSurveyId.isNullOrBlank()) {
+            return BridgeResponse(request.requestId, "error", errorMessage = "Could not resolve survey identifier (must provide valid survey_title, survey_id, or schedule_id)")
         }
 
         // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
