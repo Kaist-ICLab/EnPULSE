@@ -1,6 +1,5 @@
 package kaist.iclab.wearabletracker.ui.components
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -39,6 +38,7 @@ import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.theme.AppSpacing
 import kaist.iclab.wearabletracker.theme.DeviceNameText
 import kaist.iclab.wearabletracker.theme.SyncStatusText
+import kaist.iclab.wearabletracker.ui.utils.formatCompactCount
 import kotlinx.coroutines.delay
 import java.util.Date
 import java.util.Locale
@@ -137,7 +137,7 @@ fun DeviceStatusInfo(
             StatusChip(
                 text = stringResource(
                     R.string.status_records_format,
-                    formatCount(totalRecordCount)
+                    formatCompactCount(totalRecordCount)
                 ),
                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
             )
@@ -242,18 +242,6 @@ private fun RecordingDuration(startTime: Long) {
         text = durationText,
         color = Color(0xFF66BB6A) // Green for active recording
     )
-}
-
-/**
- * Format large numbers compactly: 1234 -> "1.2K", 1234567 -> "1.2M"
- */
-@SuppressLint("DefaultLocale")
-private fun formatCount(count: Int): String {
-    return when {
-        count >= 1_000_000 -> String.format("%.1fM", count / 1_000_000.0)
-        count >= 1_000 -> String.format("%.1fK", count / 1_000.0)
-        else -> count.toString()
-    }
 }
 
 /**

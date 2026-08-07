@@ -25,6 +25,13 @@ class WatchSensorRepositoryImpl(
     override suspend fun getRecordCountSince(timestamp: Long): Int =
         sensorDataStorages.values.sumOf { it.getCountSince(timestamp) }
 
+    override suspend fun getPendingRecordCountsBySensor(): Map<String, Int> =
+        sensorDataStorages.mapValues { (sensorId, store) ->
+            // ACKed data is pruned from the store, so a null watermark (never confirmed) just
+            // means everything still held for this sensor is pending.
+            store.getCountSince(syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L)
+        }
+
     override val autoSyncEnabledFlow: Flow<Boolean> = syncPreferencesHelper.autoSyncEnabledFlow
     override val autoSyncIntervalFlow: Flow<Long> = syncPreferencesHelper.autoSyncIntervalFlow
 

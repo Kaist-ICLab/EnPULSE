@@ -54,6 +54,10 @@
     <string name="sensor_ecg">ECG</string>
     <string name="sensor_default">센서</string>
 
+    <!-- Pending upload badge on each sensor chip -->
+    <string name="pending_upload_format">%1$s</string>
+    <string name="pending_upload_description">업로드 대기 %1$d개</string>
+
     <!-- Samsung Health Connection -->
     <string name="samsung_health_connection_failed">연결 실패</string>
     <string name="samsung_health_check_app">Samsung Health가 설치되어 있는지 확인하고 다시 시도해 주세요</string>

@@ -134,6 +134,15 @@ fun SettingsScreen(
 
     // Observe dashboard data
     val totalRecordCount by settingsViewModel.totalRecordCount.collectAsState()
+
+    // Pending upload counts arrive keyed by sensor id; the sensor list below is keyed by
+    // sensor name, so re-key them here rather than making every call site translate.
+    val pendingCountsBySensorId by settingsViewModel.pendingRecordCounts.collectAsState()
+    val pendingRecordCounts = remember(pendingCountsBySensorId, sensorMap) {
+        sensorMap.mapNotNull { (name, sensor) ->
+            pendingCountsBySensorId[sensor.id]?.let { name to it }
+        }.toMap()
+    }
     val batteryLevel by settingsViewModel.batteryLevel.collectAsState()
     val recordingStartTime by settingsViewModel.recordingStartTime.collectAsState()
     val syncProgress by settingsViewModel.syncProgress.collectAsState()
@@ -170,6 +179,7 @@ fun SettingsScreen(
         deviceInfo = deviceInfo,
         lastSyncTimestamp = lastSyncTimestamp,
         totalRecordCount = totalRecordCount,
+        pendingRecordCounts = pendingRecordCounts,
         batteryLevel = batteryLevel,
         recordingStartTime = recordingStartTime,
         syncProgress = syncProgress,
@@ -229,6 +239,7 @@ fun SettingsScreenContent(
     deviceInfo: DeviceInfo,
     lastSyncTimestamp: Long?,
     totalRecordCount: Int,
+    pendingRecordCounts: Map<String, Int>,
     batteryLevel: Int,
     recordingStartTime: Long?,
     syncProgress: Float?,
@@ -331,6 +342,7 @@ fun SettingsScreenContent(
                             sensorId = name,
                             sensorStateFlow = stateFlow,
                             isCollecting = isCollecting,
+                            pendingRecordCount = pendingRecordCounts[name] ?: 0,
                             updateStatus = { status -> onSensorToggle(name, status) }
                         )
                     }
@@ -378,6 +390,12 @@ private val previewAvailableSensors: Map<String, StateFlow<SensorState>> = linke
     "EDA" to previewSensorState(SensorState.FLAG.DISABLED),
 )
 
+private val previewPendingCounts: Map<String, Int> = mapOf(
+    "Accelerometer" to 4820,
+    "Heart Rate" to 137,
+    "PPG" to 0,
+)
+
 @Preview(name = "Idle", device = WearDevices.SMALL_ROUND, showBackground = true)
 @Preview(name = "Idle - Large Round", device = WearDevices.LARGE_ROUND, showBackground = true)
 @Composable
@@ -399,6 +417,7 @@ private fun SettingsScreenContentIdlePreview() {
             deviceInfo = DeviceInfo(name = "Galaxy Watch6"),
             lastSyncTimestamp = System.currentTimeMillis() - 15 * 60_000L,
             totalRecordCount = 1234,
+            pendingRecordCounts = previewPendingCounts,
             batteryLevel = 82,
             recordingStartTime = null,
             syncProgress = null,
@@ -442,6 +461,7 @@ private fun SettingsScreenContentRecordingPreview() {
             deviceInfo = DeviceInfo(name = "Galaxy Watch6"),
             lastSyncTimestamp = System.currentTimeMillis() - 15 * 60_000L,
             totalRecordCount = 5821,
+            pendingRecordCounts = previewPendingCounts,
             batteryLevel = 24,
             recordingStartTime = System.currentTimeMillis() - 12 * 60_000L,
             syncProgress = 0.42f,
@@ -485,6 +505,7 @@ private fun SettingsScreenContentFlushDialogPreview() {
             deviceInfo = DeviceInfo(name = "Galaxy Watch6"),
             lastSyncTimestamp = null,
             totalRecordCount = 0,
+            pendingRecordCounts = previewPendingCounts,
             batteryLevel = 60,
             recordingStartTime = null,
             syncProgress = null,
@@ -528,6 +549,7 @@ private fun SettingsScreenContentSdkPolicyErrorPreview() {
             deviceInfo = DeviceInfo(),
             lastSyncTimestamp = null,
             totalRecordCount = 0,
+            pendingRecordCounts = emptyMap(),
             batteryLevel = -1,
             recordingStartTime = null,
             syncProgress = null,
@@ -571,6 +593,7 @@ private fun SettingsScreenContentConnectionErrorPreview() {
             deviceInfo = DeviceInfo(),
             lastSyncTimestamp = null,
             totalRecordCount = 0,
+            pendingRecordCounts = emptyMap(),
             batteryLevel = -1,
             recordingStartTime = null,
             syncProgress = null,
