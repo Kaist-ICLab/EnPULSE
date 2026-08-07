@@ -88,6 +88,11 @@
         tools:ignore="QueryAllPackagesPermission" />
 
 
+    <queries>
+        <!-- Required for Android 11+ package visibility to interact with Samsung Health SDK -->
+        <package android:name="com.sec.android.app.shealth" />
+    </queries>
+
     <application>
         <service
             android:name=".sync.ble.BLEReceiver$BLEReceiverService"

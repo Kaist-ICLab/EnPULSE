@@ -173,7 +173,7 @@ class AndroidPermissionManager(
             .filter { it !in healthDataPermission.keys }.associateWith { getPermissionState(it) }
 
         // Query Samsung Health permissions only on Samsung devices if they have been registered
-        val hasRegisteredHealthPermissions = permissionStateFlow.value.keys.any { it in healthDataPermission.keys }
+        val hasRegisteredHealthPermissions = permissions.any { it in healthDataPermission.keys }
         if (hasRegisteredHealthPermissions) {
             if (HardwareAvailabilityChecker.isSamsungDevice()) {
                 querySamsungHealthPermissions()
@@ -288,7 +288,8 @@ class AndroidPermissionManager(
         grantedPermission: Set<com.samsung.android.sdk.health.data.permission.Permission>
     ) {
         val permissionMap = requestedPermission.associate { p ->
-            val state = if (p in grantedPermission) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+            val isGranted = grantedPermission.any { it.dataType.name == p.dataType.name && it.accessType == p.accessType }
+            val state = if (isGranted) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
             p.dataType.name to state
         }
 
@@ -557,7 +558,11 @@ class AndroidPermissionManager(
             Looper.getMainLooper(),
             { res: Set<com.samsung.android.sdk.health.data.permission.Permission> ->
                 Log.v(TAG, "Granted permissions check result: ${res.size}/${possiblePermission.size}")
-                if (res.containsAll(possiblePermission)) {
+                val allGranted = possiblePermission.all { req -> 
+                    res.any { it.dataType.name == req.dataType.name && it.accessType == req.accessType }
+                }
+                
+                if (allGranted) {
                     setHealthDataPermissionState(possiblePermission, res)
                 } else {
                     Log.v(TAG, "Requesting missing health permissions...")
