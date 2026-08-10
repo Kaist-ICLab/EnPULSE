@@ -5,12 +5,12 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
+import com.samsung.android.service.health.tracking.data.DataPoint as HealthDataPoint
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Speed
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
-import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
@@ -22,11 +22,13 @@ class AccelerometerSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
-) : BaseSensor<AccelerometerSensor.Config, AccelerometerSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+) : SamsungHealthSensor<AccelerometerSensor.Config, AccelerometerSensor.Entity, AccelerometerSensor.DataPoint>(
+    permissionManager, configStorage, stateStorage, samsungHealthSensorInitializer,
+    Config::class, Entity::class,
     titleResId = R.string.sensor_accelerometer,
     descriptionResId = R.string.sensor_desc_accelerometer,
-    icon = Icons.Default.Speed
+    icon = Icons.Default.Speed,
+    trackerType = HealthTrackerType.ACCELEROMETER_CONTINUOUS
 ) {
     override val id: String = "Accelerometer"
     override val permissions = listOfNotNull(
@@ -61,39 +63,18 @@ class AccelerometerSensor(
         val z: Float
     )
 
-
-    private val tracker by lazy {
-        samsungHealthSensorInitializer.getTracker(HealthTrackerType.ACCELEROMETER_CONTINUOUS)
-    }
-
-    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
-        val timestamp = System.currentTimeMillis()
-        val entity = Entity(
-            dataPoints.map {
-                DataPoint(
-                    timestamp,
-                    it.timestamp,
-                    rawDataToSI(it.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_X)),
-                    rawDataToSI(it.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_Y)),
-                    rawDataToSI(it.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_Z))
-                )
-            }
-        )
-
-        listeners.forEach {
-            it.invoke(entity)
-        }
-    }
-
     private fun rawDataToSI(value: Int): Float {
         return 9.81F / (16383.75F / 4.0F) * value
     }
 
-    override fun onStart() {
-        tracker.setEventListener(listener)
-    }
+    override fun mapDataPoint(received: Long, dataPoint: HealthDataPoint): DataPoint =
+        DataPoint(
+            received,
+            dataPoint.timestamp,
+            rawDataToSI(dataPoint.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_X)),
+            rawDataToSI(dataPoint.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_Y)),
+            rawDataToSI(dataPoint.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_Z))
+        )
 
-    override fun onStop() {
-        tracker.unsetEventListener()
-    }
+    override fun toEntity(dataPoints: List<DataPoint>): Entity = Entity(dataPoints)
 }

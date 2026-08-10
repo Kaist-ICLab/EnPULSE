@@ -6,12 +6,12 @@ import android.health.connect.HealthPermissions
 import android.os.Build
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
+import com.samsung.android.service.health.tracking.data.DataPoint as HealthDataPoint
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Thermostat
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
-import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
@@ -25,11 +25,13 @@ class SkinTemperatureSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
-) : BaseSensor<SkinTemperatureSensor.Config, SkinTemperatureSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+) : SamsungHealthSensor<SkinTemperatureSensor.Config, SkinTemperatureSensor.Entity, SkinTemperatureSensor.DataPoint>(
+    permissionManager, configStorage, stateStorage, samsungHealthSensorInitializer,
+    Config::class, Entity::class,
     titleResId = R.string.sensor_skin_temperature,
     descriptionResId = R.string.sensor_desc_skin_temperature,
-    icon = Icons.Default.Thermostat
+    icon = Icons.Default.Thermostat,
+    trackerType = HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS
 ) {
     override val id: String = "SkinTemperature"
     override val permissions = listOfNotNull(
@@ -63,42 +65,14 @@ class SkinTemperatureSensor(
         val status: Int
     )
 
-    private val tracker by lazy {
-        samsungHealthSensorInitializer.getTracker(HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS)
-    }
-
-    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
-        val timestamp = System.currentTimeMillis()
-        val entity = Entity(
-            dataPoints.map {
-                DataPoint(
-                    timestamp,
-                    it.timestamp,
-                    it.getValue(ValueKey.SkinTemperatureSet.OBJECT_TEMPERATURE) ?: 0.0f,
-                    it.getValue(ValueKey.SkinTemperatureSet.AMBIENT_TEMPERATURE) ?: 0.0f,
-                    it.getValue(ValueKey.SkinTemperatureSet.STATUS) ?: 0
-                )
-            }
+    override fun mapDataPoint(received: Long, dataPoint: HealthDataPoint): DataPoint =
+        DataPoint(
+            received,
+            dataPoint.timestamp,
+            dataPoint.getValue(ValueKey.SkinTemperatureSet.OBJECT_TEMPERATURE) ?: 0.0f,
+            dataPoint.getValue(ValueKey.SkinTemperatureSet.AMBIENT_TEMPERATURE) ?: 0.0f,
+            dataPoint.getValue(ValueKey.SkinTemperatureSet.STATUS) ?: 0
         )
 
-        listeners.forEach {
-            it.invoke(entity)
-        }
-    }
-
-    override fun onStart() {
-        try {
-            tracker.setEventListener(listener)
-        } catch (_: UnsupportedOperationException) {
-            // Skin Temperature not supported on this device, ignore
-        }
-    }
-
-    override fun onStop() {
-        try {
-            tracker.unsetEventListener()
-        } catch (_: UnsupportedOperationException) {
-            // Skin Temperature not supported on this device, ignore
-        }
-    }
+    override fun toEntity(dataPoints: List<DataPoint>): Entity = Entity(dataPoints)
 }

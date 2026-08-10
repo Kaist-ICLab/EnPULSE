@@ -13,10 +13,6 @@ import java.util.Locale
 @Entity
 @Serializable
 class WatchStressEntity : BaseEntity, CsvSerializable, RecordSerializable {
-    @SerialName("window_start")
-    var windowStart: Long = 0
-    @SerialName("window_end")
-    var windowEnd: Long = 0
     var rmssd: Float = 0f
     @SerialName("ibi_count")
     var ibiCount: Int = 0
@@ -33,24 +29,20 @@ class WatchStressEntity : BaseEntity, CsvSerializable, RecordSerializable {
         received: Long = 0,
         timestamp: Long = 0,
         deviceType: Int = DeviceType.WATCH.value,
-        windowStart: Long = 0,
-        windowEnd: Long = 0,
         rmssd: Float = 0f,
         ibiCount: Int = 0,
         threshold: Float = 0f,
         isStressed: Boolean = false
     ) {
         initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
-        this.windowStart = windowStart
-        this.windowEnd = windowEnd
         this.rmssd = rmssd
         this.ibiCount = ibiCount
         this.threshold = threshold
         this.isStressed = isStressed
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,windowStart,windowEnd,rmssd,ibiCount,threshold,isStressed"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$windowStart,$windowEnd,$rmssd,$ibiCount,$threshold,$isStressed"
+    override fun csvHeader() = "eventId,uuid,received,timestamp,rmssd,ibiCount,threshold,isStressed"
+    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$rmssd,$ibiCount,$threshold,$isStressed"
 
     override fun toRecord() = SensorRecord(
         id = id,

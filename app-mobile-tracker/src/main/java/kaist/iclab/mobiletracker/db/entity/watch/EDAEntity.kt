@@ -6,12 +6,14 @@ import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.Locale
 
 @Entity
 @Serializable
 class EDAEntity : BaseEntity, CsvSerializable, RecordSerializable {
+    @SerialName("skin_conductance")
     var skinConductance: Float = 0f
     var status: Int = 0
 

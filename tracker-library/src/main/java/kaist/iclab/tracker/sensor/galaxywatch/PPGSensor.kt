@@ -6,12 +6,12 @@ import android.os.Build
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.PpgType
 import com.samsung.android.service.health.tracking.data.ValueKey
+import com.samsung.android.service.health.tracking.data.DataPoint as HealthDataPoint
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MonitorHeart
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
-import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
@@ -23,11 +23,14 @@ class PPGSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
-) : BaseSensor<PPGSensor.Config, PPGSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+) : SamsungHealthSensor<PPGSensor.Config, PPGSensor.Entity, PPGSensor.DataPoint>(
+    permissionManager, configStorage, stateStorage, samsungHealthSensorInitializer,
+    Config::class, Entity::class,
     titleResId = R.string.sensor_ppg,
     descriptionResId = R.string.sensor_desc_ppg,
-    icon = Icons.Default.MonitorHeart
+    icon = Icons.Default.MonitorHeart,
+    trackerType = HealthTrackerType.PPG_CONTINUOUS,
+    ppgTypes = setOf(PpgType.GREEN, PpgType.RED, PpgType.IR)
 ) {
     override val permissions = listOfNotNull(
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.VANILLA_ICE_CREAM) Manifest.permission.BODY_SENSORS else "com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA",
@@ -63,41 +66,17 @@ class PPGSensor(
         val irStatus: Int,
     )
 
-    private val tracker by lazy {
-        samsungHealthSensorInitializer.getTracker(
-            HealthTrackerType.PPG_CONTINUOUS,
-            setOf(PpgType.GREEN, PpgType.RED, PpgType.IR)
-        )
-    }
-
-    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
-        val timestamp = System.currentTimeMillis()
-        val entity = Entity(
-
-            dataPoints.map {
-                DataPoint(
-                    timestamp,
-                    it.timestamp,
-                    it.getValue(ValueKey.PpgSet.PPG_GREEN),
-                    it.getValue(ValueKey.PpgSet.PPG_RED),
-                    it.getValue(ValueKey.PpgSet.PPG_IR),
-                    it.getValue(ValueKey.PpgSet.GREEN_STATUS),
-                    it.getValue(ValueKey.PpgSet.RED_STATUS),
-                    it.getValue(ValueKey.PpgSet.IR_STATUS),
-                )
-            }
+    override fun mapDataPoint(received: Long, dataPoint: HealthDataPoint): DataPoint =
+        DataPoint(
+            received,
+            dataPoint.timestamp,
+            dataPoint.getValue(ValueKey.PpgSet.PPG_GREEN),
+            dataPoint.getValue(ValueKey.PpgSet.PPG_RED),
+            dataPoint.getValue(ValueKey.PpgSet.PPG_IR),
+            dataPoint.getValue(ValueKey.PpgSet.GREEN_STATUS),
+            dataPoint.getValue(ValueKey.PpgSet.RED_STATUS),
+            dataPoint.getValue(ValueKey.PpgSet.IR_STATUS),
         )
 
-        listeners.forEach {
-            it.invoke(entity)
-        }
-    }
-
-    override fun onStart() {
-        tracker.setEventListener(listener)
-    }
-
-    override fun onStop() {
-        tracker.unsetEventListener()
-    }
+    override fun toEntity(dataPoints: List<DataPoint>): Entity = Entity(dataPoints)
 }

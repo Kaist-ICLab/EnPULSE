@@ -6,12 +6,12 @@ import android.os.Build
 import android.util.Log
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
+import com.samsung.android.service.health.tracking.data.DataPoint as HealthDataPoint
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
-import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
@@ -28,13 +28,16 @@ import kotlinx.serialization.Serializable
 class ECGSensor(
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    private val stateStorage: StateStorage<SensorState>,
-    private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer
-) : BaseSensor<ECGSensor.Config, ECGSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+    stateStorage: StateStorage<SensorState>,
+    samsungHealthSensorInitializer: SamsungHealthSensorInitializer
+) : SamsungHealthSensor<ECGSensor.Config, ECGSensor.Entity, ECGSensor.DataPoint>(
+    permissionManager, configStorage, stateStorage, samsungHealthSensorInitializer,
+    Config::class, Entity::class,
     titleResId = R.string.sensor_ecg,
     descriptionResId = R.string.sensor_desc_ecg,
-    icon = Icons.Default.Favorite
+    icon = Icons.Default.Favorite,
+    trackerType = HealthTrackerType.ECG_ON_DEMAND,
+    unavailableMessage = "ECG not supported on this device"
 ) {
     override val permissions = listOfNotNull(
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.VANILLA_ICE_CREAM) Manifest.permission.BODY_SENSORS else "com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA",
@@ -70,55 +73,22 @@ class ECGSensor(
         val minThresholdMv: Float,
     )
 
-    private val tracker by lazy {
-        samsungHealthSensorInitializer.getTracker(HealthTrackerType.ECG_ON_DEMAND)
-    }
-
-    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
-        val timestamp = System.currentTimeMillis()
-        val entity = Entity(
-            dataPoints.map {
-                DataPoint(
-                    timestamp,
-                    it.timestamp,
-                    it.getValue(ValueKey.EcgSet.ECG_MV),
-                    it.getValue(ValueKey.EcgSet.LEAD_OFF),
-                    it.getValue(ValueKey.EcgSet.SEQUENCE),
-                    it.getValue(ValueKey.EcgSet.PPG_GREEN),
-                    it.getValue(ValueKey.EcgSet.MAX_THRESHOLD_MV),
-                    it.getValue(ValueKey.EcgSet.MIN_THRESHOLD_MV),
-                )
-            }
+    override fun mapDataPoint(received: Long, dataPoint: HealthDataPoint): DataPoint =
+        DataPoint(
+            received,
+            dataPoint.timestamp,
+            dataPoint.getValue(ValueKey.EcgSet.ECG_MV),
+            dataPoint.getValue(ValueKey.EcgSet.LEAD_OFF),
+            dataPoint.getValue(ValueKey.EcgSet.SEQUENCE),
+            dataPoint.getValue(ValueKey.EcgSet.PPG_GREEN),
+            dataPoint.getValue(ValueKey.EcgSet.MAX_THRESHOLD_MV),
+            dataPoint.getValue(ValueKey.EcgSet.MIN_THRESHOLD_MV),
         )
 
-        listeners.forEach {
-            it.invoke(entity)
-        }
-    }
+    override fun toEntity(dataPoints: List<DataPoint>): Entity = Entity(dataPoints)
 
-    override fun init() {
-        super.init()
-
-        // Check ECG support on this device
-        // Since binding to the service takes a while, we subscribe to the connection stateflow and check it when it is actually binded
-        CoroutineScope(Dispatchers.IO).launch {
-            samsungHealthSensorInitializer.connectionStateFlow.collect { isConnected ->
-                if (!isConnected) return@collect
-                if (!samsungHealthSensorInitializer.isTrackerAvailable(HealthTrackerType.ECG_ON_DEMAND)) {
-                    Log.w(name, "ECGSensor is unavailable")
-                    stateStorage.set(
-                        SensorState(
-                            SensorState.FLAG.UNAVAILABLE,
-                            "ECG not supported on this device"
-                        )
-                    )
-                }
-
-                this.cancel()
-            }
-        }
-    }
-
+    // ECG is on-demand: the tracker can only be armed once the tracking service is actually
+    // connected, so we wait for connectionStateFlow instead of arming it eagerly.
     private var connectionJob: kotlinx.coroutines.Job? = null
 
     override fun onStart() {
@@ -142,6 +112,9 @@ class ECGSensor(
         connectionJob = null
         try {
             if (samsungHealthSensorInitializer.connectionStateFlow.value) {
+                // Push out whatever is still sitting in the tracker's buffer before we tear
+                // down the listener, so the last bit of data isn't lost on stop.
+                flush()
                 tracker.unsetEventListener()
             }
         } catch (e: Exception) {

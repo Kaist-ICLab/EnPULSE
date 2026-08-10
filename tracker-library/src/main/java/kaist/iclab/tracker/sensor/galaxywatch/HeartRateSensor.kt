@@ -6,12 +6,12 @@ import android.health.connect.HealthPermissions
 import android.os.Build
 import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
+import com.samsung.android.service.health.tracking.data.DataPoint as HealthDataPoint
 import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FavoriteBorder
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
-import kaist.iclab.tracker.sensor.core.BaseSensor
 import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
@@ -23,11 +23,13 @@ class HeartRateSensor(
     configStorage: StateStorage<Config>,
     stateStorage: StateStorage<SensorState>,
     samsungHealthSensorInitializer: SamsungHealthSensorInitializer
-) : BaseSensor<HeartRateSensor.Config, HeartRateSensor.Entity>(
-    permissionManager, configStorage, stateStorage, Config::class, Entity::class,
+) : SamsungHealthSensor<HeartRateSensor.Config, HeartRateSensor.Entity, HeartRateSensor.DataPoint>(
+    permissionManager, configStorage, stateStorage, samsungHealthSensorInitializer,
+    Config::class, Entity::class,
     titleResId = R.string.sensor_heart_rate,
     descriptionResId = R.string.sensor_desc_heart_rate,
-    icon = Icons.Default.FavoriteBorder
+    icon = Icons.Default.FavoriteBorder,
+    trackerType = HealthTrackerType.HEART_RATE_CONTINUOUS
 ) {
     override val id: String = "HeartRate"
     override val permissions = listOfNotNull(
@@ -62,35 +64,15 @@ class HeartRateSensor(
         val ibiStatus: List<Int>,
     )
 
-    private val tracker by lazy {
-        samsungHealthSensorInitializer.getTracker(HealthTrackerType.HEART_RATE_CONTINUOUS)
-    }
-
-    private val listener = samsungHealthSensorInitializer.createDataListener { dataPoints ->
-        val timestamp = System.currentTimeMillis()
-        val entity = Entity(
-            dataPoints.map {
-                DataPoint(
-                    timestamp,
-                    it.timestamp,
-                    it.getValue(ValueKey.HeartRateSet.HEART_RATE),
-                    it.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS),
-                    it.getValue(ValueKey.HeartRateSet.IBI_LIST),
-                    it.getValue(ValueKey.HeartRateSet.IBI_STATUS_LIST),
-                )
-            }
+    override fun mapDataPoint(received: Long, dataPoint: HealthDataPoint): DataPoint =
+        DataPoint(
+            received,
+            dataPoint.timestamp,
+            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE),
+            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS),
+            dataPoint.getValue(ValueKey.HeartRateSet.IBI_LIST),
+            dataPoint.getValue(ValueKey.HeartRateSet.IBI_STATUS_LIST),
         )
 
-        listeners.forEach {
-            it.invoke(entity)
-        }
-    }
-
-    override fun onStart() {
-        tracker.setEventListener(listener)
-    }
-
-    override fun onStop() {
-        tracker.unsetEventListener()
-    }
+    override fun toEntity(dataPoints: List<DataPoint>): Entity = Entity(dataPoints)
 }

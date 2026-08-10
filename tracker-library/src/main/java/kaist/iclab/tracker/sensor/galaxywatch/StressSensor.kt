@@ -1,8 +1,6 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
 import android.content.Context
-import android.content.Intent
-import kaist.iclab.tracker.listener.AlarmListener
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Psychology
 import kaist.iclab.tracker.R
@@ -17,12 +15,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.sqrt
+import kotlin.time.Duration.Companion.milliseconds
 
 class StressSensor(
     private val context: Context,
@@ -50,9 +51,6 @@ class StressSensor(
 
         // RMSSD needs at least one successive-difference pair.
         private const val MIN_IBIS_PER_WINDOW = 2
-
-        private const val ACTION_INFER = "kaist.iclab.tracker.StressSensor.ACTION_INFER"
-        private const val REQUEST_CODE_INFER = 0x57
     }
 
     @Serializable
@@ -67,8 +65,6 @@ class StressSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val windowStartMs: Long,
-        val windowEndMs: Long,
         val rmssd: Float,
         val ibiCount: Int,
         val threshold: Float,
@@ -89,13 +85,6 @@ class StressSensor(
     private var ownsHr = false
     private val hrListener: (HeartRateSensor.Entity) -> Unit = { handleHr(it) }
 
-    private var alarmListener: AlarmListener? = null
-    private val alarmCallback: (Intent?) -> Unit = {
-        inferenceScope?.launch {
-            inferenceMutex.withLock { runInference() }
-        }
-    }
-
     override fun init() {
         super.init()
         heartRateSensor.init()
@@ -106,23 +95,27 @@ class StressSensor(
             ibiTimestampsMs.clear()
             ibiValuesMs.clear()
         }
-        inferenceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        inferenceScope = scope
 
         heartRateSensor.addListener(hrListener)
         ownsHr = ensureRunning(heartRateSensor)
 
-        alarmListener = AlarmListener(
-            context = context,
-            actionName = ACTION_INFER,
-            actionCode = REQUEST_CODE_INFER,
-            actionIntervalInMilliseconds = configStateFlow.value.strideMs,
-        ).also { it.addListener(alarmCallback) }
+        // Drive inference off a self-rescheduling coroutine instead of a repeating
+        // AlarmManager alarm. AlarmManager treats setRepeating() as inexact and batches/
+        // defers it under Doze & App Standby - at a 15s stride that meant the actual fire
+        // times (and therefore the window each inference saw, and its ibiCount) drifted
+        // unpredictably instead of landing every strideMs.
+        val strideMs = configStateFlow.value.strideMs
+        scope.launch {
+            while (isActive) {
+                delay(strideMs.milliseconds)
+                inferenceMutex.withLock { runInference() }
+            }
+        }
     }
 
     override fun onStop() {
-        alarmListener?.removeListener(alarmCallback)
-        alarmListener = null
-
         heartRateSensor.removeListener(hrListener)
         if (ownsHr && heartRateSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
             heartRateSensor.stop()
@@ -192,8 +185,6 @@ class StressSensor(
         val emission = Entity(
             received = System.currentTimeMillis(),
             timestamp = windowEnd,
-            windowStartMs = windowStart,
-            windowEndMs = windowEnd,
             rmssd = rmssd,
             ibiCount = filtered.size,
             threshold = threshold,
