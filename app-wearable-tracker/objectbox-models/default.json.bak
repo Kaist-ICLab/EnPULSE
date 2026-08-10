@@ -581,16 +581,6 @@
           "flags": 8
         },
         {
-          "id": "5:6915339082440371516",
-          "name": "windowStart",
-          "type": 6
-        },
-        {
-          "id": "6:153771153757966156",
-          "name": "windowEnd",
-          "type": 6
-        },
-        {
           "id": "7:4055290187166177876",
           "name": "rmssd",
           "type": 7
@@ -622,7 +612,10 @@
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
   "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredPropertyUids": [
+    6915339082440371516,
+    153771153757966156
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

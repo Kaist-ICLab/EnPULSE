@@ -13,9 +13,14 @@ import java.util.Locale
 @Entity
 @Serializable
 class WatchStressEntity : BaseEntity, CsvSerializable, RecordSerializable {
-    var rmssd: Float = 0f
-    @SerialName("ibi_count")
-    var ibiCount: Int = 0
+    @SerialName("rmssd_1m")
+    var rmssd1m: Float = 0f
+    @SerialName("ibi_count_1m")
+    var ibiCount1m: Int = 0
+    @SerialName("rmssd_5m")
+    var rmssd5m: Float = 0f
+    @SerialName("ibi_count_5m")
+    var ibiCount5m: Int = 0
     var threshold: Float = 0f
     @SerialName("is_stressed")
     var isStressed: Boolean = false
@@ -29,27 +34,34 @@ class WatchStressEntity : BaseEntity, CsvSerializable, RecordSerializable {
         received: Long = 0,
         timestamp: Long = 0,
         deviceType: Int = DeviceType.WATCH.value,
-        rmssd: Float = 0f,
-        ibiCount: Int = 0,
+        rmssd1m: Float = 0f,
+        ibiCount1m: Int = 0,
+        rmssd5m: Float = 0f,
+        ibiCount5m: Int = 0,
         threshold: Float = 0f,
         isStressed: Boolean = false
     ) {
         initBaseEntity(id, eventId, uuid, received, timestamp, deviceType)
-        this.rmssd = rmssd
-        this.ibiCount = ibiCount
+        this.rmssd1m = rmssd1m
+        this.ibiCount1m = ibiCount1m
+        this.rmssd5m = rmssd5m
+        this.ibiCount5m = ibiCount5m
         this.threshold = threshold
         this.isStressed = isStressed
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,rmssd,ibiCount,threshold,isStressed"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$rmssd,$ibiCount,$threshold,$isStressed"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,rmssd1m,ibiCount1m,rmssd5m,ibiCount5m,threshold,isStressed"
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$rmssd1m,$ibiCount1m,$rmssd5m,$ibiCount5m,$threshold,$isStressed"
 
     override fun toRecord() = SensorRecord(
         id = id,
         timestamp = timestamp,
         fields = mapOf(
-            "RMSSD" to String.format(Locale.getDefault(), "%.3f", rmssd),
-            "IBI Count" to ibiCount.toString(),
+            "RMSSD (1m)" to String.format(Locale.getDefault(), "%.3f", rmssd1m),
+            "RMSSD (5m)" to String.format(Locale.getDefault(), "%.3f", rmssd5m),
+            "IBI Count (5m)" to ibiCount5m.toString(),
             "Stressed" to isStressed.toString()
         )
     )

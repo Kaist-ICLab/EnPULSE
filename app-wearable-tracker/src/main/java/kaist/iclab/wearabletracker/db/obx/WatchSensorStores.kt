@@ -77,6 +77,13 @@ class WatchSensorStores(boxStore: BoxStore) {
 
     val watchStress = WatchSensorStore(boxStore, StressEntity::class.java) { e ->
         e as StressSensor.Entity
-        listOf(StressEntity(e.received, e.timestamp, e.rmssd, e.ibiCount, e.threshold, e.isStressed))
+        listOf(
+            StressEntity(
+                e.received, e.timestamp,
+                e.rmssd1m, e.ibiCount1m,
+                e.rmssd5m, e.ibiCount5m,
+                e.threshold, e.isStressed
+            )
+        )
     }
 }

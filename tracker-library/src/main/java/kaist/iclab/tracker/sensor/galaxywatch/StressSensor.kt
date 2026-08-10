@@ -39,7 +39,8 @@ class StressSensor(
     icon = Icons.Default.Psychology
 ) {
     companion object {
-        private const val WINDOW_MS = 60_000L
+        private const val WINDOW_1M_MS = 60_000L
+        private const val WINDOW_5M_MS = 300_000L
         private const val STRIDE_MS = 15_000L
 
         // HR bounds 30–220 bpm → IBI bounds 60000/220–60000/30 ms.
@@ -55,7 +56,8 @@ class StressSensor(
 
     @Serializable
     data class Config(
-        val windowMs: Long = WINDOW_MS,
+        val window1mMs: Long = WINDOW_1M_MS,
+        val window5mMs: Long = WINDOW_5M_MS,
         val strideMs: Long = STRIDE_MS,
     ) : SensorConfig
 
@@ -65,8 +67,13 @@ class StressSensor(
     data class Entity(
         val received: Long,
         val timestamp: Long,
-        val rmssd: Float,
-        val ibiCount: Int,
+        // RMSSD over the trailing 1-minute and 5-minute windows. The stress
+        // trigger (threshold/isStressed) is decided off rmssd5m only -
+        // rmssd1m is reported for visibility/analysis.
+        val rmssd1m: Float,
+        val ibiCount1m: Int,
+        val rmssd5m: Float,
+        val ibiCount5m: Int,
         val threshold: Float,
         val isStressed: Boolean,
     ) : SensorEntity()
@@ -164,33 +171,50 @@ class StressSensor(
     private suspend fun runInference() {
         val config = configStateFlow.value
         val windowEnd = System.currentTimeMillis()
-        val windowStart = windowEnd - config.windowMs
+        // Retain enough history in the buffer to serve the larger of the two windows.
+        val retentionStart = windowEnd - maxOf(config.window1mMs, config.window5mMs)
 
-        val ibis: IntArray = synchronized(dataLock) {
-            while (ibiTimestampsMs.isNotEmpty() && ibiTimestampsMs.first() < windowStart) {
+        val timestamps: LongArray
+        val values: IntArray
+        synchronized(dataLock) {
+            while (ibiTimestampsMs.isNotEmpty() && ibiTimestampsMs.first() < retentionStart) {
                 ibiTimestampsMs.removeFirst()
                 ibiValuesMs.removeFirst()
             }
-            ibiValuesMs.toIntArray()
+            timestamps = ibiTimestampsMs.toLongArray()
+            values = ibiValuesMs.toIntArray()
         }
 
-        val filtered = filterIbis(ibis)
-        if (filtered.size < MIN_IBIS_PER_WINDOW) return
+        val filtered1m = filterIbis(ibisSince(windowEnd - config.window1mMs, timestamps, values))
+        val filtered5m = filterIbis(ibisSince(windowEnd - config.window5mMs, timestamps, values))
+        // The 5-minute window drives the stress trigger, so it gates emission.
+        if (filtered1m.size < MIN_IBIS_PER_WINDOW || filtered5m.size < MIN_IBIS_PER_WINDOW) return
 
-        val rmssd = rmssd(filtered)
-        rmssdHistory.insert(windowEnd, rmssd)
+        val rmssd1m = rmssd(filtered1m)
+        val rmssd5m = rmssd(filtered5m)
+        rmssdHistory.insert(windowEnd, rmssd5m)
         val history = rmssdHistory.all()
         val threshold = percentile(history, STRESS_PERCENTILE)
 
         val emission = Entity(
             received = System.currentTimeMillis(),
             timestamp = windowEnd,
-            rmssd = rmssd,
-            ibiCount = filtered.size,
+            rmssd1m = rmssd1m,
+            ibiCount1m = filtered1m.size,
+            rmssd5m = rmssd5m,
+            ibiCount5m = filtered5m.size,
             threshold = threshold,
-            isStressed = rmssd < threshold,
+            isStressed = rmssd5m < threshold,
         )
         listeners.forEach { it.invoke(emission) }
+    }
+
+    private fun ibisSince(windowStart: Long, timestamps: LongArray, values: IntArray): IntArray {
+        val result = ArrayList<Int>(values.size)
+        for (i in timestamps.indices) {
+            if (timestamps[i] >= windowStart) result.add(values[i])
+        }
+        return result.toIntArray()
     }
 
     private fun filterIbis(ibis: IntArray): IntArray {
