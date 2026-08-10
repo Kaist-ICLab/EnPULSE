@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.di.phone
 
 import android.util.Log
 import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.mobiletracker.storage.CouchbaseSensorStateStorage
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.mobiletracker.storage.SimpleStateStorage
@@ -86,5 +87,16 @@ val surveySensorModule = module {
                 }
             }
         }
+    }
+
+    // Survey response capture (store only — upload is AutoSyncService's job). Tracks
+    // "Start Logging" but not campaign_table/per-sensor Enabling — see doc comment.
+    // Started/stopped from MobileTrackerApplication.
+    single {
+        SurveyResponseCapture(
+            surveySensor = get(),
+            surveyResponseStore = get(),
+            appScope = get()
+        )
     }
 }

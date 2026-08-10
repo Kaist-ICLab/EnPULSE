@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.services
 
-import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -11,21 +10,17 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
-import kaist.iclab.mobiletracker.db.obx.SurveyResponseStore
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
-import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -35,7 +30,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.serialization.json.JsonObject
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.qualifier.named
@@ -66,9 +60,6 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     private val phoneSensorRepository by inject<PhoneSensorRepository>()
     private val serviceNotification by inject<BackgroundController.ServiceNotification>()
     private val timestampService by inject<SyncTimestampService>()
-    private val surveySensor by inject<SurveySensor>()
-    private val surveyResponseStore by inject<SurveyResponseStore>()
-    private val surveyResponseUploader by inject<SurveyResponseUploader>()
     private val bleHelper by inject<BLEHelper>()
 
     // Channel for batching
@@ -89,13 +80,6 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
             } else {
                 Log.w(TAG, "[PHONE] - No storage found for sensor ${sensor.name} (${sensor.id})")
             }
-        }
-    }
-
-    private val surveyResponseListener: (SensorEntity) -> Unit = listener@{ entity ->
-        val surveyEntity = entity as? SurveySensor.Entity ?: return@listener
-        lifecycleScope.launch(Dispatchers.IO) {
-            handleSurveyResponse(surveyEntity)
         }
     }
 
@@ -172,10 +156,8 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                 }
             }
         }
-
-        // Survey is currently triggered out-of-band by push notifications or local schedules.
-        // We always keep it registered, but it only collects when a survey is explicitly scheduled.
-        surveySensor.addListener(surveyResponseListener)
+        // Survey is handled entirely by SurveyResponseCapture, not this service — see its doc
+        // comment for why SurveySensor isn't in the "phoneSensors" list this loop iterates.
     }
 
     /**
@@ -227,69 +209,10 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         }
     }
 
-    /**
-     * Persists the response locally first, then kicks off an immediate upload attempt — same
-     * store-then-upload shape as sensor data (via [PhoneSensorRepository]) and webapp logs (via
-     * [kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler]). Unlike the old direct-insert
-     * path, a failed or delayed upload no longer loses the response: it stays in
-     * [SurveyResponseStore] and is retried by [SurveyResponseUploader] on the next flush
-     * (see [kaist.iclab.mobiletracker.services.AutoSyncService.startSurveyResponseSync]).
-     */
-    private suspend fun handleSurveyResponse(surveyEntity: SurveySensor.Entity) {
-        try {
-            val entities = buildSurveyResponseEntities(surveyEntity)
-            if (entities.isEmpty()) return
-
-            surveyResponseStore.insertAll(entities)
-            Log.d(TAG, "[SURVEY] - Queued ${entities.size} responses for upload")
-
-            // Fire-and-forget so a burst of submissions (e.g. a multi-question survey) coalesces
-            // into one flush under surveyResponseUploader's lock, rather than one per question.
-            lifecycleScope.launch(Dispatchers.IO) {
-                surveyResponseUploader.flush().let { result ->
-                    if (result is Result.Error) {
-                        Log.w(TAG, "[SURVEY] - Immediate response flush failed: ${result.message}")
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.e(TAG, "[SURVEY] - Error processing response", e)
-        }
-    }
-
-    private fun buildSurveyResponseEntities(entity: SurveySensor.Entity): List<SurveyResponseEntity> {
-        val responseJson = entity.response
-        if (responseJson !is kotlinx.serialization.json.JsonArray) return emptyList()
-
-        // Null moments (e.g. no scheduleId) fall back to "now", matching the old formatTimestamp behavior.
-        val now = System.currentTimeMillis()
-        val triggerTime = entity.triggerTime ?: now
-        val actualTriggerTime = entity.actualTriggerTime ?: now
-        val surveyStartTime = entity.surveyStartTime ?: now
-        val responseSubmissionTime = entity.responseSubmissionTime?.takeIf { it > 0 } ?: now
-
-        return responseJson.mapNotNull { element ->
-            val obj = element as? JsonObject ?: return@mapNotNull null
-            val questionId =
-                obj["id"]?.toString()?.replace("\"", "")?.toIntOrNull() ?: return@mapNotNull null
-
-            SurveyResponseEntity(
-                questionId = questionId,
-                triggerTime = triggerTime,
-                actualTriggerTime = actualTriggerTime,
-                surveyStartTime = surveyStartTime,
-                responseSubmissionTime = responseSubmissionTime,
-                responseJson = element.toString()
-            )
-        }
-    }
-
     override fun onDestroy() {
         // Only remove if we registered
         if (listenersRegistered) {
             sensors.forEach { it.removeListener(listener[it.id]!!) }
-            surveySensor.removeListener(surveyResponseListener)
             listenersRegistered = false
         }
 

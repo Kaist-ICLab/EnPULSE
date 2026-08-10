@@ -23,7 +23,6 @@ import kaist.iclab.tracker.sensor.phone.NotificationSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
 import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
-import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.phone.TimingSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
@@ -37,7 +36,9 @@ import org.koin.dsl.module
  * Controller module - BackgroundController and sensors list
  */
 val controllerModule = module {
-    // Sensors list
+    // Sensors list. SurveySensor is deliberately excluded — it must always capture responses
+    // regardless of "Start Logging"/campaign_table, so BackgroundController never manages its
+    // start/stop and it has no Settings toggle. See SurveyResponseCapture's doc comment.
     single(named("phoneSensors")) {
         listOf(
             get<ActivityRecognitionSensor>(),
@@ -60,7 +61,6 @@ val controllerModule = module {
             get<StepSensor>(),
             get<UserInteractionSensor>(),
             get<WifiScanSensor>(),
-            get<SurveySensor>(),
             get<TimingSensor>(),
             get<MicroEmaSensor>(),
         )

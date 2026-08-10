@@ -17,7 +17,9 @@ import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
+import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.tracker.sensor.controller.BackgroundController
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.tracker.sensor.controller.ControllerState
@@ -84,8 +86,18 @@ class MobileTrackerApplication : Application(), KoinComponent,
             )
         }
 
-        // Observe controller state to manage PhoneSensorDataService lifecycle.
-        // This is placed at the Application level so it persists across
+        // SurveySensor isn't in the "phoneSensors" list BackgroundController manages (see
+        // SurveyResponseCapture's doc comment), so its permission registration/initial state
+        // — normally handled by BackgroundController's `sensors.forEach { it.init() }` — has to
+        // happen here instead. One-time and independent of Start/Stop Logging.
+        try {
+            getKoin().get<SurveySensor>().init()
+        } catch (e: Exception) {
+            Log.e("MobileTrackerApplication", "Error initializing SurveySensor: ${e.message}", e)
+        }
+
+        // Observe controller state to manage PhoneSensorDataService and survey response capture
+        // lifecycle. This is placed at the Application level so it persists across
         // Activity/ViewModel recreations (navigation, config changes, etc.).
         observeControllerStateForService()
 
@@ -151,17 +163,30 @@ class MobileTrackerApplication : Application(), KoinComponent,
     }
 
     /**
-     * Observes BackgroundController state and starts/stops PhoneSensorDataService accordingly.
-     * Placed at the Application level so it persists regardless of Activity/ViewModel lifecycle.
+     * Observes BackgroundController state and starts/stops PhoneSensorDataService + survey
+     * response capture accordingly. Placed at the Application level so it persists regardless of
+     * Activity/ViewModel lifecycle.
+     *
+     * Survey rides the same RUNNING/not-RUNNING transitions as PhoneSensorDataService — capture
+     * tracks Start/Stop Logging like every other sensor — but goes through
+     * [SurveyResponseCapture] directly instead of the `"phoneSensors"` list's per-sensor
+     * ENABLED/campaign_table filtering (see its doc comment for why).
      */
     private fun observeControllerStateForService() {
         val backgroundController = getKoin().get<BackgroundController>()
+        val surveyResponseCapture = getKoin().get<SurveyResponseCapture>()
         ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
             backgroundController.controllerStateFlow.collect { state ->
                 try {
                     when (state.flag) {
-                        ControllerState.FLAG.RUNNING -> PhoneSensorDataService.start(this@MobileTrackerApplication)
-                        else -> PhoneSensorDataService.stop(this@MobileTrackerApplication)
+                        ControllerState.FLAG.RUNNING -> {
+                            PhoneSensorDataService.start(this@MobileTrackerApplication)
+                            surveyResponseCapture.start()
+                        }
+                        else -> {
+                            PhoneSensorDataService.stop(this@MobileTrackerApplication)
+                            surveyResponseCapture.stop()
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e(

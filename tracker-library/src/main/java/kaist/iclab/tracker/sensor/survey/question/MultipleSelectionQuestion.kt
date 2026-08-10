@@ -3,6 +3,8 @@ package kaist.iclab.tracker.sensor.survey.question
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -18,13 +20,11 @@ class MultipleSelectionQuestion(
 ) : Question<Set<Int>>(
     id, question, isMandatory, setOf(), questionTrigger
 ) {
-    val freeResponseIndex: Int? = if (allowFreeResponse) option.size else null
-
     private val _otherResponse = MutableStateFlow("")
     val otherResponse = _otherResponse.asStateFlow()
 
     override fun isAllowedResponse(response: Set<Int>): Boolean {
-        val optionValues = option.indices + listOfNotNull(freeResponseIndex)
+        val optionValues = option.indices + listOfNotNull(if (allowFreeResponse) option.size else null)
         return response.all { it in optionValues }
     }
 
@@ -49,16 +49,13 @@ class MultipleSelectionQuestion(
             put("id", id)
             put("isMandatory", isMandatory)
             putJsonArray("response") {
-                response.value.forEach {
-                    add(buildJsonObject {
-                        put("value", it)
-                        if (it == freeResponseIndex) put(
-                            "otherResponse",
-                            otherResponse.value
-                        )
-                    })
+                buildJsonArray {
+                    response.value.forEach {
+                        add(it)
+                    }
                 }
             }
+            put("otherResponse", otherResponse.value)
         }
 
         return jsonObject

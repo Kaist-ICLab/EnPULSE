@@ -86,9 +86,6 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     /** Independent loop for webapp logs; see [startWebAppLogSync] */
     private var webAppLogSyncJob: Job? = null
 
-    /** Independent loop for survey responses; see [startSurveyResponseSync] */
-    private var surveyResponseSyncJob: Job? = null
-
     /** Prevents overlapping sync cycles when uploads take longer than the interval */
     private val isSyncing = AtomicBoolean(false)
 
@@ -109,7 +106,6 @@ class AutoSyncService : LifecycleService(), KoinComponent {
      */
     private fun startAutoSync() {
         startWebAppLogSync()
-        startSurveyResponseSync()
         if (syncLoopJob?.isActive == true) return
         Log.d(TAG, "Starting auto sync service")
         // Create notification channel
@@ -156,34 +152,6 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
                     Log.e(TAG, "Error in webapp log sync loop: ${e.message}", e)
-                }
-                delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
-            }
-        }
-    }
-
-    /**
-     * Survey responses are queued locally by [PhoneSensorDataService] before upload (same
-     * store-then-upload shape as webapp logs), so this loop is what retries anything the
-     * immediate post-submit flush couldn't land — offline at submit time, no session yet, etc.
-     * Independent of [checkAndSyncIfNeeded]'s gates for the same reason as [startWebAppLogSync]:
-     * "Survey" isn't in the campaign-gated sensor pipeline, so responses keep retrying even while
-     * sensor collection is stopped. The user's network preference is still honoured.
-     */
-    private fun startSurveyResponseSync() {
-        if (surveyResponseSyncJob?.isActive == true) return
-
-        surveyResponseSyncJob = lifecycleScope.launch(Dispatchers.IO) {
-            while (isActive) {
-                try {
-                    if (isNetworkConditionMet()) {
-                        surveyResponseUploader.flush().onFailure { e ->
-                            Log.e(TAG, "Survey response upload failed: ${e.message}", e)
-                        }
-                    }
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                    Log.e(TAG, "Error in survey response sync loop: ${e.message}", e)
                 }
                 delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
             }
@@ -316,8 +284,17 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                 uploadMicroEmaResponses(successCount, failureCount, failedSensors)
             }
 
+            // Launch survey responses upload — same "Start Logging"/interval/network gate as
+            // every other sensor here (unlike webapp logs, which intentionally bypass it; see
+            // startWebAppLogSync). Not routed through SensorUploadService because "Survey" has no
+            // SensorDescriptor (insert-only, not upsert-by-eventId) — same reason MicroEMA gets
+            // its own job above instead of going through sensorJobs.
+            val surveyJob = lifecycleScope.async(Dispatchers.IO) {
+                uploadSurveyResponses(successCount, failureCount, failedSensors)
+            }
+
             // Wait for all uploads to complete
-            (sensorJobs + microEmaJob).awaitAll()
+            (sensorJobs + microEmaJob + surveyJob).awaitAll()
 
             val elapsed = System.currentTimeMillis() - startTime
             Log.d(
@@ -420,6 +397,26 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                 )
                 failureCount.incrementAndGet()
                 failedSensors.add("MicroEMA")
+            }
+        }
+    }
+
+    private suspend fun uploadSurveyResponses(
+        successCount: AtomicInteger,
+        failureCount: AtomicInteger,
+        failedSensors: MutableList<String>
+    ) {
+        when (val result = surveyResponseUploader.flush()) {
+            is Result.Success -> {
+                if (result.data > 0) {
+                    successCount.incrementAndGet()
+                }
+            }
+
+            is Result.Error -> {
+                Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
+                failureCount.incrementAndGet()
+                failedSensors.add("Survey")
             }
         }
     }
