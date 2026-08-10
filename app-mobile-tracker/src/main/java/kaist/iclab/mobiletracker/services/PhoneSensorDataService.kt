@@ -11,13 +11,14 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.data.survey.SurveyQuestionResponseInsert
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
+import kaist.iclab.mobiletracker.db.obx.SurveyResponseStore
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.UserProfileRepository
+import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
@@ -38,9 +39,6 @@ import kotlinx.serialization.json.JsonObject
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.qualifier.named
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -69,8 +67,8 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     private val serviceNotification by inject<BackgroundController.ServiceNotification>()
     private val timestampService by inject<SyncTimestampService>()
     private val surveySensor by inject<SurveySensor>()
-    private val surveyService by inject<SurveyService>()
-    private val userProfileRepository by inject<UserProfileRepository>()
+    private val surveyResponseStore by inject<SurveyResponseStore>()
+    private val surveyResponseUploader by inject<SurveyResponseUploader>()
     private val bleHelper by inject<BLEHelper>()
 
     // Channel for batching
@@ -229,18 +227,30 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         }
     }
 
+    /**
+     * Persists the response locally first, then kicks off an immediate upload attempt — same
+     * store-then-upload shape as sensor data (via [PhoneSensorRepository]) and webapp logs (via
+     * [kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler]). Unlike the old direct-insert
+     * path, a failed or delayed upload no longer loses the response: it stays in
+     * [SurveyResponseStore] and is retried by [SurveyResponseUploader] on the next flush
+     * (see [kaist.iclab.mobiletracker.services.AutoSyncService.startSurveyResponseSync]).
+     */
     private suspend fun handleSurveyResponse(surveyEntity: SurveySensor.Entity) {
         try {
-            val uuid = userProfileRepository.getCurrentUuid()
-            if (uuid == null) {
-                Log.w(TAG, "[SURVEY] - No user UUID available")
-                return
-            }
+            val entities = buildSurveyResponseEntities(surveyEntity)
+            if (entities.isEmpty()) return
 
-            val responses = buildSurveyResponses(surveyEntity, uuid)
-            if (responses.isNotEmpty()) {
-                surveyService.submitSurveyResponses(responses)
-                Log.d(TAG, "[SURVEY] - Submitted ${responses.size} responses")
+            surveyResponseStore.insertAll(entities)
+            Log.d(TAG, "[SURVEY] - Queued ${entities.size} responses for upload")
+
+            // Fire-and-forget so a burst of submissions (e.g. a multi-question survey) coalesces
+            // into one flush under surveyResponseUploader's lock, rather than one per question.
+            lifecycleScope.launch(Dispatchers.IO) {
+                surveyResponseUploader.flush().let { result ->
+                    if (result is Result.Error) {
+                        Log.w(TAG, "[SURVEY] - Immediate response flush failed: ${result.message}")
+                    }
+                }
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
@@ -248,32 +258,29 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         }
     }
 
-    private fun buildSurveyResponses(
-        entity: SurveySensor.Entity,
-        uuid: String
-    ): List<SurveyQuestionResponseInsert> {
-        val formatter = DateTimeFormatter.ISO_INSTANT
-        fun formatTimestamp(millis: Long?) =
-            Instant.ofEpochMilli(millis ?: System.currentTimeMillis())
-                .atOffset(ZoneOffset.UTC)
-                .format(formatter)
-
+    private fun buildSurveyResponseEntities(entity: SurveySensor.Entity): List<SurveyResponseEntity> {
         val responseJson = entity.response
         if (responseJson !is kotlinx.serialization.json.JsonArray) return emptyList()
+
+        // Null moments (e.g. no scheduleId) fall back to "now", matching the old formatTimestamp behavior.
+        val now = System.currentTimeMillis()
+        val triggerTime = entity.triggerTime ?: now
+        val actualTriggerTime = entity.actualTriggerTime ?: now
+        val surveyStartTime = entity.surveyStartTime ?: now
+        val responseSubmissionTime = entity.responseSubmissionTime?.takeIf { it > 0 } ?: now
 
         return responseJson.mapNotNull { element ->
             val obj = element as? JsonObject ?: return@mapNotNull null
             val questionId =
                 obj["id"]?.toString()?.replace("\"", "")?.toIntOrNull() ?: return@mapNotNull null
 
-            SurveyQuestionResponseInsert(
+            SurveyResponseEntity(
                 questionId = questionId,
-                uuid = uuid,
-                triggerTime = formatTimestamp(entity.triggerTime),
-                actualTriggerTime = formatTimestamp(entity.actualTriggerTime),
-                surveyStartTime = formatTimestamp(entity.surveyStartTime),
-                responseSubmissionTime = formatTimestamp(entity.responseSubmissionTime),
-                response = element
+                triggerTime = triggerTime,
+                actualTriggerTime = actualTriggerTime,
+                surveyStartTime = surveyStartTime,
+                responseSubmissionTime = responseSubmissionTime,
+                responseJson = element.toString()
             )
         }
     }

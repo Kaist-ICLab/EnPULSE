@@ -48,7 +48,6 @@ object SurveyBuilder {
 
         return Survey(
             id = config.id.toString(),
-            scheduleMethod = scheduleMethod,
             notificationConfig = notificationConfig,
             *rootQuestions.toTypedArray()
         )

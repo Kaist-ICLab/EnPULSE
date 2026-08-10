@@ -17,6 +17,7 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
+import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
@@ -73,6 +74,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     private val surveyService: SurveyService by inject()
     private val microEmaResponseDao by inject<MicroEmaResponseStore>()
     private val webAppLogUploader by inject<WebAppLogUploader>()
+    private val surveyResponseUploader by inject<SurveyResponseUploader>()
 
     private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
@@ -83,6 +85,9 @@ class AutoSyncService : LifecycleService(), KoinComponent {
 
     /** Independent loop for webapp logs; see [startWebAppLogSync] */
     private var webAppLogSyncJob: Job? = null
+
+    /** Independent loop for survey responses; see [startSurveyResponseSync] */
+    private var surveyResponseSyncJob: Job? = null
 
     /** Prevents overlapping sync cycles when uploads take longer than the interval */
     private val isSyncing = AtomicBoolean(false)
@@ -104,6 +109,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
      */
     private fun startAutoSync() {
         startWebAppLogSync()
+        startSurveyResponseSync()
         if (syncLoopJob?.isActive == true) return
         Log.d(TAG, "Starting auto sync service")
         // Create notification channel
@@ -150,6 +156,34 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                 } catch (e: Exception) {
                     if (e is CancellationException) throw e
                     Log.e(TAG, "Error in webapp log sync loop: ${e.message}", e)
+                }
+                delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
+            }
+        }
+    }
+
+    /**
+     * Survey responses are queued locally by [PhoneSensorDataService] before upload (same
+     * store-then-upload shape as webapp logs), so this loop is what retries anything the
+     * immediate post-submit flush couldn't land — offline at submit time, no session yet, etc.
+     * Independent of [checkAndSyncIfNeeded]'s gates for the same reason as [startWebAppLogSync]:
+     * "Survey" isn't in the campaign-gated sensor pipeline, so responses keep retrying even while
+     * sensor collection is stopped. The user's network preference is still honoured.
+     */
+    private fun startSurveyResponseSync() {
+        if (surveyResponseSyncJob?.isActive == true) return
+
+        surveyResponseSyncJob = lifecycleScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                try {
+                    if (isNetworkConditionMet()) {
+                        surveyResponseUploader.flush().onFailure { e ->
+                            Log.e(TAG, "Survey response upload failed: ${e.message}", e)
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    Log.e(TAG, "Error in survey response sync loop: ${e.message}", e)
                 }
                 delay(Constants.AutoSync.CHECK_INTERVAL_MS.milliseconds)
             }
