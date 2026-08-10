@@ -203,7 +203,8 @@ fun CheckboxQuestion(
                 onClick = { question.toggleResponse(index, !selected) },
             )
         }
-        question.freeResponseIndex?.let { index ->
+        if(question.allowFreeResponse) {
+            val index = question.option.size
             val selected = (index in response.value)
             InputButtonRow(
                 isRadioButton = false,

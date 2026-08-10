@@ -66,6 +66,12 @@ class SettingsViewModel(
     private val _totalRecordCount = MutableStateFlow(0)
     val totalRecordCount: StateFlow<Int> = _totalRecordCount.asStateFlow()
 
+    // Records still waiting to be confirmed by the phone, per sensor. Keyed by sensor *id*
+    // (e.g. "SkinTemperature"), unlike sensorMap/sensorState which are keyed by the
+    // human-readable `.name` — SettingsScreen translates between the two.
+    private val _pendingRecordCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val pendingRecordCounts: StateFlow<Map<String, Int>> = _pendingRecordCounts.asStateFlow()
+
     // Sync progress: 0.0 to 1.0, null if not syncing
     val syncProgress: StateFlow<Float?> = phoneCommunicationManager.syncProgress
 
@@ -285,10 +291,11 @@ class SettingsViewModel(
 
     private suspend fun refreshRecordCount() {
         try {
-            val count = withContext(Dispatchers.IO) {
-                repository.getTotalRecordCount()
+            val (count, pending) = withContext(Dispatchers.IO) {
+                repository.getTotalRecordCount() to repository.getPendingRecordCountsBySensor()
             }
             _totalRecordCount.value = count
+            _pendingRecordCounts.value = pending
         } catch (e: Exception) {
             Log.w(TAG, "Failed to refresh record count: ${e.message}")
         }

@@ -52,7 +52,7 @@ class EnPulseBridge(
                 when (request.action) {
                     "getSurvey" -> surveyHandler.getSurvey(request)
                     "getAllSurvey" -> surveyHandler.getAllSurvey(request)
-                    "setSurveyResponse" -> surveyHandler.setSurveyResponse(request)
+                    "submitSurveyResponse" -> surveyHandler.submitSurveyResponse(request)
                     "getSensorData" -> sensorHandler.getSensorData(request, callerWebAppId)
                     "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(request, callerWebAppId)
                     "getStorageData" -> storageHandler.get(request, callerWebAppId)
@@ -69,7 +69,7 @@ class EnPulseBridge(
                     "openNativeSettings" -> appHandler.openNativeSettings(request)
                     // Accepts both names: the TS client posts action "log" with a payload that also
                     // carries `action: "logEvent"`, so either reading of the envelope dispatches here.
-                    "log", "logEvent" -> logHandler.log(request, callerWebAppId)
+                    "log" -> logHandler.log(request, callerWebAppId)
                     else -> BridgeResponse(request.requestId, "error", errorMessage = "Unknown action: ${request.action}")
                 }
             } catch (e: Exception) {

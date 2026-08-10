@@ -4,8 +4,12 @@ import android.util.Log
 import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
+import kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler
+import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
+import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
+import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,6 +24,8 @@ class DataRepositoryImpl(
     private val handlerRegistry: SensorDataHandlerRegistry,
     private val syncTimestampService: SyncTimestampService,
     private val sensorUploadService: SensorUploadService,
+    private val surveyResponseUploader: SurveyResponseUploader,
+    private val webAppLogUploader: WebAppLogUploader,
     private val supabaseHelper: SupabaseHelper,
     private val campaignSensorRepository: CampaignSensorRepository
 ) : DataRepository {
@@ -30,7 +36,16 @@ class DataRepositoryImpl(
 
     private val syncingSensors = ConcurrentHashMap<String, Boolean>()
 
+    /**
+     * Survey and webapp logs are never campaign-gated — capture already ignores `campaign_table`
+     * for both (see `PhoneSensorDataService.registerListeners` and [WebAppLogDataHandler]'s doc
+     * comment), so the Data screen and manual upload must agree, or data the app happily captured
+     * would look permanently invisible/unsendable.
+     */
     private fun isSensorActive(sensorId: String): Boolean {
+        if (sensorId == SurveyResponseDataHandler.SENSOR_ID || sensorId == WebAppLogDataHandler.SENSOR_ID) {
+            return true
+        }
         val activeSensorNames = campaignSensorRepository.getActiveSensors().map { it.name }
         return activeSensorNames.contains(sensorId.toCampaignSensorName())
     }
@@ -96,6 +111,21 @@ class DataRepositoryImpl(
     override suspend fun uploadSensorData(sensorId: String): Int {
         if (syncingSensors.putIfAbsent(sensorId, true) != null) return -2
         try {
+            // Survey and webapp logs don't ride SensorUploadService (insert-only, not
+            // upsert-by-eventId; see their handlers' doc comments), so each gets its own uploader.
+            if (sensorId == SurveyResponseDataHandler.SENSOR_ID) {
+                return when (val result = surveyResponseUploader.flush()) {
+                    is Result.Success -> if (result.data > 0) 1 else 0
+                    is Result.Error -> -1
+                }
+            }
+            if (sensorId == WebAppLogDataHandler.SENSOR_ID) {
+                return when (val result = webAppLogUploader.flush()) {
+                    is Result.Success -> if (result.data > 0) 1 else 0
+                    is Result.Error -> -1
+                }
+            }
+
             if (!sensorUploadService.hasDataToUpload(sensorId)) return 0
             return when (sensorUploadService.uploadSensorData(sensorId)) {
                 is Result.Success -> 1

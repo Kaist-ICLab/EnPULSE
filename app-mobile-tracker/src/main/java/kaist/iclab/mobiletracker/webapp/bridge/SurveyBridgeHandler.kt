@@ -2,9 +2,11 @@ package kaist.iclab.mobiletracker.webapp.bridge
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.tracker.sensor.phone.SurveySensor
+import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import kotlinx.serialization.encodeToString
@@ -37,7 +39,7 @@ class SurveyBridgeHandler(
         var resolvedSurveyId = surveyId
         if (resolvedSurveyId.isNullOrBlank() && !scheduleId.isNullOrBlank()) {
             val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)
-            if (schedule != null && !schedule.surveyId.isNullOrBlank()) {
+            if (schedule != null && schedule.surveyId.isNotBlank()) {
                 resolvedSurveyId = schedule.surveyId
             }
         }
@@ -74,12 +76,14 @@ class SurveyBridgeHandler(
         )
     }
 
-    fun setSurveyResponse(request: BridgeRequest): BridgeResponse {
+    fun submitSurveyResponse(request: BridgeRequest): BridgeResponse {
         val params = request.payload.jsonObject
-        val scheduleId = params["schedule_id"]?.jsonPrimitive?.content
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing schedule_id")
-        val answers = params["answers"]
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing answers")
+        val surveyId = params["survey_id"]?.jsonPrimitive?.content ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_id")
+        val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = surveyId))
+        val answers = params["response"]
+            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing response")
+
+        Log.d("SurveyBridgeHandler", "setSurveyResponse: $surveyId, $answers")
 
         // Same broadcast SurveyActivity.pushSurveyResult() sends — the existing
         // SurveySensor.surveyResultCallback absorbs it with no new storage logic.

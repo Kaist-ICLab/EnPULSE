@@ -86,9 +86,7 @@ val webAppModule = module {
     single {
         LogBridgeHandler(
             webAppLogStore = get(),
-            webAppLogUploader = get<WebAppLogUploader>(),
-            webAppRegistry = get<WebAppRegistry>(),
-            appScope = get()
+            webAppRegistry = get<WebAppRegistry>()
         )
     }
 

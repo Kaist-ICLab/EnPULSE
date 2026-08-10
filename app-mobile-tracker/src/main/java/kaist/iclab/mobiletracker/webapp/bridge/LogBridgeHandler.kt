@@ -3,10 +3,7 @@ package kaist.iclab.mobiletracker.webapp.bridge
 import android.util.Log
 import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity
 import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
-import kaist.iclab.mobiletracker.di.AppCoroutineScope
-import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -28,25 +25,29 @@ import kotlinx.serialization.json.jsonObject
  *
  * Unlike the other bridge handlers there is no sensor behind this — the JS call itself is the
  * capture point. Events are written straight to [WebAppLogStore] and pushed to the `web_app_log`
- * table by [WebAppLogUploader], deliberately bypassing the sensor pipeline: no
- * `SensorDescriptor`, no campaign `campaign_table` gating, and no dependency on sensor collection
- * being started.
+ * table by [WebAppLogUploader] on its own periodic schedule (see
+ * [kaist.iclab.mobiletracker.services.AutoSyncService.startWebAppLogSync]) — same
+ * collect-locally-then-batch-upload shape as sensor data, deliberately bypassing the sensor
+ * pipeline itself: no `SensorDescriptor`, no campaign `campaign_table` gating, and no dependency
+ * on sensor collection being started.
  */
 class LogBridgeHandler(
     private val webAppLogStore: WebAppLogStore,
-    private val webAppLogUploader: WebAppLogUploader,
-    private val webAppRegistry: WebAppRegistry,
-    private val appScope: AppCoroutineScope
+    private val webAppRegistry: WebAppRegistry
 ) {
     fun log(request: BridgeRequest, callerWebAppId: String): BridgeResponse {
         if (webAppRegistry.get(callerWebAppId) == null) {
             return BridgeResponse(request.requestId, "error", errorMessage = "Unknown caller webapp: $callerWebAppId")
         }
+        Log.d(TAG, "log: $request")
 
         val params = request.payload.jsonObject
         val eventType = (params["event_type"] as? JsonPrimitive)?.contentOrNullSafe()?.takeIf { it.isNotBlank() }
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing event_type")
 
+        // Local write only — no immediate flush. AutoSyncService's periodic loop drains this store
+        // into Supabase, same as sensor data: capture and upload are decoupled so a burst of log()
+        // calls coalesces into a few upload batches instead of one network round-trip per event.
         webAppLogStore.insert(
             WebAppLogEntity(
                 timestamp = System.currentTimeMillis(),
@@ -55,14 +56,6 @@ class LogBridgeHandler(
                 propertiesJson = params["properties"]?.let { normalizeProperties(it) }
             )
         )
-
-        // Fire-and-forget so the webapp's promise resolves on the local write, not the network.
-        // The uploader drains everything pending under one lock, so a burst of log() calls
-        // coalesces into a few inserts rather than one per event.
-        appScope.io.launch {
-            runCatching { webAppLogUploader.flush() }
-                .onFailure { Log.w(TAG, "Immediate webapp log flush failed: ${it.message}") }
-        }
 
         return BridgeResponse(request.requestId, "success")
     }

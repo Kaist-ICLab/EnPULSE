@@ -33,6 +33,13 @@ interface WatchSensorRepository {
      */
     suspend fun getTotalRecordCount(): Int
 
+    /**
+     * Number of records per sensor that the phone has not yet confirmed receiving, keyed by
+     * sensor id. Counted from each sensor's own ACK-confirmed watermark, so a sensor whose
+     * backlog is fully ACKed reports 0 even while other sensors are still behind.
+     */
+    suspend fun getPendingRecordCountsBySensor(): Map<String, Int>
+
     // Auto-sync settings
     val autoSyncEnabledFlow: Flow<Boolean>
     val autoSyncIntervalFlow: Flow<Long>

@@ -17,6 +17,7 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
+import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
@@ -73,6 +74,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     private val surveyService: SurveyService by inject()
     private val microEmaResponseDao by inject<MicroEmaResponseStore>()
     private val webAppLogUploader by inject<WebAppLogUploader>()
+    private val surveyResponseUploader by inject<SurveyResponseUploader>()
 
     private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
@@ -282,8 +284,17 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                 uploadMicroEmaResponses(successCount, failureCount, failedSensors)
             }
 
+            // Launch survey responses upload — same "Start Logging"/interval/network gate as
+            // every other sensor here (unlike webapp logs, which intentionally bypass it; see
+            // startWebAppLogSync). Not routed through SensorUploadService because "Survey" has no
+            // SensorDescriptor (insert-only, not upsert-by-eventId) — same reason MicroEMA gets
+            // its own job above instead of going through sensorJobs.
+            val surveyJob = lifecycleScope.async(Dispatchers.IO) {
+                uploadSurveyResponses(successCount, failureCount, failedSensors)
+            }
+
             // Wait for all uploads to complete
-            (sensorJobs + microEmaJob).awaitAll()
+            (sensorJobs + microEmaJob + surveyJob).awaitAll()
 
             val elapsed = System.currentTimeMillis() - startTime
             Log.d(
@@ -386,6 +397,26 @@ class AutoSyncService : LifecycleService(), KoinComponent {
                 )
                 failureCount.incrementAndGet()
                 failedSensors.add("MicroEMA")
+            }
+        }
+    }
+
+    private suspend fun uploadSurveyResponses(
+        successCount: AtomicInteger,
+        failureCount: AtomicInteger,
+        failedSensors: MutableList<String>
+    ) {
+        when (val result = surveyResponseUploader.flush()) {
+            is Result.Success -> {
+                if (result.data > 0) {
+                    successCount.incrementAndGet()
+                }
+            }
+
+            is Result.Error -> {
+                Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
+                failureCount.incrementAndGet()
+                failedSensors.add("Survey")
             }
         }
     }

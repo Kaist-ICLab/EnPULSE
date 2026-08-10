@@ -74,6 +74,7 @@ val viewModelModule = module {
             sensors = get(qualifier = named("phoneSensors")),
             sensorUploadService = get(),
             webAppLogStore = get(),
+            surveyResponseStore = get(),
         )
     }
 
