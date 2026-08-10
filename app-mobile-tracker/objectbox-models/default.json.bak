@@ -1932,16 +1932,6 @@
           "flags": 8
         },
         {
-          "id": "7:7082442092561574663",
-          "name": "windowStart",
-          "type": 6
-        },
-        {
-          "id": "8:1516309987136753711",
-          "name": "windowEnd",
-          "type": 6
-        },
-        {
           "id": "9:4345474967117113757",
           "name": "rmssd",
           "type": 7
@@ -2069,10 +2059,61 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "33:8682142796350908026",
+      "lastPropertyId": "8:6217921912284647354",
+      "name": "SurveyResponseEntity",
+      "properties": [
+        {
+          "id": "1:8627147192948912325",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7181936844784378385",
+          "name": "questionId",
+          "type": 5
+        },
+        {
+          "id": "3:8240222830243357806",
+          "name": "triggerTime",
+          "type": 6
+        },
+        {
+          "id": "4:3379900548322209695",
+          "name": "actualTriggerTime",
+          "type": 6
+        },
+        {
+          "id": "5:5205749435030716652",
+          "name": "surveyStartTime",
+          "type": 6
+        },
+        {
+          "id": "6:5334138233526224191",
+          "name": "responseSubmissionTime",
+          "type": 6
+        },
+        {
+          "id": "7:238366620708099196",
+          "name": "responseJson",
+          "type": 9
+        },
+        {
+          "id": "8:6217921912284647354",
+          "name": "isSynced",
+          "indexId": "94:2422217651806928826",
+          "type": 1,
+          "flags": 8
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "32:4725045231195002542",
-  "lastIndexId": "93:5773966667135619404",
+  "lastEntityId": "33:8682142796350908026",
+  "lastIndexId": "94:2422217651806928826",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
@@ -2096,7 +2137,9 @@
     7217326629480786369,
     6904234097274457800,
     4418610109325922842,
-    9097634029779304150
+    9097634029779304150,
+    7082442092561574663,
+    1516309987136753711
   ],
   "retiredRelationUids": [],
   "version": 1

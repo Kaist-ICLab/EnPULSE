@@ -554,7 +554,7 @@
     },
     {
       "id": "12:5212911369007796461",
-      "lastPropertyId": "10:6603748727979647870",
+      "lastPropertyId": "14:8448107556473192952",
       "name": "StressEntity",
       "properties": [
         {
@@ -581,26 +581,6 @@
           "flags": 8
         },
         {
-          "id": "5:6915339082440371516",
-          "name": "windowStart",
-          "type": 6
-        },
-        {
-          "id": "6:153771153757966156",
-          "name": "windowEnd",
-          "type": 6
-        },
-        {
-          "id": "7:4055290187166177876",
-          "name": "rmssd",
-          "type": 7
-        },
-        {
-          "id": "8:3821572658076844352",
-          "name": "ibiCount",
-          "type": 5
-        },
-        {
           "id": "9:6643535431335041647",
           "name": "threshold",
           "type": 7
@@ -609,6 +589,26 @@
           "id": "10:6603748727979647870",
           "name": "isStressed",
           "type": 1
+        },
+        {
+          "id": "11:7451804162156012268",
+          "name": "rmssd1m",
+          "type": 7
+        },
+        {
+          "id": "12:8536385194805622034",
+          "name": "ibiCount1m",
+          "type": 5
+        },
+        {
+          "id": "13:2239328388826965985",
+          "name": "rmssd5m",
+          "type": 7
+        },
+        {
+          "id": "14:8448107556473192952",
+          "name": "ibiCount5m",
+          "type": 5
         }
       ],
       "relations": []
@@ -622,7 +622,12 @@
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
   "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredPropertyUids": [
+    6915339082440371516,
+    153771153757966156,
+    4055290187166177876,
+    3821572658076844352
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

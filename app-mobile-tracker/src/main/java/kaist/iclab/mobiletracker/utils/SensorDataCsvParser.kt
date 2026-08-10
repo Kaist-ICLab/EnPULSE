@@ -368,7 +368,7 @@ object SensorDataCsvParser {
         return parseSensorSection(
             csvData = csvData,
             sectionName = "Stress",
-            headerPattern = "eventId,received,timestamp,windowStartMs,windowEndMs,rmssd,ibiCount,threshold,isStressed",
+            headerPattern = "eventId,received,timestamp,rmssd1m,ibiCount1m,rmssd5m,ibiCount5m,threshold,isStressed",
             rowParser = ::parseStressRow
         )
     }
@@ -380,10 +380,10 @@ object SensorDataCsvParser {
                 val eventId = parts[0]
                 val received = parts[1].toLongOrNull() ?: return null
                 val timestampMillis = parts[2].toLongOrNull() ?: return null
-                val windowStartMs = parts[3].toLongOrNull() ?: return null
-                val windowEndMs = parts[4].toLongOrNull() ?: return null
-                val rmssd = parts[5].toFloatOrNull() ?: return null
-                val ibiCount = parts[6].toIntOrNull() ?: return null
+                val rmssd1m = parts[3].toFloatOrNull() ?: return null
+                val ibiCount1m = parts[4].toIntOrNull() ?: return null
+                val rmssd5m = parts[5].toFloatOrNull() ?: return null
+                val ibiCount5m = parts[6].toIntOrNull() ?: return null
                 val threshold = parts[7].toFloatOrNull() ?: return null
                 val isStressed = parts[8].toBooleanStrictOrNull() ?: return null
 
@@ -392,10 +392,10 @@ object SensorDataCsvParser {
                     uuid = "",
                     deviceType = DeviceType.WATCH.value,
                     timestamp = timestampMillis,
-                    windowStart = windowStartMs,
-                    windowEnd = windowEndMs,
-                    rmssd = rmssd,
-                    ibiCount = ibiCount,
+                    rmssd1m = rmssd1m,
+                    ibiCount1m = ibiCount1m,
+                    rmssd5m = rmssd5m,
+                    ibiCount5m = ibiCount5m,
                     threshold = threshold,
                     isStressed = isStressed,
                     received = received,

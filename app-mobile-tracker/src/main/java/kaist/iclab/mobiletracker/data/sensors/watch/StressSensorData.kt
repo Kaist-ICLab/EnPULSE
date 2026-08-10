@@ -20,13 +20,14 @@ data class StressSensorData(
     val deviceType: Int,
     val received: String,
     val timestamp: String,
-    @SerialName("window_start")
-    val windowStart: String,
-    @SerialName("window_end")
-    val windowEnd: String,
-    val rmssd: Float,
-    @SerialName("ibi_count")
-    val ibiCount: Int,
+    @SerialName("rmssd_1m")
+    val rmssd1m: Float,
+    @SerialName("ibi_count_1m")
+    val ibiCount1m: Int,
+    @SerialName("rmssd_5m")
+    val rmssd5m: Float,
+    @SerialName("ibi_count_5m")
+    val ibiCount5m: Int,
     val threshold: Float,
     @SerialName("is_stressed")
     val isStressed: Boolean
