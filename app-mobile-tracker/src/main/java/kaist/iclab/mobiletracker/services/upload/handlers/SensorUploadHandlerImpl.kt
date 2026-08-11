@@ -35,29 +35,28 @@ class SensorUploadHandlerImpl<T>(
         return JsonObject(obj + ("uuid" to JsonPrimitive(userUuid)))
     }
 
-    override suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean =
-        store.hasDataAfter(lastUploadTimestamp)
+    // Cursor is the local ObjectBox row id (not the record's own `timestamp`) — see
+    // SensorStore.hasDataWithIdAfter's doc comment for why: id is assigned in true insertion
+    // order, so it stays monotonic even when a watch BLE reconnect/backfill delivers events
+    // whose own timestamp is older than data already uploaded.
+    override suspend fun hasDataToUpload(lastUploadCursor: Long): Boolean =
+        store.hasDataWithIdAfter(lastUploadCursor)
 
-    override suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long> {
+    override suspend fun uploadData(userUuid: String, lastUploadCursor: Long): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
-            var currentMaxTimestamp = lastUploadTimestamp
+            var currentCursor = lastUploadCursor
             var uploadedAny = false
 
             while (true) {
-                val entities = store.recordsAfter(
-                    afterTimestamp = currentMaxTimestamp + 1,
-                    isAscending = true,
-                    limit = batchSize,
-                    offset = 0
-                )
+                val entities = store.recordsWithIdAfter(afterId = currentCursor, limit = batchSize)
 
                 if (entities.isEmpty()) break
 
                 val rows = entities.map { toSupabaseRow(it, userUuid) }
                 supabase.upsertBatch(tableName, sensorName, rows).getOrElse { throw it }
 
-                currentMaxTimestamp = entities.maxOf { it.timestamp }
+                currentCursor = entities.maxOf { it.id }
                 uploadedAny = true
 
                 if (entities.size < batchSize) break
@@ -67,7 +66,7 @@ class SensorUploadHandlerImpl<T>(
                 throw IllegalStateException("No new $sensorId data to upload")
             }
 
-            currentMaxTimestamp
+            currentCursor
         }
     }
 

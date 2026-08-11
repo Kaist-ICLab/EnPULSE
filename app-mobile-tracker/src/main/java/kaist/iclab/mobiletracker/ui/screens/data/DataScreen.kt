@@ -30,7 +30,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -55,7 +54,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
@@ -335,7 +333,8 @@ fun DataScreen(
         )
     }
 
-    // Upload Progress & Summary Dialog
+    // Upload Summary Dialog — the in-progress state itself is shown inline (non-blocking) in
+    // SummaryCard below, not as a modal, so this only fires once the upload finishes.
     uiState.uploadProgress?.let { progress ->
         if (progress.isComplete) {
             PopupDialog(
@@ -396,47 +395,6 @@ fun DataScreen(
                 ),
                 onDismiss = { viewModel.clearUploadProgress() }
             )
-        } else {
-            Dialog(onDismissRequest = { /* do nothing, must wait */ }) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = AppColors.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.upload_dialog_title),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AppColors.TextPrimary
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = stringResource(R.string.upload_dialog_status, progress.currentSensorName),
-                            fontSize = 14.sp,
-                            color = AppColors.TextPrimary
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        LinearProgressIndicator(
-                            progress = { if (progress.totalSensors > 0) progress.currentIndex.toFloat() / progress.totalSensors else 0f },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = AppColors.PrimaryColor,
-                            trackColor = AppColors.PrimaryColor.copy(alpha = 0.2f)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.upload_dialog_progress, progress.currentIndex, progress.totalSensors),
-                            fontSize = 12.sp,
-                            color = AppColors.TextSecondary,
-                            modifier = Modifier.align(Alignment.End)
-                        )
-                    }
-                }
-            }
         }
     }
 }
@@ -483,7 +441,9 @@ private fun SummaryCard(
                 value = lastSuccessfulUpload ?: "--"
             )
 
-            // Progress Indicators with labels
+            // Lightweight status indicator only — the actual progress bar (with X of Y / percent)
+            // lives in DataUploadService's notification, not here, so it isn't duplicated in-app.
+            // Non-blocking either way: this never covers the screen or stops navigation.
             if (isUploading || isDeleting || isExporting) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(

@@ -1,6 +1,8 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
 import android.content.Context
+import android.os.PowerManager
+import android.os.SystemClock
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Psychology
 import kaist.iclab.tracker.R
@@ -23,7 +25,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.sqrt
-import kotlin.time.Duration.Companion.milliseconds
 
 class StressSensor(
     private val context: Context,
@@ -41,7 +42,7 @@ class StressSensor(
     companion object {
         private const val WINDOW_1M_MS = 60_000L
         private const val WINDOW_5M_MS = 300_000L
-        private const val STRIDE_MS = 15_000L
+        private const val STRIDE_MS = 30_000L
 
         // HR bounds 30–220 bpm → IBI bounds 60000/220–60000/30 ms.
         private const val MIN_IBI_MS = 60 * 1000 / 220
@@ -52,6 +53,14 @@ class StressSensor(
 
         // RMSSD needs at least one successive-difference pair.
         private const val MIN_IBIS_PER_WINDOW = 2
+
+        private const val WAKE_LOCK_TAG = "EnPulse:StressSensorWakeLock"
+        // The lock is re-acquired every tick with this multiple of the current stride as
+        // its timeout, so it stays continuously held while the loop is healthy but still
+        // self-releases within one missed cycle if the loop ever dies without reaching
+        // onStop() (mirrors the timeout-bound WakeLock pattern used by
+        // DefaultTriggerEngine/AutoSyncManager elsewhere in this codebase).
+        private const val WAKE_LOCK_TIMEOUT_MULTIPLIER = 2
     }
 
     @Serializable
@@ -92,6 +101,9 @@ class StressSensor(
     private var ownsHr = false
     private val hrListener: (HeartRateSensor.Entity) -> Unit = { handleHr(it) }
 
+    private val powerManager by lazy { context.getSystemService(Context.POWER_SERVICE) as PowerManager }
+    private var wakeLock: PowerManager.WakeLock? = null
+
     override fun init() {
         super.init()
         heartRateSensor.init()
@@ -108,16 +120,38 @@ class StressSensor(
         heartRateSensor.addListener(hrListener)
         ownsHr = ensureRunning(heartRateSensor)
 
-        // Drive inference off a self-rescheduling coroutine instead of a repeating
-        // AlarmManager alarm. AlarmManager treats setRepeating() as inexact and batches/
-        // defers it under Doze & App Standby - at a 15s stride that meant the actual fire
-        // times (and therefore the window each inference saw, and its ibiCount) drifted
-        // unpredictably instead of landing every strideMs.
-        val strideMs = configStateFlow.value.strideMs
+        val lock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
+        wakeLock = lock
+
+        // Hold the CPU awake for as long as this loop is running rather than relying on
+        // AlarmManager wakeups. Neither setRepeating() (batched/deferred under Doze &
+        // App Standby) nor setExactAndAllowWhileIdle() (only guarantees a wakeup at the
+        // moment it fires, not that the CPU - and the Health Sensor SDK's IBI delivery -
+        // stays awake in between; repeat exact-idle alarms are also subject to per-app
+        // rate limiting under aggressive OEM battery management, which made things worse
+        // on-watch, not better) actually keep the device awake between ticks. A held
+        // PARTIAL_WAKE_LOCK does.
         scope.launch {
+            // Anchor to an absolute elapsedRealtime() target instead of chaining
+            // delay(strideMs) calls back-to-back, so runInference()'s own execution time
+            // doesn't accumulate into drift across ticks.
+            var nextTickAt = SystemClock.elapsedRealtime() + configStateFlow.value.strideMs
             while (isActive) {
-                delay(strideMs.milliseconds)
+                val strideMs = configStateFlow.value.strideMs
+                // Re-acquiring an already-held lock just refreshes its timeout, so this
+                // both keeps the CPU awake for the upcoming wait AND guarantees the lock
+                // can never leak past 2x strideMs if the loop dies unexpectedly.
+                lock.acquire(strideMs * WAKE_LOCK_TIMEOUT_MULTIPLIER)
+
+                val waitMs = nextTickAt - SystemClock.elapsedRealtime()
+                if (waitMs > 0) delay(waitMs)
                 inferenceMutex.withLock { runInference() }
+
+                // If we still fell behind by more than one stride (e.g. the process was
+                // briefly suspended despite the WakeLock), snap forward instead of firing
+                // a burst of back-to-back catch-up ticks.
+                val now = SystemClock.elapsedRealtime()
+                nextTickAt = if (now - nextTickAt > strideMs) now + strideMs else nextTickAt + strideMs
             }
         }
     }
@@ -131,6 +165,9 @@ class StressSensor(
 
         inferenceScope?.cancel()
         inferenceScope = null
+
+        wakeLock?.let { if (it.isHeld) it.release() }
+        wakeLock = null
 
         synchronized(dataLock) {
             ibiTimestampsMs.clear()

@@ -17,6 +17,7 @@ import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.SurveySettingsViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.phone.SurveySensor
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -83,7 +84,8 @@ val viewModelModule = module {
         DataViewModel(
             dataRepository = get<DataRepository>(),
             dataExportHelper = get<DataExportHelper>(),
-            syncTimestampService = get()
+            syncTimestampService = get(),
+            context = androidContext()
         )
     }
 

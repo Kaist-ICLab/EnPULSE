@@ -68,7 +68,10 @@ val koinModule = module {
     }
 
     single {
-        MyObjectBox.builder().androidContext(androidContext()).build()
+        MyObjectBox.builder()
+            .androidContext(androidContext())
+            .maxSizeInKByte(Constants.DB.OBJECTBOX_MAX_SIZE_KB)
+            .build()
     }
 
     single {
@@ -316,6 +319,7 @@ val koinModule = module {
             bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
             stores = get(named("sensorDataStorages")),
             syncPreferencesHelper = get(),
+            boxStore = get(),
             coroutineScope = get()
         )
     }

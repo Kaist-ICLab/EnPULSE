@@ -22,6 +22,16 @@ object Constants {
         const val BATCH_SIZE = 50
         const val FLUSH_INTERVAL_MS = 5000L
 
+        /**
+         * ObjectBox's own default cap (`BoxStoreBuilder.DEFAULT_MAX_DB_SIZE_KBYTE`) is 1 GB —
+         * writes past it throw `DbFullException`. Since this app intentionally keeps sensor data
+         * locally forever (pruning is disabled, see SensorUploadService.kt), 1 GB is nowhere near
+         * enough headroom for continuous multi-sensor collection over a real study's duration.
+         * Raised generously here; still a hard cap, not "unlimited", to guard against runaway/
+         * corrupted growth silently filling the device's storage.
+         */
+        const val OBJECTBOX_MAX_SIZE_KB = 32L * 1024 * 1024 // 32 GB
+
         // Survey Tables
         const val TABLE_SURVEY = "survey"
         const val TABLE_QUESTION = "survey_question"
@@ -84,11 +94,20 @@ object Constants {
      * Notification Constants
      */
     object Notification {
-        // Auto Sync Channel
+        // Data Upload Channel — foreground service used by BOTH "Upload Now" and auto-sync's
+        // actual upload work (see kaist.iclab.mobiletracker.services.upload.DataUploadService)
+        const val CHANNEL_ID_DATA_UPLOAD = "data_upload_channel"
+        const val CHANNEL_NAME_DATA_UPLOAD = "Data Upload"
+        const val ID_DATA_UPLOAD_PROGRESS = 1001
+        const val ID_DATA_UPLOAD_RESULT = 1002
+
+        // Auto Sync Channel — AutoSyncService's own persistent "running" notification, required
+        // since it's a real foreground service. Distinct from the Data Upload channel above:
+        // this one just says auto-sync is active; per-cycle success/failure comes from
+        // DataUploadService's result notification instead.
         const val CHANNEL_ID_AUTO_SYNC = "auto_sync_channel"
         const val CHANNEL_NAME_AUTO_SYNC = "Auto Sync Notifications"
-        const val ID_AUTO_SYNC_SUCCESS = 1001
-        const val ID_AUTO_SYNC_FAILURE = 1002
+        const val ID_AUTO_SYNC_ACTIVE = 1003
 
         // Survey Notifications
         const val ID_SURVEY_BASE = 2000

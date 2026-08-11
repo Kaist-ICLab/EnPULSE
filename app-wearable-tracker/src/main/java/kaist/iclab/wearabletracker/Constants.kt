@@ -101,6 +101,23 @@ object Constants {
         const val FLUSH_INTERVAL_MS = 2000L
         const val SYNC_BATCH_LIMIT = 2000 // Max records per sync batch
         const val MIN_FREE_SPACE_BYTES = 100 * 1024 * 1024L // 100MB
+
+        /**
+         * ObjectBox's own default cap (`BoxStoreBuilder.DEFAULT_MAX_DB_SIZE_KBYTE`) is 1 GB —
+         * writes past it throw `DbFullException`. Raised here so a burst of unsynced data (BLE
+         * disconnect, phone unreachable for a while) doesn't run into that hard limit. Set lower
+         * than the phone's equivalent (32 GB, see kaist.iclab.mobiletracker.Constants.DB) since
+         * watches have much less onboard storage.
+         */
+        const val OBJECTBOX_MAX_SIZE_KB = 8L * 1024 * 1024 // 8 GB
+
+        /**
+         * Once the ObjectBox database file reaches this size, [kaist.iclab.wearabletracker.data.SyncAckListener]
+         * prunes each sensor's already-confirmed-synced data (everything at/before its watermark)
+         * instead of keeping it around. Set as a ratio of [OBJECTBOX_MAX_SIZE_KB], not the whole
+         * cap, so there's headroom left even if a prune pass lags a cycle or two behind ingestion.
+         */
+        val PRUNE_TRIGGER_BYTES: Long = (OBJECTBOX_MAX_SIZE_KB * 1024L * 0.8).toLong()
     }
 
     /**
