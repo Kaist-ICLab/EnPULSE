@@ -22,6 +22,16 @@ object Constants {
         const val BATCH_SIZE = 50
         const val FLUSH_INTERVAL_MS = 5000L
 
+        /**
+         * ObjectBox's own default cap (`BoxStoreBuilder.DEFAULT_MAX_DB_SIZE_KBYTE`) is 1 GB —
+         * writes past it throw `DbFullException`. Since this app intentionally keeps sensor data
+         * locally forever (pruning is disabled, see SensorUploadService.kt), 1 GB is nowhere near
+         * enough headroom for continuous multi-sensor collection over a real study's duration.
+         * Raised generously here; still a hard cap, not "unlimited", to guard against runaway/
+         * corrupted growth silently filling the device's storage.
+         */
+        const val OBJECTBOX_MAX_SIZE_KB = 32L * 1024 * 1024 // 32 GB
+
         // Survey Tables
         const val TABLE_SURVEY = "survey"
         const val TABLE_QUESTION = "survey_question"
@@ -52,7 +62,14 @@ object Constants {
      * Auto Sync Configuration Constants
      */
     object AutoSync {
-        const val CHECK_INTERVAL_MS = 60 * 1000L // 1 minute
+        const val CHECK_INTERVAL_MS = 60 * 1000L // 1 minute — WebAppLogSyncWorker's fixed cadence
+
+        // WorkManager unique work names (see SensorAutoSyncWorker / WebAppLogSyncWorker). Both are
+        // self-rescheduling OneTimeWorkRequests rather than PeriodicWorkRequests, since the
+        // configurable sync interval (5 min option below) is under WorkManager's 15-minute
+        // PeriodicWorkRequest floor.
+        const val WORK_NAME_SENSOR_SYNC = "sensor_auto_sync_work"
+        const val WORK_NAME_WEBAPP_LOG_SYNC = "webapp_log_sync_work"
 
         // Intervals
         const val INTERVAL_NONE = 0L

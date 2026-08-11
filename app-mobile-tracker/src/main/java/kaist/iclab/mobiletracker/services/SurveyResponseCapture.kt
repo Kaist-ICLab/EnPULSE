@@ -33,8 +33,9 @@ import kotlinx.serialization.json.JsonObject
  *
  * Storage/upload shape mirrors sensor data and MicroEMA responses, not webapp logs: this class
  * only ever writes to [SurveyResponseStore] (durable, synchronous). Upload is entirely
- * [AutoSyncService]'s job, via [SurveyResponseUploader] on the same "Start Logging"/interval/
- * network-gated cycle as everything else in [AutoSyncService.uploadAllSensorData] — no immediate
+ * [kaist.iclab.mobiletracker.services.upload.SensorAutoSyncWorker]'s job, via
+ * [SurveyResponseUploader] on the same "Start Logging"/interval/network-gated cycle as everything
+ * else in [kaist.iclab.mobiletracker.services.upload.DataUploadService] — no immediate
  * best-effort flush here, so a submission's upload timing matches every other sensor's.
  */
 class SurveyResponseCapture(
@@ -83,7 +84,7 @@ class SurveyResponseCapture(
 
             surveyResponseStore.insertAll(entities)
             Log.d(TAG, "Queued ${entities.size} responses for upload")
-            // No immediate flush — AutoSyncService's gated cycle uploads this, same as every
+            // No immediate flush — SensorAutoSyncWorker's gated cycle uploads this, same as every
             // other sensor and MicroEMA responses.
         } catch (e: Exception) {
             if (e is CancellationException) throw e

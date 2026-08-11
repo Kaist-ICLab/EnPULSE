@@ -1,6 +1,7 @@
 package kaist.iclab.wearabletracker.data
 
 import android.util.Log
+import io.objectbox.BoxStore
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
@@ -10,10 +11,21 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonPrimitive
 
+/**
+ * Confirmed-synced data is deleted immediately on ACK, as before (each sensor's rows at/before
+ * the newly-confirmed watermark — see [SyncPreferencesHelper.getSensorWatermark]). On top of
+ * that, [pruneIfStorageFull] is an additional backstop, not a replacement: if the ObjectBox
+ * database file (now capped at [Constants.DB.OBJECTBOX_MAX_SIZE_KB] instead of ObjectBox's 1 GB
+ * default) still crosses [Constants.DB.PRUNE_TRIGGER_BYTES] — e.g. a long BLE outage lets
+ * *unsynced* data pile up, or a delete from an earlier ACK didn't get to run — every sensor's
+ * already-confirmed-synced data is swept again. In normal operation this is a no-op, since the
+ * per-ACK delete already keeps synced data from accumulating.
+ */
 class SyncAckListener(
     private val bleChannel: BLEDataChannel,
     private val stores: Map<String, WatchSensorStore<*>>,
     private val syncPreferencesHelper: SyncPreferencesHelper,
+    private val boxStore: BoxStore,
     private val coroutineScope: CoroutineScope
 ) {
     private val TAG = javaClass.simpleName
@@ -78,7 +90,30 @@ class SyncAckListener(
                 // phone has processed up through endTimestamp - clear the in-flight marker if
                 // it's now covered so PhoneCommunicationManager stops skipping past it.
                 syncPreferencesHelper.clearSensorPendingIfCovered(sensorId, endTimestamp)
+
+                pruneIfStorageFull()
             }
+        }
+    }
+
+    /**
+     * Prunes every sensor's already-confirmed-synced data (at/before its watermark) once the
+     * ObjectBox database file crosses [Constants.DB.PRUNE_TRIGGER_BYTES]. Cheap to call on every
+     * ACK: [BoxStore.getDbSizeOnDisk] is just a stat on the store's file, not a full scan, and
+     * below the threshold this is a no-op.
+     */
+    private fun pruneIfStorageFull() {
+        val dbSize = boxStore.getDbSizeOnDisk()
+        if (dbSize < Constants.DB.PRUNE_TRIGGER_BYTES) return
+
+        Log.w(
+            TAG,
+            "ObjectBox DB size ${dbSize / (1024 * 1024)}MB crossed prune threshold " +
+                    "${Constants.DB.PRUNE_TRIGGER_BYTES / (1024 * 1024)}MB, pruning confirmed-synced data"
+        )
+        stores.forEach { (sensorId, store) ->
+            val watermark = syncPreferencesHelper.getSensorWatermark(sensorId) ?: return@forEach
+            store.deleteDataBefore(watermark)
         }
     }
 

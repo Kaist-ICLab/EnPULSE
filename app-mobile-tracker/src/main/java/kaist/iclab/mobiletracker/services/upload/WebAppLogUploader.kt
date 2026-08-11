@@ -43,9 +43,9 @@ data class WebAppLogRow(
  * Intentionally independent of the sensor upload machinery:
  * - **not campaign-gated** — unlike [SensorUploadService.uploadSensorData], there is no
  *   `campaign_table` active-sensor check, so a webapp's logs upload as soon as it emits them;
- * - **not collection-gated** — [kaist.iclab.mobiletracker.services.AutoSyncService] flushes this
- *   on its own loop, outside the `getDataCollectionStarted()` guard, so logging keeps working
- *   while sensor collection is stopped;
+ * - **not collection-gated** — [kaist.iclab.mobiletracker.services.upload.WebAppLogSyncWorker]
+ *   flushes this on its own schedule, outside the `getDataCollectionStarted()` guard, so logging
+ *   keeps working while sensor collection is stopped;
  * - **insert, not upsert** — `web_app_log` has no primary key, so rows are appended and progress
  *   is tracked locally via [WebAppLogEntity.isSynced] instead of a timestamp watermark.
  */

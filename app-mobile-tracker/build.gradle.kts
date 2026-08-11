@@ -129,6 +129,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)
     implementation(libs.compose.lifecycle.viewmodel)
+    implementation(libs.androidx.work.runtime.ktx)
 
     /* Navigation */
     implementation(libs.compose.navigation)

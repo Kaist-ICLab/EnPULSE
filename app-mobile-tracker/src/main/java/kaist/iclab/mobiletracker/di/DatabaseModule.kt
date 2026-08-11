@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.di
 
 import io.objectbox.BoxStore
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.entity.MyObjectBox
 import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
@@ -16,10 +17,12 @@ val databaseModule = module {
         CouchbaseDB(context = androidContext())
     }
 
-    // ObjectBox - for sensor data storage
+    // ObjectBox - for sensor data storage. maxSizeInKByte is raised well past ObjectBox's 1GB
+    // default — see Constants.DB.OBJECTBOX_MAX_SIZE_KB's doc comment for why.
     single<BoxStore> {
         MyObjectBox.builder()
             .androidContext(androidContext())
+            .maxSizeInKByte(Constants.DB.OBJECTBOX_MAX_SIZE_KB)
             .build()
     }
 
