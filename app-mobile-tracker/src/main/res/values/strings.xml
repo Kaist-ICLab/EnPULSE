@@ -261,6 +261,8 @@
     <string name="data_upload_result_success_message">Successfully uploaded data for %1$d sensor(s)</string>
     <string name="data_upload_result_failure_title">Upload Finished with Errors</string>
     <string name="data_upload_result_message">Uploaded %1$d sensor(s), %2$d failed: %3$s</string>
+    <string name="auto_sync_foreground_title">Auto Sync Active</string>
+    <string name="auto_sync_foreground_description">Syncing sensor data in the background</string>
     <string name="sync_clear_data_title">Clear Local Data</string>
     <string name="sync_clear_data_message">All local sensor data will be deleted. Data already uploaded to the server will not be affected.\n\nThis action cannot be undone.</string>
     <string name="sync_clear_data_confirm">Clear</string>

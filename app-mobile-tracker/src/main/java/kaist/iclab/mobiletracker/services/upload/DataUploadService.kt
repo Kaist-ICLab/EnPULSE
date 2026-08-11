@@ -97,16 +97,16 @@ class DataUploadService : LifecycleService(), KoinComponent {
          * the returned Deferred simply completes alongside the run already in flight.
          *
          * `startForegroundService()` itself can throw — most notably
-         * `ForegroundServiceStartNotAllowedException` (API 31+) when the caller (e.g.
-         * SensorAutoSyncWorker, running via WorkManager rather than as a foreground service
-         * itself) tries to start a new foreground service while the app has no qualifying
-         * foreground/visible state. That's caught here, not left to propagate: an uncaught
-         * exception from a WorkManager-invoked `doWork()` — or any other unstructured caller —
-         * would crash the whole process rather than just skip this sync cycle. On failure the
-         * returned Deferred still completes normally rather than exceptionally, so any caller
-         * that does choose to await it doesn't hang or crash; the cycle is simply treated as a
-         * no-op and retried next time (SensorAutoSyncWorker itself doesn't await this at all —
-         * see its doc comment for why).
+         * `ForegroundServiceStartNotAllowedException` (API 31+) when the app has no qualifying
+         * foreground/visible state. AutoSyncService being itself a foreground service makes this
+         * unlikely in practice, but the manual "Upload Now" path calls this too and isn't
+         * guaranteed to always run from a visible Activity either, so it's caught here rather
+         * than left to propagate: an uncaught exception here — called from an unstructured
+         * `lifecycleScope.launch` in AutoSyncService, with no surrounding catch — would crash the
+         * whole process rather than just skip this sync cycle. On failure the returned Deferred
+         * still completes normally rather than exceptionally, so a caller that awaits it (like
+         * AutoSyncService's `checkAndSyncIfNeeded`) doesn't hang or crash; the cycle is simply
+         * treated as a no-op and retried next time.
          *
          * @param sensorIds Specific sensors to upload, e.g. from the "Upload Now" button. Pass
          * null for a full sync of every active sensor plus survey/MicroEMA responses, used by

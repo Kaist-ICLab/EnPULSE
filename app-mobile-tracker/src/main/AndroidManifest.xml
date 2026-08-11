@@ -163,16 +163,35 @@
         <service
             android:name="kaist.iclab.tracker.sensor.controller.BackgroundController$ControllerService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone"></service>
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data collection for research purposes." />
+        </service>
 
         <!-- Phone Sensor Data Service for receiving and storing phone sensor data locally -->
         <service
             android:name="kaist.iclab.mobiletracker.services.PhoneSensorDataService"
             android:exported="false"
-            android:foregroundServiceType="specialUse"></service>
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data collection and synchronization for research purposes." />
+        </service>
+
+        <!-- Schedules automatic sync cycles as a persistent foreground service; delegates the
+             actual upload work to DataUploadService -->
+        <service
+            android:name="kaist.iclab.mobiletracker.services.AutoSyncService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data synchronization for research purposes." />
+        </service>
 
         <!-- Foreground service that performs data uploads to Supabase, triggered by either the
-             "Upload Now" button or SensorAutoSyncWorker, with a progress notification -->
+             "Upload Now" button or AutoSyncService, with a progress notification -->
         <service
             android:name="kaist.iclab.mobiletracker.services.upload.DataUploadService"
             android:exported="false"

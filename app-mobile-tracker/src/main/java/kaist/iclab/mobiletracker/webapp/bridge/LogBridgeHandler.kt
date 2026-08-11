@@ -26,7 +26,7 @@ import kotlinx.serialization.json.jsonObject
  * Unlike the other bridge handlers there is no sensor behind this — the JS call itself is the
  * capture point. Events are written straight to [WebAppLogStore] and pushed to the `web_app_log`
  * table by [WebAppLogUploader] on its own periodic schedule (see
- * [kaist.iclab.mobiletracker.services.upload.WebAppLogSyncWorker]) — same
+ * [kaist.iclab.mobiletracker.services.AutoSyncService.startWebAppLogSync]) — same
  * collect-locally-then-batch-upload shape as sensor data, deliberately bypassing the sensor
  * pipeline itself: no `SensorDescriptor`, no campaign `campaign_table` gating, and no dependency
  * on sensor collection being started.
@@ -45,7 +45,7 @@ class LogBridgeHandler(
         val eventType = (params["event_type"] as? JsonPrimitive)?.contentOrNullSafe()?.takeIf { it.isNotBlank() }
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing event_type")
 
-        // Local write only — no immediate flush. WebAppLogSyncWorker's periodic schedule drains this store
+        // Local write only — no immediate flush. AutoSyncService's periodic loop drains this store
         // into Supabase, same as sensor data: capture and upload are decoupled so a burst of log()
         // calls coalesces into a few upload batches instead of one network round-trip per event.
         webAppLogStore.insert(

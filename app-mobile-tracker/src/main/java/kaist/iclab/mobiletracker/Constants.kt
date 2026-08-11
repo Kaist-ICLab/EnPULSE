@@ -62,14 +62,7 @@ object Constants {
      * Auto Sync Configuration Constants
      */
     object AutoSync {
-        const val CHECK_INTERVAL_MS = 60 * 1000L // 1 minute — WebAppLogSyncWorker's fixed cadence
-
-        // WorkManager unique work names (see SensorAutoSyncWorker / WebAppLogSyncWorker). Both are
-        // self-rescheduling OneTimeWorkRequests rather than PeriodicWorkRequests, since the
-        // configurable sync interval (5 min option below) is under WorkManager's 15-minute
-        // PeriodicWorkRequest floor.
-        const val WORK_NAME_SENSOR_SYNC = "sensor_auto_sync_work"
-        const val WORK_NAME_WEBAPP_LOG_SYNC = "webapp_log_sync_work"
+        const val CHECK_INTERVAL_MS = 60 * 1000L // 1 minute
 
         // Intervals
         const val INTERVAL_NONE = 0L
@@ -101,12 +94,20 @@ object Constants {
      * Notification Constants
      */
     object Notification {
-        // Data Upload Channel — foreground service used by BOTH "Upload Now" and auto-sync
-        // (see kaist.iclab.mobiletracker.services.upload.DataUploadService)
+        // Data Upload Channel — foreground service used by BOTH "Upload Now" and auto-sync's
+        // actual upload work (see kaist.iclab.mobiletracker.services.upload.DataUploadService)
         const val CHANNEL_ID_DATA_UPLOAD = "data_upload_channel"
         const val CHANNEL_NAME_DATA_UPLOAD = "Data Upload"
         const val ID_DATA_UPLOAD_PROGRESS = 1001
         const val ID_DATA_UPLOAD_RESULT = 1002
+
+        // Auto Sync Channel — AutoSyncService's own persistent "running" notification, required
+        // since it's a real foreground service. Distinct from the Data Upload channel above:
+        // this one just says auto-sync is active; per-cycle success/failure comes from
+        // DataUploadService's result notification instead.
+        const val CHANNEL_ID_AUTO_SYNC = "auto_sync_channel"
+        const val CHANNEL_NAME_AUTO_SYNC = "Auto Sync Notifications"
+        const val ID_AUTO_SYNC_ACTIVE = 1003
 
         // Survey Notifications
         const val ID_SURVEY_BASE = 2000

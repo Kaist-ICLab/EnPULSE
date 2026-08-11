@@ -80,11 +80,10 @@ val helperModule = module {
         )
     }
 
-    // AutoSyncManager - wraps the WorkManager-scheduled auto-sync chain's start/stop
+    // AutoSyncManager - wraps AutoSyncService start/stop
     single {
         AutoSyncManager(
-            context = androidContext(),
-            syncTimestampService = get()
+            context = androidContext()
         )
     }
 
