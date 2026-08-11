@@ -119,9 +119,24 @@ class MobileTrackerApplication : Application(), KoinComponent,
         // conditions from (e.g. TimingSensor, gated by the "collection running" lifecycle via
         // BackgroundController), the engine itself runs continuously — mirrors how the watch used
         // to start its DefaultTriggerEngine unconditionally in WearableApplication.onCreate().
+        //
+        // loadTriggers() must be called here too: DefaultTriggerEngine.triggers starts empty on
+        // every process start and is otherwise only populated by
+        // UserProfileRepositoryImpl.syncFullStudyConfig() (login/onboarding/manual resync in
+        // Settings — and that's a no-op while collection is RUNNING). Without this, any process
+        // restart that isn't a fresh login/onboarding (OEM background kill, reboot, crash — all
+        // routine for a long-running background tracker) leaves the engine subscribed and logging
+        // "State changed: ..." for every detection, but with zero triggers to evaluate, so no
+        // action ever fires. Loading from TriggerRepository's persisted Couchbase cache here
+        // requires no network call and keeps this in sync with whatever was last synced.
         try {
             getKoin().get<kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter>().start()
-            getKoin().get<kaist.iclab.tracker.trigger.engine.TriggerEngine>().start()
+            val triggerEngine = getKoin().get<kaist.iclab.tracker.trigger.engine.TriggerEngine>()
+            triggerEngine.loadTriggers(
+                getKoin().get<kaist.iclab.mobiletracker.repository.TriggerRepository>()
+                    .getParsedTriggers()
+            )
+            triggerEngine.start()
         } catch (e: Exception) {
             Log.e("MobileTrackerApplication", "Error starting trigger engine: ${e.message}", e)
         }
