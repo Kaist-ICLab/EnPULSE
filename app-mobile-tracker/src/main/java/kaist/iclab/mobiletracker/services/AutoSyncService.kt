@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.LifecycleService
@@ -56,7 +57,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
          */
         fun start(context: Context) {
             val intent = Intent(context, AutoSyncService::class.java)
-            context.startService(intent)
+            context.startForegroundService(intent)
         }
 
         /**
@@ -96,6 +97,33 @@ class AutoSyncService : LifecycleService(), KoinComponent {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        
+        val pendingIntent = NotificationHelper.createMainActivityPendingIntent(this, 0)
+        val localizedContext = LanguageHelper(this).applyLanguage(this)
+        
+        NotificationHelper.ensureNotificationChannel(
+            this,
+            Constants.Notification.CHANNEL_ID_AUTO_SYNC,
+            Constants.Notification.CHANNEL_NAME_AUTO_SYNC
+        )
+        
+        val notification = NotificationHelper.buildNotification(
+            context = this,
+            channelId = Constants.Notification.CHANNEL_ID_AUTO_SYNC,
+            title = localizedContext.getString(R.string.auto_sync_foreground_title),
+            text = localizedContext.getString(R.string.auto_sync_foreground_description),
+            ongoing = true,
+            pendingIntent = pendingIntent
+        ).build()
+        
+        val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        } else {
+            0
+        }
+        
+        startForeground(Constants.Notification.ID_AUTO_SYNC_SUCCESS, notification, serviceType)
+        
         startAutoSync()
         return START_STICKY
     }

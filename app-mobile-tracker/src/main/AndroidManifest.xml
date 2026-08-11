@@ -163,18 +163,31 @@
         <service
             android:name="kaist.iclab.tracker.sensor.controller.BackgroundController$ControllerService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone"></service>
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data collection for research purposes." />
+        </service>
 
         <!-- Phone Sensor Data Service for receiving and storing phone sensor data locally -->
         <service
             android:name="kaist.iclab.mobiletracker.services.PhoneSensorDataService"
             android:exported="false"
-            android:foregroundServiceType="specialUse"></service>
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data collection and synchronization for research purposes." />
+        </service>
 
         <!-- Automatically send data to Supabase serer -->
         <service
             android:name="kaist.iclab.mobiletracker.services.AutoSyncService"
-            android:exported="false"></service>
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data synchronization for research purposes." />
+        </service>
 
         <activity
             android:name=".MainActivity"

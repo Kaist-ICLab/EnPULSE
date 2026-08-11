@@ -97,7 +97,7 @@ class ECGSensor(
             samsungHealthSensorInitializer.connectionStateFlow.collect { isConnected ->
                 if (isConnected) {
                     try {
-                        tracker.setEventListener(listener)
+                        tracker?.setEventListener(listener)
                     } catch (e: Exception) {
                         Log.w(name, "Failed to start ECG sensor: ${e.message}")
                     }
@@ -115,7 +115,7 @@ class ECGSensor(
                 // Push out whatever is still sitting in the tracker's buffer before we tear
                 // down the listener, so the last bit of data isn't lost on stop.
                 flush()
-                tracker.unsetEventListener()
+                tracker?.unsetEventListener()
             }
         } catch (e: Exception) {
             Log.w(name, "Failed to stop ECG sensor: ${e.message}")
