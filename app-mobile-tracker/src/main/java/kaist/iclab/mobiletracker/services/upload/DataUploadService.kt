@@ -15,6 +15,8 @@ import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.DataRepository
 import kaist.iclab.mobiletracker.repository.Result
+import kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler
+import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.SurveyService
@@ -213,6 +215,16 @@ class DataUploadService : LifecycleService(), KoinComponent {
             val displayName = dataRepository.getSensorInfo(sensorId)?.displayName ?: sensorId
             updateProgress(displayName, index + 1, total)
 
+            // Survey/WebApp log aren't gated by campaign membership (see SensorUploadService),
+            // so only skip the campaign check for sensors that actually go through it. A sensor
+            // dropped from the campaign has nothing to upload for the same reason an up-to-date
+            // one doesn't, but reporting it as "already up to date" would wrongly imply it's still
+            // being tracked — so it's left out of the summary entirely instead.
+            if (isCampaignGatedSensor(sensorId) && !sensorUploadService.isSensorActive(sensorId)) {
+                Log.d(TAG, "Skipping $sensorId: not part of the current campaign")
+                return@forEachIndexed
+            }
+
             try {
                 val result = dataRepository.uploadSensorData(sensorId)
                 when {
@@ -230,13 +242,22 @@ class DataUploadService : LifecycleService(), KoinComponent {
         finishAndNotify(successfulSensors, failedSensors, upToDateSensors)
     }
 
+    /** True for sensors whose upload is gated on campaign membership (i.e. not Survey/WebAppLog). */
+    private fun isCampaignGatedSensor(sensorId: String): Boolean =
+        sensorId != SurveyResponseDataHandler.SENSOR_ID && sensorId != WebAppLogDataHandler.SENSOR_ID
+
     /**
      * Uploads every active sensor plus survey/MicroEMA responses in parallel — same shape as the
      * old AutoSyncService.uploadAllSensorData(), just relocated here so auto-sync and manual
      * upload share one implementation and one progress/notification surface.
      */
     private suspend fun runFullSync() {
-        val allSensorIds = sensors.map { it.id } + SensorTypeHelper.watchSensorIds
+        // Only sensors currently included in the joined campaign are uploaded — a sensor that
+        // was removed from (or never added to) the campaign has nothing to upload for the same
+        // reason an up-to-date one doesn't, but listing it as "already up to date" in the summary
+        // would wrongly imply it's still being tracked, so it's excluded outright instead.
+        val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds)
+            .filter { sensorUploadService.isSensorActive(it) }
         val totalUnits = allSensorIds.size + 2 // + MicroEMA + Survey
         val completed = AtomicInteger(0)
         val successfulSensors = Collections.synchronizedList(mutableListOf<String>())
