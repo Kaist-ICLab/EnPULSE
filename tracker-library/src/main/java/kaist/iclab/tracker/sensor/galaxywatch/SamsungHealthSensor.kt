@@ -53,12 +53,17 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
     permissionManager, configStorage, stateStorage, configClass, entityClass,
     titleResId, descriptionResId, icon
 ) {
-    protected val tracker: HealthTracker by lazy {
-        val ppgTypes = ppgTypes
-        if (ppgTypes != null) {
-            samsungHealthSensorInitializer.getTracker(trackerType, ppgTypes)
-        } else {
-            samsungHealthSensorInitializer.getTracker(trackerType)
+    protected val tracker: HealthTracker? by lazy {
+        try {
+            val ppgTypes = ppgTypes
+            if (ppgTypes != null) {
+                samsungHealthSensorInitializer.getTracker(trackerType, ppgTypes)
+            } else {
+                samsungHealthSensorInitializer.getTracker(trackerType)
+            }
+        } catch (e: Exception) {
+            Log.e(name, "Failed to get HealthTracker for $name: ${e.message}")
+            null
         }
     }
 
@@ -94,8 +99,8 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
 
     override fun onStart() {
         try {
-            tracker.setEventListener(listener)
-        } catch (_: UnsupportedOperationException) {
+            tracker?.setEventListener(listener)
+        } catch (_: Exception) {
             // Not supported on this device, ignore
         }
     }
@@ -105,8 +110,8 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
             // Push out whatever is still sitting in the tracker's buffer before we tear
             // down the listener, so the last bit of data isn't lost on stop.
             flush()
-            tracker.unsetEventListener()
-        } catch (_: UnsupportedOperationException) {
+            tracker?.unsetEventListener()
+        } catch (_: Exception) {
             // Not supported on this device, ignore
         }
     }
@@ -122,8 +127,9 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
      * the request failed outright.
      */
     open fun flush(): Boolean {
+        val t = tracker ?: return false
         return try {
-            tracker.flush()
+            t.flush()
         } catch (e: Exception) {
             Log.w(name, "Failed to flush $name: ${e.message}")
             false
