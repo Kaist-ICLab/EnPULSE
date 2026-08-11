@@ -47,11 +47,24 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         private const val TAG = "AutoSyncService"
 
         /**
-         * Helper function to start the service from a Context
+         * Helper function to start the service from a Context.
+         *
+         * `startForegroundService()` can throw (most notably
+         * `ForegroundServiceStartNotAllowedException` on API 31+ when the app has no qualifying
+         * foreground/visible state). This used to only be called from a UI action (Settings'
+         * "Start Logging"), where that's a non-issue, but it's now also called from
+         * [kaist.iclab.mobiletracker.MobileTrackerApplication] to re-arm auto-sync on process
+         * restart — a context where the OS is more likely to refuse a background FGS start — so
+         * the exception is caught here rather than left to crash the whole process. On failure,
+         * auto-sync simply stays off until the user next opens the app / toggles logging.
          */
         fun start(context: Context) {
-            val intent = Intent(context, AutoSyncService::class.java)
-            context.startForegroundService(intent)
+            try {
+                val intent = Intent(context, AutoSyncService::class.java)
+                context.startForegroundService(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start AutoSyncService: ${e.message}", e)
+            }
         }
 
         /**

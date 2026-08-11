@@ -141,6 +141,24 @@ class MobileTrackerApplication : Application(), KoinComponent,
             Log.e("MobileTrackerApplication", "Error starting trigger engine: ${e.message}", e)
         }
 
+        // Re-arm auto-sync on process restart, mirroring the trigger engine's loadTriggers()
+        // fix above. AutoSyncManager.start() is otherwise only called from Settings' "Start
+        // Logging" UI action, so without this, any process restart that isn't a fresh
+        // Start-Logging tap (OEM background kill, reboot, memory-pressure eviction — all routine
+        // for a long-running background tracker) leaves auto-sync permanently off with no crash
+        // and no log, even though data collection itself (via BackgroundController's persisted
+        // state, above) resumes normally. getDataCollectionStarted() is the same persisted flag
+        // AutoSyncService.checkAndSyncIfNeeded() gates on, so this only restarts the service when
+        // the user actually had logging running.
+        try {
+            val syncTimestampService = getKoin().get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
+            if (syncTimestampService.getDataCollectionStarted() != null) {
+                getKoin().get<kaist.iclab.mobiletracker.services.AutoSyncManager>().start()
+            }
+        } catch (e: Exception) {
+            Log.e("MobileTrackerApplication", "Error restarting auto-sync: ${e.message}", e)
+        }
+
         // Additional initialization can be added here:
         // - Crash reporting
         // - Analytics
