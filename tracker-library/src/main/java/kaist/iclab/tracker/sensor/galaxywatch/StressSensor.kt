@@ -3,6 +3,7 @@ package kaist.iclab.tracker.sensor.galaxywatch
 import android.content.Context
 import android.os.PowerManager
 import android.os.SystemClock
+import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Psychology
 import kaist.iclab.tracker.R
@@ -53,6 +54,12 @@ class StressSensor(
 
         // RMSSD needs at least one successive-difference pair.
         private const val MIN_IBIS_PER_WINDOW = 2
+
+        // How long to keep valid IBI around purely to anchor the outlier-bound median/MAD -
+        // independent of window1mMs/window5mMs, which only bound the RMSSD calculation
+        // itself. The intent is "all data collected so far this run"; this cap just keeps a
+        // multi-day continuous session from growing the buffer without limit.
+        private const val STATS_RETENTION_MS = 24 * 60 * 60 * 1000L
 
         private const val WAKE_LOCK_TAG = "EnPulse:StressSensorWakeLock"
         // The lock is re-acquired every tick with this multiple of the current stride as
@@ -145,6 +152,17 @@ class StressSensor(
 
                 val waitMs = nextTickAt - SystemClock.elapsedRealtime()
                 if (waitMs > 0) delay(waitMs)
+
+                // The Health Sensor SDK is otherwise free to hold IBI data in its own
+                // internal buffer for however long its delivery policy dictates - observed
+                // in the field as 100+s stalls followed by an instantaneous catch-up burst
+                // of backlogged DataPoints. flush() was previously only requested from
+                // onStop(); asking for it every tick here keeps that backlog bounded to
+                // roughly one stride instead of growing unboundedly between deliveries.
+                // It's a request, not a synchronous read, so the pushed data lands via the
+                // normal listener/handleHr path a moment later and is picked up next tick.
+                heartRateSensor.flush()
+
                 inferenceMutex.withLock { runInference() }
 
                 // If we still fell behind by more than one stride (e.g. the process was
@@ -193,13 +211,36 @@ class StressSensor(
                 val ibis = point.ibi
                 val statuses = point.ibiStatus
                 val n = minOf(ibis.size, statuses.size)
+                if (n == 0) {
+                    Log.d(name, "handleHr: DataPoint@${point.timestamp} carried no IBI values")
+                    continue
+                }
+
+                // point.timestamp marks when this burst was reported (i.e. the last beat
+                // in it), not each individual beat's own time. Reconstruct each beat's
+                // timestamp by walking the IBI deltas backward from point.timestamp,
+                // instead of stamping every IBI in the burst with the same shared
+                // timestamp - that collapsed burst arrival into step changes in
+                // ibiCount1m/ibiCount5m independent of the wearer's actual HR stability.
+                val beatTimestamps = LongArray(n)
+                var t = point.timestamp
+                for (i in (n - 1) downTo 0) {
+                    beatTimestamps[i] = t
+                    t -= if (ibis[i] > 0) ibis[i] else 0
+                }
+
+                var accepted = 0
                 for (i in 0 until n) {
                     // Galaxy Watch IBI_STATUS: 0 == valid.
                     if (statuses[i] != 0) continue
                     val v = ibis[i]
                     if (v <= 0) continue
-                    ibiTimestampsMs.addLast(point.timestamp)
+                    ibiTimestampsMs.addLast(beatTimestamps[i])
                     ibiValuesMs.addLast(v)
+                    accepted++
+                }
+                if (accepted == 0) {
+                    Log.d(name, "handleHr: DataPoint@${point.timestamp} had $n IBI entries, none valid")
                 }
             }
         }
@@ -208,8 +249,11 @@ class StressSensor(
     private suspend fun runInference() {
         val config = configStateFlow.value
         val windowEnd = System.currentTimeMillis()
-        // Retain enough history in the buffer to serve the larger of the two windows.
-        val retentionStart = windowEnd - maxOf(config.window1mMs, config.window5mMs)
+        // The RMSSD windows themselves only need the last 1/5 minutes, but the buffer is
+        // kept around much longer (STATS_RETENTION_MS) so outlierBounds() below has "all
+        // data collected so far" to anchor its median/MAD on, rather than just whatever a
+        // single short window happens to contain.
+        val retentionStart = windowEnd - STATS_RETENTION_MS
 
         val timestamps: LongArray
         val values: IntArray
@@ -222,10 +266,28 @@ class StressSensor(
             values = ibiValuesMs.toIntArray()
         }
 
-        val filtered1m = filterIbis(ibisSince(windowEnd - config.window1mMs, timestamps, values))
-        val filtered5m = filterIbis(ibisSince(windowEnd - config.window5mMs, timestamps, values))
+        // Derive the outlier bounds once, from the entire retained history - a single 1 or
+        // 5-minute window is too small a sample for its own median/MAD to be a stable
+        // outlier reference, and computing it separately per window made them disagree on
+        // what counts as an outlier in what is otherwise overlapping underlying data.
+        val bounds = outlierBounds(values)
+        val raw1m = ibisSince(windowEnd - config.window1mMs, timestamps, values)
+        val raw5m = ibisSince(windowEnd - config.window5mMs, timestamps, values)
+        val filtered1m = filterIbis(raw1m, bounds)
+        val filtered5m = filterIbis(raw5m, bounds)
+        Log.d(
+            name,
+            "runInference: bufferSize=${timestamps.size} ibiCount1m=${filtered1m.size} ibiCount5m=${filtered5m.size}"
+        )
         // The 5-minute window drives the stress trigger, so it gates emission.
-        if (filtered1m.size < MIN_IBIS_PER_WINDOW || filtered5m.size < MIN_IBIS_PER_WINDOW) return
+        if (filtered1m.size < MIN_IBIS_PER_WINDOW || filtered5m.size < MIN_IBIS_PER_WINDOW) {
+            Log.w(
+                name,
+                "runInference: skipping emission, below MIN_IBIS_PER_WINDOW ($MIN_IBIS_PER_WINDOW): " +
+                    "ibiCount1m=${filtered1m.size} ibiCount5m=${filtered5m.size}"
+            )
+            return
+        }
 
         val rmssd1m = rmssd(filtered1m)
         val rmssd5m = rmssd(filtered5m)
@@ -254,15 +316,28 @@ class StressSensor(
         return result.toIntArray()
     }
 
-    private fun filterIbis(ibis: IntArray): IntArray {
+    /**
+     * Median +/- [MAD_MULTIPLIER] * MAD computed from [ibis], restricted to physiologically
+     * plausible values ([MIN_IBI_MS]..[MAX_IBI_MS]). Callers apply the returned bounds via
+     * [filterIbis] - typically to a different (e.g. smaller, overlapping) set of IBIs than
+     * the one the bounds were derived from, so the outlier reference stays stable across
+     * windows of different sizes drawn from the same underlying data.
+     *
+     * Returns an empty range (nothing passes) if there's no in-range data to anchor a
+     * median on, and an all-inclusive range if the data has no spread (MAD == 0) to derive
+     * a meaningful bound from.
+     */
+    private fun outlierBounds(ibis: IntArray): ClosedFloatingPointRange<Double> {
         val inRange = ibis.filter { it in MIN_IBI_MS..MAX_IBI_MS }.map { it.toDouble() }
-        if (inRange.isEmpty()) return IntArray(0)
+        if (inRange.isEmpty()) return Double.POSITIVE_INFINITY..Double.NEGATIVE_INFINITY
         val med = median(inRange)
         val mad = median(inRange.map { abs(it - med) })
-        if (mad == 0.0) return inRange.map { it.toInt() }.toIntArray()
-        val low = med - MAD_MULTIPLIER * mad
-        val high = med + MAD_MULTIPLIER * mad
-        return inRange.filter { it in low..high }.map { it.toInt() }.toIntArray()
+        if (mad == 0.0) return Double.NEGATIVE_INFINITY..Double.POSITIVE_INFINITY
+        return (med - MAD_MULTIPLIER * mad)..(med + MAD_MULTIPLIER * mad)
+    }
+
+    private fun filterIbis(ibis: IntArray, bounds: ClosedFloatingPointRange<Double>): IntArray {
+        return ibis.filter { it in MIN_IBI_MS..MAX_IBI_MS && it.toDouble() in bounds }.toIntArray()
     }
 
     private fun rmssd(ibis: IntArray): Float {
