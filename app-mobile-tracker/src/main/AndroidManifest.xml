@@ -171,10 +171,17 @@
             android:exported="false"
             android:foregroundServiceType="specialUse"></service>
 
-        <!-- Automatically send data to Supabase serer -->
+        <!-- Schedules automatic sync cycles; delegates the actual upload work to DataUploadService -->
         <service
             android:name="kaist.iclab.mobiletracker.services.AutoSyncService"
             android:exported="false"></service>
+
+        <!-- Foreground service that performs data uploads to Supabase, triggered by either the
+             "Upload Now" button or AutoSyncService, with a progress notification -->
+        <service
+            android:name="kaist.iclab.mobiletracker.services.upload.DataUploadService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"></service>
 
         <activity
             android:name=".MainActivity"

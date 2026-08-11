@@ -273,10 +273,10 @@
     <string name="sync_network_option_all">모든 네트워크</string>
     <string name="sync_network_option_wifi_only">Wi-Fi만</string>
     <string name="sync_network_option_mobile_only">모바일 데이터만</string>
-    <string name="auto_sync_success_title">자동 동기화 성공</string>
-    <string name="auto_sync_success_message">%1$d개 센서의 데이터 업로드 성공</string>
-    <string name="auto_sync_failure_title">자동 동기화 실패</string>
-    <string name="auto_sync_failure_message">%1$d개 센서 업로드 실패: %2$s</string>
+    <string name="data_upload_result_success_title">업로드 완료</string>
+    <string name="data_upload_result_success_message">%1$d개 센서의 데이터 업로드 성공</string>
+    <string name="data_upload_result_failure_title">업로드 중 오류 발생</string>
+    <string name="data_upload_result_message">%1$d개 성공, %2$d개 실패: %3$s</string>
     <string name="sync_clear_data_title">로컬 데이터 삭제</string>
     <string name="sync_clear_data_message">모든 로컬 센서 데이터가 삭제됩니다. 서버에 이미 업로드된 데이터는 영향을 받지 않습니다.\n\n이 작업은 취소할 수 없습니다.</string>
     <string name="sync_clear_data_confirm">삭제</string>

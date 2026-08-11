@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.viewmodels.data
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,8 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.repository.DataRepository
 import kaist.iclab.mobiletracker.repository.SensorInfo
 import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.services.upload.DataUploadService
+import kaist.iclab.mobiletracker.services.upload.DataUploadState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,10 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
-import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -61,7 +62,8 @@ data class DataUiState(
 class DataViewModel(
     private val dataRepository: DataRepository,
     private val dataExportHelper: kaist.iclab.mobiletracker.helpers.DataExportHelper,
-    private val syncTimestampService: SyncTimestampService
+    private val syncTimestampService: SyncTimestampService,
+    private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DataUiState())
@@ -77,6 +79,45 @@ class DataViewModel(
     init {
         loadSensorInfo()
         startTimestampUpdates()
+        observeUploadService()
+    }
+
+    /**
+     * Mirrors [DataUploadService]'s shared upload state/events into [uiState] so the progress
+     * bar shows the same thing regardless of whether the upload was triggered by this screen's
+     * "Upload Now" button or by an automatic sync running in the background.
+     */
+    private fun observeUploadService() {
+        viewModelScope.launch {
+            DataUploadService.uploadState.collect { state ->
+                if (state is DataUploadState.InProgress) {
+                    _uiState.value = _uiState.value.copy(
+                        uploadProgress = UploadProgressState(
+                            isComplete = false,
+                            currentSensorName = state.currentSensorName,
+                            currentIndex = state.currentIndex,
+                            totalSensors = state.totalSensors
+                        )
+                    )
+                }
+            }
+        }
+        viewModelScope.launch {
+            DataUploadService.completionEvents.collect { summary ->
+                _uiState.value = _uiState.value.copy(
+                    uploadProgress = UploadProgressState(
+                        isComplete = true,
+                        successCount = summary.successCount,
+                        failedCount = summary.failedCount,
+                        upToDateCount = summary.upToDateCount,
+                        successfulSensors = summary.successfulSensors,
+                        failedSensors = summary.failedSensors,
+                        upToDateSensors = summary.upToDateSensors
+                    )
+                )
+                loadSensorInfo()
+            }
+        }
     }
 
     private fun startTimestampUpdates() {
@@ -123,10 +164,12 @@ class DataViewModel(
     }
 
     /**
-     * Upload all data for all sensors with detailed progress tracking.
+     * Upload all data for all sensors via [DataUploadService]'s foreground service — same
+     * upload path auto-sync uses, so it runs without blocking the UI. Progress and the
+     * completion summary arrive through [observeUploadService].
      */
     fun uploadAllData() {
-        if (_uiState.value.uploadProgress != null) return
+        if (DataUploadService.uploadState.value is DataUploadState.InProgress) return
 
         viewModelScope.launch {
             val sensorsToUpload = _uiState.value.sensors.filter { it.recordCount > 0 }
@@ -135,69 +178,8 @@ class DataViewModel(
                 return@launch
             }
 
-            startUploadProgress(sensorsToUpload.size)
-            val successfulSensors = mutableListOf<String>()
-            val failedSensors = mutableListOf<String>()
-            val upToDateSensors = mutableListOf<String>()
-
-            try {
-                sensorsToUpload.forEachIndexed { index, sensor ->
-                    updateUploadProgress(index + 1, sensor.displayName)
-
-                    try {
-                        val result = dataRepository.uploadSensorData(sensor.sensorId)
-                        if (result > 0) {
-                            successfulSensors.add(sensor.displayName)
-                        } else if (result == -1) {
-                            failedSensors.add(sensor.displayName)
-                        } else {
-                            upToDateSensors.add(sensor.displayName)
-                        }
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                        failedSensors.add(sensor.displayName)
-                        Log.e("DataViewModel", "Error uploading ${sensor.sensorId}", e)
-                    }
-                }
-            } finally {
-                finishUploadProgress(successfulSensors, failedSensors, upToDateSensors)
-                loadSensorInfo()
-            }
+            DataUploadService.start(context, sensorsToUpload.map { it.sensorId })
         }
-    }
-
-    private fun startUploadProgress(totalSensors: Int) {
-        SupabaseLoadingInterceptor.suppressGlobalLoading = true
-        _uiState.value = _uiState.value.copy(
-            uploadProgress = UploadProgressState(
-                isComplete = false,
-                totalSensors = totalSensors
-            )
-        )
-    }
-
-    private fun updateUploadProgress(currentIndex: Int, sensorName: String) {
-        _uiState.value = _uiState.value.copy(
-            uploadProgress = _uiState.value.uploadProgress?.copy(
-                currentIndex = currentIndex,
-                currentSensorName = sensorName
-            )
-        )
-    }
-
-    private fun finishUploadProgress(successful: List<String>, failed: List<String>, upToDate: List<String>) {
-        SupabaseLoadingInterceptor.suppressGlobalLoading = false
-        _uiState.value = _uiState.value.copy(
-            uploadProgress = _uiState.value.uploadProgress?.copy(
-                isComplete = true,
-                successCount = successful.size,
-                failedCount = failed.size,
-                upToDateCount = upToDate.size,
-                successfulSensors = successful,
-                failedSensors = failed,
-                upToDateSensors = upToDate
-            )
-        )
     }
 
     /**

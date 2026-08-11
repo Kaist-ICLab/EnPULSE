@@ -10,42 +10,27 @@ import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
-import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
-import kaist.iclab.mobiletracker.helpers.LanguageHelper
-import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.onFailure
-import kaist.iclab.mobiletracker.repository.onSuccess
-import kaist.iclab.mobiletracker.services.upload.SensorUploadService
-import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
+import kaist.iclab.mobiletracker.services.upload.DataUploadService
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
-import kaist.iclab.mobiletracker.utils.NotificationHelper
-import kaist.iclab.mobiletracker.utils.SensorTypeHelper
-import kaist.iclab.tracker.sensor.core.Sensor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
-import org.koin.core.qualifier.named
 import java.time.format.DateTimeFormatter
-import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.getValue
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Service that handles automatic synchronization of sensor data to Supabase
- * based on configured interval and network preferences.
+ * Service that decides WHEN sensor data should be synced to Supabase, based on the configured
+ * interval and network preferences. The actual upload work — shared with the manual "Upload Now"
+ * action — is delegated to [DataUploadService], a foreground service with its own progress
+ * notification, so this service never has to become foreground itself.
  *
  * Uses LifecycleService for automatic coroutine lifecycle management.
- * Sensor uploads are parallelized and protected by a sync lock to prevent
- * overlapping sync cycles.
  */
 class AutoSyncService : LifecycleService(), KoinComponent {
     companion object {
@@ -69,12 +54,7 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     }
 
     private val syncTimestampService by inject<SyncTimestampService>()
-    private val sensorUploadService: SensorUploadService by inject()
-    private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
-    private val surveyService: SurveyService by inject()
-    private val microEmaResponseDao by inject<MicroEmaResponseStore>()
     private val webAppLogUploader by inject<WebAppLogUploader>()
-    private val surveyResponseUploader by inject<SurveyResponseUploader>()
 
     private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
@@ -108,12 +88,6 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         startWebAppLogSync()
         if (syncLoopJob?.isActive == true) return
         Log.d(TAG, "Starting auto sync service")
-        // Create notification channel
-        NotificationHelper.ensureNotificationChannel(
-            this,
-            Constants.Notification.CHANNEL_ID_AUTO_SYNC,
-            Constants.Notification.CHANNEL_NAME_AUTO_SYNC
-        )
 
         // lifecycleScope automatically cancels when service is destroyed
         syncLoopJob = lifecycleScope.launch(Dispatchers.IO) {
@@ -199,10 +173,12 @@ class AutoSyncService : LifecycleService(), KoinComponent {
             return
         }
 
-        // All conditions met, trigger sync - update lastSyncTime AFTER completion to ensure retry on failure
+        // All conditions met — hand the actual upload off to DataUploadService's foreground
+        // service (shared with manual "Upload Now") and update lastSyncTime AFTER it completes,
+        // to ensure a retry on failure.
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                uploadAllSensorData()
+                DataUploadService.start(applicationContext).await()
                 lastSyncTime = System.currentTimeMillis()
             } finally {
                 isSyncing.set(false)
@@ -246,178 +222,5 @@ class AutoSyncService : LifecycleService(), KoinComponent {
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-    }
-
-    /**
-     * Uploads all sensor data in parallel for faster sync cycles.
-     * Phone sensors and watch sensors are uploaded concurrently.
-     */
-    private suspend fun uploadAllSensorData() {
-        val successCount = AtomicInteger(0)
-        val failureCount = AtomicInteger(0)
-        val skippedCount = AtomicInteger(0)
-        val failedSensors = Collections.synchronizedList(mutableListOf<String>())
-
-        try {
-            val startTime = System.currentTimeMillis()
-
-            // Launch all sensor uploads in parallel
-            val allSensorIds = sensors.map { it.id } + SensorTypeHelper.watchSensorIds
-            val sensorJobs = allSensorIds.map { sensorId ->
-                lifecycleScope.async(Dispatchers.IO) {
-                    if (sensorUploadService.hasDataToUpload(sensorId)) {
-                        sensorUploadService.uploadSensorData(sensorId)
-                            .onSuccess { successCount.incrementAndGet() }
-                            .onFailure { e ->
-                                failureCount.incrementAndGet()
-                                failedSensors.add(sensorId)
-                                Log.e(TAG, "Upload failed for $sensorId: ${e.message}", e)
-                            }
-                    } else {
-                        skippedCount.incrementAndGet()
-                    }
-                }
-            }
-
-            // Launch MicroEMA responses upload
-            val microEmaJob = lifecycleScope.async(Dispatchers.IO) {
-                uploadMicroEmaResponses(successCount, failureCount, failedSensors)
-            }
-
-            // Launch survey responses upload — same "Start Logging"/interval/network gate as
-            // every other sensor here (unlike webapp logs, which intentionally bypass it; see
-            // startWebAppLogSync). Not routed through SensorUploadService because "Survey" has no
-            // SensorDescriptor (insert-only, not upsert-by-eventId) — same reason MicroEMA gets
-            // its own job above instead of going through sensorJobs.
-            val surveyJob = lifecycleScope.async(Dispatchers.IO) {
-                uploadSurveyResponses(successCount, failureCount, failedSensors)
-            }
-
-            // Wait for all uploads to complete
-            (sensorJobs + microEmaJob + surveyJob).awaitAll()
-
-            val elapsed = System.currentTimeMillis() - startTime
-            Log.d(
-                TAG, "Auto-sync completed in ${elapsed}ms: " +
-                        "${successCount.get()} success, ${failureCount.get()} failed, ${skippedCount.get()} skipped"
-            )
-
-            // Show notification based on results
-            if (successCount.get() > 0) {
-                showSuccessNotification(successCount.get())
-            } else if (failureCount.get() > 0) {
-                showFailureNotification(failureCount.get(), failedSensors)
-            }
-
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            Log.e(TAG, "Fatal error in auto-sync upload: ${e.message}", e)
-            showFailureNotification(0, listOf("Fatal error: ${e.message}"))
-        }
-    }
-
-    /**
-     * Shows a success notification when auto-sync completes successfully
-     */
-    private fun showSuccessNotification(successCount: Int) {
-        val pendingIntent =
-            NotificationHelper.createMainActivityPendingIntent(
-                this,
-                Constants.Notification.ID_AUTO_SYNC_SUCCESS
-            )
-        val localizedContext = LanguageHelper(this).applyLanguage(this)
-        val notification = NotificationHelper.buildNotification(
-            context = this,
-            channelId = Constants.Notification.CHANNEL_ID_AUTO_SYNC,
-            title = localizedContext.getString(R.string.auto_sync_success_title),
-            text = localizedContext.getString(R.string.auto_sync_success_message, successCount),
-            pendingIntent = pendingIntent
-        ).build()
-
-        NotificationHelper.showNotification(
-            this,
-            Constants.Notification.ID_AUTO_SYNC_SUCCESS,
-            notification
-        )
-    }
-
-    /**
-     * Shows a failure notification when auto-sync encounters errors
-     */
-    private fun showFailureNotification(failureCount: Int, failedSensors: List<String>) {
-        val failedSensorsText = if (failedSensors.isNotEmpty()) {
-            failedSensors.take(3).joinToString(", ") + if (failedSensors.size > 3) "..." else ""
-        } else {
-            ""
-        }
-
-        val pendingIntent =
-            NotificationHelper.createMainActivityPendingIntent(
-                this,
-                Constants.Notification.ID_AUTO_SYNC_FAILURE
-            )
-        val localizedContext = LanguageHelper(this).applyLanguage(this)
-        val notification = NotificationHelper.buildNotification(
-            context = this,
-            channelId = Constants.Notification.CHANNEL_ID_AUTO_SYNC,
-            title = localizedContext.getString(R.string.auto_sync_failure_title),
-            text = localizedContext.getString(
-                R.string.auto_sync_failure_message,
-                failureCount,
-                failedSensorsText
-            ),
-            pendingIntent = pendingIntent
-        ).build()
-
-        NotificationHelper.showNotification(
-            this,
-            Constants.Notification.ID_AUTO_SYNC_FAILURE,
-            notification
-        )
-        Log.w(TAG, "Failure notification shown: $failureCount sensors failed")
-    }
-
-    private suspend fun uploadMicroEmaResponses(
-        successCount: AtomicInteger,
-        failureCount: AtomicInteger,
-        failedSensors: MutableList<String>
-    ) {
-        when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
-            is Result.Success -> {
-                if (result.data > 0) {
-                    successCount.incrementAndGet()
-                }
-            }
-
-            is Result.Error -> {
-                Log.e(
-                    TAG,
-                    "Failed to upload MicroEMA responses: ${result.message}",
-                    result.exception
-                )
-                failureCount.incrementAndGet()
-                failedSensors.add("MicroEMA")
-            }
-        }
-    }
-
-    private suspend fun uploadSurveyResponses(
-        successCount: AtomicInteger,
-        failureCount: AtomicInteger,
-        failedSensors: MutableList<String>
-    ) {
-        when (val result = surveyResponseUploader.flush()) {
-            is Result.Success -> {
-                if (result.data > 0) {
-                    successCount.incrementAndGet()
-                }
-            }
-
-            is Result.Error -> {
-                Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
-                failureCount.incrementAndGet()
-                failedSensors.add("Survey")
-            }
-        }
     }
 }

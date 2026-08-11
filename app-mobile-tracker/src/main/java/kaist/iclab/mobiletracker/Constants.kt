@@ -84,11 +84,12 @@ object Constants {
      * Notification Constants
      */
     object Notification {
-        // Auto Sync Channel
-        const val CHANNEL_ID_AUTO_SYNC = "auto_sync_channel"
-        const val CHANNEL_NAME_AUTO_SYNC = "Auto Sync Notifications"
-        const val ID_AUTO_SYNC_SUCCESS = 1001
-        const val ID_AUTO_SYNC_FAILURE = 1002
+        // Data Upload Channel — foreground service used by BOTH "Upload Now" and auto-sync
+        // (see kaist.iclab.mobiletracker.services.upload.DataUploadService)
+        const val CHANNEL_ID_DATA_UPLOAD = "data_upload_channel"
+        const val CHANNEL_NAME_DATA_UPLOAD = "Data Upload"
+        const val ID_DATA_UPLOAD_PROGRESS = 1001
+        const val ID_DATA_UPLOAD_RESULT = 1002
 
         // Survey Notifications
         const val ID_SURVEY_BASE = 2000
