@@ -43,11 +43,13 @@ class SyncTimestampService(context: Context) {
     }
 
     /**
-     * Update timestamp when a specific sensor's data is successfully uploaded to server
+     * Update timestamp when a specific sensor's data is successfully uploaded to server.
+     * This is purely a display value ("last synced at") — it is NOT the upload-progress
+     * watermark; that's [getUploadCursor]/[setUploadCursor].
      * @param sensorId The ID of the sensor that was uploaded
-     * @param timestamp The timestamp of the last uploaded record (in milliseconds)
+     * @param timestamp Wall-clock time of the successful upload, defaults to now
      */
-    fun updateLastSuccessfulUpload(sensorId: String, timestamp: Long) {
+    fun updateLastSuccessfulUpload(sensorId: String, timestamp: Long = System.currentTimeMillis()) {
         val key = "last_upload_$sensorId"
         prefs.edit { putLong(key, timestamp) }
         // Also update global timestamp
@@ -78,6 +80,30 @@ class SyncTimestampService(context: Context) {
         val key = "last_upload_$sensorId"
         val timestamp = prefs.getLong(key, 0L)
         return if (timestamp > 0) timestamp else null
+    }
+
+    /**
+     * Upload-progress cursor for a sensor — the local ObjectBox row id up to which data has been
+     * confirmed uploaded to Supabase. Distinct from [getLastSuccessfulUploadTimestamp], which is
+     * just a display value; this is what upload gating actually checks against.
+     *
+     * Deliberately keyed on the local row id rather than the record's own event timestamp: id is
+     * assigned in true insertion order, so it stays correct even when data arrives out of order
+     * (e.g. a watch BLE reconnect/backfill resending events older than ones already uploaded) — a
+     * timestamp-keyed cursor would silently and permanently skip such rows. See
+     * [kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerImpl].
+     *
+     * Defaults to 0 for sensors that have never set a cursor under this key — including every
+     * sensor on every device the first time this runs after the cursor was switched from
+     * timestamp-based to id-based, which causes a one-time full re-upload of local data. That's
+     * intentional and safe: Supabase upserts by `event_id`, so re-sending already-uploaded rows
+     * is a no-op server-side, not a duplicate.
+     */
+    fun getUploadCursor(sensorId: String): Long =
+        prefs.getLong("upload_cursor_id_$sensorId", 0L)
+
+    fun setUploadCursor(sensorId: String, id: Long) {
+        prefs.edit { putLong("upload_cursor_id_$sensorId", id) }
     }
 
     /**
@@ -190,21 +216,26 @@ class SyncTimestampService(context: Context) {
 
 
     /**
-     * Clear the last successful upload timestamp for a specific sensor
+     * Clear the last successful upload timestamp AND upload cursor for a specific sensor (e.g.
+     * when the user deletes all local data for it — nothing left to resume from).
      * @param sensorId The ID of the sensor
      */
     fun clearLastSuccessfulUpload(sensorId: String) {
-        val key = "last_upload_$sensorId"
-        prefs.edit { remove(key) }
+        prefs.edit {
+            remove("last_upload_$sensorId")
+            remove("upload_cursor_id_$sensorId")
+        }
     }
 
     /**
-     * Clear all sensor upload timestamps
+     * Clear all sensor upload timestamps and cursors.
      * @param existingEditor Optional existing editor to use for atomicity
      */
     fun clearAllSensorUploadTimestamps(existingEditor: SharedPreferences.Editor? = null) {
         val allKeys = prefs.all.keys
-        val keysToRemove = allKeys.filter { it.startsWith("last_upload_") }
+        val keysToRemove = allKeys.filter {
+            it.startsWith("last_upload_") || it.startsWith("upload_cursor_id_")
+        }
         val editor = existingEditor ?: prefs.edit()
         keysToRemove.forEach { editor.remove(it) }
         if (existingEditor == null) {

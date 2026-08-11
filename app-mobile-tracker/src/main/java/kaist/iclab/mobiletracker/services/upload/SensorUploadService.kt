@@ -42,8 +42,7 @@ class SensorUploadService(
             return Result.Error(UnsupportedOperationException("Upload not implemented for sensor: $sensorId"))
         }
 
-        val lastUploadTimestamp =
-            syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
+        val lastUploadCursor = syncTimestampService.getUploadCursor(sensorId)
 
         supabaseHelper.supabaseClient.auth.awaitInitialization()
 
@@ -54,13 +53,18 @@ class SensorUploadService(
         }
 
         return try {
-            when (val result = handler.uploadData(userUuid, lastUploadTimestamp)) {
+            when (val result = handler.uploadData(userUuid, lastUploadCursor)) {
                 is Result.Success -> {
-                    syncTimestampService.updateLastSuccessfulUpload(sensorId, result.data)
+                    syncTimestampService.setUploadCursor(sensorId, result.data)
+                    syncTimestampService.updateLastSuccessfulUpload(sensorId)
 
                     // Prune data that is BOTH synced AND older than PRUNE_BUFFER_MS
                     // NOTE: This is currently disabled as per user preference for infinite local retention.
-                    // Infrastructure is kept for future manual activation.
+                    // Infrastructure is kept for future manual activation. If re-enabled: result.data
+                    // is now the upload cursor (a local row id), not a timestamp — pruneData() takes a
+                    // timestamp threshold, so this needs a real "max uploaded timestamp" from the
+                    // handler again (e.g. have uploadData() report both the new cursor and the max
+                    // event timestamp of the batch) before this can be un-commented as-is.
                     /*
                     val pruneThreshold = minOf(
                         result.data,
@@ -91,12 +95,11 @@ class SensorUploadService(
                 Log.d(TAG, "hasDataToUpload: No handler for $sensorId")
                 return false
             }
-            val lastUploadTimestamp =
-                syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId) ?: 0L
-            val hasData = handler.hasDataToUpload(lastUploadTimestamp)
+            val lastUploadCursor = syncTimestampService.getUploadCursor(sensorId)
+            val hasData = handler.hasDataToUpload(lastUploadCursor)
             Log.d(
                 TAG,
-                "hasDataToUpload: $sensorId hasData=$hasData (lastUpload=$lastUploadTimestamp)"
+                "hasDataToUpload: $sensorId hasData=$hasData (cursor=$lastUploadCursor)"
             )
             hasData
         } catch (e: Exception) {

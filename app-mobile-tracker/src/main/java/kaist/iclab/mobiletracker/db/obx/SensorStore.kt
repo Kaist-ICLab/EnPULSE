@@ -54,6 +54,8 @@ open class SensorStore<T : BaseEntity>(
     private val deviceTypeProperty = metaClass.getField("deviceType").get(null) as Property<T>
     @Suppress("UNCHECKED_CAST")
     private val eventIdProperty = metaClass.getField("eventId").get(null) as Property<T>
+    @Suppress("UNCHECKED_CAST")
+    private val idProperty = metaClass.getField("id").get(null) as Property<T>
 
     fun insert(entity: T): Long {
         applyDedup(listOf(entity))
@@ -157,6 +159,23 @@ open class SensorStore<T : BaseEntity>(
         builder.order(timestampProperty, if (isAscending) 0 else QueryBuilder.DESCENDING)
         return builder.build().use { it.find(offset.toLong(), limit.toLong()) }
     }
+
+    /**
+     * Whether any row's ObjectBox [id][kaist.iclab.mobiletracker.db.entity.BaseEntity.id] exceeds
+     * [afterId]. This is the upload cursor check — deliberately keyed on `id`, not the record's own
+     * `timestamp` (see [hasDataAfter]): ObjectBox assigns `id` in true insertion order, so it stays
+     * monotonic even when a row's `timestamp` arrives out of order — e.g. a watch BLE
+     * reconnect/backfill resending events older than ones already uploaded. A `timestamp`-keyed
+     * cursor would permanently skip such rows, since their timestamp never exceeds the watermark
+     * even though they were never actually uploaded.
+     */
+    fun hasDataWithIdAfter(afterId: Long): Boolean =
+        box.query().greater(idProperty, afterId).build().use { it.count() > 0 }
+
+    /** Rows with ObjectBox id > [afterId], ordered by id ascending — the actual upload batch. */
+    fun recordsWithIdAfter(afterId: Long, limit: Int): List<T> =
+        box.query().greater(idProperty, afterId).order(idProperty).build()
+            .use { it.find(0, limit.toLong()) }
 
     fun newInstance(): T = entityClass.getDeclaredConstructor().newInstance()
 

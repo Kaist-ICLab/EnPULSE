@@ -13,18 +13,22 @@ interface SensorUploadHandler {
 
     /**
      * Check if there is data available to upload.
-     * @param lastUploadTimestamp The timestamp of the last successful upload
+     * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload (its
+     * meaning is defined by the implementation — e.g. [SensorUploadHandlerImpl] uses the local
+     * ObjectBox row id rather than the record's own timestamp, so out-of-order/backfilled data
+     * isn't mistaken for already-uploaded; see its doc comment).
      * @return true if there is new data to upload
      */
-    suspend fun hasDataToUpload(lastUploadTimestamp: Long): Boolean
+    suspend fun hasDataToUpload(lastUploadCursor: Long): Boolean
 
     /**
      * Upload sensor data to Supabase.
      * @param userUuid The UUID of the current user
-     * @param lastUploadTimestamp The timestamp of the last successful upload
-     * @return Result containing the max timestamp of uploaded data on success
+     * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload; see
+     * [hasDataToUpload].
+     * @return Result containing the new cursor value to persist on success
      */
-    suspend fun uploadData(userUuid: String, lastUploadTimestamp: Long): Result<Long>
+    suspend fun uploadData(userUuid: String, lastUploadCursor: Long): Result<Long>
 
     /**
      * Delete local data older than the specified timestamp.
