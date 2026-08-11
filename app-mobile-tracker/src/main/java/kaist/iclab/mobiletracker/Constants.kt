@@ -22,15 +22,7 @@ object Constants {
         const val BATCH_SIZE = 50
         const val FLUSH_INTERVAL_MS = 5000L
 
-        /**
-         * ObjectBox's own default cap (`BoxStoreBuilder.DEFAULT_MAX_DB_SIZE_KBYTE`) is 1 GB —
-         * writes past it throw `DbFullException`. Since this app intentionally keeps sensor data
-         * locally forever (pruning is disabled, see SensorUploadService.kt), 1 GB is nowhere near
-         * enough headroom for continuous multi-sensor collection over a real study's duration.
-         * Raised generously here; still a hard cap, not "unlimited", to guard against runaway/
-         * corrupted growth silently filling the device's storage.
-         */
-        const val OBJECTBOX_MAX_SIZE_KB = 32L * 1024 * 1024 // 32 GB
+        const val OBJECTBOX_MAX_SIZE_KB = 48L * 1024 * 1024 // 48 GB
 
         // Survey Tables
         const val TABLE_SURVEY = "survey"
