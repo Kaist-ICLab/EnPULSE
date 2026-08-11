@@ -1,4 +1,5 @@
 package kaist.iclab.mobiletracker.webapp
+import android.net.Uri
 import kaist.iclab.mobiletracker.data.campaign.WebAppConfigList
 import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,15 @@ interface WebAppRegistry {
     fun get(webAppId: String): WebAppConfig?
     fun list(): List<WebAppConfig>
 
+    /**
+     * Find the registered webapp whose [WebAppConfig.allowedOrigin] host matches [url]'s host,
+     * if any. Used to decide whether an arbitrary, dashboard-authored url (e.g. a `notification`
+     * trigger action's url, possibly relayed back from a tapped watch notification) is trusted
+     * enough to open in [WebAppActivity] (bridge-enabled) rather than [SimpleWebViewActivity]
+     * (bridge-less fallback for untrusted urls).
+     */
+    fun findByUrl(url: String): WebAppConfig?
+
     /** Observable list of all registered webapps. Emits whenever storage changes. */
     val webAppsFlow: StateFlow<List<WebAppConfig>>
 }
@@ -43,6 +53,14 @@ class PersistentWebAppRegistry(private val storage: CouchbaseWebAppConfigStorage
 
     override fun get(webAppId: String) = storage.get().configs.find { it.id == webAppId }
     override fun list() = storage.get().configs
+
+    override fun findByUrl(url: String): WebAppConfig? {
+        val host = try { Uri.parse(url).host } catch (e: Exception) { null } ?: return null
+        return storage.get().configs.find { config ->
+            val allowedHost = try { Uri.parse(config.allowedOrigin).host } catch (e: Exception) { null }
+            allowedHost != null && allowedHost == host
+        }
+    }
 
     override val webAppsFlow: StateFlow<List<WebAppConfig>> = storage.stateFlow
         .map { it.configs }
