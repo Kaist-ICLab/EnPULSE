@@ -143,7 +143,8 @@ class WebAppTriggerHandler(
             context = context,
             title = title,
             body = body,
-            url = url
+            url = url,
+            webAppRegistry = webAppRegistry
         )
     }
 

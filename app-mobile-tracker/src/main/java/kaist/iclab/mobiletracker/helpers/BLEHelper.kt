@@ -58,6 +58,7 @@ class BLEHelper(
     private val surveySensor by inject<SurveySensor>()
     private val userProfileRepository by inject<UserProfileRepository>()
     private val webAppTriggerHandler by inject<WebAppTriggerHandler>()
+    private val webAppRegistry by inject<kaist.iclab.mobiletracker.webapp.WebAppRegistry>()
 
     private var isInitialized = false
 
@@ -168,12 +169,33 @@ class BLEHelper(
 
     private fun handleOpenUrlTrigger(url: String) {
         try {
-            val intent = Intent(context, kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity::class.java).apply {
-                putExtra(kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity.EXTRA_URL, url)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // If the url's host matches a registered WebApp's allowedOrigin, it's a trusted,
+            // known destination - open it in WebAppActivity so the page gets EnPulseBridge
+            // (native sensor/storage/device access), same as any other WebApp trigger. Otherwise
+            // fall back to the bridge-less SimpleWebViewActivity, since the url is arbitrary
+            // dashboard-authored input with no associated WebApp registration.
+            val trustedWebApp = webAppRegistry.findByUrl(url)
+            val intent = if (trustedWebApp != null) {
+                // Match WebAppNotificationBuilder.createWebAppActivityIntent's flags/data convention
+                // (documentLaunchMode="intoExisting" + per-webapp data URI) so this gets the same
+                // distinct-task-card behavior as any other WebApp launch.
+                Intent(context, kaist.iclab.mobiletracker.webapp.WebAppActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    data = android.net.Uri.parse("webapp://${trustedWebApp.id}")
+                    putExtra(kaist.iclab.mobiletracker.webapp.WebAppActivity.EXTRA_URL, url)
+                    putExtra(kaist.iclab.mobiletracker.webapp.WebAppActivity.EXTRA_WEBAPP_ID, trustedWebApp.id)
+                }
+            } else {
+                Intent(context, kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity::class.java).apply {
+                    putExtra(kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity.EXTRA_URL, url)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
             }
             context.startActivity(intent)
-            Log.d(AppConfig.LogTags.PHONE_BLE, "Opened url relayed from watch (in-app): $url")
+            Log.d(
+                AppConfig.LogTags.PHONE_BLE,
+                "Opened url relayed from watch (in-app, trusted=${trustedWebApp != null}): $url"
+            )
         } catch (e: Exception) {
             Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to open url relayed from watch: ${e.message}", e)
         }

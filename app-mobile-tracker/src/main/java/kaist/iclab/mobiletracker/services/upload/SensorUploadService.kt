@@ -24,7 +24,8 @@ class SensorUploadService(
         private const val PRUNE_BUFFER_MS = 7 * 24 * 60 * 60 * 1000L
     }
 
-    private fun isSensorActive(sensorId: String): Boolean {
+    /** Whether [sensorId] is part of the currently joined campaign's active sensor set. */
+    fun isSensorActive(sensorId: String): Boolean {
         val activeSensors = campaignSensorRepository.getActiveSensors().map { it.name }
         val campaignSensorName = sensorId.toCampaignSensorName()
         return activeSensors.contains(campaignSensorName)

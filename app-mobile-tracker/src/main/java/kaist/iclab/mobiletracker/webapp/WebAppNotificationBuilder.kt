@@ -84,13 +84,16 @@ object WebAppNotificationBuilder {
     }
 
     /**
-     * Shows a generic URL/notification trigger forwarded from Wearable.
+     * Shows a generic URL/notification trigger - either fired directly on the phone
+     * (`deviceType=0`) or forwarded from Wearable after a tapped watch notification.
      *
      * [Use Case]
-     * Used for general/external links (e.g., reading an article on WebMD or a university page).
-     * Opens the URL in-app via [SimpleWebViewActivity] (a bridge-free, unrestricted WebView —
-     * unlike [WebAppActivity], no native bridge access, since this URL isn't a registered/trusted
-     * WebApp), rather than the system browser or [WebAppActivity].
+     * Used for general/external links (e.g., reading an article on WebMD or a university page),
+     * but a dashboard-authored [url] may also happen to match a registered WebApp's
+     * `allowedOrigin`. In that case it's a trusted, known destination, so it's opened in
+     * [WebAppActivity] (native bridge access via EnPulseBridge) the same way a `webapp` trigger
+     * would. Anything else opens in [SimpleWebViewActivity] (bridge-free, unrestricted WebView),
+     * since it's arbitrary input with no associated WebApp registration.
      *
      * If [url] is null (the dashboard didn't set one), the notification just opens the EnPULSE
      * app itself (`MainActivity`) instead of a URL.
@@ -99,16 +102,26 @@ object WebAppNotificationBuilder {
         context: Context,
         title: String,
         body: String,
-        url: String?
+        url: String?,
+        webAppRegistry: WebAppRegistry
     ) {
-        val intent = if (url != null) {
-            Intent(context, SimpleWebViewActivity::class.java).apply {
+        val trustedWebApp = url?.let { webAppRegistry.findByUrl(it) }
+        val intent = when {
+            trustedWebApp != null -> Intent(context, WebAppActivity::class.java).apply {
+                data = Uri.parse("webapp://${trustedWebApp.id}")
+                putExtra(WebAppActivity.EXTRA_URL, url)
+                putExtra(WebAppActivity.EXTRA_WEBAPP_ID, trustedWebApp.id)
+            }
+            url != null -> Intent(context, SimpleWebViewActivity::class.java).apply {
                 putExtra(SimpleWebViewActivity.EXTRA_URL, url)
             }
-        } else {
-            Intent(context, MainActivity::class.java)
+            else -> Intent(context, MainActivity::class.java)
         }.apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = if (trustedWebApp != null) {
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            } else {
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
         }
         val uniqueString = "$title|$body|$url"
         val uniqueHash = uniqueString.hashCode()
