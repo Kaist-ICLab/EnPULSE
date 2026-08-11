@@ -108,7 +108,11 @@
         <service
             android:name=".sensor.controller.BackgroundController$ControllerService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone" />
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice|microphone">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data collection for research purposes." />
+        </service>
 
         <service
             android:name=".listener.AccessibilityListener$AccessibilityServiceAdaptor"

@@ -21,10 +21,18 @@
 
         <service
             android:name="com.example.survey_test_app.SurveyDataReceiver$SurveyDataReceiverService"
-            android:foregroundServiceType="specialUse" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Research survey data receiver." />
+        </service>
         <service
             android:name="MyBackgroundController$ControllerService"
             android:exported="false"
-            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice"></service>
+            android:foregroundServiceType="dataSync|health|specialUse|location|connectedDevice">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Research background sensor controller." />
+        </service>
     </application>
 </manifest>
