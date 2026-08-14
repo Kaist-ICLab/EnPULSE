@@ -23,8 +23,7 @@ samsung-health-data-api/*.aar
 samsung-health-sensor-api/*.aar
 
 # Firebase Configuration
-/app-mobile-tracker/google-services.json
-
+google-services.json
 
 # Claude stuffs
 .artifacts
