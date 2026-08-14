@@ -74,7 +74,7 @@ The Samsung Health SDKs are required for collecting real-time biosignals from Ga
 Because `google-services.json` is untracked by Git for security, you must provide your own Firebase project configuration when building from source:
 
 1. Create or open a project in the [Firebase Console](https://console.firebase.google.com/).
-2. Add an Android App registered with package name `kaist.iclab.trackerSystem`.
+2. Add an Android App registered with package name `kaist.iclab.trackerSystem` (refer to [google-services.json.example](file:///Volumes/Personal Data/Projects/Study/android-tracker/app-mobile-tracker/google-services.json.example) for template structure).
 3. Download `google-services.json` and place it inside the `app-mobile-tracker/` directory.
 4. (Optional) Enable Google Sign-In under Firebase Authentication settings.
 
