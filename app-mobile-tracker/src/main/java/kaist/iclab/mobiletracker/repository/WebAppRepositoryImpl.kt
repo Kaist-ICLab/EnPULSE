@@ -29,7 +29,8 @@ class WebAppRepositoryImpl(
                                 id = it.id.toString(),
                                 name = it.name,
                                 url = it.url,
-                                allowedOrigin = extractOrigin(it.url)
+                                allowedOrigin = extractOrigin(it.url),
+                                iconPath = it.icon_path
                             )
                         }
                         persistentStorage.set(WebAppConfigList(configs))

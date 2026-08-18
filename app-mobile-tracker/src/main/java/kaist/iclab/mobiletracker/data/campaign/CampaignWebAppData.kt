@@ -10,5 +10,8 @@ data class CampaignWebAppData(
     val id: Long,
     val campaign_id: Long,
     val name: String,
-    val url: String
+    val url: String,
+
+    /** Path of the uploaded icon within the `campaign-webapp-icons` Storage bucket, if set. */
+    val icon_path: String? = null
 )
