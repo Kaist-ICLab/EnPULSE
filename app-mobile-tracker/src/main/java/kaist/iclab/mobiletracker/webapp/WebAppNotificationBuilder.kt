@@ -3,8 +3,8 @@ package kaist.iclab.mobiletracker.webapp
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.MainActivity
 import kaist.iclab.mobiletracker.R
@@ -28,17 +28,17 @@ object WebAppNotificationBuilder {
         baseUrl: String
     ): Intent {
         val fullUrl = try {
-            Uri.parse(baseUrl).buildUpon()
+            baseUrl.toUri().buildUpon()
                 .appendQueryParameter("survey_id", surveyId)
                 .appendQueryParameter("schedule_id", scheduleId)
                 .build()
                 .toString()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "$baseUrl?survey_id=$surveyId&schedule_id=$scheduleId"
         }
         return Intent(context, WebAppActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            data = Uri.parse("webapp://$webAppId")
+            data = "webapp://$webAppId".toUri()
             putExtra(WebAppActivity.EXTRA_URL, fullUrl)
             putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webAppId)
         }
@@ -108,7 +108,7 @@ object WebAppNotificationBuilder {
         val trustedWebApp = url?.let { webAppRegistry.findByUrl(it) }
         val intent = when {
             trustedWebApp != null -> Intent(context, WebAppActivity::class.java).apply {
-                data = Uri.parse("webapp://${trustedWebApp.id}")
+                data = "webapp://${trustedWebApp.id}".toUri()
                 putExtra(WebAppActivity.EXTRA_URL, url)
                 putExtra(WebAppActivity.EXTRA_WEBAPP_ID, trustedWebApp.id)
             }

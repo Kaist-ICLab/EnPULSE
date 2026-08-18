@@ -8,6 +8,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.net.toUri
 
 /**
  * Custom WebChromeClient that delegates target="_blank" (multiple windows) link creation
@@ -27,7 +28,7 @@ class ExternalLinkWebChromeClient : WebChromeClient() {
         val targetUrl = hrefMessage.data.getString("url")
         if (!targetUrl.isNullOrEmpty()) {
             try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl))
+                val intent = Intent(Intent.ACTION_VIEW, targetUrl.toUri())
                 view.context.startActivity(intent)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to launch external window for URL: $targetUrl", e)

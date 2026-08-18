@@ -30,6 +30,7 @@ import kaist.iclab.mobiletracker.webapp.WebAppActivity
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import org.koin.compose.koinInject
+import androidx.core.net.toUri
 
 /**
  * Top-level tab listing webapps registered in [WebAppRegistry].
@@ -51,7 +52,7 @@ fun WebAppsScreen(
     fun launchWebApp(webApp: WebAppConfig) {
         val intent = Intent(context, WebAppActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            data = android.net.Uri.parse("webapp://${webApp.id}")
+            data = "webapp://${webApp.id}".toUri()
             putExtra(WebAppActivity.EXTRA_URL, webApp.url)
             putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webApp.id)
         }

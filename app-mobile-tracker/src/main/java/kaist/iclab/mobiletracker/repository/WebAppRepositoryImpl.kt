@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
-import android.net.Uri
+import androidx.core.net.toUri
 import kaist.iclab.mobiletracker.data.campaign.WebAppConfigList
 import kaist.iclab.mobiletracker.services.WebAppService
 import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
@@ -53,7 +53,7 @@ class WebAppRepositoryImpl(
      */
     private fun extractOrigin(url: String): String {
         return try {
-            val uri = Uri.parse(url)
+            val uri = url.toUri()
             val scheme = uri.scheme ?: "https"
             val host = uri.host ?: ""
             val port = uri.port
@@ -63,7 +63,7 @@ class WebAppRepositoryImpl(
             } else {
                 "$scheme://$host"
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             "*" // Fallback to allow all if parsing fails, though it's not recommended.
         }
     }

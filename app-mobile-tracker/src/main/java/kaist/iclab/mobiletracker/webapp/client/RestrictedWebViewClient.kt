@@ -1,11 +1,11 @@
 package kaist.iclab.mobiletracker.webapp.client
 
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.core.net.toUri
 
 /**
  * Restricts WebView navigation to [allowedOrigin].
@@ -16,7 +16,7 @@ class RestrictedWebViewClient(
     allowedOrigin: String,
     private val onExternalRedirect: () -> Unit = {}
 ) : WebViewClient() {
-    private val allowedHost: String? = Uri.parse(allowedOrigin).host
+    private val allowedHost: String? = allowedOrigin.toUri().host
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         val scheme = request.url.scheme

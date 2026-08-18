@@ -1,5 +1,6 @@
 package kaist.iclab.wearabletracker.helpers
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -302,6 +303,7 @@ object NotificationHelper {
      * Show a notification for a survey trigger (MicroEMA).
      * Uses High Priority and Full Screen Intent to wake the watch.
      */
+    @SuppressLint("FullScreenIntentPolicy")
     fun showSurveyTriggerNotification(
         context: Context,
         pendingIntent: PendingIntent,
