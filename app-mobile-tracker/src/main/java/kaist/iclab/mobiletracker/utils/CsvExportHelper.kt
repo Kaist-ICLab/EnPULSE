@@ -6,6 +6,8 @@ import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
 import kaist.iclab.mobiletracker.repository.SensorRecord
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileWriter
 import java.text.SimpleDateFormat
@@ -29,13 +31,13 @@ class CsvExportHelper(
      * @param records List of sensor records to export
      * @return Uri of the created file, or null if export failed
      */
-    fun exportToCsv(
+    suspend fun exportToCsv(
         sensorName: String,
         records: List<SensorRecord>
-    ): Uri? {
+    ): Uri? = withContext(Dispatchers.IO) {
         if (records.isEmpty()) {
             Log.w(TAG, "No records to export")
-            return null
+            return@withContext null
         }
 
         try {
@@ -89,21 +91,21 @@ class CsvExportHelper(
             Log.d(TAG, "Exported ${records.size} records to ${file.absolutePath}")
 
             // Return file URI using FileProvider
-            return FileProvider.getUriForFile(
+            return@withContext FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 file
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to export CSV: ${e.message}", e)
-            return null
+            return@withContext null
         }
     }
 
     /**
      * Export multiple sensors to separate CSV files and return as a list of URIs.
      */
-    fun exportMultipleSensorsToCsv(
+    suspend fun exportMultipleSensorsToCsv(
         sensorData: Map<String, List<SensorRecord>>
     ): List<Uri> {
         return sensorData.mapNotNull { (sensorName, records) ->

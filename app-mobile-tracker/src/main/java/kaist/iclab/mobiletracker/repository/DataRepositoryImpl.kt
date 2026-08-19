@@ -11,6 +11,8 @@ import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -238,8 +240,8 @@ class DataRepositoryImpl(
     override suspend fun getAllSensorRecordsForExport(
         sensorId: String,
         dateFilter: DateFilter
-    ): List<SensorRecord> {
-        val handler = handlerRegistry.getHandler(sensorId) ?: return emptyList()
+    ): List<SensorRecord> = withContext(Dispatchers.IO) {
+        val handler = handlerRegistry.getHandler(sensorId) ?: return@withContext emptyList()
         val afterTimestamp = getTimestampForFilter(dateFilter)
 
         val allRecords = mutableListOf<SensorRecord>()
@@ -260,6 +262,6 @@ class DataRepositoryImpl(
             offset += batchSize
         }
 
-        return allRecords
+        allRecords
     }
 }
