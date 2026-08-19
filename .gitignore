@@ -25,6 +25,7 @@ samsung-health-sensor-api/*.aar
 # Firebase Configuration
 google-services.json
 
-# Claude stuffs
+# Development stuffs
 .artifacts
-.claude
+/.claude/
+/.vscode/
