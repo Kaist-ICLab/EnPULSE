@@ -1,4 +1,4 @@
-package kaist.iclab.mobiletracker.data.sensors
+package kaist.iclab.mobiletracker.data.messaging
 
 import kotlinx.serialization.Serializable
 
@@ -25,4 +25,3 @@ data class MessageData(
     val content: String,
     val isRead: Boolean
 )
-

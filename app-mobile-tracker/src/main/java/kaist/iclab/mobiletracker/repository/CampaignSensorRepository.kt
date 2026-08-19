@@ -2,8 +2,8 @@ package kaist.iclab.mobiletracker.repository
 
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
-import kaist.iclab.mobiletracker.data.sensors.CampaignSensorList
-import kaist.iclab.mobiletracker.data.sensors.CampaignTableData
+import kaist.iclab.mobiletracker.data.campaign.CampaignSensorList
+import kaist.iclab.mobiletracker.data.campaign.CampaignTableData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import kotlinx.coroutines.flow.MutableStateFlow

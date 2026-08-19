@@ -1,4 +1,4 @@
-package kaist.iclab.mobiletracker.data.sensors
+package kaist.iclab.mobiletracker.data.messaging
 
 import kotlinx.serialization.Serializable
 
@@ -21,4 +21,3 @@ data class ChatSessionData(
     val lastMessageTime: Long,
     val unreadCount: Int
 )
-

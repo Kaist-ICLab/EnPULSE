@@ -1,4 +1,4 @@
-package kaist.iclab.mobiletracker.data.sensors
+package kaist.iclab.mobiletracker.data.campaign
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
