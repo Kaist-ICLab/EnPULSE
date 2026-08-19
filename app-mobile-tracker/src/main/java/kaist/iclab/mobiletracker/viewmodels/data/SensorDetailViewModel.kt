@@ -274,16 +274,22 @@ class SensorDetailViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isExporting = true)
             try {
-                val records = dataRepository.getAllSensorRecordsForExport(
-                    sensorId = sensorId,
-                    dateFilter = _uiState.value.dateFilter
-                )
+                val dateFilter = _uiState.value.dateFilter
+                val totalCount = dataRepository.getSensorRecordCount(sensorId, dateFilter)
 
-                if (records.isEmpty()) {
+                if (totalCount == 0) {
                     _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_export))
                 } else {
                     val sensorName = _uiState.value.sensorInfo?.displayName ?: sensorId
-                    val uri = csvExportHelper.exportToCsv(sensorName, records)
+                    val uri = csvExportHelper.exportToCsv(sensorName, totalCount) { offset, limit ->
+                        dataRepository.getSensorRecords(
+                            sensorId = sensorId,
+                            dateFilter = dateFilter,
+                            sortOrder = SortOrder.OLDEST_FIRST,
+                            limit = limit,
+                            offset = offset
+                        )
+                    }
 
                     if (uri != null) {
                         csvExportHelper.shareCsv(uri, sensorName)

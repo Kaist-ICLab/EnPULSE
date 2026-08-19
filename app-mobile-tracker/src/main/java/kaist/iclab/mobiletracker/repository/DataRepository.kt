@@ -153,15 +153,4 @@ interface DataRepository {
      * Delete all data for all sensors.
      */
     suspend fun deleteAllAllData()
-
-    /**
-     * Get all records for a sensor (for export, no pagination).
-     * @param sensorId The sensor ID
-     * @param dateFilter Date filter option
-     * @return List of all SensorRecord matching the filter
-     */
-    suspend fun getAllSensorRecordsForExport(
-        sensorId: String,
-        dateFilter: DateFilter
-    ): List<SensorRecord>
 }

@@ -25,17 +25,28 @@ class CsvExportHelper(
 ) {
 
     /**
-     * Export sensor records to a CSV file.
+     * Export sensor records to a CSV file, streaming in batches so memory use stays bounded by
+     * [batchSize] rather than the full record count — a "big" sensor table (e.g. watch
+     * accelerometer) can be millions of rows, and materializing them all as [SensorRecord] before
+     * writing a single byte is what was causing OOMs here.
+     *
+     * The header is derived from the first non-empty batch: every entity's `toRecord()` builds its
+     * `fields` map from a fixed set of literal keys, so the key set is the same for every record of
+     * a given sensor and a single batch is enough to determine it.
      *
      * @param sensorName Name of the sensor (used in filename)
-     * @param records List of sensor records to export
+     * @param totalCount Total number of records to export (drives when to stop paging)
+     * @param batchSize Number of records to fetch and write per batch
+     * @param fetchBatch Suspending page fetcher: (offset, limit) -> records
      * @return Uri of the created file, or null if export failed
      */
     suspend fun exportToCsv(
         sensorName: String,
-        records: List<SensorRecord>
+        totalCount: Int,
+        batchSize: Int = 5000,
+        fetchBatch: suspend (offset: Int, limit: Int) -> List<SensorRecord>
     ): Uri? = withContext(Dispatchers.IO) {
-        if (records.isEmpty()) {
+        if (totalCount <= 0) {
             Log.w(TAG, "No records to export")
             return@withContext null
         }
@@ -57,38 +68,50 @@ class CsvExportHelper(
             val fileName = "${sanitizedName}_$timestamp.csv"
             val file = File(exportDir, fileName)
 
-            // Get all unique field names from records
-            val allFieldNames = records
-                .flatMap { it.fields.keys }
-                .distinct()
-                .sorted()
+            var fieldNames: List<String>? = null
+            var written = 0
 
-            // Write CSV
             FileWriter(file).use { writer ->
-                // Write header
-                val header = listOf("id", "timestamp") + allFieldNames
-                writer.write(header.joinToString(","))
-                writer.write("\n")
+                var offset = 0
+                while (offset < totalCount) {
+                    val batch = fetchBatch(offset, batchSize)
+                    if (batch.isEmpty()) break
 
-                // Write data rows
-                records.forEach { record ->
-                    val timestampStr =
-                        SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
-                            .format(Date(record.timestamp))
-
-                    val row = listOf(
-                        record.id.toString(),
-                        timestampStr
-                    ) + allFieldNames.map { fieldName ->
-                        escapeCsvField(record.fields[fieldName] ?: "")
+                    if (fieldNames == null) {
+                        fieldNames = batch.first().fields.keys.sorted()
+                        val header = listOf("id", "timestamp") + fieldNames!!
+                        writer.write(header.joinToString(","))
+                        writer.write("\n")
                     }
 
-                    writer.write(row.joinToString(","))
-                    writer.write("\n")
+                    batch.forEach { record ->
+                        val timestampStr =
+                            SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault())
+                                .format(Date(record.timestamp))
+
+                        val row = listOf(
+                            record.id.toString(),
+                            timestampStr
+                        ) + fieldNames!!.map { fieldName ->
+                            escapeCsvField(record.fields[fieldName] ?: "")
+                        }
+
+                        writer.write(row.joinToString(","))
+                        writer.write("\n")
+                    }
+
+                    written += batch.size
+                    offset += batchSize
                 }
             }
 
-            Log.d(TAG, "Exported ${records.size} records to ${file.absolutePath}")
+            if (written == 0) {
+                Log.w(TAG, "No records to export")
+                file.delete()
+                return@withContext null
+            }
+
+            Log.d(TAG, "Exported $written records to ${file.absolutePath}")
 
             // Return file URI using FileProvider
             return@withContext FileProvider.getUriForFile(
@@ -103,13 +126,17 @@ class CsvExportHelper(
     }
 
     /**
-     * Export multiple sensors to separate CSV files and return as a list of URIs.
+     * Export multiple sensors (already loaded in memory) to separate CSV files and return as a
+     * list of URIs. Intended for small, already-fetched record sets — for large per-sensor tables,
+     * page through [exportToCsv]'s `fetchBatch` instead of building the full list first.
      */
     suspend fun exportMultipleSensorsToCsv(
         sensorData: Map<String, List<SensorRecord>>
     ): List<Uri> {
         return sensorData.mapNotNull { (sensorName, records) ->
-            exportToCsv(sensorName, records)
+            exportToCsv(sensorName, records.size) { offset, _ ->
+                if (offset == 0) records else emptyList()
+            }
         }
     }
 

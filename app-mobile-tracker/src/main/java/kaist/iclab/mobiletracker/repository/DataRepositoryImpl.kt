@@ -11,8 +11,6 @@ import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -235,33 +233,5 @@ class DataRepositoryImpl(
             DateFilter.ALL_TIME -> 0L
             DateFilter.CUSTOM -> 0L // Custom range handled separately
         }
-    }
-
-    override suspend fun getAllSensorRecordsForExport(
-        sensorId: String,
-        dateFilter: DateFilter
-    ): List<SensorRecord> = withContext(Dispatchers.IO) {
-        val handler = handlerRegistry.getHandler(sensorId) ?: return@withContext emptyList()
-        val afterTimestamp = getTimestampForFilter(dateFilter)
-
-        val allRecords = mutableListOf<SensorRecord>()
-        val batchSize = 5000
-        var offset = 0
-
-        while (true) {
-            val records = handler.getRecordsPaginated(
-                afterTimestamp = afterTimestamp,
-                isAscending = true,
-                limit = batchSize,
-                offset = offset
-            )
-
-            if (records.isEmpty()) break
-            allRecords.addAll(records)
-            if (records.size < batchSize) break
-            offset += batchSize
-        }
-
-        allRecords
     }
 }
