@@ -1,4 +1,4 @@
-package kaist.iclab.mobiletracker.ui.screens.WebAppsScreen
+package kaist.iclab.mobiletracker.ui.screens.webapp
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import kaist.iclab.mobiletracker.ui.theme.Dimens

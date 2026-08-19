@@ -1,4 +1,4 @@
-package kaist.iclab.mobiletracker.ui.screens.WebAppsScreen
+package kaist.iclab.mobiletracker.ui.screens.webapp
 
 import android.content.Intent
 import android.graphics.Bitmap
