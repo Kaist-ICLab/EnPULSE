@@ -38,6 +38,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import androidx.core.net.toUri
 
 /**
  * Helper class for managing BLE communication with wearable devices.
@@ -181,7 +182,7 @@ class BLEHelper(
                 // distinct-task-card behavior as any other WebApp launch.
                 Intent(context, kaist.iclab.mobiletracker.webapp.WebAppActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    data = android.net.Uri.parse("webapp://${trustedWebApp.id}")
+                    data = "webapp://${trustedWebApp.id}".toUri()
                     putExtra(kaist.iclab.mobiletracker.webapp.WebAppActivity.EXTRA_URL, url)
                     putExtra(kaist.iclab.mobiletracker.webapp.WebAppActivity.EXTRA_WEBAPP_ID, trustedWebApp.id)
                 }

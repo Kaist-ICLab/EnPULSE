@@ -19,7 +19,7 @@ import androidx.compose.ui.res.integerResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import kaist.iclab.mobiletracker.ui.screens.WebAppsScreen.WebAppsScreen
+import kaist.iclab.mobiletracker.ui.screens.webapp.WebAppsScreen
 import kaist.iclab.mobiletracker.ui.screens.data.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.home.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.login.LoginScreen

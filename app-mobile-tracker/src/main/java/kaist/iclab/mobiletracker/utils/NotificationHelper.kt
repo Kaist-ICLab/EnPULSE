@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.utils
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -175,6 +176,7 @@ object NotificationHelper {
      * Show a notification for a triggered survey (JIT).
      * Uses Full Screen Intent to wake the device.
      */
+    @SuppressLint("FullScreenIntentPolicy")
     fun showSurveyTriggerNotification(
         context: Context,
         surveyId: String,
@@ -225,6 +227,7 @@ object NotificationHelper {
      * but keyed by webAppId rather than surveyId, since a webapp trigger config is not itself a
      * [kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig].
      */
+    @SuppressLint("FullScreenIntentPolicy")
     fun showWebAppTriggerNotification(
         context: Context,
         webAppId: String,

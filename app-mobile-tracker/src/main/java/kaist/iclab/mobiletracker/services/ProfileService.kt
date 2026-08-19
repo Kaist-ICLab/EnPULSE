@@ -1,7 +1,7 @@
 package kaist.iclab.mobiletracker.services
 
 import io.github.jan.supabase.postgrest.from
-import kaist.iclab.mobiletracker.data.sensors.ProfileData
+import kaist.iclab.mobiletracker.data.campaign.ProfileData
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result

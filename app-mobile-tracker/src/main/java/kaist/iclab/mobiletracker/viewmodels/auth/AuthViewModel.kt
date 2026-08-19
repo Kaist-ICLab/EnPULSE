@@ -6,7 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.data.sensors.ProfileData
+import kaist.iclab.mobiletracker.data.campaign.ProfileData
 import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.AuthRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository

@@ -1,41 +1,33 @@
 package kaist.iclab.mobiletracker.webapp
 
+import android.annotation.SuppressLint
 import android.content.Context
-import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebChromeClient
-import android.os.Message
 import android.webkit.WebSettings
-import android.webkit.WebViewClient
+import android.webkit.WebView
 import androidx.activity.ComponentActivity
+import androidx.core.net.toUri
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
+import kaist.iclab.mobiletracker.helpers.LanguageHelper
+import kaist.iclab.mobiletracker.webapp.bridge.AppBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.EnPulseBridge
+import kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.PermissionBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SensorBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
-import kaist.iclab.mobiletracker.webapp.client.RestrictedWebViewClient
 import kaist.iclab.mobiletracker.webapp.client.ExternalLinkWebChromeClient
+import kaist.iclab.mobiletracker.webapp.client.RestrictedWebViewClient
 import kaist.iclab.mobiletracker.webapp.client.WebAppPermissionHelper
+import kaist.iclab.tracker.permission.AndroidPermissionManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import androidx.activity.result.contract.ActivityResultContracts
-import kaist.iclab.mobiletracker.webapp.bridge.AppBridgeHandler
-import kaist.iclab.mobiletracker.webapp.bridge.BridgeRequest
-import kaist.iclab.mobiletracker.webapp.bridge.BridgeResponse
-import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
-import kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler
-import kaist.iclab.mobiletracker.webapp.bridge.PermissionBridgeHandler
-import kaist.iclab.tracker.permission.AndroidPermissionManager
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 
 /**
  * WebView container that hosts a third-party EnPULSE webapp and bridges it to native survey /
@@ -74,6 +66,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -90,8 +83,13 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         var url = originalUrl
 
         // Validate URL host against allowedOrigin to prevent phishing/spoofing attacks from malicious intents
-        val intentHost = try { Uri.parse(url).host } catch (e: Exception) { null }
-        val allowedHost = try { Uri.parse(webApp.allowedOrigin).host } catch (e: Exception) { null }
+        val intentHost = try {
+            url.toUri().host
+        } catch (_: Exception) { null }
+
+        val allowedHost = try {
+            webApp.allowedOrigin.toUri().host
+        } catch (_: Exception) { null }
         
         if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
             Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
@@ -128,7 +126,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             val sanitizedOrigin = try {
-                val uri = Uri.parse(webApp.allowedOrigin)
+                val uri = webApp.allowedOrigin.toUri()
                 val scheme = uri.scheme
                 val host = uri.host
                 if (!scheme.isNullOrEmpty() && !host.isNullOrEmpty()) {
@@ -137,7 +135,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
                 } else {
                     webApp.allowedOrigin.trimEnd('/')
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 webApp.allowedOrigin.trimEnd('/')
             }
 
@@ -182,8 +180,8 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
 
         var url = originalUrl
         if (url != null && webApp != null) {
-            val intentHost = try { Uri.parse(url).host } catch (e: Exception) { null }
-            val allowedHost = try { Uri.parse(webApp.allowedOrigin).host } catch (e: Exception) { null }
+            val intentHost = try { url.toUri().host } catch (_: Exception) { null }
+            val allowedHost = try { webApp.allowedOrigin.toUri().host } catch (_: Exception) { null }
             if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
                 Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
                 url = webApp.url

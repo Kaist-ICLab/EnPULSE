@@ -15,6 +15,12 @@ import kotlinx.coroutines.flow.flowOn
 /**
  * How a [SensorStore] resolves incoming rows that may already exist, so `insert`/`insertBatch`
  * upsert instead of always appending a new row.
+ *
+ * eventId-based dedup (resends/retries from the watch over BLE, or any other duplicate eventId)
+ * is no longer handled here — it's enforced natively by ObjectBox via
+ * [BaseEntity.eventId][kaist.iclab.mobiletracker.db.entity.BaseEntity]'s
+ * `@Unique(onConflict = ConflictStrategy.REPLACE)`, which also correctly collapses duplicates
+ * within a single incoming batch, not just against rows already persisted.
  */
 enum class DedupStrategy {
     /** Always insert a new row, even if an equivalent one already exists. */
@@ -22,10 +28,6 @@ enum class DedupStrategy {
 
     /** Upsert by (timestamp, deviceType) — for sensors that re-read a trailing margin on every poll. */
     TIMESTAMP,
-
-    /** Upsert by the per-record eventId — for sensors forwarded from the watch over BLE, where
-     * resends (retries, redelivery) must not create duplicate rows. */
-    EVENT_ID,
 }
 
 /**
@@ -53,68 +55,47 @@ open class SensorStore<T : BaseEntity>(
     @Suppress("UNCHECKED_CAST")
     private val deviceTypeProperty = metaClass.getField("deviceType").get(null) as Property<T>
     @Suppress("UNCHECKED_CAST")
-    private val eventIdProperty = metaClass.getField("eventId").get(null) as Property<T>
-    @Suppress("UNCHECKED_CAST")
     private val idProperty = metaClass.getField("id").get(null) as Property<T>
 
     fun insert(entity: T): Long {
-        applyDedup(listOf(entity))
-        return box.put(entity)
+        val deduped = applyDedup(listOf(entity))
+        val toPut = deduped.firstOrNull() ?: entity
+        return box.put(toPut)
     }
 
     fun insertBatch(entities: List<T>) {
-        applyDedup(entities)
-        box.put(entities)
+        box.put(applyDedup(entities))
     }
 
-    private fun applyDedup(entities: List<T>) {
-        when (dedupStrategy) {
-            DedupStrategy.NONE -> Unit
-            DedupStrategy.TIMESTAMP -> applyExistingIds(entities)
-            DedupStrategy.EVENT_ID -> applyExistingIdsByEventId(entities)
-        }
+    private fun applyDedup(entities: List<T>): List<T> = when (dedupStrategy) {
+        DedupStrategy.NONE -> entities
+        DedupStrategy.TIMESTAMP -> applyExistingIds(entities)
     }
 
     /**
-     * For dedup-enabled stores, mutates [entities] in place so any entity matching an existing
-     * row's (timestamp, deviceType) reuses that row's id — making the subsequent `box.put` an
-     * update instead of an insert.
+     * For dedup-enabled stores: first collapses entities that duplicate each other *within this
+     * same incoming batch* (kept: the first occurrence per (timestamp, deviceType) — a resend
+     * within one batch carries equivalent data, so either copy is fine to drop). Without this step,
+     * two such entities would both stay unmatched against the DB below and get `box.put` as two
+     * separate new rows.
+     *
+     * Then, for what's left, reuses an already-persisted row's id wherever (timestamp, deviceType)
+     * matches — making that entity's `box.put` an update instead of an insert.
      */
-    private fun applyExistingIds(entities: List<T>) {
-        if (entities.isEmpty()) return
-        val timestamps = entities.map { it.timestamp }.distinct().toLongArray()
+    private fun applyExistingIds(entities: List<T>): List<T> {
+        if (entities.isEmpty()) return entities
+        val deduped = entities.distinctBy { it.timestamp to it.deviceType }
+        val timestamps = deduped.map { it.timestamp }.distinct().toLongArray()
         val existingByKey = box.query(timestampProperty.oneOf(timestamps))
             .build()
             .use { it.find() }
             .associate { (it.timestamp to it.deviceType) to it.id }
-        entities.forEach { entity ->
+        deduped.forEach { entity ->
             existingByKey[entity.timestamp to entity.deviceType]?.let { existingId ->
                 entity.id = existingId
             }
         }
-    }
-
-    /**
-     * For eventId-deduped stores, mutates [entities] in place so any entity matching an existing
-     * row's eventId reuses that row's id — making the subsequent `box.put` an update instead of an
-     * insert. Entities with a blank eventId are skipped entirely: the location store shares this
-     * code path between watch-forwarded rows (always a real UUID eventId) and phone-native GPS
-     * fixes (no eventId, defaults to ""); without this guard every phone-native fix would look
-     * like a duplicate of the last one and collapse into a single row.
-     */
-    private fun applyExistingIdsByEventId(entities: List<T>) {
-        val candidates = entities.filter { it.eventId.isNotBlank() }
-        if (candidates.isEmpty()) return
-        val eventIds = candidates.map { it.eventId }.distinct().toTypedArray()
-        val existingByEventId = box.query(eventIdProperty.oneOf(eventIds, QueryBuilder.StringOrder.CASE_SENSITIVE))
-            .build()
-            .use { it.find() }
-            .associate { it.eventId to it.id }
-        candidates.forEach { entity ->
-            existingByEventId[entity.eventId]?.let { existingId ->
-                entity.id = existingId
-            }
-        }
+        return deduped
     }
 
     fun count(deviceType: Int? = null): Int = box.query().run {

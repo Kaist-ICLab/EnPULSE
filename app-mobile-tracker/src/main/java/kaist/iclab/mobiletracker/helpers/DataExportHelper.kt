@@ -94,21 +94,23 @@ class DataExportHelper(
             val totalCount = handler.getRecordCount()
             if (totalCount == 0) return false
 
-            FileWriter(file).use { writer ->
-                // Write header
-                writer.write(handler.getCsvHeader())
-                writer.write("\n")
+            withContext(Dispatchers.IO) {
+                FileWriter(file).use { writer ->
+                    // Write header
+                    writer.write(handler.getCsvHeader())
+                    writer.write("\n")
 
-                var offset = 0
-                while (offset < totalCount) {
-                    val records = handler.getRecordsPaginated(BATCH_SIZE, offset)
-                    if (records.isEmpty()) break
+                    var offset = 0
+                    while (offset < totalCount) {
+                        val records = handler.getRecordsPaginated(BATCH_SIZE, offset)
+                        if (records.isEmpty()) break
 
-                    for (record in records) {
-                        writer.write(handler.recordToCsvRow(record))
-                        writer.write("\n")
+                        for (record in records) {
+                            writer.write(handler.recordToCsvRow(record))
+                            writer.write("\n")
+                        }
+                        offset += BATCH_SIZE
                     }
-                    offset += BATCH_SIZE
                 }
             }
             true

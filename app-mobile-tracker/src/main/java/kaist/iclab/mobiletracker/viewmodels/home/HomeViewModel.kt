@@ -2,7 +2,7 @@ package kaist.iclab.mobiletracker.viewmodels.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kaist.iclab.mobiletracker.data.sensors.ProfileData
+import kaist.iclab.mobiletracker.data.campaign.ProfileData
 import kaist.iclab.mobiletracker.repository.HomeRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchConnectionInfo

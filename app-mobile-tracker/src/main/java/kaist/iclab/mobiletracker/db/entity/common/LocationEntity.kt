@@ -7,6 +7,8 @@ import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
 import java.util.Locale
+import java.util.UUID
+import kotlin.String
 
 /**
  * ObjectBox entity for location data from both phone and watch devices, differentiated by
@@ -27,7 +29,7 @@ class LocationEntity : BaseEntity, CsvSerializable, RecordSerializable {
 
     constructor(
         id: Long = 0,
-        eventId: String = "",
+        eventId: String = UUID.randomUUID().toString(),
         uuid: String = "",
         received: Long = 0,
         timestamp: Long = 0,
