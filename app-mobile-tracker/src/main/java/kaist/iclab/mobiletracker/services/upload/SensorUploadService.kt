@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.services.upload
 import kotlinx.coroutines.CancellationException
 import android.util.Log
 import io.github.jan.supabase.auth.auth
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
@@ -10,6 +11,8 @@ import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 class SensorUploadService(
     private val handlerRegistry: SensorUploadHandlerRegistry,
@@ -66,7 +69,17 @@ class SensorUploadService(
 
         val lastUploadCursor = syncTimestampService.getUploadCursor(sensorId)
 
-        supabaseHelper.supabaseClient.auth.awaitInitialization()
+        // Belt-and-suspenders: normally SupabaseHelper's enableLifecycleCallbacks = false keeps
+        // SessionStatus from ever getting stuck at Initializing mid-upload. If it does anyway (any
+        // other cause), don't let this sensor's upload wedge every sensor queued after it — fail
+        // this one cleanly and let the caller move on, same as a real timed-out network call would.
+        val initialized = withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS.milliseconds) {
+            supabaseHelper.supabaseClient.auth.awaitInitialization()
+        } != null
+        if (!initialized) {
+            Log.e(TAG, "Timed out waiting for Supabase auth to initialize; skipping $sensorId")
+            return Result.Error(IllegalStateException("Auth session not ready"))
+        }
 
         val userUuid = getUserUuid()
         if (userUuid == null) {

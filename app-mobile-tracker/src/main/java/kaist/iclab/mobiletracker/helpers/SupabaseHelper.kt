@@ -43,6 +43,16 @@ class SupabaseHelper(context: Context) {
             install(Auth) {
                 // Persist session across app restarts
                 sessionManager = SettingsSessionManager(settings)
+
+                // auth-kt defaults this to true: it watches ProcessLifecycleOwner and, the moment
+                // the app's last Activity stops, cancels the auth auto-refresh job and resets
+                // SessionStatus to Initializing — even while DataUploadService keeps uploading as a
+                // foreground service. From there, any in-flight upload silently falls back to the
+                // anon key (RLS rejects it), and every sensor queued after it hangs forever on
+                // auth.awaitInitialization(), since only the app returning to the foreground clears
+                // Initializing. Sensor data collection/upload is a core background feature here, not
+                // an edge case, so session validity must not be tied to Activity visibility.
+                enableLifecycleCallbacks = false
             }
             install(Functions)
             install(Storage)
