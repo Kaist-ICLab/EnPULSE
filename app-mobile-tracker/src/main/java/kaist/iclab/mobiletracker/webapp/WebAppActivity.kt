@@ -22,6 +22,7 @@ import kaist.iclab.mobiletracker.webapp.bridge.PermissionBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SensorBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.EventsBridgeHandler
 import kaist.iclab.mobiletracker.webapp.client.ExternalLinkWebChromeClient
 import kaist.iclab.mobiletracker.webapp.client.RestrictedWebViewClient
 import kaist.iclab.mobiletracker.webapp.client.WebAppPermissionHelper
@@ -54,6 +55,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
     private val storageBridgeHandler by inject<StorageBridgeHandler>()
     private val deviceBridgeHandler by inject<DeviceBridgeHandler>()
     private val logBridgeHandler by inject<LogBridgeHandler>()
+    private val eventsBridgeHandler by inject<EventsBridgeHandler>()
     private val permissionManager by inject<AndroidPermissionManager>()
     private val appScope by inject<AppCoroutineScope>()
 
@@ -152,6 +154,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
                         appHandler = appBridgeHandler,
                         permissionHandler = permissionBridgeHandler,
                         logHandler = logBridgeHandler,
+                        eventsHandler = eventsBridgeHandler,
                         callerWebAppId = webApp.id,
                         appScope = appScope
                     )

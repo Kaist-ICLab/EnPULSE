@@ -29,6 +29,8 @@
     <string name="email_label">Email</string>
     <string name="no_email">No email</string>
     <string name="version_label">Version</string>
+    <string name="about_developer_label">Developer</string>
+    <string name="about_developer_value">KAIST Interactive Computing Lab (ICLab)</string>
     <string name="about_description">A mobile tracking application for research data collection</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in_with_google">Sign in with Google</string>
