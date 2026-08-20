@@ -28,7 +28,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
 import org.koin.core.qualifier.named
@@ -91,7 +92,24 @@ class DataUploadService : LifecycleService(), KoinComponent {
         val completionEvents: SharedFlow<UploadSummary> = _completionEvents.asSharedFlow()
 
         private val lock = Any()
-        private var completionDeferred: CompletableDeferred<Unit>? = null
+
+        /**
+         * Every caller waiting on the current run, not just the most recent one. A single
+         * nullable Deferred was not enough: [notifyCompletion] cleared it while the run's
+         * coroutine was still inside its `finally`, so a [start] landing in that window installed
+         * a fresh Deferred that the (already finished) run would never complete and that the next
+         * [onStartCommand] would dismiss as "a run is already underway". The caller —
+         * AutoSyncService, which awaits this — then hung forever with its `isSyncing` flag stuck
+         * true, permanently disabling auto-sync for the rest of the process's life.
+         *
+         * Parking a Deferred here and claiming/releasing a run both happen under [lock], so a
+         * request either joins the in-flight run or starts a new one — it can never fall between
+         * the two.
+         */
+        private val pendingCompletions = mutableListOf<CompletableDeferred<Unit>>()
+
+        /** Whether a run has been claimed by [onStartCommand] and not yet released. */
+        private var runInFlight = false
 
         /**
          * Starts the upload foreground service and returns a [Deferred] that completes once the
@@ -114,30 +132,53 @@ class DataUploadService : LifecycleService(), KoinComponent {
          * null for a full sync of every active sensor plus survey/MicroEMA responses, used by
          * auto-sync.
          */
-        fun start(context: Context, sensorIds: List<String>? = null): Deferred<Unit> =
-            synchronized(lock) {
-                val existing = completionDeferred
-                if (existing != null && !existing.isCompleted) {
-                    return existing
-                }
-                val deferred = CompletableDeferred<Unit>()
-                completionDeferred = deferred
-                try {
-                    val intent = Intent(context, DataUploadService::class.java).apply {
-                        sensorIds?.let { putStringArrayListExtra(EXTRA_SENSOR_IDS, ArrayList(it)) }
-                    }
-                    ContextCompat.startForegroundService(context, intent)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to start DataUploadService, will retry next cycle: ${e.message}", e)
-                    completionDeferred = null
-                    deferred.complete(Unit)
-                }
-                deferred
+        fun start(context: Context, sensorIds: List<String>? = null): Deferred<Unit> {
+            val deferred = CompletableDeferred<Unit>()
+            val joinsRunInFlight = synchronized(lock) {
+                pendingCompletions.add(deferred)
+                runInFlight
             }
+            // Ride along with the run already underway rather than starting a duplicate — and
+            // without re-posting the foreground notification, which would reset the visible
+            // progress bar. That run's notifyCompletion() completes this Deferred too.
+            if (joinsRunInFlight) return deferred
 
-        private fun notifyCompletion() = synchronized(lock) {
-            completionDeferred?.complete(Unit)
-            completionDeferred = null
+            try {
+                val intent = Intent(context, DataUploadService::class.java).apply {
+                    sensorIds?.let { putStringArrayListExtra(EXTRA_SENSOR_IDS, ArrayList(it)) }
+                }
+                ContextCompat.startForegroundService(context, intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start DataUploadService, will retry next cycle: ${e.message}", e)
+                synchronized(lock) { pendingCompletions.remove(deferred) }
+                deferred.complete(Unit)
+            }
+            return deferred
+        }
+
+        /** Claims the run for the calling [onStartCommand], or reports one already in flight. */
+        private fun claimRun(): Boolean = synchronized(lock) {
+            if (runInFlight) {
+                false
+            } else {
+                runInFlight = true
+                true
+            }
+        }
+
+        /**
+         * Releases the run and completes everyone waiting on it. Idempotent — completing an
+         * already-completed Deferred is a no-op — so the safety-net call in [onDestroy] can't
+         * double-complete or strand anything.
+         */
+        private fun notifyCompletion() {
+            val waiting = synchronized(lock) {
+                runInFlight = false
+                val snapshot = pendingCompletions.toList()
+                pendingCompletions.clear()
+                snapshot
+            }
+            waiting.forEach { it.complete(Unit) }
         }
     }
 
@@ -148,8 +189,14 @@ class DataUploadService : LifecycleService(), KoinComponent {
     private val microEmaResponseDao by inject<MicroEmaResponseStore>()
     private val surveyResponseUploader: SurveyResponseUploader by inject()
 
-    /** Guards against starting a second run while one is already in flight; see [onStartCommand]. */
-    private var activeJob: Job? = null
+    /**
+     * The most recent startId the system has delivered, including requests that only rode along
+     * with an in-flight run. `stopSelf(startId)` is a no-op unless the id is the latest one
+     * delivered, so stopping with the id captured when the run began would leave the service
+     * alive — and no longer in the foreground — whenever a second request arrived mid-run.
+     */
+    @Volatile
+    private var latestStartId: Int = 0
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -158,6 +205,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        latestStartId = startId
 
         NotificationHelper.ensureNotificationChannel(
             this,
@@ -166,33 +214,52 @@ class DataUploadService : LifecycleService(), KoinComponent {
         )
         startForegroundWithNotification(buildProgressNotification(0, 0))
 
-        if (activeJob?.isActive == true) {
-            // A run is already underway; the new request rides along with it via the shared
-            // completionDeferred set up in start().
+        if (!claimRun()) {
+            // A run is already underway; this request rides along with it — start() has already
+            // parked its Deferred for the in-flight run's notifyCompletion() to complete.
             return START_NOT_STICKY
         }
 
         val requestedSensorIds = intent?.getStringArrayListExtra(EXTRA_SENSOR_IDS)
-        activeJob = lifecycleScope.launch(Dispatchers.IO) {
+        val tally = UploadTally()
+        lifecycleScope.launch(Dispatchers.IO) {
             SupabaseLoadingInterceptor.suppressGlobalLoading = true
             try {
                 if (requestedSensorIds != null) {
-                    runSelectedUpload(requestedSensorIds)
+                    runSelectedUpload(requestedSensorIds, tally)
                 } else {
-                    runFullSync()
+                    runFullSync(tally)
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "Fatal error during upload: ${e.message}", e)
             } finally {
+                // The summary is emitted here rather than at the end of the run functions so that
+                // a run which ends early — a child job failing through awaitAll(), or the service
+                // being torn down mid-upload — still reports whatever it managed to upload. It is
+                // also the UI's only "the run is over" signal: DataViewModel keeps rendering the
+                // last InProgress snapshot until something replaces it, so skipping this on the
+                // error path left the progress indicator spinning and the Upload button disabled
+                // for good. NonCancellable because emit() throws immediately on a cancelled job.
+                withContext(NonCancellable) { finishAndNotify(tally.toSummary()) }
                 SupabaseLoadingInterceptor.suppressGlobalLoading = false
                 _uploadState.value = DataUploadState.Idle
                 notifyCompletion()
                 stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf(startId)
+                stopSelf(latestStartId)
             }
         }
         return START_NOT_STICKY
+    }
+
+    /**
+     * Released here as well as in the run's `finally` so that a teardown which never reaches that
+     * `finally` can't leave [runInFlight] stuck true — which would wedge every future upload,
+     * manual and automatic alike.
+     */
+    override fun onDestroy() {
+        notifyCompletion()
+        super.onDestroy()
     }
 
     private fun startForegroundWithNotification(notification: android.app.Notification) {
@@ -204,16 +271,42 @@ class DataUploadService : LifecycleService(), KoinComponent {
         startForeground(Constants.Notification.ID_DATA_UPLOAD_PROGRESS, notification, serviceType)
     }
 
+    /**
+     * Running tally of an upload run. Owned by [onStartCommand] rather than by the run functions
+     * so the `finally` there can still emit a summary — of whatever completed — when the run ends
+     * early. The lists are synchronized because [runFullSync] fills them from parallel jobs.
+     */
+    private class UploadTally {
+        val successful: MutableList<String> = Collections.synchronizedList(mutableListOf())
+        val failed: MutableList<String> = Collections.synchronizedList(mutableListOf())
+        val upToDate: MutableList<String> = Collections.synchronizedList(mutableListOf())
+
+        /** Snapshot of the tally so far; safe to take while parallel jobs are still adding. */
+        fun toSummary(): UploadSummary {
+            val successfulSnapshot = synchronized(successful) { successful.toList() }
+            val failedSnapshot = synchronized(failed) { failed.toList() }
+            val upToDateSnapshot = synchronized(upToDate) { upToDate.toList() }
+            return UploadSummary(
+                successCount = successfulSnapshot.size,
+                failedCount = failedSnapshot.size,
+                upToDateCount = upToDateSnapshot.size,
+                successfulSensors = successfulSnapshot,
+                failedSensors = failedSnapshot,
+                upToDateSensors = upToDateSnapshot
+            )
+        }
+    }
+
     /** Uploads exactly the requested sensors, sequentially — mirrors the old "Upload Now" logic. */
-    private suspend fun runSelectedUpload(sensorIds: List<String>) {
+    private suspend fun runSelectedUpload(sensorIds: List<String>, tally: UploadTally) {
         val total = sensorIds.size
-        val successfulSensors = mutableListOf<String>()
-        val failedSensors = mutableListOf<String>()
-        val upToDateSensors = mutableListOf<String>()
+        val successfulSensors = tally.successful
+        val failedSensors = tally.failed
+        val upToDateSensors = tally.upToDate
 
         sensorIds.forEachIndexed { index, sensorId ->
             val displayName = dataRepository.getSensorInfo(sensorId)?.displayName ?: sensorId
-            updateProgress(displayName, index + 1, total)
+            updateProgress(displayName, index, total)
 
             // Survey/WebApp log aren't gated by campaign membership (see SensorUploadService),
             // so only skip the campaign check for sensors that actually go through it. A sensor
@@ -238,8 +331,6 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 Log.e(TAG, "Error uploading $sensorId", e)
             }
         }
-
-        finishAndNotify(successfulSensors, failedSensors, upToDateSensors)
     }
 
     /** True for sensors whose upload is gated on campaign membership (i.e. not Survey/WebAppLog). */
@@ -251,7 +342,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
      * old AutoSyncService.uploadAllSensorData(), just relocated here so auto-sync and manual
      * upload share one implementation and one progress/notification surface.
      */
-    private suspend fun runFullSync() {
+    private suspend fun runFullSync(tally: UploadTally) {
         // Only sensors currently included in the joined campaign are uploaded — a sensor that
         // was removed from (or never added to) the campaign has nothing to upload for the same
         // reason an up-to-date one doesn't, but listing it as "already up to date" in the summary
@@ -260,9 +351,9 @@ class DataUploadService : LifecycleService(), KoinComponent {
             .filter { sensorUploadService.isSensorActive(it) }
         val totalUnits = allSensorIds.size + 2 // + MicroEMA + Survey
         val completed = AtomicInteger(0)
-        val successfulSensors = Collections.synchronizedList(mutableListOf<String>())
-        val failedSensors = Collections.synchronizedList(mutableListOf<String>())
-        val upToDateSensors = Collections.synchronizedList(mutableListOf<String>())
+        val successfulSensors = tally.successful
+        val failedSensors = tally.failed
+        val upToDateSensors = tally.upToDate
 
         updateProgress("", 0, totalUnits)
 
@@ -311,8 +402,6 @@ class DataUploadService : LifecycleService(), KoinComponent {
         }
 
         (sensorJobs + microEmaJob + surveyJob).awaitAll()
-
-        finishAndNotify(successfulSensors.toList(), failedSensors.toList(), upToDateSensors.toList())
     }
 
     private fun updateProgress(currentLabel: String, index: Int, total: Int) {
@@ -347,19 +436,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
         }.build()
     }
 
-    private suspend fun finishAndNotify(
-        successfulSensors: List<String>,
-        failedSensors: List<String>,
-        upToDateSensors: List<String>
-    ) {
-        val summary = UploadSummary(
-            successCount = successfulSensors.size,
-            failedCount = failedSensors.size,
-            upToDateCount = upToDateSensors.size,
-            successfulSensors = successfulSensors,
-            failedSensors = failedSensors,
-            upToDateSensors = upToDateSensors
-        )
+    private suspend fun finishAndNotify(summary: UploadSummary) {
         _completionEvents.emit(summary)
 
         // Only surface a result notification when there was something to report — matches the

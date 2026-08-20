@@ -90,15 +90,30 @@ class DataViewModel(
     private fun observeUploadService() {
         viewModelScope.launch {
             DataUploadService.uploadState.collect { state ->
-                if (state is DataUploadState.InProgress) {
-                    _uiState.value = _uiState.value.copy(
-                        uploadProgress = UploadProgressState(
-                            isComplete = false,
-                            currentSensorName = state.currentSensorName,
-                            currentIndex = state.currentIndex,
-                            totalSensors = state.totalSensors
+                when (state) {
+                    is DataUploadState.InProgress -> {
+                        _uiState.value = _uiState.value.copy(
+                            uploadProgress = UploadProgressState(
+                                isComplete = false,
+                                currentSensorName = state.currentSensorName,
+                                currentIndex = state.currentIndex,
+                                totalSensors = state.totalSensors
+                            )
                         )
-                    )
+                    }
+
+                    // The run is over. Normally the completion event has already replaced this
+                    // with the finished summary, and that must survive — so only a still-running
+                    // snapshot is dropped. Without this the in-progress state was a dead end:
+                    // if the summary never arrived (or arrived before this ViewModel existed),
+                    // the indicator kept spinning and DataScreen kept the Upload button disabled
+                    // with no way back, since clearUploadProgress() is only reachable from the
+                    // summary dialog.
+                    DataUploadState.Idle -> {
+                        if (_uiState.value.uploadProgress?.isComplete == false) {
+                            _uiState.value = _uiState.value.copy(uploadProgress = null)
+                        }
+                    }
                 }
             }
         }
