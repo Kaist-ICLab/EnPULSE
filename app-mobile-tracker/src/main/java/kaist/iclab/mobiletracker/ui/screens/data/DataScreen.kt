@@ -717,18 +717,11 @@ private fun SensorListItem(
                         fontSize = Styles.LAST_RECORDED_FONT_SIZE,
                         color = AppColors.TextSecondary,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.offset(y = (-2).dp)
                     )
                 }
             }
-
-            // Record count
-            Text(
-                text = formatRecordCount(sensor.recordCount),
-                fontSize = Styles.RECORD_COUNT_FONT_SIZE,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.TextPrimary
-            )
 
             Spacer(modifier = Modifier.width(Styles.CHEVRON_SPACING))
 

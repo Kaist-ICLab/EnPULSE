@@ -369,17 +369,6 @@ private fun SummaryCard(
                 label = stringResource(R.string.sensor_detail_last_recorded),
                 value = formatDateTime(uiState.sensorInfo?.lastRecordedTime)
             )
-            uiState.sensorInfo?.uploadSuccessRatePercent?.let { percent ->
-                SummaryRow(
-                    label = stringResource(R.string.sensor_detail_upload_success_rate),
-                    value = stringResource(
-                        R.string.sensor_detail_upload_success_rate_value,
-                        uiState.sensorInfo.uploadSucceededBatches,
-                        uiState.sensorInfo.uploadSucceededBatches + uiState.sensorInfo.uploadQuarantinedBatches,
-                        percent
-                    )
-                )
-            }
 
             if ((uiState.sensorInfo?.totalRecords ?: 0) > 0) {
                 Spacer(modifier = Modifier.height(Dimens.SpacingMedium))
