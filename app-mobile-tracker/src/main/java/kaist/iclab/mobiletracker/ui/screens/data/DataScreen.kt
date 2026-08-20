@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -197,6 +198,16 @@ fun DataScreen(
                                     lastSuccessfulUpload = uiState.lastSuccessfulUpload,
                                     totalRecords = uiState.totalRecords,
                                     isUploading = uiState.uploadProgress?.isComplete == false,
+                                    uploadingLabel = uiState.uploadProgress
+                                        ?.takeIf { !it.isComplete && it.currentSensorName.isNotBlank() && it.totalBatches > 0 }
+                                        ?.let {
+                                            stringResource(
+                                                R.string.sync_status_uploading_sensor,
+                                                it.currentSensorName,
+                                                it.currentBatch,
+                                                it.totalBatches
+                                            )
+                                        },
                                     isDeleting = uiState.isDeleting,
                                     isExporting = uiState.isExporting,
                                     onUploadClick = { showUploadConfirm = true },
@@ -406,6 +417,7 @@ private fun SummaryCard(
     lastSuccessfulUpload: String?,
     totalRecords: Int,
     isUploading: Boolean,
+    uploadingLabel: String?,
     isDeleting: Boolean,
     isExporting: Boolean,
     onUploadClick: () -> Unit,
@@ -441,9 +453,10 @@ private fun SummaryCard(
                 value = lastSuccessfulUpload ?: "--"
             )
 
-            // Lightweight status indicator only — the actual progress bar (with X of Y / percent)
-            // lives in DataUploadService's notification, not here, so it isn't duplicated in-app.
-            // Non-blocking either way: this never covers the screen or stops navigation.
+            // Lightweight status indicator only — it names the sensor being uploaded and its
+            // batch counts, but the progress bar itself lives in DataUploadService's notification
+            // so it isn't duplicated in-app. Non-blocking either way: this never covers the screen
+            // or stops navigation.
             if (isUploading || isDeleting || isExporting) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -459,7 +472,8 @@ private fun SummaryCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = when {
-                            isUploading -> stringResource(R.string.sync_status_uploading)
+                            isUploading -> uploadingLabel
+                                ?: stringResource(R.string.sync_status_uploading)
                             isDeleting -> stringResource(R.string.sync_status_deleting)
                             else -> stringResource(R.string.sync_status_exporting)
                         },
@@ -701,20 +715,20 @@ private fun formatLastRecorded(timestamp: Long?): String {
     val diff = now - timestamp
 
     return when {
-        diff < TimeUnit.MINUTES.toMillis(1) -> "Just now"
+        diff < TimeUnit.MINUTES.toMillis(1) -> stringResource(R.string.last_recorded_just_now)
         diff < TimeUnit.HOURS.toMillis(1) -> {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
-            "$minutes min ago"
+            stringResource(R.string.last_recorded_min_ago, minutes)
         }
 
         diff < TimeUnit.DAYS.toMillis(1) -> {
             val hours = TimeUnit.MILLISECONDS.toHours(diff)
-            "$hours hour${if (hours > 1) "s" else ""} ago"
+            pluralStringResource(R.plurals.last_recorded_hour_ago, hours.toInt(), hours)
         }
 
         diff < TimeUnit.DAYS.toMillis(7) -> {
             val days = TimeUnit.MILLISECONDS.toDays(diff)
-            "$days day${if (days > 1) "s" else ""} ago"
+            pluralStringResource(R.plurals.last_recorded_day_ago, days.toInt(), days)
         }
 
         else -> {

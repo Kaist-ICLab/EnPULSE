@@ -32,6 +32,8 @@ class SensorUploadHandlerImpl<T>(
     private val supabase: SupabaseUploadService
 ) : SensorUploadHandler where T : BaseEntity, T : CsvSerializable {
 
+    override val displayName: String get() = sensorName
+
     private fun toSupabaseRow(entity: T, userUuid: String): JsonObject {
         val obj = SupabaseJson.encodeToJsonElement(serializer, entity).jsonObject
         return JsonObject(obj + ("uuid" to JsonPrimitive(userUuid)))
@@ -92,6 +94,12 @@ class SensorUploadHandlerImpl<T>(
 
             currentCursor
         }
+    }
+
+    override suspend fun pendingBatchCount(lastUploadCursor: Long): Int {
+        val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
+        val pendingRows = store.countWithIdAfter(lastUploadCursor)
+        return ((pendingRows + batchSize - 1) / batchSize).toInt()
     }
 
     override suspend fun pruneData(beforeTimestamp: Long) {

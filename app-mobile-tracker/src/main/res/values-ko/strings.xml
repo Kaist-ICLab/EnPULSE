@@ -284,6 +284,7 @@
     <string name="sync_clear_data_confirm">삭제</string>
     <string name="sync_clear_data_cancel">취소</string>
     <string name="sync_status_uploading">업로드 중…</string>
+    <string name="sync_status_uploading_sensor">%1$s 업로드 중… (%2$d / %3$d)</string>
     <string name="sync_status_exporting">내보내는 중…</string>
     <string name="sync_status_deleting">삭제 중…</string>
 
@@ -380,6 +381,7 @@
     <string name="upload_dialog_title">데이터 업로드 중</string>
     <string name="upload_dialog_status">%1$s 업로드 중…</string>
     <string name="upload_dialog_progress">%1$d / %2$d</string>
+    <string name="upload_dialog_progress_sensor">%1$s · %2$d / %3$d</string>
     <string name="upload_complete_title">업로드 완료</string>
     <string name="upload_success_header">%1$d개 센서 업로드 성공:</string>
     <string name="upload_no_data">업로드할 새로운 데이터가 없습니다.</string>
@@ -393,5 +395,17 @@
     <!-- WebView Error Strings -->
     <string name="webview_failed_to_load">로드하지 못했습니다</string>
     <string name="webview_check_connection">네트워크 연결 상태를 확인하고 다시 시도해 주세요.</string>
+
+    <string name="last_recorded_just_now">Just now</string>
+    <string name="last_recorded_min_ago">%1$d분 전</string>
+
+    <plurals name="last_recorded_hour_ago" tools:ignore="UnusedQuantity">
+        <item quantity="one">%1$d시간 전</item>
+        <item quantity="other">%1$d시간 전</item>
+    </plurals>
+    <plurals name="last_recorded_day_ago" tools:ignore="UnusedQuantity">
+        <item quantity="one">%1$d일 전</item>
+        <item quantity="other">%1$d일 전</item>
+    </plurals>
 </resources>
 

@@ -28,8 +28,8 @@ import kotlin.time.Duration.Companion.milliseconds
 data class UploadProgressState(
     val isComplete: Boolean = false,
     val currentSensorName: String = "",
-    val currentIndex: Int = 0,
-    val totalSensors: Int = 0,
+    val currentBatch: Int = 0,
+    val totalBatches: Int = 0,
     val successCount: Int = 0,
     val failedCount: Int = 0,
     val upToDateCount: Int = 0,
@@ -96,8 +96,8 @@ class DataViewModel(
                             uploadProgress = UploadProgressState(
                                 isComplete = false,
                                 currentSensorName = state.currentSensorName,
-                                currentIndex = state.currentIndex,
-                                totalSensors = state.totalSensors
+                                currentBatch = state.currentBatch,
+                                totalBatches = state.totalBatches
                             )
                         )
                     }

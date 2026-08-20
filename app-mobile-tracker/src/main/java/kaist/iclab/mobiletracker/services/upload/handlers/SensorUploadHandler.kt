@@ -11,6 +11,9 @@ interface SensorUploadHandler {
     /** Unique identifier for the sensor (e.g., "Location", "Battery") */
     val sensorId: String
 
+    /** Human-readable name, shown while this sensor is being uploaded. */
+    val displayName: String
+
     /**
      * Check if there is data available to upload.
      * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload (its
@@ -37,6 +40,13 @@ interface SensorUploadHandler {
         lastUploadCursor: Long,
         onBatchUploaded: suspend (cursor: Long) -> Unit = {}
     ): Result<Long>
+
+    /**
+     * How many batches [uploadData] would send for the backlog after [lastUploadCursor] — the unit
+     * the upload progress bar counts in, since one batch is roughly one unit of work while one
+     * sensor can be anything from nothing to hours of it. 0 when there is nothing to upload.
+     */
+    suspend fun pendingBatchCount(lastUploadCursor: Long): Int
 
     /**
      * Delete local data older than the specified timestamp.

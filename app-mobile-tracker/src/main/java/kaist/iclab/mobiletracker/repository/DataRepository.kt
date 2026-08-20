@@ -132,9 +132,11 @@ interface DataRepository {
     /**
      * Upload sensor data to server.
      * @param sensorId The sensor ID
+     * @param onBatchUploaded Invoked once per batch accepted by the server, for callers driving a
+     * progress bar. Survey and webapp logs flush in one go and report a single batch.
      * @return Number of records uploaded, or -1 on failure
      */
-    suspend fun uploadSensorData(sensorId: String): Int
+    suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit = {}): Int
 
     /**
      * Get the last sync timestamp for a sensor.

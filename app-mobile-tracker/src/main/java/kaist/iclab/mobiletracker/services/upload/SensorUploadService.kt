@@ -31,7 +31,28 @@ class SensorUploadService(
         return activeSensors.contains(campaignSensorName)
     }
 
-    suspend fun uploadSensorData(sensorId: String): Result<Unit> {
+    /** Display name for [sensorId], falling back to the id when nothing is registered for it. */
+    fun displayNameOf(sensorId: String): String =
+        handlerRegistry.getHandler(sensorId)?.displayName ?: sensorId
+
+    /**
+     * Batches [uploadSensorData] would send for [sensorId] right now — used to size the upload
+     * progress bar. 0 for sensors outside the campaign, unknown to the registry, or up to date.
+     */
+    suspend fun pendingBatchCount(sensorId: String): Int {
+        if (!isSensorActive(sensorId)) return 0
+        val handler = handlerRegistry.getHandler(sensorId) ?: return 0
+        return handler.pendingBatchCount(syncTimestampService.getUploadCursor(sensorId))
+    }
+
+    /**
+     * @param onBatchUploaded Invoked after each batch Supabase accepts, so callers can advance a
+     * progress bar in batch-sized steps instead of jumping once per sensor.
+     */
+    suspend fun uploadSensorData(
+        sensorId: String,
+        onBatchUploaded: suspend () -> Unit = {}
+    ): Result<Unit> {
         if (!isSensorActive(sensorId)) {
             Log.d(TAG, "uploadSensorData: $sensorId is NOT active")
             return Result.Success(Unit)
@@ -59,6 +80,7 @@ class SensorUploadService(
             // Supabase instead of re-uploading them on every retry.
             val result = handler.uploadData(userUuid, lastUploadCursor) { cursor ->
                 syncTimestampService.setUploadCursor(sensorId, cursor)
+                onBatchUploaded()
             }
             when (result) {
                 is Result.Success -> {

@@ -153,6 +153,10 @@ open class SensorStore<T : BaseEntity>(
     fun hasDataWithIdAfter(afterId: Long): Boolean =
         box.query().greater(idProperty, afterId).build().use { it.count() > 0 }
 
+    /** How many rows have ObjectBox id > [afterId] — the pending upload backlog, in rows. */
+    fun countWithIdAfter(afterId: Long): Long =
+        box.query().greater(idProperty, afterId).build().use { it.count() }
+
     /** Rows with ObjectBox id > [afterId], ordered by id ascending — the actual upload batch. */
     fun recordsWithIdAfter(afterId: Long, limit: Int): List<T> =
         box.query().greater(idProperty, afterId).order(idProperty).build()

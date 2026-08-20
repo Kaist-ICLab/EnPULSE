@@ -53,8 +53,8 @@ sealed interface DataUploadState {
     data object Idle : DataUploadState
     data class InProgress(
         val currentSensorName: String,
-        val currentIndex: Int,
-        val totalSensors: Int
+        val currentBatch: Int,
+        val totalBatches: Int
     ) : DataUploadState
 }
 
@@ -198,6 +198,12 @@ class DataUploadService : LifecycleService(), KoinComponent {
     @Volatile
     private var latestStartId: Int = 0
 
+    /**
+     * Resolved once instead of per notification update: progress is now posted per upload batch,
+     * which is far more often than the old per-sensor updates.
+     */
+    private val localizedContext by lazy { LanguageHelper(this).applyLanguage(this) }
+
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
         return null
@@ -212,7 +218,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
             Constants.Notification.CHANNEL_ID_DATA_UPLOAD,
             Constants.Notification.CHANNEL_NAME_DATA_UPLOAD
         )
-        startForegroundWithNotification(buildProgressNotification(0, 0))
+        startForegroundWithNotification(buildProgressNotification("", 0, 0))
 
         if (!claimRun()) {
             // A run is already underway; this request rides along with it — start() has already
@@ -272,6 +278,29 @@ class DataUploadService : LifecycleService(), KoinComponent {
     }
 
     /**
+     * Progress accounting for a run, measured in upload batches rather than sensors: a sensor
+     * sitting on a 50k-row backlog is ~100 batches of work while an idle one is a single unit, so
+     * a per-sensor bar crawled through the big ones and then leapt through the rest. The total is
+     * estimated up front from each sensor's pending row count.
+     */
+    private class BatchProgress(estimatedTotal: Int) {
+        private val total = AtomicInteger(estimatedTotal)
+        private val completed = AtomicInteger(0)
+
+        val totalBatches: Int get() = total.get()
+        val completedBatches: Int get() = completed.get()
+
+        /**
+         * Records one finished batch, growing the total if the run outlasts the estimate — sensors
+         * keep collecting while the upload runs, so the backlog can outgrow its own measurement.
+         */
+        fun advance() {
+            val done = completed.incrementAndGet()
+            total.updateAndGet { maxOf(it, done) }
+        }
+    }
+
+    /**
      * Running tally of an upload run. Owned by [onStartCommand] rather than by the run functions
      * so the `finally` there can still emit a summary — of whatever completed — when the run ends
      * early. The lists are synchronized because [runFullSync] fills them from parallel jobs.
@@ -299,14 +328,16 @@ class DataUploadService : LifecycleService(), KoinComponent {
 
     /** Uploads exactly the requested sensors, sequentially — mirrors the old "Upload Now" logic. */
     private suspend fun runSelectedUpload(sensorIds: List<String>, tally: UploadTally) {
-        val total = sensorIds.size
         val successfulSensors = tally.successful
         val failedSensors = tally.failed
         val upToDateSensors = tally.upToDate
+        val progress = BatchProgress(sensorIds.sumOf { estimatedBatchesFor(it) })
 
-        sensorIds.forEachIndexed { index, sensorId ->
+        sensorIds.forEach { sensorId ->
             val displayName = dataRepository.getSensorInfo(sensorId)?.displayName ?: sensorId
-            updateProgress(displayName, index, total)
+            // Announced before the work starts, so the name on screen is the sensor currently
+            // uploading rather than the one that just finished.
+            updateProgress(displayName, progress)
 
             // Survey/WebApp log aren't gated by campaign membership (see SensorUploadService),
             // so only skip the campaign check for sensors that actually go through it. A sensor
@@ -315,11 +346,14 @@ class DataUploadService : LifecycleService(), KoinComponent {
             // being tracked — so it's left out of the summary entirely instead.
             if (isCampaignGatedSensor(sensorId) && !sensorUploadService.isSensorActive(sensorId)) {
                 Log.d(TAG, "Skipping $sensorId: not part of the current campaign")
-                return@forEachIndexed
+                return@forEach
             }
 
             try {
-                val result = dataRepository.uploadSensorData(sensorId)
+                val result = dataRepository.uploadSensorData(sensorId) {
+                    progress.advance()
+                    updateProgress(displayName, progress)
+                }
                 when {
                     result > 0 -> successfulSensors.add(displayName)
                     result == -1 -> failedSensors.add(displayName)
@@ -338,6 +372,13 @@ class DataUploadService : LifecycleService(), KoinComponent {
         sensorId != SurveyResponseDataHandler.SENSOR_ID && sensorId != WebAppLogDataHandler.SENSOR_ID
 
     /**
+     * Batches [sensorId] is expected to need. Survey and webapp logs drain in a single flush
+     * instead of cursor-tracked batches, so they count as one unit each.
+     */
+    private suspend fun estimatedBatchesFor(sensorId: String): Int =
+        if (isCampaignGatedSensor(sensorId)) sensorUploadService.pendingBatchCount(sensorId) else 1
+
+    /**
      * Uploads every active sensor plus survey/MicroEMA responses in parallel — same shape as the
      * old AutoSyncService.uploadAllSensorData(), just relocated here so auto-sync and manual
      * upload share one implementation and one progress/notification surface.
@@ -349,27 +390,33 @@ class DataUploadService : LifecycleService(), KoinComponent {
         // would wrongly imply it's still being tracked, so it's excluded outright instead.
         val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds)
             .filter { sensorUploadService.isSensorActive(it) }
-        val totalUnits = allSensorIds.size + 2 // + MicroEMA + Survey
-        val completed = AtomicInteger(0)
         val successfulSensors = tally.successful
         val failedSensors = tally.failed
         val upToDateSensors = tally.upToDate
+        // + 1 unit each for MicroEMA and Survey, which flush in one go rather than in batches.
+        val progress = BatchProgress(allSensorIds.sumOf { sensorUploadService.pendingBatchCount(it) } + 2)
 
-        updateProgress("", 0, totalUnits)
+        updateProgress("", progress)
 
+        // Sensors upload concurrently, so the name shown is whichever of them most recently
+        // started or finished a batch — always one that is genuinely in flight.
         val sensorJobs = allSensorIds.map { sensorId ->
             lifecycleScope.async(Dispatchers.IO) {
+                val displayName = sensorUploadService.displayNameOf(sensorId)
                 if (sensorUploadService.hasDataToUpload(sensorId)) {
-                    sensorUploadService.uploadSensorData(sensorId)
-                        .onSuccess { successfulSensors.add(sensorId) }
+                    updateProgress(displayName, progress)
+                    sensorUploadService.uploadSensorData(sensorId) {
+                        progress.advance()
+                        updateProgress(displayName, progress)
+                    }
+                        .onSuccess { successfulSensors.add(displayName) }
                         .onFailure { e ->
-                            failedSensors.add(sensorId)
+                            failedSensors.add(displayName)
                             Log.e(TAG, "Upload failed for $sensorId: ${e.message}", e)
                         }
                 } else {
-                    upToDateSensors.add(sensorId)
+                    upToDateSensors.add(displayName)
                 }
-                updateProgress(sensorId, completed.incrementAndGet(), totalUnits)
             }
         }
 
@@ -384,7 +431,8 @@ class DataUploadService : LifecycleService(), KoinComponent {
                     failedSensors.add("MicroEMA")
                 }
             }
-            updateProgress("MicroEMA", completed.incrementAndGet(), totalUnits)
+            progress.advance()
+            updateProgress("MicroEMA", progress)
         }
 
         val surveyJob = lifecycleScope.async(Dispatchers.IO) {
@@ -398,31 +446,44 @@ class DataUploadService : LifecycleService(), KoinComponent {
                     failedSensors.add("Survey")
                 }
             }
-            updateProgress("Survey", completed.incrementAndGet(), totalUnits)
+            progress.advance()
+            updateProgress("Survey", progress)
         }
 
         (sensorJobs + microEmaJob + surveyJob).awaitAll()
     }
 
-    private fun updateProgress(currentLabel: String, index: Int, total: Int) {
+    private fun updateProgress(currentLabel: String, progress: BatchProgress) {
+        val current = progress.completedBatches
+        val total = progress.totalBatches
         _uploadState.value = DataUploadState.InProgress(
             currentSensorName = currentLabel,
-            currentIndex = index,
-            totalSensors = total
+            currentBatch = current,
+            totalBatches = total
         )
         NotificationHelper.showNotification(
             this,
             Constants.Notification.ID_DATA_UPLOAD_PROGRESS,
-            buildProgressNotification(index, total)
+            buildProgressNotification(currentLabel, current, total)
         )
     }
 
-    private fun buildProgressNotification(current: Int, total: Int): android.app.Notification {
-        val localizedContext = LanguageHelper(this).applyLanguage(this)
-        val text = if (total > 0) {
-            localizedContext.getString(R.string.upload_dialog_progress, current, total)
-        } else {
-            localizedContext.getString(R.string.sync_status_uploading)
+    private fun buildProgressNotification(
+        currentLabel: String,
+        current: Int,
+        total: Int
+    ): android.app.Notification {
+        val text = when {
+            total <= 0 -> localizedContext.getString(R.string.sync_status_uploading)
+            currentLabel.isBlank() ->
+                localizedContext.getString(R.string.upload_dialog_progress, current, total)
+
+            else -> localizedContext.getString(
+                R.string.upload_dialog_progress_sensor,
+                currentLabel,
+                current,
+                total
+            )
         }
         return NotificationHelper.buildNotification(
             context = this,
@@ -447,7 +508,6 @@ class DataUploadService : LifecycleService(), KoinComponent {
     }
 
     private fun showResultNotification(summary: UploadSummary) {
-        val localizedContext = LanguageHelper(this).applyLanguage(this)
         val pendingIntent = NotificationHelper.createMainActivityPendingIntent(
             this,
             Constants.Notification.ID_DATA_UPLOAD_RESULT

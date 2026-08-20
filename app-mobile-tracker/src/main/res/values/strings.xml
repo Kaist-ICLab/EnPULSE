@@ -268,6 +268,7 @@
     <string name="sync_clear_data_confirm">Clear</string>
     <string name="sync_clear_data_cancel">Cancel</string>
     <string name="sync_status_uploading">Uploading…</string>
+    <string name="sync_status_uploading_sensor">Uploading %1$s… (%2$d of %3$d)</string>
     <string name="sync_status_exporting">Exporting…</string>
     <string name="sync_status_deleting">Deleting…</string>
 
@@ -381,6 +382,7 @@
     <string name="upload_dialog_title">Uploading Data</string>
     <string name="upload_dialog_status">Uploading %1$s…</string>
     <string name="upload_dialog_progress">%1$d of %2$d</string>
+    <string name="upload_dialog_progress_sensor">%1$s · %2$d of %3$d</string>
     <string name="upload_complete_title">Upload Complete</string>
     <string name="upload_success_header">Successfully uploaded %1$d sensor(s):</string>
     <string name="upload_no_data">No new data to upload.</string>
@@ -394,4 +396,15 @@
     <!-- WebView Error Strings -->
     <string name="webview_failed_to_load">Failed to load</string>
     <string name="webview_check_connection">Please check your connection and try again.</string>
+    <string name="last_recorded_just_now">Just now</string>
+    <string name="last_recorded_min_ago">%1$d min ago</string>
+
+    <plurals name="last_recorded_hour_ago">
+        <item quantity="one">%1$d hour ago</item>
+        <item quantity="other">%1$d hours ago</item>
+    </plurals>
+    <plurals name="last_recorded_day_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
 </resources>

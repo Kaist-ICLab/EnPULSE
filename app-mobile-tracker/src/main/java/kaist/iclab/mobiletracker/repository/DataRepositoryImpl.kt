@@ -108,26 +108,28 @@ class DataRepositoryImpl(
         syncTimestampService.clearLastSuccessfulUpload(sensorId)
     }
 
-    override suspend fun uploadSensorData(sensorId: String): Int {
+    override suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit): Int {
         if (syncingSensors.putIfAbsent(sensorId, true) != null) return -2
         try {
             // Survey and webapp logs don't ride SensorUploadService (insert-only, not
             // upsert-by-eventId; see their handlers' doc comments), so each gets its own uploader.
             if (sensorId == SurveyResponseDataHandler.SENSOR_ID) {
                 return when (val result = surveyResponseUploader.flush()) {
+                    // These drain in a single flush rather than in cursor-tracked batches, so they
+                    // count as one batch towards the caller's progress bar.
                     is Result.Success -> if (result.data > 0) 1 else 0
                     is Result.Error -> -1
-                }
+                }.also { onBatchUploaded() }
             }
             if (sensorId == WebAppLogDataHandler.SENSOR_ID) {
                 return when (val result = webAppLogUploader.flush()) {
                     is Result.Success -> if (result.data > 0) 1 else 0
                     is Result.Error -> -1
-                }
+                }.also { onBatchUploaded() }
             }
 
             if (!sensorUploadService.hasDataToUpload(sensorId)) return 0
-            return when (sensorUploadService.uploadSensorData(sensorId)) {
+            return when (sensorUploadService.uploadSensorData(sensorId, onBatchUploaded)) {
                 is Result.Success -> 1
                 is Result.Error -> -1
             }
