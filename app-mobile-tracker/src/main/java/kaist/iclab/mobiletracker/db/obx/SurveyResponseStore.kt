@@ -19,8 +19,35 @@ import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity_
 class SurveyResponseStore(boxStore: BoxStore) {
     private val box = boxStore.boxFor(SurveyResponseEntity::class.java)
 
+    // See SensorStore's class doc for why: count()/latestTimestamp() are read on every Data tab
+    // load, so they're backed by a running total instead of a live query, adjusted on each
+    // mutation rather than recomputed on every read.
+    private val cacheLock = Any()
+    private var cacheInitialized = false
+    private var cachedCount = 0
+    private var cachedLatestTimestamp: Long? = null
+
+    private fun ensureCacheInitializedLocked() {
+        if (cacheInitialized) return
+        cachedCount = box.count().toInt()
+        cachedLatestTimestamp = if (box.isEmpty) null
+            else box.query().build().use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
+        cacheInitialized = true
+    }
+
     fun insertAll(entities: List<SurveyResponseEntity>) {
-        box.put(entities)
+        synchronized(cacheLock) {
+            ensureCacheInitializedLocked()
+            val before = box.count()
+            box.put(entities)
+            cachedCount += (box.count() - before).toInt()
+            val maxTimestamp = entities.maxOfOrNull { it.responseSubmissionTime }
+            if (maxTimestamp != null &&
+                (cachedLatestTimestamp == null || maxTimestamp > cachedLatestTimestamp!!)
+            ) {
+                cachedLatestTimestamp = maxTimestamp
+            }
+        }
     }
 
     /** Oldest-first batch of rows not yet accepted by Supabase. */
@@ -37,15 +64,18 @@ class SurveyResponseStore(boxStore: BoxStore) {
         box.put(items)
     }
 
-    fun count(): Long = box.count()
+    fun count(): Long = synchronized(cacheLock) {
+        ensureCacheInitializedLocked()
+        cachedCount.toLong()
+    }
 
     fun countAfter(afterTimestamp: Long): Long =
         box.query().greaterOrEqual(SurveyResponseEntity_.responseSubmissionTime, afterTimestamp)
             .build().use { it.count() }
 
-    fun latestTimestamp(): Long? {
-        if (box.isEmpty) return null
-        return box.query().build().use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
+    fun latestTimestamp(): Long? = synchronized(cacheLock) {
+        ensureCacheInitializedLocked()
+        cachedLatestTimestamp
     }
 
     fun recordsAfter(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<SurveyResponseEntity> {
@@ -54,7 +84,25 @@ class SurveyResponseStore(boxStore: BoxStore) {
         return builder.build().use { it.find(offset.toLong(), limit.toLong()) }
     }
 
-    fun removeById(id: Long): Boolean = box.remove(id)
+    fun removeById(id: Long): Boolean {
+        val removed = box.remove(id)
+        if (removed) {
+            synchronized(cacheLock) {
+                ensureCacheInitializedLocked()
+                cachedCount = (cachedCount - 1).coerceAtLeast(0)
+                cachedLatestTimestamp = if (box.isEmpty) null
+                    else box.query().build().use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
+            }
+        }
+        return removed
+    }
 
-    fun removeAll() = box.removeAll()
+    fun removeAll() {
+        box.removeAll()
+        synchronized(cacheLock) {
+            cachedCount = 0
+            cachedLatestTimestamp = null
+            cacheInitialized = true
+        }
+    }
 }
