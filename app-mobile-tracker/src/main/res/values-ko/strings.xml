@@ -219,6 +219,7 @@
     <string name="sensor_desc_ecg">워치 심전도 센서 데이터</string>
     <string name="sensor_desc_default">센서 데이터 수집</string>
     <string name="sensor_desc_activity_recognition">사용자 신체 활동 인식</string>
+    <string name="sensor_desc_web_app_log">웹앱 사용에서 수집된 이벤트 로그</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -328,6 +329,7 @@
     <string name="sensor_desc_skin_temperature">피부 온도 데이터</string>
     <string name="sensor_desc_eda">땀 등 수분으로 인한 피부 전도도 측정</string>
     <string name="sensor_desc_audio">소리 시그널</string>
+    <string name="sensor_web_app_log">웹앱 로그</string>
 
 
     <!-- Toast Messages -->

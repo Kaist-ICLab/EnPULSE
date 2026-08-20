@@ -220,6 +220,7 @@
     <string name="sensor_desc_ecg">Watch ECG sensor data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
     <string name="sensor_desc_activity_recognition">Recognize user physical activity</string>
+    <string name="sensor_desc_web_app_log">Event logs collected from webapp usage</string>
     <!-- Watch Sensor Descriptions -->
     <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
     <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>
@@ -268,7 +269,7 @@
     <string name="sync_clear_data_confirm">Clear</string>
     <string name="sync_clear_data_cancel">Cancel</string>
     <string name="sync_status_uploading">Uploading…</string>
-    <string name="sync_status_uploading_sensor">Uploading %1$s… (%2$d of %3$d)</string>
+    <string name="sync_status_uploading_sensor">Uploading %1$s… (%2$d / %3$d)</string>
     <string name="sync_status_exporting">Exporting…</string>
     <string name="sync_status_deleting">Deleting…</string>
 
@@ -306,6 +307,7 @@
     <string name="sensor_exercise">Exercise</string>
     <string name="sensor_sleep">Sleep</string>
     <string name="sensor_activity_recognition">Activity Recognition</string>
+    <string name="sensor_web_app_log">Web App Log</string>
 
 
     <!-- Toast Messages -->
@@ -381,7 +383,7 @@
     <!-- Data Upload Dialog -->
     <string name="upload_dialog_title">Uploading Data</string>
     <string name="upload_dialog_status">Uploading %1$s…</string>
-    <string name="upload_dialog_progress">%1$d of %2$d</string>
+    <string name="upload_dialog_progress">%1$d / %2$d</string>
     <string name="upload_dialog_progress_sensor">%1$s · %2$d of %3$d</string>
     <string name="upload_complete_title">Upload Complete</string>
     <string name="upload_success_header">Successfully uploaded %1$d sensor(s):</string>
