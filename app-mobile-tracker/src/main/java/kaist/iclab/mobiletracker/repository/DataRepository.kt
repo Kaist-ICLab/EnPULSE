@@ -25,8 +25,21 @@ data class SensorDetailInfo(
     val lastRecordedTime: Long?,
     val lastSyncTimestamp: Long? = null,
     val isWatchSensor: Boolean = false,
-    val isPhoneSensor: Boolean = false
-)
+    val isPhoneSensor: Boolean = false,
+    /** Lifetime batches Supabase accepted normally — see [kaist.iclab.mobiletracker.services.SyncTimestampService.UploadStats]. */
+    val uploadSucceededBatches: Long = 0,
+    /** Lifetime batches given up on whole after repeated server rejections at the same spot. */
+    val uploadQuarantinedBatches: Long = 0,
+    /** Same as [uploadQuarantinedBatches], in raw record count — still kept locally, just never retried. */
+    val uploadQuarantinedRecordCount: Long = 0
+) {
+    /** `null` until the first upload attempt for this sensor. */
+    val uploadSuccessRatePercent: Int?
+        get() {
+            val total = uploadSucceededBatches + uploadQuarantinedBatches
+            return if (total == 0L) null else ((uploadSucceededBatches * 100) / total).toInt()
+        }
+}
 
 /**
  * Data class representing a single sensor record for display.

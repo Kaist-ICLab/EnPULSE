@@ -6,10 +6,10 @@ import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.db.obx.SupabaseJson
+import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
-import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -49,7 +49,9 @@ class SensorUploadHandlerImpl<T>(
     override suspend fun uploadData(
         userUuid: String,
         lastUploadCursor: Long,
-        onBatchUploaded: suspend (cursor: Long) -> Unit
+        allowQuarantine: Boolean,
+        onBatchUploaded: suspend (cursor: Long) -> Unit,
+        onBatchQuarantined: suspend (cursor: Long, recordCount: Int, reason: String) -> Unit
     ): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
@@ -61,29 +63,46 @@ class SensorUploadHandlerImpl<T>(
 
                 if (entities.isEmpty()) break
 
+                // Everything accepted so far stays accepted: each batch's cursor was handed to
+                // onBatchUploaded as it landed, so the next run resumes from here. Before that, the
+                // cursor only moved once the whole sensor finished, so a failure part-way through
+                // re-uploaded the entire backlog next time — and a backlog that failed at the same
+                // batch every run (a row the server rejects, a batch big enough to time out) never
+                // made any forward progress at all.
                 val rows = entities.map { toSupabaseRow(it, userUuid) }
-                try {
-                    supabase.upsertBatch(tableName, sensorName, rows).getOrElse { throw it }
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                    // Everything accepted so far stays accepted: each batch's cursor was handed to
-                    // onBatchUploaded as it landed, so the next run resumes from here. Before that,
-                    // the cursor only moved once the whole sensor finished, so a failure part-way
-                    // through re-uploaded the entire backlog next time — and a backlog that failed
-                    // at the same batch every run (a row the server rejects, a batch big enough to
-                    // time out) never made any forward progress at all.
-                    Log.w(
-                        TAG,
-                        "Partial upload for $sensorId: $uploadedRows rows committed up to cursor " +
-                                "$currentCursor, resuming from there next run",
-                        e
-                    )
-                    throw e
+                when (val result = supabase.upsertBatch(tableName, sensorName, rows)) {
+                    is Result.Success -> {
+                        currentCursor = entities.maxOf { it.id }
+                        uploadedRows += entities.size
+                        onBatchUploaded(currentCursor)
+                    }
+                    is Result.Error -> {
+                        if (allowQuarantine && result.exception is AppError.ServerRejected) {
+                            // The caller has already seen this exact spot fail this way repeatedly
+                            // across separate upload cycles (see SensorUploadService's streak
+                            // tracking) — give up on this whole batch rather than the entire sensor,
+                            // so everything captured after it can still get through. The batch stays
+                            // in local storage; it's simply skipped instead of retried forever.
+                            currentCursor = entities.maxOf { it.id }
+                            val reason = result.exception.message ?: "Server rejected this batch"
+                            Log.e(
+                                TAG,
+                                "Quarantining $sensorId batch of ${entities.size} records up to " +
+                                    "cursor $currentCursor: $reason"
+                            )
+                            onBatchQuarantined(currentCursor, entities.size, reason)
+                            uploadedRows += entities.size
+                        } else {
+                            Log.w(
+                                TAG,
+                                "Partial upload for $sensorId: $uploadedRows rows committed up to " +
+                                    "cursor $currentCursor, resuming from there next run",
+                                result.exception
+                            )
+                            throw result.exception
+                        }
+                    }
                 }
-
-                currentCursor = entities.maxOf { it.id }
-                uploadedRows += entities.size
-                onBatchUploaded(currentCursor)
 
                 if (entities.size < batchSize) break
             }

@@ -154,6 +154,8 @@
     <string name="sensor_detail_total_records">총 레코드</string>
     <string name="sensor_detail_today">오늘</string>
     <string name="sensor_detail_last_recorded">마지막 기록</string>
+    <string name="sensor_detail_upload_success_rate">업로드 성공률</string>
+    <string name="sensor_detail_upload_success_rate_value">%1$d / %2$d (%3$d%%)</string>
     <string name="sensor_detail_raw_data">모든 기록된 데이터</string>
     <string name="sensor_detail_no_records">레코드가 없습니다</string>
     <string name="data_screen_last_recorded_none">데이터 없음</string>

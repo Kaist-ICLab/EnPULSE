@@ -5,6 +5,7 @@ import android.util.Log
 import io.github.jan.supabase.auth.auth
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
+import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.SyncTimestampService
@@ -87,18 +88,38 @@ class SensorUploadService(
             return Result.Error(IllegalStateException("User not logged in"))
         }
 
+        // Only start skipping a whole "poison" batch once the exact same spot has already failed
+        // this way repeatedly across separate upload cycles (see
+        // SyncTimestampService.recordUploadFailureAtCursor) — a single rejection is treated
+        // normally first, in case it's transient-looking rather than a genuinely bad batch.
+        val allowQuarantine = syncTimestampService.getUploadFailureStreak(sensorId) >=
+            Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES
+
         return try {
             // Persist the cursor as each batch lands rather than only once the sensor finishes, so
             // an error part-way through a large backlog keeps the batches that already reached
             // Supabase instead of re-uploading them on every retry.
-            val result = handler.uploadData(userUuid, lastUploadCursor) { cursor ->
-                syncTimestampService.setUploadCursor(sensorId, cursor)
-                onBatchUploaded()
-            }
+            val result = handler.uploadData(
+                userUuid,
+                lastUploadCursor,
+                allowQuarantine = allowQuarantine,
+                onBatchUploaded = { cursor ->
+                    syncTimestampService.setUploadCursor(sensorId, cursor)
+                    syncTimestampService.addUploadStats(sensorId, succeededBatches = 1)
+                    onBatchUploaded()
+                },
+                onBatchQuarantined = { cursor, recordCount, reason ->
+                    syncTimestampService.setUploadCursor(sensorId, cursor)
+                    syncTimestampService.addUploadStats(sensorId, quarantinedRecordCount = recordCount)
+                    Log.w(TAG, "Gave up on $recordCount $sensorId record(s) up to cursor $cursor: $reason")
+                    onBatchUploaded()
+                }
+            )
             when (result) {
                 is Result.Success -> {
                     syncTimestampService.setUploadCursor(sensorId, result.data)
                     syncTimestampService.updateLastSuccessfulUpload(sensorId)
+                    syncTimestampService.clearUploadFailureStreak(sensorId)
 
                     // Prune data that is BOTH synced AND older than PRUNE_BUFFER_MS
                     // NOTE: This is currently disabled as per user preference for infinite local retention.
@@ -117,7 +138,24 @@ class SensorUploadService(
 
                     Result.Success(Unit)
                 }
-                is Result.Error -> result
+                is Result.Error -> {
+                    // Only a decisive server rejection counts toward the quarantine streak — a
+                    // network/timeout/auth-not-ready failure says nothing about whether this data
+                    // is actually the problem, so it must not push a sensor closer to giving up on
+                    // real data over what might just be the network being briefly unavailable.
+                    if (result.exception is AppError.ServerRejected) {
+                        // onBatchUploaded already persisted the cursor for whatever got through
+                        // before the failing batch, so this read reflects exactly where it's stuck.
+                        val stuckAtCursor = syncTimestampService.getUploadCursor(sensorId)
+                        val streak = syncTimestampService.recordUploadFailureAtCursor(sensorId, stuckAtCursor)
+                        Log.w(
+                            TAG,
+                            "$sensorId upload rejected by server (cycle $streak/" +
+                                "${Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES} at this spot)"
+                        )
+                    }
+                    result
+                }
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e

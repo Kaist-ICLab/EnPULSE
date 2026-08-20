@@ -155,6 +155,8 @@
     <string name="sensor_detail_total_records">Total Records</string>
     <string name="sensor_detail_today">Today</string>
     <string name="sensor_detail_last_recorded">Last Recorded</string>
+    <string name="sensor_detail_upload_success_rate">Upload Success Rate</string>
+    <string name="sensor_detail_upload_success_rate_value">%1$d / %2$d (%3$d%%)</string>
     <string name="sensor_detail_raw_data">All Recorded Data</string>
     <string name="sensor_detail_no_records">No records found</string>
     <string name="data_screen_last_recorded_none">No data</string>

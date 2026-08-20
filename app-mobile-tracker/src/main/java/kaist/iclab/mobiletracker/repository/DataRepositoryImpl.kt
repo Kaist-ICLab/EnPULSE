@@ -70,6 +70,7 @@ class DataRepositoryImpl(
     override suspend fun getSensorDetailInfo(sensorId: String): SensorDetailInfo? {
         val handler = handlerRegistry.getHandler(sensorId) ?: return null
         val startOfToday = getStartOfToday()
+        val uploadStats = syncTimestampService.getUploadStats(sensorId)
 
         return SensorDetailInfo(
             sensorId = handler.sensorId,
@@ -79,7 +80,10 @@ class DataRepositoryImpl(
             lastRecordedTime = handler.getLatestTimestamp(),
             lastSyncTimestamp = syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId),
             isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
-            isPhoneSensor = handler.isPhoneSensor
+            isPhoneSensor = handler.isPhoneSensor,
+            uploadSucceededBatches = uploadStats.succeededBatches,
+            uploadQuarantinedBatches = uploadStats.quarantinedBatches,
+            uploadQuarantinedRecordCount = uploadStats.quarantinedRecordCount
         )
     }
 

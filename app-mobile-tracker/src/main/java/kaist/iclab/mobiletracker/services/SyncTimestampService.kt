@@ -107,6 +107,88 @@ class SyncTimestampService(context: Context) {
     }
 
     /**
+     * How many consecutive upload cycles have ended in a [kaist.iclab.mobiletracker.repository.AppError.ServerRejected]
+     * failure — the server explicitly rejecting the request, not a network/auth/timeout hiccup —
+     * without the cursor making any progress. Used to detect a "poison" batch that will keep
+     * failing forever unless skipped; see [kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerImpl]'s
+     * quarantine logic. Reset to 0 whenever a cycle succeeds or the cursor moves past where it was
+     * last recorded (both mean this exact spot is no longer stuck).
+     */
+    fun getUploadFailureStreak(sensorId: String): Int = prefs.getInt("upload_failure_streak_$sensorId", 0)
+
+    private fun getUploadFailureCursor(sensorId: String): Long = prefs.getLong("upload_failure_cursor_$sensorId", -1L)
+
+    /**
+     * Records that [sensorId]'s upload failed with a server rejection while stuck at [cursor].
+     * @return the streak count after this failure (1 the first time [cursor] fails, incrementing
+     * only if the *same* [cursor] fails again — a cursor that has moved on gets a fresh streak).
+     */
+    fun recordUploadFailureAtCursor(sensorId: String, cursor: Long): Int {
+        val streak = if (getUploadFailureCursor(sensorId) == cursor) getUploadFailureStreak(sensorId) + 1 else 1
+        prefs.edit {
+            putLong("upload_failure_cursor_$sensorId", cursor)
+            putInt("upload_failure_streak_$sensorId", streak)
+        }
+        return streak
+    }
+
+    fun clearUploadFailureStreak(sensorId: String) {
+        prefs.edit {
+            remove("upload_failure_cursor_$sensorId")
+            remove("upload_failure_streak_$sensorId")
+        }
+    }
+
+    /**
+     * Lifetime upload outcome counts for [sensorId], in batches: [succeededBatches] Supabase
+     * accepted normally, and [quarantinedBatches] skipped whole after repeated
+     * [kaist.iclab.mobiletracker.repository.AppError.ServerRejected] failures at the same spot (see
+     * [recordUploadFailureAtCursor]) — those records stay in the local store forever, just never
+     * retried. [quarantinedRecordCount] is the same thing in raw record count, for context (a
+     * quarantined batch can be up to [kaist.iclab.mobiletracker.Constants.Network.UPLOAD_BATCH_SIZE]
+     * records). `null` [successRatePercent] means nothing has been attempted yet.
+     */
+    data class UploadStats(
+        val succeededBatches: Long,
+        val quarantinedBatches: Long,
+        val quarantinedRecordCount: Long
+    ) {
+        val successRatePercent: Int?
+            get() {
+                val total = succeededBatches + quarantinedBatches
+                return if (total == 0L) null else ((succeededBatches * 100) / total).toInt()
+            }
+    }
+
+    fun getUploadStats(sensorId: String): UploadStats = UploadStats(
+        succeededBatches = prefs.getLong("upload_succeeded_batches_$sensorId", 0L),
+        quarantinedBatches = prefs.getLong("upload_quarantined_batches_$sensorId", 0L),
+        quarantinedRecordCount = prefs.getLong("upload_quarantined_records_$sensorId", 0L)
+    )
+
+    /**
+     * Adds to [sensorId]'s lifetime [UploadStats]. Pass 0 for whichever side didn't happen.
+     * @param quarantinedRecordCount How many records were in the quarantined batch (0 when
+     * [succeededBatches] is being recorded instead).
+     */
+    fun addUploadStats(sensorId: String, succeededBatches: Int = 0, quarantinedRecordCount: Int = 0) {
+        if (succeededBatches == 0 && quarantinedRecordCount == 0) return
+        val current = getUploadStats(sensorId)
+        prefs.edit {
+            if (succeededBatches != 0) {
+                putLong("upload_succeeded_batches_$sensorId", current.succeededBatches + succeededBatches)
+            }
+            if (quarantinedRecordCount != 0) {
+                putLong("upload_quarantined_batches_$sensorId", current.quarantinedBatches + 1)
+                putLong(
+                    "upload_quarantined_records_$sensorId",
+                    current.quarantinedRecordCount + quarantinedRecordCount
+                )
+            }
+        }
+    }
+
+    /**
      * Update timestamp when data collection starts
      */
     fun updateDataCollectionStarted() {
@@ -224,6 +306,11 @@ class SyncTimestampService(context: Context) {
         prefs.edit {
             remove("last_upload_$sensorId")
             remove("upload_cursor_id_$sensorId")
+            remove("upload_failure_cursor_$sensorId")
+            remove("upload_failure_streak_$sensorId")
+            remove("upload_succeeded_batches_$sensorId")
+            remove("upload_quarantined_batches_$sensorId")
+            remove("upload_quarantined_records_$sensorId")
         }
     }
 
@@ -234,7 +321,10 @@ class SyncTimestampService(context: Context) {
     fun clearAllSensorUploadTimestamps(existingEditor: SharedPreferences.Editor? = null) {
         val allKeys = prefs.all.keys
         val keysToRemove = allKeys.filter {
-            it.startsWith("last_upload_") || it.startsWith("upload_cursor_id_")
+            it.startsWith("last_upload_") || it.startsWith("upload_cursor_id_") ||
+                it.startsWith("upload_failure_cursor_") || it.startsWith("upload_failure_streak_") ||
+                it.startsWith("upload_succeeded_batches_") || it.startsWith("upload_quarantined_batches_") ||
+                it.startsWith("upload_quarantined_records_")
         }
         val editor = existingEditor ?: prefs.edit()
         keysToRemove.forEach { editor.remove(it) }
