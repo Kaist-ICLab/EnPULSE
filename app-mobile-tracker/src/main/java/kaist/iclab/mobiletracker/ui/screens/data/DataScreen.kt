@@ -59,6 +59,7 @@ import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.repository.SensorInfo
+import kaist.iclab.mobiletracker.services.upload.SensorUploadResult
 import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
@@ -345,58 +346,41 @@ fun DataScreen(
     }
 
     // Upload Summary Dialog — the in-progress state itself is shown inline (non-blocking) in
-    // SummaryCard below, not as a modal, so this only fires once the upload finishes.
+    // SummaryCard below, not as a modal, so this only fires once the upload finishes. Per-sensor
+    // record counts (not just success/fail) so subjects can see how much of what was attempted
+    // actually reached the server, rather than a bare pass/fail flag.
     uiState.uploadProgress?.let { progress ->
         if (progress.isComplete) {
             PopupDialog(
                 title = stringResource(R.string.upload_complete_title),
                 content = {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        if (progress.successCount > 0) {
-                            Text(
-                                text = stringResource(R.string.upload_success_header, progress.successCount),
-                                color = AppColors.PrimaryColor,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = progress.successfulSensors.joinToString(", "),
-                                fontSize = 12.sp,
-                                color = AppColors.TextSecondary
-                            )
-                        } else if (progress.failedCount == 0) {
-                            Text(
-                                text = stringResource(R.string.upload_no_data),
-                                color = AppColors.TextPrimary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
-                        if (progress.failedCount > 0) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.upload_failed_header, progress.failedCount),
-                                color = AppColors.ErrorColor,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = progress.failedSensors.joinToString(", "),
-                                fontSize = 12.sp,
-                                color = AppColors.TextSecondary
-                            )
-                        }
-
-                        if (progress.upToDateCount > 0) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(R.string.upload_uptodate_header, progress.upToDateCount),
-                                color = AppColors.TextPrimary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = progress.upToDateSensors.joinToString(", "),
-                                fontSize = 12.sp,
-                                color = AppColors.TextSecondary
-                            )
+                    if (progress.results.isEmpty() && progress.upToDateCount == 0) {
+                        Text(
+                            text = stringResource(R.string.upload_no_data),
+                            color = AppColors.TextPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    } else {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            progress.results.forEach { result ->
+                                UploadResultRow(result)
+                            }
+                            if (progress.upToDateCount > 0) {
+                                if (progress.results.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                Text(
+                                    text = stringResource(R.string.upload_uptodate_header, progress.upToDateCount),
+                                    color = AppColors.TextSecondary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = progress.upToDateSensors.joinToString(", "),
+                                    fontSize = 12.sp,
+                                    color = AppColors.TextSecondary
+                                )
+                            }
                         }
                     }
                 },
@@ -407,6 +391,47 @@ fun DataScreen(
                 onDismiss = { viewModel.clearUploadProgress() }
             )
         }
+    }
+}
+
+@Composable
+private fun UploadResultRow(result: SensorUploadResult) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = result.displayName,
+            fontSize = 13.sp,
+            color = AppColors.TextPrimary,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        val percent = result.successRatePercent
+        val valueText = if (percent != null) {
+            stringResource(
+                R.string.upload_result_row_value,
+                formatRecordCount(result.succeededCount),
+                formatRecordCount(result.attemptedCount),
+                percent
+            )
+        } else {
+            stringResource(R.string.upload_result_row_failed)
+        }
+        // 100% and no error reads as healthy (green); anything less than everything landing —
+        // whether an outright error or some data quarantined — is flagged in red so a partial
+        // success can't be mistaken for a clean one.
+        val valueColor = if (percent == 100 && !result.isError) AppColors.SecondaryColor else AppColors.ErrorColor
+        Text(
+            text = valueText,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = valueColor
+        )
     }
 }
 

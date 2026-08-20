@@ -10,6 +10,7 @@ import kaist.iclab.mobiletracker.repository.SensorInfo
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.DataUploadService
 import kaist.iclab.mobiletracker.services.upload.DataUploadState
+import kaist.iclab.mobiletracker.services.upload.SensorUploadResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +31,9 @@ data class UploadProgressState(
     val currentSensorName: String = "",
     val currentBatch: Int = 0,
     val totalBatches: Int = 0,
-    val successCount: Int = 0,
-    val failedCount: Int = 0,
+    /** Per-sensor record counts once the run finishes — see [SensorUploadResult]. */
+    val results: List<SensorUploadResult> = emptyList(),
     val upToDateCount: Int = 0,
-    val successfulSensors: List<String> = emptyList(),
-    val failedSensors: List<String> = emptyList(),
     val upToDateSensors: List<String> = emptyList()
 )
 
@@ -122,11 +121,8 @@ class DataViewModel(
                 _uiState.value = _uiState.value.copy(
                     uploadProgress = UploadProgressState(
                         isComplete = true,
-                        successCount = summary.successCount,
-                        failedCount = summary.failedCount,
+                        results = summary.results,
                         upToDateCount = summary.upToDateCount,
-                        successfulSensors = summary.successfulSensors,
-                        failedSensors = summary.failedSensors,
                         upToDateSensors = summary.upToDateSensors
                     )
                 )

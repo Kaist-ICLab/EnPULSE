@@ -52,6 +52,28 @@ data class SensorDetailInfo(
 }
 
 /**
+ * Result of one [DataRepository.uploadSensorData] call, in records — how much of what was
+ * attempted actually landed, rather than a bare success/failure flag. Used to build the
+ * post-upload summary shown to the user.
+ */
+data class SensorUploadOutcome(
+    val succeededCount: Int,
+    val attemptedCount: Int,
+    val isUpToDate: Boolean,
+    val error: Throwable? = null
+) {
+    val isError: Boolean get() = error != null
+
+    /** `null` when nothing was attempted (e.g. [isUpToDate], or [error] hit before any batch landed). */
+    val successRatePercent: Int?
+        get() = if (attemptedCount == 0) null else (succeededCount * 100) / attemptedCount
+
+    companion object {
+        val UP_TO_DATE = SensorUploadOutcome(0, 0, isUpToDate = true)
+    }
+}
+
+/**
  * Data class representing a single sensor record for display.
  */
 @Serializable
@@ -157,9 +179,9 @@ interface DataRepository {
      * @param sensorId The sensor ID
      * @param onBatchUploaded Invoked once per batch accepted by the server, for callers driving a
      * progress bar. Survey and webapp logs flush in one go and report a single batch.
-     * @return Number of records uploaded, or -1 on failure
+     * @return How many records this call actually got uploaded, out of how many it attempted.
      */
-    suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit = {}): Int
+    suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit = {}): SensorUploadOutcome
 
     /**
      * Get the last sync timestamp for a sensor.

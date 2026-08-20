@@ -17,9 +17,8 @@ import kaist.iclab.mobiletracker.repository.DataRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
-import kaist.iclab.mobiletracker.repository.onFailure
-import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.SurveyService
+import kaist.iclab.mobiletracker.ui.utils.getSensorTitleResId
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
@@ -58,13 +57,26 @@ sealed interface DataUploadState {
     ) : DataUploadState
 }
 
+/**
+ * Per-sensor upload outcome for one run, in records — how much of what was attempted actually
+ * landed, so the summary UI can show "1,230 / 1,250 (98%)" instead of a bare pass/fail flag.
+ */
+data class SensorUploadResult(
+    val displayName: String,
+    val succeededCount: Int,
+    val attemptedCount: Int,
+    val isError: Boolean
+) {
+    /** `null` when nothing was attempted (e.g. [isError] before any batch landed). */
+    val successRatePercent: Int?
+        get() = if (attemptedCount == 0) null else (succeededCount * 100) / attemptedCount
+}
+
 /** One-shot summary emitted when an upload run finishes, regardless of trigger. */
 data class UploadSummary(
-    val successCount: Int,
-    val failedCount: Int,
+    /** Sensors that had something to report — anything attempted, or an error before anything did. */
+    val results: List<SensorUploadResult>,
     val upToDateCount: Int,
-    val successfulSensors: List<String>,
-    val failedSensors: List<String>,
     val upToDateSensors: List<String>
 )
 
@@ -204,6 +216,15 @@ class DataUploadService : LifecycleService(), KoinComponent {
      */
     private val localizedContext by lazy { LanguageHelper(this).applyLanguage(this) }
 
+    /**
+     * Localized sensor name for progress/notification/summary text — the same
+     * [getSensorTitleResId] mapping the Data tab uses via its Composable [getSensorDisplayName]
+     * wrapper, just resolved through [localizedContext] since this runs outside Compose. Handler
+     * `displayName` (used before) is a fixed English label, not localized.
+     */
+    private fun localizedDisplayName(sensorId: String): String =
+        localizedContext.getString(getSensorTitleResId(sensorId))
+
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
         return null
@@ -306,21 +327,16 @@ class DataUploadService : LifecycleService(), KoinComponent {
      * early. The lists are synchronized because [runFullSync] fills them from parallel jobs.
      */
     private class UploadTally {
-        val successful: MutableList<String> = Collections.synchronizedList(mutableListOf())
-        val failed: MutableList<String> = Collections.synchronizedList(mutableListOf())
+        val results: MutableList<SensorUploadResult> = Collections.synchronizedList(mutableListOf())
         val upToDate: MutableList<String> = Collections.synchronizedList(mutableListOf())
 
         /** Snapshot of the tally so far; safe to take while parallel jobs are still adding. */
         fun toSummary(): UploadSummary {
-            val successfulSnapshot = synchronized(successful) { successful.toList() }
-            val failedSnapshot = synchronized(failed) { failed.toList() }
+            val resultsSnapshot = synchronized(results) { results.toList() }
             val upToDateSnapshot = synchronized(upToDate) { upToDate.toList() }
             return UploadSummary(
-                successCount = successfulSnapshot.size,
-                failedCount = failedSnapshot.size,
+                results = resultsSnapshot,
                 upToDateCount = upToDateSnapshot.size,
-                successfulSensors = successfulSnapshot,
-                failedSensors = failedSnapshot,
                 upToDateSensors = upToDateSnapshot
             )
         }
@@ -328,13 +344,12 @@ class DataUploadService : LifecycleService(), KoinComponent {
 
     /** Uploads exactly the requested sensors, sequentially — mirrors the old "Upload Now" logic. */
     private suspend fun runSelectedUpload(sensorIds: List<String>, tally: UploadTally) {
-        val successfulSensors = tally.successful
-        val failedSensors = tally.failed
+        val results = tally.results
         val upToDateSensors = tally.upToDate
         val progress = BatchProgress(sensorIds.sumOf { estimatedBatchesFor(it) })
 
         sensorIds.forEach { sensorId ->
-            val displayName = dataRepository.getSensorInfo(sensorId)?.displayName ?: sensorId
+            val displayName = localizedDisplayName(sensorId)
             // Announced before the work starts, so the name on screen is the sensor currently
             // uploading rather than the one that just finished.
             updateProgress(displayName, progress)
@@ -350,18 +365,18 @@ class DataUploadService : LifecycleService(), KoinComponent {
             }
 
             try {
-                val result = dataRepository.uploadSensorData(sensorId) {
+                val outcome = dataRepository.uploadSensorData(sensorId) {
                     progress.advance()
                     updateProgress(displayName, progress)
                 }
-                when {
-                    result > 0 -> successfulSensors.add(displayName)
-                    result == -1 -> failedSensors.add(displayName)
-                    else -> upToDateSensors.add(displayName)
+                if (outcome.isUpToDate) {
+                    upToDateSensors.add(displayName)
+                } else {
+                    results.add(SensorUploadResult(displayName, outcome.succeededCount, outcome.attemptedCount, outcome.isError))
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                failedSensors.add(displayName)
+                results.add(SensorUploadResult(displayName, 0, 0, isError = true))
                 Log.e(TAG, "Error uploading $sensorId", e)
             }
         }
@@ -390,8 +405,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
         // would wrongly imply it's still being tracked, so it's excluded outright instead.
         val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds)
             .filter { sensorUploadService.isSensorActive(it) }
-        val successfulSensors = tally.successful
-        val failedSensors = tally.failed
+        val results = tally.results
         val upToDateSensors = tally.upToDate
         // + 1 unit each for MicroEMA and Survey, which flush in one go rather than in batches.
         val progress = BatchProgress(allSensorIds.sumOf { sensorUploadService.pendingBatchCount(it) } + 2)
@@ -402,18 +416,17 @@ class DataUploadService : LifecycleService(), KoinComponent {
         // started or finished a batch — always one that is genuinely in flight.
         val sensorJobs = allSensorIds.map { sensorId ->
             lifecycleScope.async(Dispatchers.IO) {
-                val displayName = sensorUploadService.displayNameOf(sensorId)
+                val displayName = localizedDisplayName(sensorId)
                 if (sensorUploadService.hasDataToUpload(sensorId)) {
                     updateProgress(displayName, progress)
-                    sensorUploadService.uploadSensorData(sensorId) {
+                    val outcome = sensorUploadService.uploadSensorData(sensorId) {
                         progress.advance()
                         updateProgress(displayName, progress)
                     }
-                        .onSuccess { successfulSensors.add(displayName) }
-                        .onFailure { e ->
-                            failedSensors.add(displayName)
-                            Log.e(TAG, "Upload failed for $sensorId: ${e.message}", e)
-                        }
+                    if (outcome.isError) {
+                        Log.e(TAG, "Upload failed for $sensorId: ${outcome.error?.message}", outcome.error)
+                    }
+                    results.add(SensorUploadResult(displayName, outcome.succeededCount, outcome.attemptedCount, outcome.isError))
                 } else {
                     upToDateSensors.add(displayName)
                 }
@@ -421,14 +434,18 @@ class DataUploadService : LifecycleService(), KoinComponent {
         }
 
         val microEmaJob = lifecycleScope.async(Dispatchers.IO) {
+            // No quarantine concept for MicroEMA/Survey — they're insert-only flushes, so
+            // result.data (the count Supabase actually accepted) doubles as both succeeded and
+            // attempted.
             when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
                 is Result.Success -> {
-                    if (result.data > 0) successfulSensors.add("MicroEMA") else upToDateSensors.add("MicroEMA")
+                    if (result.data > 0) results.add(SensorUploadResult("MicroEMA", result.data, result.data, isError = false))
+                    else upToDateSensors.add("MicroEMA")
                 }
 
                 is Result.Error -> {
                     Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
-                    failedSensors.add("MicroEMA")
+                    results.add(SensorUploadResult("MicroEMA", 0, 0, isError = true))
                 }
             }
             progress.advance()
@@ -436,18 +453,20 @@ class DataUploadService : LifecycleService(), KoinComponent {
         }
 
         val surveyJob = lifecycleScope.async(Dispatchers.IO) {
+            val displayName = localizedDisplayName(SurveyResponseDataHandler.SENSOR_ID)
             when (val result = surveyResponseUploader.flush()) {
                 is Result.Success -> {
-                    if (result.data > 0) successfulSensors.add("Survey") else upToDateSensors.add("Survey")
+                    if (result.data > 0) results.add(SensorUploadResult(displayName, result.data, result.data, isError = false))
+                    else upToDateSensors.add(displayName)
                 }
 
                 is Result.Error -> {
                     Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
-                    failedSensors.add("Survey")
+                    results.add(SensorUploadResult(displayName, 0, 0, isError = true))
                 }
             }
             progress.advance()
-            updateProgress("Survey", progress)
+            updateProgress(displayName, progress)
         }
 
         (sensorJobs + microEmaJob + surveyJob).awaitAll()
@@ -502,7 +521,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
 
         // Only surface a result notification when there was something to report — matches the
         // previous auto-sync behavior of staying silent on a no-op cycle (nothing new to upload).
-        if (summary.successCount > 0 || summary.failedCount > 0) {
+        if (summary.results.isNotEmpty()) {
             showResultNotification(summary)
         }
     }
@@ -513,23 +532,26 @@ class DataUploadService : LifecycleService(), KoinComponent {
             Constants.Notification.ID_DATA_UPLOAD_RESULT
         )
 
+        val failed = summary.results.filter { it.isError }
+        val succeeded = summary.results.filter { !it.isError }
+
         val title: String
         val text: String
-        if (summary.failedCount > 0) {
-            val failedText = summary.failedSensors.take(3).joinToString(", ") +
-                    if (summary.failedSensors.size > 3) "…" else ""
+        if (failed.isNotEmpty()) {
+            val failedText = failed.take(3).joinToString(", ") { it.displayName } +
+                    if (failed.size > 3) "…" else ""
             title = localizedContext.getString(R.string.data_upload_result_failure_title)
             text = localizedContext.getString(
                 R.string.data_upload_result_message,
-                summary.successCount,
-                summary.failedCount,
+                succeeded.size,
+                failed.size,
                 failedText
             )
         } else {
             title = localizedContext.getString(R.string.data_upload_result_success_title)
             text = localizedContext.getString(
                 R.string.data_upload_result_success_message,
-                summary.successCount
+                succeeded.size
             )
         }
 
@@ -542,6 +564,6 @@ class DataUploadService : LifecycleService(), KoinComponent {
         ).build()
 
         NotificationHelper.showNotification(this, Constants.Notification.ID_DATA_UPLOAD_RESULT, notification)
-        Log.d(TAG, "Result notification shown: ${summary.successCount} succeeded, ${summary.failedCount} failed")
+        Log.d(TAG, "Result notification shown: ${succeeded.size} succeeded, ${failed.size} failed")
     }
 }

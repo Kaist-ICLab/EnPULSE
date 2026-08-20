@@ -218,15 +218,15 @@ class SensorDetailViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUploading = true)
             try {
-                val result = dataRepository.uploadSensorData(sensorId)
+                val outcome = dataRepository.uploadSensorData(sensorId)
                 when {
-                    result > 0 -> {
+                    outcome.succeededCount > 0 -> {
                         _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_uploaded))
                         // Refresh to update sync timestamp
                         loadSensorDetail()
                     }
 
-                    result == 0 -> {
+                    outcome.isUpToDate -> {
                         _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_upload))
                     }
 
