@@ -102,6 +102,11 @@ class DataRepositoryImpl(
         return handler.getRecordCountAfterTimestamp(afterTimestamp)
     }
 
+    override suspend fun importSensorRecords(sensorId: String, records: List<SensorRecord>, uuid: String): Int {
+        val handler = handlerRegistry.getHandler(sensorId) ?: return -1
+        return handler.importRecords(records, uuid)
+    }
+
     override suspend fun deleteAllSensorData(sensorId: String) {
         val handler = handlerRegistry.getHandler(sensorId) ?: return
         handler.deleteAll()

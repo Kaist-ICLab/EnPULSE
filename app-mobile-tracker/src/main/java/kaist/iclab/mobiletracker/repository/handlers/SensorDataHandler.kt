@@ -54,6 +54,19 @@ interface SensorDataHandler {
         offset: Int
     ): List<JsonElement>
 
+    /**
+     * Import records previously produced by [getRecordsPaginated]'s [SensorRecord] display
+     * projection — e.g. a CSV a researcher edited by hand for debugging — back into this
+     * sensor's store. Every imported row's `uuid` is overwritten with [uuid]: imported data is
+     * always attributed to the importing user, never whatever (if anything) was in the source.
+     *
+     * Only sensors that declare a reverse mapping (see [kaist.iclab.mobiletracker.di.SensorDescriptor.fromRecord])
+     * support this; others return -1.
+     *
+     * @return Number of rows imported, or -1 if this sensor doesn't support import.
+     */
+    suspend fun importRecords(records: List<SensorRecord>, uuid: String): Int = -1
+
     /** Delete all records for this sensor */
     suspend fun deleteAll()
 

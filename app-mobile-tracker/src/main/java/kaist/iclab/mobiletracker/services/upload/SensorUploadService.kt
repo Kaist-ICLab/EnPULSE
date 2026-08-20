@@ -54,9 +54,19 @@ class SensorUploadService(
         }
 
         return try {
-            when (val result = handler.uploadData(userUuid, lastUploadCursor)) {
+            when (
+                val result = handler.uploadData(
+                    userUuid = userUuid,
+                    lastUploadCursor = lastUploadCursor,
+                    // Persist progress after every individual batch, not just once at the end —
+                    // a later batch failing must not discard/re-upload the batches that already
+                    // succeeded. See uploadData()'s doc comment.
+                    onBatchUploaded = { newCursor -> syncTimestampService.setUploadCursor(sensorId, newCursor) }
+                )
+            ) {
                 is Result.Success -> {
-                    syncTimestampService.setUploadCursor(sensorId, result.data)
+                    // Cursor is already persisted via onBatchUploaded above (including this last
+                    // batch), so nothing more to do here besides the "last synced at" display value.
                     syncTimestampService.updateLastSuccessfulUpload(sensorId)
 
                     // Prune data that is BOTH synced AND older than PRUNE_BUFFER_MS
@@ -113,7 +123,22 @@ class SensorUploadService(
     private fun getUserUuid(): String? {
         var userUuid = SupabaseSessionHelper.getUuidOrNull(supabaseHelper.supabaseClient)
         if (userUuid.isNullOrEmpty()) {
-            userUuid = syncTimestampService.getCachedUserUuid()
+            // The live Supabase session has no usable uuid right now (see the sessionStatus log
+            // in SupabaseSessionHelper for why) — falling back to the last-known-good uuid we
+            // cached at login. This uuid is very likely still correct, but it says nothing about
+            // whether the Supabase client actually HAS a valid access token to authenticate the
+            // upcoming upsert with. If the request goes out unauthenticated (anon role) because
+            // the session is genuinely broken (e.g. a failed token refresh), Postgres will
+            // reject every row with an RLS violation even though this uuid looks completely
+            // fine — that mismatch is exactly what an "RLS error with no obvious local cause"
+            // looks like from here.
+            val cachedUuid = syncTimestampService.getCachedUserUuid()
+            Log.w(
+                TAG,
+                "No live session uuid; falling back to cached uuid (present=${!cachedUuid.isNullOrEmpty()}). " +
+                    "If the upload that follows fails with an RLS error, the session was likely broken at request time."
+            )
+            userUuid = cachedUuid
         }
         return userUuid?.takeIf { it.isNotEmpty() }
     }

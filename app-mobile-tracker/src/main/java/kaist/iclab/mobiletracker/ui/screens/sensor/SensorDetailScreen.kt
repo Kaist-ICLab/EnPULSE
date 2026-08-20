@@ -1,5 +1,8 @@
 package kaist.iclab.mobiletracker.ui.screens.sensor
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -96,6 +99,12 @@ fun SensorDetailScreen(
 
     var showUploadDialog by remember { mutableStateOf(false) }
     var showDeleteAllDialog by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Opens the system file picker for CSV import; the confirmation dialog fires once a file is chosen.
+    val importCsvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri -> if (uri != null) pendingImportUri = uri }
 
     // Load more when reaching end of list
 
@@ -150,7 +159,8 @@ fun SensorDetailScreen(
                             uiState = uiState,
                             onUploadClick = { showUploadDialog = true },
                             onDeleteAllClick = { showDeleteAllDialog = true },
-                            onExportClick = { viewModel.exportToCsv() }
+                            onExportClick = { viewModel.exportToCsv() },
+                            onImportClick = { importCsvLauncher.launch(arrayOf("text/csv", "text/comma-separated-values", "*/*")) }
                         )
                     }
 
@@ -283,6 +293,34 @@ fun SensorDetailScreen(
             onDismiss = { showDeleteAllDialog = false }
         )
     }
+
+    // Import confirmation dialog — shown after a CSV file is picked, before it's actually imported
+    pendingImportUri?.let { uri ->
+        PopupDialog(
+            title = stringResource(R.string.sensor_import_data_confirm),
+            content = {
+                Text(
+                    text = stringResource(R.string.sensor_import_data_message),
+                    fontSize = Dimens.FontSizeBody,
+                    color = AppColors.TextPrimary
+                )
+            },
+            primaryButton = DialogButtonConfig(
+                text = stringResource(R.string.sensor_import_csv),
+                onClick = {
+                    viewModel.importFromCsv(uri)
+                    pendingImportUri = null
+                },
+                enabled = !uiState.isImporting
+            ),
+            secondaryButton = DialogButtonConfig(
+                text = stringResource(R.string.sync_clear_data_cancel),
+                onClick = { pendingImportUri = null },
+                isPrimary = false
+            ),
+            onDismiss = { pendingImportUri = null }
+        )
+    }
 }
 
 @Composable
@@ -341,7 +379,8 @@ private fun SummaryCard(
     uiState: SensorDetailUiState,
     onUploadClick: () -> Unit,
     onDeleteAllClick: () -> Unit,
-    onExportClick: () -> Unit
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -465,6 +504,42 @@ private fun SummaryCard(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.SpacingSmall))
+
+            // Import button (Full width) — debugging tool, so always available even with no
+            // existing records yet.
+            Button(
+                onClick = onImportClick,
+                enabled = !uiState.isImporting && !uiState.isUploading && !uiState.isDeleting,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(Styles.SMALL_BUTTON_HEIGHT),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.SecondaryColor,
+                    contentColor = AppColors.White,
+                    disabledContainerColor = AppColors.TextSecondary.copy(alpha = 0.3f),
+                    disabledContentColor = AppColors.TextSecondary
+                ),
+                shape = RoundedCornerShape(Styles.SMALL_BUTTON_CORNER_RADIUS),
+                contentPadding = PaddingValues(
+                    horizontal = Styles.SMALL_BUTTON_PADDING_HORIZONTAL,
+                    vertical = Styles.SMALL_BUTTON_PADDING_VERTICAL
+                )
+            ) {
+                if (uiState.isImporting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(Dimens.IconSizeSmall),
+                        color = AppColors.TextSecondary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.sensor_import_csv),
+                        fontSize = Styles.SMALL_BUTTON_FONT_SIZE
+                    )
                 }
             }
         }

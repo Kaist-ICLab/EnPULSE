@@ -38,6 +38,7 @@ import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.db.obx.SupabaseJson
+import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.handlers.GenericSensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
@@ -77,7 +78,17 @@ class SensorDescriptor<T>(
     val store: SensorStore<T>,
     val supabaseTable: String,
     val serializer: KSerializer<T>,
-    val fromSensorEntity: ((SensorEntity, String?) -> T)? = null
+    val fromSensorEntity: ((SensorEntity, String?) -> T)? = null,
+    /**
+     * Reverse of [RecordSerializable.toRecord] — rebuilds an entity from its CSV-exported
+     * [SensorRecord] display projection, for the debug "re-import a CSV" flow. `null` means this
+     * sensor doesn't support import. `id`/`uuid`/`eventId`/`received` are ignored here and
+     * always overwritten by [GenericSensorDataHandler.importRecords], so lambdas only need to
+     * fill in the sensor-specific fields (mirroring `toRecord()` in reverse); any field the
+     * display projection doesn't carry (e.g. columns dropped or truncated for readability) falls
+     * back to the entity's own default.
+     */
+    val fromRecord: ((SensorRecord) -> T)? = null
 ) where T : BaseEntity, T : CsvSerializable, T : RecordSerializable {
     fun toDataHandler(): SensorDataHandler = GenericSensorDataHandler(
         sensorId = sensorId,
@@ -85,7 +96,8 @@ class SensorDescriptor<T>(
         isWatchSensor = isWatchSensor,
         supabaseTableName = supabaseTable,
         store = store,
-        serializer = serializer
+        serializer = serializer,
+        fromRecord = fromRecord
     )
 
     fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler = SensorUploadHandlerImpl(
@@ -120,6 +132,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     score = e.score,
                     probabilities = e.probabilities.toIntArray()
                 )
+            },
+            fromRecord = { record ->
+                ActivityRecognitionEntity(
+                    timestamp = record.timestamp,
+                    activityType = record.fields["Activity"]?.toIntOrNull() ?: 0,
+                    score = record.fields["Score"]?.toIntOrNull() ?: 0
+                )
             }
         ),
         SensorDescriptor(
@@ -132,6 +151,12 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as AmbientLightSensor.Entity
                 AmbientLightEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, accuracy = e.accuracy, value = e.value)
+            },
+            fromRecord = { record ->
+                AmbientLightEntity(
+                    timestamp = record.timestamp,
+                    value = record.fields["Value"]?.removeSuffix("lux")?.trim()?.toFloatOrNull() ?: 0f
+                )
             }
         ),
         SensorDescriptor(
@@ -144,6 +169,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as AppListChangeSensor.Entity
                 AppListChangeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, changedAppJson = e.changedApp?.let { SupabaseJson.encodeToString(it) }, appListJson = e.appList?.let { SupabaseJson.encodeToString(it) })
+            },
+            // "Changed" is truncated to 50 chars for display, so this is best-effort only.
+            fromRecord = { record ->
+                AppListChangeEntity(
+                    timestamp = record.timestamp,
+                    changedAppJson = record.fields["Changed"]?.takeIf { it != "N/A" }
+                )
             }
         ),
         SensorDescriptor(
@@ -156,6 +188,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as AppUsageLogSensor.Entity
                 AppUsageLogEntity(uuid = uuid ?: "", eventId = e.eventId, received = e.received, timestamp = e.timestamp, packageName = e.packageName, installedBy = e.installedBy, eventType = e.eventType)
+            },
+            fromRecord = { record ->
+                AppUsageLogEntity(
+                    timestamp = record.timestamp,
+                    packageName = record.fields["Package"] ?: "",
+                    eventType = record.fields["Event"]?.toIntOrNull() ?: 0
+                )
             }
         ),
         SensorDescriptor(
@@ -168,6 +207,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as BatterySensor.Entity
                 BatteryEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, connectedType = e.connectedType, status = e.status, level = e.level, temperature = e.temperature)
+            },
+            fromRecord = { record ->
+                BatteryEntity(
+                    timestamp = record.timestamp,
+                    level = record.fields["Level"]?.removeSuffix("%")?.toIntOrNull() ?: 0,
+                    status = record.fields["Status"]?.toIntOrNull() ?: 0
+                )
             }
         ),
         SensorDescriptor(
@@ -180,6 +226,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as BluetoothScanSensor.Entity
                 BluetoothScanEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, name = e.name, alias = e.alias, address = e.address, bondState = e.bondState, connectionType = e.connectionType, classType = e.classType, rssi = e.rssi, isLE = e.isLE)
+            },
+            fromRecord = { record ->
+                BluetoothScanEntity(
+                    timestamp = record.timestamp,
+                    name = record.fields["Name"] ?: "",
+                    address = record.fields["Address"] ?: ""
+                )
             }
         ),
         SensorDescriptor(
@@ -192,6 +245,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as CallLogSensor.Entity
                 CallLogEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, duration = e.duration, number = e.number, type = e.type)
+            },
+            fromRecord = { record ->
+                CallLogEntity(
+                    timestamp = record.timestamp,
+                    type = record.fields["Type"]?.toIntOrNull() ?: 0,
+                    duration = record.fields["Duration"]?.removeSuffix("s")?.toLongOrNull() ?: 0
+                )
             }
         ),
         SensorDescriptor(
@@ -204,6 +264,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as ConnectivitySensor.Entity
                 ConnectivityEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, networkType = e.networkType, isConnected = e.isConnected, hasInternet = e.hasInternet, transportTypes = e.transportTypes.joinToString(","))
+            },
+            fromRecord = { record ->
+                ConnectivityEntity(
+                    timestamp = record.timestamp,
+                    networkType = record.fields["Network"] ?: "",
+                    isConnected = record.fields["Connected"]?.toBooleanStrictOrNull() ?: false
+                )
             }
         ),
         SensorDescriptor(
@@ -216,6 +283,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as DataTrafficSensor.Entity
                 DataTrafficEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, totalRx = e.totalRx, totalTx = e.totalTx, mobileRx = e.mobileRx, mobileTx = e.mobileTx)
+            },
+            // Display rounds to whole KB and drops mobileRx/mobileTx entirely, so this is lossy.
+            fromRecord = { record ->
+                DataTrafficEntity(
+                    timestamp = record.timestamp,
+                    totalRx = (record.fields["Total Rx"]?.removeSuffix("KB")?.trim()?.toLongOrNull() ?: 0) * 1024,
+                    totalTx = (record.fields["Total Tx"]?.removeSuffix("KB")?.trim()?.toLongOrNull() ?: 0) * 1024
+                )
             }
         ),
         SensorDescriptor(
@@ -228,6 +303,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as DeviceModeSensor.Entity
                 DeviceModeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, eventType = e.eventType, value = e.value)
+            },
+            fromRecord = { record ->
+                DeviceModeEntity(
+                    timestamp = record.timestamp,
+                    eventType = record.fields["Event"] ?: "",
+                    value = record.fields["Value"] ?: ""
+                )
             }
         ),
         SensorDescriptor(
@@ -263,6 +345,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     meanRpm = e.meanRpm,
                     maxRpm = e.maxRpm
                 )
+            },
+            fromRecord = { record ->
+                ExerciseEntity(
+                    timestamp = record.timestamp,
+                    exerciseType = record.fields["Type"] ?: "",
+                    duration = record.fields["Duration"]?.removeSuffix("ms")?.toLongOrNull() ?: 0,
+                    calories = record.fields["Calories"]?.toFloatOrNull() ?: 0f
+                )
             }
         ),
         SensorDescriptor(
@@ -275,6 +365,16 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as LocationSensor.Entity
                 LocationEntity(uuid = uuid ?: "", deviceType = DeviceType.PHONE.value, received = e.received, timestamp = e.timestamp, latitude = e.latitude, longitude = e.longitude, altitude = e.altitude, speed = e.speed, accuracy = e.accuracy)
+            },
+            // altitude/speed aren't shown for display, so those default to 0 on import.
+            fromRecord = { record ->
+                LocationEntity(
+                    timestamp = record.timestamp,
+                    deviceType = DeviceType.PHONE.value,
+                    latitude = record.fields["Latitude"]?.removeSuffix("°")?.toDoubleOrNull() ?: 0.0,
+                    longitude = record.fields["Longitude"]?.removeSuffix("°")?.toDoubleOrNull() ?: 0.0,
+                    accuracy = record.fields["Accuracy"]?.removeSuffix("m")?.trim()?.toFloatOrNull() ?: 0f
+                )
             }
         ),
         SensorDescriptor(
@@ -287,6 +387,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as MediaSensor.Entity
                 MediaEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, operation = e.operation, mediaType = e.mediaType, storageType = e.storageType, uri = e.uri, fileName = e.fileName, mimeType = e.mimeType, size = e.size, dateAdded = e.dateAdded, dateModified = e.dateModified)
+            },
+            // fileName is truncated to 30 chars for display, so this is best-effort only.
+            fromRecord = { record ->
+                MediaEntity(
+                    timestamp = record.timestamp,
+                    mimeType = record.fields["Type"]?.takeIf { it != "Unknown" },
+                    fileName = record.fields["Name"]?.takeIf { it != "Unknown" }
+                )
             }
         ),
         SensorDescriptor(
@@ -299,6 +407,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as MessageLogSensor.Entity
                 MessageLogEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, number = e.number, messageType = e.messageType, contactType = e.contactType)
+            },
+            // number is truncated to 10 chars for display, so this is best-effort only.
+            fromRecord = { record ->
+                MessageLogEntity(
+                    timestamp = record.timestamp,
+                    messageType = record.fields["Type"] ?: "",
+                    number = record.fields["Number"] ?: ""
+                )
             }
         ),
         SensorDescriptor(
@@ -311,6 +427,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as NotificationSensor.Entity
                 NotificationEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, packageName = e.packageName, eventType = e.eventType, title = e.title, text = e.text, visibility = e.visibility, category = e.category)
+            },
+            fromRecord = { record ->
+                NotificationEntity(
+                    timestamp = record.timestamp,
+                    packageName = record.fields["Package"] ?: "",
+                    title = record.fields["Title"] ?: ""
+                )
             }
         ),
         SensorDescriptor(
@@ -323,6 +446,9 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as ScreenSensor.Entity
                 ScreenEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, type = e.type)
+            },
+            fromRecord = { record ->
+                ScreenEntity(timestamp = record.timestamp, type = record.fields["Type"] ?: "")
             }
         ),
         SensorDescriptor(
@@ -342,6 +468,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     sleepScore = e.sleepScore,
                     stagesJson = SupabaseJson.encodeToString(e.stages)
                 )
+            },
+            fromRecord = { record ->
+                SleepEntity(
+                    timestamp = record.timestamp,
+                    duration = record.fields["Duration"]?.removeSuffix("ms")?.toLongOrNull() ?: 0,
+                    sleepScore = record.fields["Score"]?.takeIf { it != "N/A" }?.toIntOrNull()
+                )
             }
         ),
         SensorDescriptor(
@@ -354,6 +487,9 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as StepSensor.Entity
                 StepEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, duration = e.duration, steps = e.steps)
+            },
+            fromRecord = { record ->
+                StepEntity(timestamp = record.timestamp, steps = record.fields["Steps"]?.toLongOrNull() ?: 0)
             }
         ),
         SensorDescriptor(
@@ -366,6 +502,9 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as UserInteractionSensor.Entity
                 UserInteractionEntity(uuid = uuid ?: "", eventId = e.eventId, received = e.received, timestamp = e.timestamp, packageName = e.packageName, className = e.className, eventType = e.eventType, text = e.text)
+            },
+            fromRecord = { record ->
+                UserInteractionEntity(timestamp = record.timestamp, eventType = record.fields["Event"]?.toIntOrNull() ?: 0)
             }
         ),
         SensorDescriptor(
@@ -378,6 +517,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             fromSensorEntity = { e, uuid ->
                 e as WifiScanSensor.Entity
                 WifiScanEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, ssid = e.ssid, bssid = e.bssid, frequency = e.frequency, level = e.level)
+            },
+            fromRecord = { record ->
+                WifiScanEntity(
+                    timestamp = record.timestamp,
+                    ssid = record.fields["SSID"] ?: "",
+                    bssid = record.fields["BSSID"] ?: ""
+                )
             }
         ),
         // Watch sensors — written via WatchSensorRepository (BLE), no phone-side store needed
@@ -387,7 +533,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchHeartRate,
             supabaseTable = AppConfig.SupabaseTables.HEART_RATE_SENSOR,
-            serializer = HeartRateEntity.serializer()
+            serializer = HeartRateEntity.serializer(),
+            // ibi/ibiStatus aren't shown for display, so those default to empty on import.
+            fromRecord = { record ->
+                HeartRateEntity(
+                    timestamp = record.timestamp,
+                    hr = record.fields["Heart Rate"]?.removeSuffix("BPM")?.trim()?.toIntOrNull() ?: 0,
+                    hrStatus = record.fields["Status"]?.toIntOrNull() ?: 0
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "Accelerometer",
@@ -395,7 +549,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchAccelerometer,
             supabaseTable = AppConfig.SupabaseTables.ACCELEROMETER_SENSOR,
-            serializer = AccelerometerEntity.serializer()
+            serializer = AccelerometerEntity.serializer(),
+            fromRecord = { record ->
+                AccelerometerEntity(
+                    timestamp = record.timestamp,
+                    x = record.fields["X"]?.toFloatOrNull() ?: 0f,
+                    y = record.fields["Y"]?.toFloatOrNull() ?: 0f,
+                    z = record.fields["Z"]?.toFloatOrNull() ?: 0f
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "EDA",
@@ -403,7 +565,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchEDA,
             supabaseTable = AppConfig.SupabaseTables.EDA_SENSOR,
-            serializer = EDAEntity.serializer()
+            serializer = EDAEntity.serializer(),
+            fromRecord = { record ->
+                EDAEntity(
+                    timestamp = record.timestamp,
+                    skinConductance = record.fields["EDA"]?.removeSuffix("μS")?.trim()?.toFloatOrNull() ?: 0f
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "PPG",
@@ -411,7 +579,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchPPG,
             supabaseTable = AppConfig.SupabaseTables.PPG_SENSOR,
-            serializer = PPGEntity.serializer()
+            serializer = PPGEntity.serializer(),
+            // greenStatus/red/redStatus/irStatus aren't shown for display, so those default to 0.
+            fromRecord = { record ->
+                PPGEntity(
+                    timestamp = record.timestamp,
+                    green = record.fields["Green"]?.toIntOrNull() ?: 0,
+                    ir = record.fields["IR"]?.toIntOrNull() ?: 0
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "SkinTemperature",
@@ -419,7 +595,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchSkinTemperature,
             supabaseTable = AppConfig.SupabaseTables.SKIN_TEMPERATURE_SENSOR,
-            serializer = SkinTemperatureEntity.serializer()
+            serializer = SkinTemperatureEntity.serializer(),
+            // ambientTemp/status aren't shown for display, so those default on import.
+            fromRecord = { record ->
+                SkinTemperatureEntity(
+                    timestamp = record.timestamp,
+                    objectTemp = record.fields["Skin Temp"]?.removeSuffix("°C")?.trim()?.toFloatOrNull() ?: 0f
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "ECG",
@@ -427,7 +610,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.ecg,
             supabaseTable = AppConfig.SupabaseTables.ECG_SENSOR,
-            serializer = ECGEntity.serializer()
+            serializer = ECGEntity.serializer(),
+            fromRecord = { record ->
+                ECGEntity(
+                    timestamp = record.timestamp,
+                    ecgMv = record.fields["ECG (mV)"]?.toFloatOrNull() ?: 0f,
+                    leadOff = record.fields["Lead Off"]?.toIntOrNull() ?: 0
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "IMU",
@@ -435,7 +625,18 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchIMU,
             supabaseTable = AppConfig.SupabaseTables.IMU_SENSOR,
-            serializer = WatchIMUEntity.serializer()
+            serializer = WatchIMUEntity.serializer(),
+            fromRecord = { record ->
+                WatchIMUEntity(
+                    timestamp = record.timestamp,
+                    accX = record.fields["AccX"]?.toFloatOrNull() ?: 0f,
+                    accY = record.fields["AccY"]?.toFloatOrNull() ?: 0f,
+                    accZ = record.fields["AccZ"]?.toFloatOrNull() ?: 0f,
+                    gyroX = record.fields["GyroX"]?.toFloatOrNull() ?: 0f,
+                    gyroY = record.fields["GyroY"]?.toFloatOrNull() ?: 0f,
+                    gyroZ = record.fields["GyroZ"]?.toFloatOrNull() ?: 0f
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "Gesture",
@@ -443,7 +644,18 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchGesture,
             supabaseTable = AppConfig.SupabaseTables.GESTURE_SENSOR,
-            serializer = WatchGestureEntity.serializer()
+            serializer = WatchGestureEntity.serializer(),
+            fromRecord = { record ->
+                WatchGestureEntity(
+                    timestamp = record.timestamp,
+                    classIndex = record.fields["Class Index"]?.toIntOrNull() ?: 0,
+                    score = record.fields["Score"]?.toIntOrNull() ?: 0,
+                    probabilities = record.fields["Probabilities"]
+                        ?.split(",")
+                        ?.mapNotNull { it.trim().toIntOrNull() }
+                        ?.toIntArray() ?: IntArray(0)
+                )
+            }
         ),
         SensorDescriptor(
             sensorId = "Stress",
@@ -451,7 +663,17 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             isWatchSensor = true,
             store = s.watchStress,
             supabaseTable = AppConfig.SupabaseTables.STRESS_SENSOR,
-            serializer = WatchStressEntity.serializer()
+            serializer = WatchStressEntity.serializer(),
+            // ibiCount1m/threshold aren't shown for display, so those default on import.
+            fromRecord = { record ->
+                WatchStressEntity(
+                    timestamp = record.timestamp,
+                    rmssd1m = record.fields["RMSSD (1m)"]?.toFloatOrNull() ?: 0f,
+                    rmssd5m = record.fields["RMSSD (5m)"]?.toFloatOrNull() ?: 0f,
+                    ibiCount5m = record.fields["IBI Count (5m)"]?.toIntOrNull() ?: 0,
+                    isStressed = record.fields["Stressed"]?.toBooleanStrictOrNull() ?: false
+                )
+            }
         ),
     )
 }

@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.viewmodels.data
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +11,7 @@ import kaist.iclab.mobiletracker.repository.PageSize
 import kaist.iclab.mobiletracker.repository.SensorDetailInfo
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.SortOrder
+import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.utils.CsvExportHelper
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +39,8 @@ data class SensorDetailUiState(
     val error: String? = null,
     val isUploading: Boolean = false,
     val isDeleting: Boolean = false,
-    val isExporting: Boolean = false
+    val isExporting: Boolean = false,
+    val isImporting: Boolean = false
 )
 
 /**
@@ -46,7 +49,8 @@ data class SensorDetailUiState(
 class SensorDetailViewModel(
     private val dataRepository: DataRepository,
     private val sensorId: String,
-    private val csvExportHelper: CsvExportHelper
+    private val csvExportHelper: CsvExportHelper,
+    private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SensorDetailUiState())
@@ -302,6 +306,47 @@ class SensorDetailViewModel(
                 _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_export_failed))
             } finally {
                 _uiState.value = _uiState.value.copy(isExporting = false)
+            }
+        }
+    }
+
+    /**
+     * Import sensor data from a CSV previously produced by [exportToCsv], for debugging. Every
+     * imported row's uuid is overwritten with the current user's own uuid — imported data is
+     * always attributed to whoever is importing it, never whatever (if anything) was in the file.
+     */
+    fun importFromCsv(uri: Uri) {
+        if (_uiState.value.isImporting) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isImporting = true)
+            try {
+                val uuid = userProfileRepository.getCurrentUuid()
+                if (uuid.isNullOrBlank()) {
+                    _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_import_failed))
+                    return@launch
+                }
+
+                var imported = 0
+                var unsupported = false
+                val total = csvExportHelper.importCsv(uri) { batch ->
+                    val result = dataRepository.importSensorRecords(sensorId, batch, uuid)
+                    if (result < 0) unsupported = true else imported += result
+                }
+
+                when {
+                    unsupported -> _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_import_unsupported))
+                    total == 0 -> _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_import))
+                    else -> {
+                        _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_imported))
+                        loadSensorDetail()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("SensorDetailViewModel", "Error importing CSV", e)
+                _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_import_failed))
+            } finally {
+                _uiState.value = _uiState.value.copy(isImporting = false)
             }
         }
     }

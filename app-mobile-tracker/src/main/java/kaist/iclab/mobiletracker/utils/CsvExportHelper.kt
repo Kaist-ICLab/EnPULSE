@@ -141,6 +141,98 @@ class CsvExportHelper(
     }
 
     /**
+     * Import a CSV previously produced by [exportToCsv], for the debug "load CSV back into a
+     * sensor" flow. Reads [uri] line by line and hands off parsed rows in [batchSize] chunks via
+     * [onBatch] — same reasoning as [exportToCsv]'s batching, just in reverse, so re-importing a
+     * "big" CSV doesn't OOM either.
+     *
+     * The `id` column is ignored (a re-import always inserts fresh rows); every other header
+     * column becomes a `fields` entry.
+     *
+     * @return Total number of rows parsed and handed off, or 0 if the file was empty/unreadable.
+     */
+    suspend fun importCsv(
+        uri: Uri,
+        batchSize: Int = 5000,
+        onBatch: suspend (List<SensorRecord>) -> Unit
+    ): Int = withContext(Dispatchers.IO) {
+        var total = 0
+        try {
+            context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+                var headerLine = reader.readLine()
+                while (headerLine != null && headerLine.isBlank()) headerLine = reader.readLine()
+                val header = headerLine?.let { parseCsvLine(it) } ?: return@use
+                if (header.size < 2) return@use
+                val fieldNames = header.drop(2)
+
+                val batch = mutableListOf<SensorRecord>()
+                var line = reader.readLine()
+                while (line != null) {
+                    if (line.isNotBlank()) {
+                        val cols = parseCsvLine(line)
+                        val timestamp = cols.getOrNull(1)?.let { parseTimestamp(it) }
+                        if (cols.size >= 2 && timestamp != null) {
+                            val fields = fieldNames.indices.associate { i ->
+                                fieldNames[i] to (cols.getOrNull(i + 2) ?: "")
+                            }
+                            batch.add(SensorRecord(id = 0, timestamp = timestamp, fields = fields))
+                            if (batch.size >= batchSize) {
+                                onBatch(batch.toList())
+                                total += batch.size
+                                batch.clear()
+                            }
+                        }
+                    }
+                    line = reader.readLine()
+                }
+                if (batch.isNotEmpty()) {
+                    onBatch(batch.toList())
+                    total += batch.size
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to import CSV: ${e.message}", e)
+        }
+        total
+    }
+
+    /** Parses a "yyyy-MM-dd HH:mm:ss.SSS" timestamp as written by [exportToCsv], or null if malformed. */
+    private fun parseTimestamp(value: String): Long? = try {
+        SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault()).parse(value)?.time
+    } catch (e: Exception) {
+        null
+    }
+
+    /**
+     * Splits one CSV row, honoring double-quoted fields (with `""` as an escaped quote) — the
+     * reverse of [escapeCsvField].
+     */
+    private fun parseCsvLine(line: String): List<String> {
+        val result = mutableListOf<String>()
+        val current = StringBuilder()
+        var inQuotes = false
+        var i = 0
+        while (i < line.length) {
+            val c = line[i]
+            when {
+                inQuotes && c == '"' && i + 1 < line.length && line[i + 1] == '"' -> {
+                    current.append('"')
+                    i++
+                }
+                c == '"' -> inQuotes = !inQuotes
+                c == ',' && !inQuotes -> {
+                    result.add(current.toString())
+                    current.clear()
+                }
+                else -> current.append(c)
+            }
+            i++
+        }
+        result.add(current.toString())
+        return result
+    }
+
+    /**
      * Share a CSV file using Android's share intent.
      */
     fun shareCsv(uri: Uri, sensorName: String) {

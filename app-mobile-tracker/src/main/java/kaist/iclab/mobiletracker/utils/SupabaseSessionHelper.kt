@@ -21,7 +21,18 @@ object SupabaseSessionHelper {
      */
     fun getUuidOrNull(supabaseClient: SupabaseClient): String? {
         return try {
-            val session = supabaseClient.auth.currentSessionOrNull() ?: return null
+            val session = supabaseClient.auth.currentSessionOrNull()
+            if (session == null) {
+                // currentSessionOrNull() returns null for ANY sessionStatus other than
+                // Authenticated — including RefreshFailure (an in-flight token refresh that
+                // failed, e.g. a transient network blip) and Initializing, not just a real
+                // sign-out. Logging the actual status here is the only way to tell those apart
+                // from logcat when an upload fails RLS right after this: a plain "no session"
+                // read is ambiguous, but "status=RefreshFailure" pinpoints a broken/expired
+                // token as the cause rather than the user genuinely being logged out.
+                Log.w(TAG, "currentSessionOrNull() is null (sessionStatus=${supabaseClient.auth.sessionStatus.value::class.simpleName})")
+                return null
+            }
             val uuid = session.user?.id
             if (uuid.isNullOrEmpty()) null else uuid
         } catch (e: Exception) {

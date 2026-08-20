@@ -22,13 +22,24 @@ interface SensorUploadHandler {
     suspend fun hasDataToUpload(lastUploadCursor: Long): Boolean
 
     /**
-     * Upload sensor data to Supabase.
+     * Upload sensor data to Supabase, in batches.
      * @param userUuid The UUID of the current user
      * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload; see
      * [hasDataToUpload].
-     * @return Result containing the new cursor value to persist on success
+     * @param onBatchUploaded Invoked with the new cursor value after each individual batch
+     * upserts successfully — the caller should persist it immediately (e.g. [SensorUploadHandlerImpl]
+     * calls it after every batch, not just once at the end). This way, if a later batch fails
+     * (bad data, network drop, etc.), the batches that already succeeded aren't silently forgotten
+     * and re-uploaded next time — only the failing point is retried.
+     * @return Result containing the final cursor value on success (already persisted via
+     * [onBatchUploaded] by the time this returns); on failure, whatever progress was made before
+     * the failing batch has still been persisted via [onBatchUploaded].
      */
-    suspend fun uploadData(userUuid: String, lastUploadCursor: Long): Result<Long>
+    suspend fun uploadData(
+        userUuid: String,
+        lastUploadCursor: Long,
+        onBatchUploaded: suspend (Long) -> Unit = {}
+    ): Result<Long>
 
     /**
      * Delete local data older than the specified timestamp.

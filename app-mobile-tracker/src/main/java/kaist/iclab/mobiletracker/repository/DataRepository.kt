@@ -153,4 +153,15 @@ interface DataRepository {
      * Delete all data for all sensors.
      */
     suspend fun deleteAllAllData()
+
+    /**
+     * Import previously-exported [SensorRecord]s back into a sensor's local store, for
+     * debugging. Every imported row's `uuid` is overwritten with [uuid] — imported data is
+     * always attributed to the importing user, never whatever (if anything) was in the source.
+     * @param sensorId The sensor ID
+     * @param records Records to import, e.g. parsed from a CSV previously exported for this sensor
+     * @param uuid The importing user's own uuid, stamped onto every imported row
+     * @return Number of rows imported, or -1 if this sensor doesn't support import
+     */
+    suspend fun importSensorRecords(sensorId: String, records: List<SensorRecord>, uuid: String): Int
 }

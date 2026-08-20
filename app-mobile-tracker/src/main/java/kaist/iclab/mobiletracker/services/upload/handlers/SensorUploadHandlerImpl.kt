@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.services.upload.handlers
 
+import android.util.Log
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
@@ -42,22 +43,48 @@ class SensorUploadHandlerImpl<T>(
     override suspend fun hasDataToUpload(lastUploadCursor: Long): Boolean =
         store.hasDataWithIdAfter(lastUploadCursor)
 
-    override suspend fun uploadData(userUuid: String, lastUploadCursor: Long): Result<Long> {
+    override suspend fun uploadData(
+        userUuid: String,
+        lastUploadCursor: Long,
+        onBatchUploaded: suspend (Long) -> Unit
+    ): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var currentCursor = lastUploadCursor
             var uploadedAny = false
+            var batchIndex = 0
 
             while (true) {
                 val entities = store.recordsWithIdAfter(afterId = currentCursor, limit = batchSize)
 
                 if (entities.isEmpty()) break
 
+                batchIndex++
+                // recordsWithIdAfter orders by id ascending, so first/last id is the range as-is;
+                // timestamp isn't guaranteed sorted, hence minOf/maxOf. If upsertBatch below throws,
+                // this line (already in logcat) plus the classified error that follows pinpoints
+                // exactly which local rows (id/timestamp/eventId range) caused it — debug aid for
+                // tracking down which imported/captured batch triggers an upload failure.
+                Log.d(
+                    sensorId,
+                    "Uploading $sensorId batch #$batchIndex: ${entities.size} records, " +
+                        "id range [${entities.first().id}, ${entities.last().id}], " +
+                        "timestamp range [${entities.minOf { it.timestamp }}, ${entities.maxOf { it.timestamp }}], " +
+                        "eventId range [${entities.first().eventId}, ${entities.last().eventId}]"
+                )
+
                 val rows = entities.map { toSupabaseRow(it, userUuid) }
                 supabase.upsertBatch(tableName, sensorName, rows).getOrElse { throw it }
 
                 currentCursor = entities.maxOf { it.id }
                 uploadedAny = true
+
+                // Persist progress right away — if a later batch throws, everything up to and
+                // including this one is already committed to Supabase, so it must not be silently
+                // discarded and re-uploaded on the next attempt just because a later batch failed.
+                onBatchUploaded(currentCursor)
+
+                Log.d(sensorId, "Uploaded $sensorId batch #$batchIndex successfully (${entities.size} records), cursor now $currentCursor")
 
                 if (entities.size < batchSize) break
             }

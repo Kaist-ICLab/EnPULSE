@@ -94,7 +94,8 @@ val viewModelModule = module {
         SensorDetailViewModel(
             dataRepository = get<DataRepository>(),
             sensorId = sensorId,
-            csvExportHelper = get()
+            csvExportHelper = get(),
+            userProfileRepository = get<UserProfileRepository>()
         )
     }
 

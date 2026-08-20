@@ -330,6 +330,14 @@
     <string name="toast_request_timeout">Request timed out. Please check your connection and try again.</string>
     <string name="sensor_export_csv">Export CSV</string>
 
+    <string name="sensor_import_csv">Import CSV</string>
+    <string name="sensor_import_data_confirm">Import CSV Data</string>
+    <string name="sensor_import_data_message">This will re-insert the records from the selected CSV into this sensor\'s local data, attributed to your own account. This is a debugging tool — imported data may be incomplete, since the CSV only stores display-formatted values.</string>
+    <string name="toast_sensor_data_imported">Data imported successfully</string>
+    <string name="toast_no_data_to_import">No valid rows found in the selected CSV</string>
+    <string name="toast_import_failed">Failed to import data</string>
+    <string name="toast_import_unsupported">This sensor doesn\'t support importing CSV data yet</string>
+
     <!-- Onboarding Screen -->
     <string name="onboarding_welcome">Welcome to EnPULSE!</string>
     <string name="onboarding_description">Please select your experiment group to start</string>

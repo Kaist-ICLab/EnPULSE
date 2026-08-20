@@ -7,6 +7,7 @@ import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonElement
+import java.util.UUID
 
 /**
  * Generic read handler backed by a [SensorStore]. Replaces the per-sensor `*DataHandler` classes:
@@ -23,7 +24,8 @@ class GenericSensorDataHandler<T>(
     override val isWatchSensor: Boolean,
     override val supabaseTableName: String,
     private val store: SensorStore<T>,
-    private val serializer: KSerializer<T>
+    private val serializer: KSerializer<T>,
+    private val fromRecord: ((SensorRecord) -> T)? = null
 ) : SensorDataHandler where T : BaseEntity, T : RecordSerializable {
     override suspend fun getRecordCount() = store.count()
     override suspend fun getLatestTimestamp() = store.latestTimestamp()
@@ -48,6 +50,22 @@ class GenericSensorDataHandler<T>(
         store.recordsAfter(afterTimestamp, isAscending, limit, offset)
             .filter { it.timestamp <= beforeTimestamp }
             .map { SupabaseJson.encodeToJsonElement(serializer, it) }
+
+    override suspend fun importRecords(records: List<SensorRecord>, uuid: String): Int {
+        val build = fromRecord ?: return -1
+        val entities = records.map { record ->
+            build(record).also {
+                // Every imported row is treated as freshly ingested by this device right now —
+                // never trust an id/uuid/eventId that may have come from someone else's export.
+                it.id = 0
+                it.uuid = uuid
+                it.eventId = UUID.randomUUID().toString()
+                it.received = System.currentTimeMillis()
+            }
+        }
+        store.insertBatch(entities)
+        return entities.size
+    }
 
     override suspend fun deleteAll() = store.removeAll()
     override suspend fun deleteById(id: Long) { store.removeById(id) }

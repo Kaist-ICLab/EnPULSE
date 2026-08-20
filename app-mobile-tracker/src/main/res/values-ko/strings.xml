@@ -351,6 +351,14 @@
     <string name="toast_export_failed">데이터 내보내기 실패</string>
     <string name="sensor_export_csv">CSV 내보내기</string>
 
+    <string name="sensor_import_csv">CSV 가져오기</string>
+    <string name="sensor_import_data_confirm">CSV 데이터 가져오기</string>
+    <string name="sensor_import_data_message">선택한 CSV의 데이터를 이 센서의 로컬 데이터로 다시 추가하며, 사용자 ID는 현재 계정으로 덮어씌워집니다. 이 기능은 디버깅용이며, CSV에는 화면 표시용으로 포맷된 값만 저장되어 있어 가져온 데이터가 일부 누락될 수 있습니다.</string>
+    <string name="toast_sensor_data_imported">데이터를 가져왔습니다</string>
+    <string name="toast_no_data_to_import">선택한 CSV에서 가져올 수 있는 데이터가 없습니다</string>
+    <string name="toast_import_failed">데이터 가져오기 실패</string>
+    <string name="toast_import_unsupported">이 센서는 아직 CSV 가져오기를 지원하지 않습니다</string>
+
     <!-- Onboarding Screen -->
     <string name="onboarding_welcome">EnPULSE에 오신 것을 환영합니다!</string>
     <string name="onboarding_description">시작하려면 실험 그룹을 선택해 주세요.</string>
