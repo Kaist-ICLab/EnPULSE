@@ -11,6 +11,9 @@ interface SensorUploadHandler {
     /** Unique identifier for the sensor (e.g., "Location", "Battery") */
     val sensorId: String
 
+    /** Human-readable name, shown while this sensor is being uploaded. */
+    val displayName: String
+
     /**
      * Check if there is data available to upload.
      * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload (its
@@ -26,9 +29,41 @@ interface SensorUploadHandler {
      * @param userUuid The UUID of the current user
      * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload; see
      * [hasDataToUpload].
+     * @param allowQuarantine When a batch fails because the server explicitly rejected it (not a
+     * network/auth/timeout hiccup — see [kaist.iclab.mobiletracker.repository.AppError.ServerRejected]),
+     * whether to give up on that whole batch instead of failing the call: the batch is skipped via
+     * [onBatchQuarantined] and never retried, and every batch after it still uploads normally, so a
+     * batch's worth of bad data can't block everything captured after it forever. Callers should
+     * only set this once the same spot has already failed repeatedly across separate calls — see
+     * [SensorUploadService]'s streak tracking — so a single transient-looking rejection isn't
+     * quarantined too eagerly.
+     * @param onBatchUploaded Invoked with the updated cursor after each batch Supabase accepts,
+     * before the next batch is attempted, so a run that fails part-way keeps the batches that did
+     * land. Implementations that upload in more than one request must call it; the caller uses it
+     * to persist upload progress incrementally. Since the cursor is a local row id and this app
+     * keeps data forever (no pruning), it also doubles as "records processed so far" — see
+     * [kaist.iclab.mobiletracker.services.SyncTimestampService.getUploadedRecordCountFromCursor],
+     * which the Data tab reads (cursor minus quarantined count) to show subjects their data is
+     * really reaching the server, without needing a separate counter kept in lockstep here.
+     * @param onBatchQuarantined Invoked when [allowQuarantine] gives up on a whole batch: the
+     * cursor to advance past it, how many records it contained, and why the server rejected it.
+     * Those records stay in local storage; they're simply never uploaded.
      * @return Result containing the new cursor value to persist on success
      */
-    suspend fun uploadData(userUuid: String, lastUploadCursor: Long): Result<Long>
+    suspend fun uploadData(
+        userUuid: String,
+        lastUploadCursor: Long,
+        allowQuarantine: Boolean = false,
+        onBatchUploaded: suspend (cursor: Long) -> Unit = {},
+        onBatchQuarantined: suspend (cursor: Long, recordCount: Int, reason: String) -> Unit = { _, _, _ -> }
+    ): Result<Long>
+
+    /**
+     * How many batches [uploadData] would send for the backlog after [lastUploadCursor] — the unit
+     * the upload progress bar counts in, since one batch is roughly one unit of work while one
+     * sensor can be anything from nothing to hours of it. 0 when there is nothing to upload.
+     */
+    suspend fun pendingBatchCount(lastUploadCursor: Long): Int
 
     /**
      * Delete local data older than the specified timestamp.

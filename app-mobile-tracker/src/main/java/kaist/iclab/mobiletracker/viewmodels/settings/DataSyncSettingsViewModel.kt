@@ -9,7 +9,6 @@ import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.repository.onFailure
-import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.utils.DateTimeFormatter
@@ -140,12 +139,13 @@ class DataSyncSettingsViewModel(
                         if (!sensorUploadService.hasDataToUpload(sensorId)) {
                             skippedCount++
                         } else {
-                            sensorUploadService.uploadSensorData(sensorId)
-                                .onSuccess { _: Unit -> uploadedCount++ }
-                                .onFailure { e: Throwable ->
-                                    failedCount++
-                                    Log.e(TAG, "Upload failed for $sensorId: ${e.message}", e)
-                                }
+                            val outcome = sensorUploadService.uploadSensorData(sensorId)
+                            if (outcome.isError) {
+                                failedCount++
+                                Log.e(TAG, "Upload failed for $sensorId: ${outcome.error?.message}", outcome.error)
+                            } else {
+                                uploadedCount++
+                            }
                         }
                     }
                 }

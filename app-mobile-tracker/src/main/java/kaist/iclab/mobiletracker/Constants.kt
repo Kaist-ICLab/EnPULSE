@@ -80,6 +80,23 @@ object Constants {
 
         /** Max records per batch to avoid HTTP timeouts on large uploads */
         const val UPLOAD_BATCH_SIZE = 500
+
+        /**
+         * Timeout for `Auth.awaitInitialization()`, which otherwise suspends forever if
+         * [SessionStatus][io.github.jan.supabase.auth.status.SessionStatus] gets stuck at
+         * `Initializing` — normally only cleared by the app coming back to the foreground. Outside
+         * this timeout, that call sits outside [SUPABASE_REQUEST_TIMEOUT_MS]'s protection entirely,
+         * which is what let one sensor's upload wedge every sensor queued after it.
+         */
+        const val AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS = 30_000L
+
+        /**
+         * How many separate upload cycles must fail at the exact same spot with a decisive server
+         * rejection (RLS/constraint/malformed payload — see [kaist.iclab.mobiletracker.repository.AppError.ServerRejected])
+         * before that record is isolated and skipped, so it can't block everything captured after
+         * it forever. See [kaist.iclab.mobiletracker.services.upload.SensorUploadService].
+         */
+        const val QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES = 1
     }
 
     /**

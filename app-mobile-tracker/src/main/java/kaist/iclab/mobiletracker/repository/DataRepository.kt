@@ -11,8 +11,18 @@ data class SensorInfo(
     val recordCount: Int,
     val lastRecordedTime: Long?,
     val isWatchSensor: Boolean = false,
-    val isPhoneSensor: Boolean = false
-)
+    val isPhoneSensor: Boolean = false,
+    /**
+     * Lifetime count of records Supabase has actually accepted for this sensor — shown against
+     * [recordCount] so subjects can see their data is really reaching the server, not just piling
+     * up on the phone. See [kaist.iclab.mobiletracker.services.SyncTimestampService.getUploadedRecordCount].
+     */
+    val uploadedRecordCount: Long = 0
+) {
+    /** `null` until the first upload attempt for this sensor. */
+    val uploadedPercent: Int?
+        get() = if (recordCount == 0) null else ((uploadedRecordCount * 100) / recordCount).toInt().coerceAtMost(100)
+}
 
 /**
  * Data class representing detailed sensor information for the Sensor Detail screen.
@@ -25,8 +35,43 @@ data class SensorDetailInfo(
     val lastRecordedTime: Long?,
     val lastSyncTimestamp: Long? = null,
     val isWatchSensor: Boolean = false,
-    val isPhoneSensor: Boolean = false
-)
+    val isPhoneSensor: Boolean = false,
+    /** Lifetime batches Supabase accepted normally — see [kaist.iclab.mobiletracker.services.SyncTimestampService.UploadStats]. */
+    val uploadSucceededBatches: Long = 0,
+    /** Lifetime batches given up on whole after repeated server rejections at the same spot. */
+    val uploadQuarantinedBatches: Long = 0,
+    /** Same as [uploadQuarantinedBatches], in raw record count — still kept locally, just never retried. */
+    val uploadQuarantinedRecordCount: Long = 0
+) {
+    /** `null` until the first upload attempt for this sensor. */
+    val uploadSuccessRatePercent: Int?
+        get() {
+            val total = uploadSucceededBatches + uploadQuarantinedBatches
+            return if (total == 0L) null else ((uploadSucceededBatches * 100) / total).toInt()
+        }
+}
+
+/**
+ * Result of one [DataRepository.uploadSensorData] call, in records — how much of what was
+ * attempted actually landed, rather than a bare success/failure flag. Used to build the
+ * post-upload summary shown to the user.
+ */
+data class SensorUploadOutcome(
+    val succeededCount: Int,
+    val attemptedCount: Int,
+    val isUpToDate: Boolean,
+    val error: Throwable? = null
+) {
+    val isError: Boolean get() = error != null
+
+    /** `null` when nothing was attempted (e.g. [isUpToDate], or [error] hit before any batch landed). */
+    val successRatePercent: Int?
+        get() = if (attemptedCount == 0) null else (succeededCount * 100) / attemptedCount
+
+    companion object {
+        val UP_TO_DATE = SensorUploadOutcome(0, 0, isUpToDate = true)
+    }
+}
 
 /**
  * Data class representing a single sensor record for display.
@@ -132,9 +177,11 @@ interface DataRepository {
     /**
      * Upload sensor data to server.
      * @param sensorId The sensor ID
-     * @return Number of records uploaded, or -1 on failure
+     * @param onBatchUploaded Invoked once per batch accepted by the server, for callers driving a
+     * progress bar. Survey and webapp logs flush in one go and report a single batch.
+     * @return How many records this call actually got uploaded, out of how many it attempted.
      */
-    suspend fun uploadSensorData(sensorId: String): Int
+    suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit = {}): SensorUploadOutcome
 
     /**
      * Get the last sync timestamp for a sensor.
