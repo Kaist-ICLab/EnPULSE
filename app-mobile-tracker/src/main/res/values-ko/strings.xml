@@ -146,6 +146,7 @@
     <string name="data_screen_subtitle">총 %1$d개 레코드</string>
     <string name="data_screen_hide_empty_sensors">빈 센서 숨기기</string>
     <string name="data_screen_no_result">수집된 데이터가 없습니다.</string>
+    <string name="data_screen_uploaded_count">%1$s / %2$s 업로드됨 (%3$d%%)</string>
 
 
     <!-- Sensor Detail Screen -->

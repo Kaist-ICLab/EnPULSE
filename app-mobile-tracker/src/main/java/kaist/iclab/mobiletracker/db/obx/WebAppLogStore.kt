@@ -57,6 +57,14 @@ class WebAppLogStore(boxStore: BoxStore) {
     fun hasUnsynced(): Boolean =
         box.query().equal(WebAppLogEntity_.isSynced, false).build().use { it.count() > 0 }
 
+    /**
+     * Records Supabase has actually accepted, counted directly from [WebAppLogEntity.isSynced]
+     * rather than a separately-tracked running total — this table is low-volume (unlike the ~30
+     * sensor stores queried on every Data tab load), so a live query here is cheap.
+     */
+    fun syncedCount(): Long =
+        box.query().equal(WebAppLogEntity_.isSynced, true).build().use { it.count() }
+
     fun markSynced(ids: List<Long>) {
         val items = ids.mapNotNull { box.get(it) }
         items.forEach { it.isSynced = true }

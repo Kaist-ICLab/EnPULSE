@@ -681,6 +681,20 @@ private fun SensorListItem(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.offset(y = (-2).dp)
                 )
+                sensor.uploadedPercent?.let { percent ->
+                    Text(
+                        text = stringResource(
+                            R.string.data_screen_uploaded_count,
+                            formatRecordCount(sensor.uploadedRecordCount),
+                            formatRecordCount(sensor.recordCount),
+                            percent
+                        ),
+                        fontSize = Styles.LAST_RECORDED_FONT_SIZE,
+                        color = AppColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             // Record count
@@ -741,7 +755,9 @@ private fun formatLastRecorded(timestamp: Long?): String {
 /**
  * Format record count with K/M suffix for large numbers.
  */
-private fun formatRecordCount(count: Int): String {
+private fun formatRecordCount(count: Int): String = formatRecordCount(count.toLong())
+
+private fun formatRecordCount(count: Long): String {
     return count.toString()
 }
 

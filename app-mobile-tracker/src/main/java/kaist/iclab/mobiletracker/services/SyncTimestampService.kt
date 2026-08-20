@@ -107,6 +107,20 @@ class SyncTimestampService(context: Context) {
     }
 
     /**
+     * Count of [sensorId] records actually accepted by Supabase, derived from [getUploadCursor]
+     * (a local row id) minus [UploadStats.quarantinedRecordCount] (batches given up on, not
+     * uploaded) — no separate counter to keep in lockstep with every upload success site. This only
+     * works because ids are assigned sequentially per box and this app never prunes data, so
+     * "highest id processed" and "records processed" stay equal. Doesn't apply to Survey/WebAppLog,
+     * which track "already uploaded" per row via an `isSynced` flag instead of a cursor — see
+     * [kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler.getUploadedRecordCount]/
+     * [kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler.getUploadedRecordCount],
+     * which count that directly instead.
+     */
+    fun getUploadedRecordCountFromCursor(sensorId: String): Long =
+        (getUploadCursor(sensorId) - getUploadStats(sensorId).quarantinedRecordCount).coerceAtLeast(0L)
+
+    /**
      * How many consecutive upload cycles have ended in a [kaist.iclab.mobiletracker.repository.AppError.ServerRejected]
      * failure — the server explicitly rejecting the request, not a network/auth/timeout hiccup —
      * without the cursor making any progress. Used to detect a "poison" batch that will keep
@@ -311,6 +325,7 @@ class SyncTimestampService(context: Context) {
             remove("upload_succeeded_batches_$sensorId")
             remove("upload_quarantined_batches_$sensorId")
             remove("upload_quarantined_records_$sensorId")
+            remove("uploaded_record_count_$sensorId")
         }
     }
 
@@ -323,6 +338,7 @@ class SyncTimestampService(context: Context) {
         val keysToRemove = allKeys.filter {
             it.startsWith("last_upload_") || it.startsWith("upload_cursor_id_") ||
                 it.startsWith("upload_failure_cursor_") || it.startsWith("upload_failure_streak_") ||
+                it.startsWith("uploaded_record_count_") ||
                 it.startsWith("upload_succeeded_batches_") || it.startsWith("upload_quarantined_batches_") ||
                 it.startsWith("upload_quarantined_records_")
         }

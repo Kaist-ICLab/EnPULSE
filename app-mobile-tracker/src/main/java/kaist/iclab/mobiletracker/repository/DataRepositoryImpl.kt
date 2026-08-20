@@ -60,7 +60,16 @@ class DataRepositoryImpl(
                     recordCount = handler.getRecordCount(),
                     lastRecordedTime = handler.getLatestTimestamp(),
                     isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
-                    isPhoneSensor = handler.isPhoneSensor
+                    isPhoneSensor = handler.isPhoneSensor,
+                    // Survey/WebAppLog track "uploaded" per row (isSynced) rather than a cursor
+                    // (see their handlers' doc comments), so they count it directly — cheap, since
+                    // unlike the ~30 sensor stores this isn't queried per-sensor on every Data tab
+                    // load. Everything else derives it from the cursor, no query needed.
+                    uploadedRecordCount = when (handler) {
+                        is SurveyResponseDataHandler -> handler.getUploadedRecordCount()
+                        is WebAppLogDataHandler -> handler.getUploadedRecordCount()
+                        else -> syncTimestampService.getUploadedRecordCountFromCursor(handler.sensorId)
+                    }
                 )
             }.sortedBy { it.displayName }
 
@@ -120,7 +129,9 @@ class DataRepositoryImpl(
             if (sensorId == SurveyResponseDataHandler.SENSOR_ID) {
                 return when (val result = surveyResponseUploader.flush()) {
                     // These drain in a single flush rather than in cursor-tracked batches, so they
-                    // count as one batch towards the caller's progress bar.
+                    // count as one batch towards the caller's progress bar. Uploaded count for the
+                    // Data tab is counted live from isSynced (SurveyResponseDataHandler.getUploadedRecordCount),
+                    // not tracked here.
                     is Result.Success -> if (result.data > 0) 1 else 0
                     is Result.Error -> -1
                 }.also { onBatchUploaded() }

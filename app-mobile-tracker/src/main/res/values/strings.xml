@@ -147,6 +147,7 @@
     <string name="data_screen_subtitle">Total %1$d Records</string>
     <string name="data_screen_hide_empty_sensors">Hide Empty Data Sensors</string>
     <string name="data_screen_no_result">No collected data found</string>
+    <string name="data_screen_uploaded_count">%1$s / %2$s uploaded (%3$d%%)</string>
 
 
     <!-- Sensor Detail Screen -->

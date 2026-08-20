@@ -11,8 +11,18 @@ data class SensorInfo(
     val recordCount: Int,
     val lastRecordedTime: Long?,
     val isWatchSensor: Boolean = false,
-    val isPhoneSensor: Boolean = false
-)
+    val isPhoneSensor: Boolean = false,
+    /**
+     * Lifetime count of records Supabase has actually accepted for this sensor — shown against
+     * [recordCount] so subjects can see their data is really reaching the server, not just piling
+     * up on the phone. See [kaist.iclab.mobiletracker.services.SyncTimestampService.getUploadedRecordCount].
+     */
+    val uploadedRecordCount: Long = 0
+) {
+    /** `null` until the first upload attempt for this sensor. */
+    val uploadedPercent: Int?
+        get() = if (recordCount == 0) null else ((uploadedRecordCount * 100) / recordCount).toInt().coerceAtMost(100)
+}
 
 /**
  * Data class representing detailed sensor information for the Sensor Detail screen.
