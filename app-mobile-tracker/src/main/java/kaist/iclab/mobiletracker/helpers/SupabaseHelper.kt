@@ -9,6 +9,7 @@ import android.content.Context
 import com.russhwolf.settings.SharedPreferencesSettings
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.SettingsSessionManager
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
@@ -41,7 +42,7 @@ class SupabaseHelper(context: Context) {
             install(Realtime)
             install(Auth) {
                 // Persist session across app restarts
-                sessionManager = io.github.jan.supabase.auth.SettingsSessionManager(settings)
+                sessionManager = SettingsSessionManager(settings)
             }
             install(Functions)
             install(Storage)
