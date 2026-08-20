@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.services.upload.handlers
 
+import android.util.Log
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
@@ -8,6 +9,7 @@ import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -42,11 +44,15 @@ class SensorUploadHandlerImpl<T>(
     override suspend fun hasDataToUpload(lastUploadCursor: Long): Boolean =
         store.hasDataWithIdAfter(lastUploadCursor)
 
-    override suspend fun uploadData(userUuid: String, lastUploadCursor: Long): Result<Long> {
+    override suspend fun uploadData(
+        userUuid: String,
+        lastUploadCursor: Long,
+        onBatchUploaded: suspend (cursor: Long) -> Unit
+    ): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var currentCursor = lastUploadCursor
-            var uploadedAny = false
+            var uploadedRows = 0
 
             while (true) {
                 val entities = store.recordsWithIdAfter(afterId = currentCursor, limit = batchSize)
@@ -54,15 +60,33 @@ class SensorUploadHandlerImpl<T>(
                 if (entities.isEmpty()) break
 
                 val rows = entities.map { toSupabaseRow(it, userUuid) }
-                supabase.upsertBatch(tableName, sensorName, rows).getOrElse { throw it }
+                try {
+                    supabase.upsertBatch(tableName, sensorName, rows).getOrElse { throw it }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    // Everything accepted so far stays accepted: each batch's cursor was handed to
+                    // onBatchUploaded as it landed, so the next run resumes from here. Before that,
+                    // the cursor only moved once the whole sensor finished, so a failure part-way
+                    // through re-uploaded the entire backlog next time — and a backlog that failed
+                    // at the same batch every run (a row the server rejects, a batch big enough to
+                    // time out) never made any forward progress at all.
+                    Log.w(
+                        TAG,
+                        "Partial upload for $sensorId: $uploadedRows rows committed up to cursor " +
+                                "$currentCursor, resuming from there next run",
+                        e
+                    )
+                    throw e
+                }
 
                 currentCursor = entities.maxOf { it.id }
-                uploadedAny = true
+                uploadedRows += entities.size
+                onBatchUploaded(currentCursor)
 
                 if (entities.size < batchSize) break
             }
 
-            if (!uploadedAny) {
+            if (uploadedRows == 0) {
                 throw IllegalStateException("No new $sensorId data to upload")
             }
 
@@ -83,4 +107,8 @@ class SensorUploadHandlerImpl<T>(
 
     @Suppress("UNCHECKED_CAST")
     override fun recordToCsvRow(record: Any): String = (record as T).toCsvRow()
+
+    private companion object {
+        const val TAG = "SensorUploadHandler"
+    }
 }

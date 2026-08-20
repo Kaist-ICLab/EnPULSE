@@ -26,9 +26,17 @@ interface SensorUploadHandler {
      * @param userUuid The UUID of the current user
      * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload; see
      * [hasDataToUpload].
+     * @param onBatchUploaded Invoked with the updated cursor after each batch Supabase accepts,
+     * before the next batch is attempted, so a run that fails part-way keeps the batches that did
+     * land. Implementations that upload in more than one request must call it; the caller uses it
+     * to persist upload progress incrementally.
      * @return Result containing the new cursor value to persist on success
      */
-    suspend fun uploadData(userUuid: String, lastUploadCursor: Long): Result<Long>
+    suspend fun uploadData(
+        userUuid: String,
+        lastUploadCursor: Long,
+        onBatchUploaded: suspend (cursor: Long) -> Unit = {}
+    ): Result<Long>
 
     /**
      * Delete local data older than the specified timestamp.

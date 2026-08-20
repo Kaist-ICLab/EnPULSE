@@ -54,7 +54,13 @@ class SensorUploadService(
         }
 
         return try {
-            when (val result = handler.uploadData(userUuid, lastUploadCursor)) {
+            // Persist the cursor as each batch lands rather than only once the sensor finishes, so
+            // an error part-way through a large backlog keeps the batches that already reached
+            // Supabase instead of re-uploading them on every retry.
+            val result = handler.uploadData(userUuid, lastUploadCursor) { cursor ->
+                syncTimestampService.setUploadCursor(sensorId, cursor)
+            }
+            when (result) {
                 is Result.Success -> {
                     syncTimestampService.setUploadCursor(sensorId, result.data)
                     syncTimestampService.updateLastSuccessfulUpload(sensorId)
