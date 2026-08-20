@@ -343,7 +343,10 @@ fun DataScreen(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         if (progress.successCount > 0) {
                             Text(
-                                text = stringResource(R.string.upload_success_header, progress.successCount),
+                                text = stringResource(
+                                    R.string.upload_success_header,
+                                    progress.successCount
+                                ),
                                 color = AppColors.PrimaryColor,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -363,7 +366,10 @@ fun DataScreen(
                         if (progress.failedCount > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = stringResource(R.string.upload_failed_header, progress.failedCount),
+                                text = stringResource(
+                                    R.string.upload_failed_header,
+                                    progress.failedCount
+                                ),
                                 color = AppColors.ErrorColor,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -377,7 +383,10 @@ fun DataScreen(
                         if (progress.upToDateCount > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = stringResource(R.string.upload_uptodate_header, progress.upToDateCount),
+                                text = stringResource(
+                                    R.string.upload_uptodate_header,
+                                    progress.upToDateCount
+                                ),
                                 color = AppColors.TextPrimary,
                                 fontWeight = FontWeight.SemiBold
                             )

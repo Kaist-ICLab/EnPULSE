@@ -45,12 +45,22 @@ class SurveyResponseStore(boxStore: BoxStore) {
 
     fun latestTimestamp(): Long? {
         if (box.isEmpty) return null
-        return box.query().build().use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
+        return box.query().build()
+            .use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
     }
 
-    fun recordsAfter(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<SurveyResponseEntity> {
-        val builder = box.query().greaterOrEqual(SurveyResponseEntity_.responseSubmissionTime, afterTimestamp)
-        builder.order(SurveyResponseEntity_.responseSubmissionTime, if (isAscending) 0 else QueryBuilder.DESCENDING)
+    fun recordsAfter(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<SurveyResponseEntity> {
+        val builder =
+            box.query().greaterOrEqual(SurveyResponseEntity_.responseSubmissionTime, afterTimestamp)
+        builder.order(
+            SurveyResponseEntity_.responseSubmissionTime,
+            if (isAscending) 0 else QueryBuilder.DESCENDING
+        )
         return builder.build().use { it.find(offset.toLong(), limit.toLong()) }
     }
 

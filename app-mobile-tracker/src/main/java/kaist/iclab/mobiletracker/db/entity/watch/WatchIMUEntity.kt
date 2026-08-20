@@ -45,7 +45,8 @@ class WatchIMUEntity : BaseEntity, CsvSerializable, RecordSerializable {
     }
 
     override fun csvHeader() = "eventId,uuid,received,timestamp,accX,accY,accZ,gyroX,gyroY,gyroZ"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$accX,$accY,$accZ,$gyroX,$gyroY,$gyroZ"
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$accX,$accY,$accZ,$gyroX,$gyroY,$gyroZ"
 
     override fun toRecord() = SensorRecord(
         id = id,

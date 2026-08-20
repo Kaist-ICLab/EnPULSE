@@ -22,7 +22,8 @@ class RestrictedWebViewClient(
         val scheme = request.url.scheme
         val host = request.url.host
 
-        val isAllowedHost = host == allowedHost || (allowedHost != null && host?.endsWith(".$allowedHost") == true)
+        val isAllowedHost =
+            host == allowedHost || (allowedHost != null && host?.endsWith(".$allowedHost") == true)
         if ((scheme == "http" || scheme == "https") && isAllowedHost) {
             return false // Load internally in the WebView
         }
@@ -52,9 +53,12 @@ class RestrictedWebViewClient(
         error: android.webkit.WebResourceError
     ) {
         if (request.isForMainFrame) {
-            val failedToLoad = view.context.getString(kaist.iclab.mobiletracker.R.string.webview_failed_to_load)
-            val checkConnection = view.context.getString(kaist.iclab.mobiletracker.R.string.webview_check_connection)
-            val htmlData = "<html><body style=\"display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;\"><h2>$failedToLoad</h2><p>$checkConnection</p></body></html>"
+            val failedToLoad =
+                view.context.getString(kaist.iclab.mobiletracker.R.string.webview_failed_to_load)
+            val checkConnection =
+                view.context.getString(kaist.iclab.mobiletracker.R.string.webview_check_connection)
+            val htmlData =
+                "<html><body style=\"display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;\"><h2>$failedToLoad</h2><p>$checkConnection</p></body></html>"
             view.loadData(htmlData, "text/html", "UTF-8")
         }
         super.onReceivedError(view, request, error)

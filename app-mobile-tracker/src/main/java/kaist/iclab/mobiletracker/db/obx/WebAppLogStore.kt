@@ -49,7 +49,12 @@ class WebAppLogStore(boxStore: BoxStore) {
         return box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
     }
 
-    fun recordsAfter(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<WebAppLogEntity> {
+    fun recordsAfter(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<WebAppLogEntity> {
         val builder = box.query().greaterOrEqual(WebAppLogEntity_.timestamp, afterTimestamp)
         builder.order(WebAppLogEntity_.timestamp, if (isAscending) 0 else QueryBuilder.DESCENDING)
         return builder.build().use { it.find(offset.toLong(), limit.toLong()) }

@@ -87,7 +87,12 @@ class SupabaseAuth(
                     // Clear cached UUID if no session
                     syncTimestampService.clearUserUuid()
                     _userStateFlow.value =
-                        UserState(isLoggedIn = false, user = null, token = null, isInitializing = false)
+                        UserState(
+                            isLoggedIn = false,
+                            user = null,
+                            token = null,
+                            isInitializing = false
+                        )
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error checking current session: ${e.message}", e)

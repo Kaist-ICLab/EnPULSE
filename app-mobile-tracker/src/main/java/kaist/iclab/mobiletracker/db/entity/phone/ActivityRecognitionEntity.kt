@@ -15,6 +15,7 @@ import java.util.UUID
 class ActivityRecognitionEntity : BaseEntity, CsvSerializable, RecordSerializable {
     @SerialName("elapsed_realtime_millis")
     var elapsedRealtimeMillis: Long = 0
+
     @SerialName("activity_type")
     var activityType: Int = 0
     var score: Int = 0
@@ -41,11 +42,17 @@ class ActivityRecognitionEntity : BaseEntity, CsvSerializable, RecordSerializabl
         this.probabilities = probabilities
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,elapsedRealtimeMillis,activityType,score,probabilities"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,elapsedRealtimeMillis,activityType,score,probabilities"
+
     override fun toCsvRow(): String {
         val escapedProbs = probabilities.joinToString("|").replace("\"", "\"\"")
         return "$eventId,$uuid,$received,$timestamp,$elapsedRealtimeMillis,$activityType,$score,\"$escapedProbs\""
     }
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Activity" to activityType.toString(), "Score" to score.toString()))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Activity" to activityType.toString(), "Score" to score.toString())
+    )
 }

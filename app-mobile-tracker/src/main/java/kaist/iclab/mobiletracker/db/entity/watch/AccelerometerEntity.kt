@@ -41,6 +41,10 @@ class AccelerometerEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun toRecord() = SensorRecord(
         id = id,
         timestamp = timestamp,
-        fields = mapOf("X" to String.format(Locale.getDefault(), "%.3f", x), "Y" to String.format(Locale.getDefault(),"%.3f", y), "Z" to String.format(Locale.getDefault(),"%.3f", z))
+        fields = mapOf(
+            "X" to String.format(Locale.getDefault(), "%.3f", x),
+            "Y" to String.format(Locale.getDefault(), "%.3f", y),
+            "Z" to String.format(Locale.getDefault(), "%.3f", z)
+        )
     )
 }

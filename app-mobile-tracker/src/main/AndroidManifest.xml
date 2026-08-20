@@ -18,7 +18,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"
+    <uses-permission
+        android:name="android.permission.USE_FULL_SCREEN_INTENT"
         tools:ignore="FullScreenIntentPolicy" />
 
     <!-- Location -->
@@ -214,8 +215,8 @@
 
         <activity
             android:name=".webapp.WebAppActivity"
-            android:exported="true"
             android:documentLaunchMode="intoExisting"
+            android:exported="true"
             android:theme="@style/Theme.MobileTracker" />
 
         <activity

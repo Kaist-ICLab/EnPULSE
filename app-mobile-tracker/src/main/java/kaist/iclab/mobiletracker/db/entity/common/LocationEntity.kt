@@ -8,7 +8,6 @@ import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
 import java.util.Locale
 import java.util.UUID
-import kotlin.String
 
 /**
  * ObjectBox entity for location data from both phone and watch devices, differentiated by
@@ -48,8 +47,11 @@ class LocationEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.accuracy = accuracy
     }
 
-    override fun csvHeader() = "eventId,uuid,deviceType,received,timestamp,latitude,longitude,altitude,speed,accuracy"
-    override fun toCsvRow() = "$eventId,$uuid,$deviceType,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
+    override fun csvHeader() =
+        "eventId,uuid,deviceType,received,timestamp,latitude,longitude,altitude,speed,accuracy"
+
+    override fun toCsvRow() =
+        "$eventId,$uuid,$deviceType,$received,$timestamp,$latitude,$longitude,$altitude,$speed,$accuracy"
 
     override fun toRecord() = SensorRecord(
         id = id,

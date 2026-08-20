@@ -50,6 +50,9 @@ class GenericSensorDataHandler<T>(
             .map { SupabaseJson.encodeToJsonElement(serializer, it) }
 
     override suspend fun deleteAll() = store.removeAll()
-    override suspend fun deleteById(id: Long) { store.removeById(id) }
+    override suspend fun deleteById(id: Long) {
+        store.removeById(id)
+    }
+
     override suspend fun getEventIdById(id: Long) = store.eventIdById(id)
 }

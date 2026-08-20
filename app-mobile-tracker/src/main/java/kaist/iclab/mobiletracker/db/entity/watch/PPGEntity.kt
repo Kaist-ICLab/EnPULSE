@@ -52,8 +52,15 @@ class PPGEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.irStatus = irStatus
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$green,$greenStatus,$red,$redStatus,$ir,$irStatus"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,green,greenStatus,red,redStatus,ir,irStatus"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Green" to green.toString(), "IR" to ir.toString()))
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$green,$greenStatus,$red,$redStatus,$ir,$irStatus"
+
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Green" to green.toString(), "IR" to ir.toString())
+    )
 }

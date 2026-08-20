@@ -32,5 +32,6 @@ class ScreenEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun csvHeader() = "eventId,uuid,received,timestamp,type"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$type"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Type" to type))
+    override fun toRecord() =
+        SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Type" to type))
 }

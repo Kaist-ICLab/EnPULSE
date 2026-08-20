@@ -35,8 +35,8 @@ val uploadModule = module {
         // can be a SensorDescriptor entry.
         SensorDataHandlerRegistry(
             get<List<SensorDescriptor<*>>>().map { it.toDataHandler() } +
-                SurveyResponseDataHandler(get<SurveyResponseStore>()) +
-                WebAppLogDataHandler(get<WebAppLogStore>())
+                    SurveyResponseDataHandler(get<SurveyResponseStore>()) +
+                    WebAppLogDataHandler(get<WebAppLogStore>())
         )
     }
 
@@ -59,7 +59,11 @@ val uploadModule = module {
 
     single<SensorUploadHandlerRegistry> {
         val supabase = get<SupabaseUploadService>()
-        SensorUploadHandlerRegistry(get<List<SensorDescriptor<*>>>().map { it.toUploadHandler(supabase) })
+        SensorUploadHandlerRegistry(get<List<SensorDescriptor<*>>>().map {
+            it.toUploadHandler(
+                supabase
+            )
+        })
     }
 
     single {

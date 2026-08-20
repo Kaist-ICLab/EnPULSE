@@ -44,5 +44,9 @@ class WifiScanEntity : BaseEntity, CsvSerializable, RecordSerializable {
         return "$eventId,$uuid,$received,$timestamp,\"$escapedSsid\",$bssid,$frequency,$level"
     }
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("SSID" to ssid, "BSSID" to bssid))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("SSID" to ssid, "BSSID" to bssid)
+    )
 }

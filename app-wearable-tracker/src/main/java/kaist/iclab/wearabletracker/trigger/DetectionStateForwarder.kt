@@ -46,7 +46,11 @@ class DetectionStateForwarder(
                     val payload = buildJsonObject { put(sensor, state.value) }.toString()
                     bleChannel.send(Constants.BLE.KEY_DETECTION_STATE_UPDATE, payload)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to forward detection state ($sensor=${state.value}): ${e.message}", e)
+                    Log.e(
+                        TAG,
+                        "Failed to forward detection state ($sensor=${state.value}): ${e.message}",
+                        e
+                    )
                 }
             }
         }
@@ -62,7 +66,10 @@ class DetectionStateForwarder(
         try {
             val payload = when (json) {
                 is kotlinx.serialization.json.JsonObject -> json
-                is kotlinx.serialization.json.JsonPrimitive -> kotlinx.serialization.json.Json.parseToJsonElement(json.content).jsonObject
+                is kotlinx.serialization.json.JsonPrimitive -> kotlinx.serialization.json.Json.parseToJsonElement(
+                    json.content
+                ).jsonObject
+
                 else -> kotlinx.serialization.json.Json.parseToJsonElement(json.toString()).jsonObject
             }
 

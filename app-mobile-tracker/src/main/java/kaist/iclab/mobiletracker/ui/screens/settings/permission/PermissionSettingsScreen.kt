@@ -77,6 +77,7 @@ fun PermissionSettingsScreen(
                 // Open settings to allow user to revoke/change permission or for permanently denied
                 permissionManager.openPermissionSettings(permission.ids.first())
             }
+
             else -> {
                 // Handle Android 13+ Restricted Settings for special accessibility/notification permissions
                 val id = permission.ids.first()
@@ -166,7 +167,10 @@ fun PermissionSettingsScreen(
                                     if (permission.instructionResId != null && permissionAggregatedState != PermissionState.GRANTED) {
                                         pendingPermissionForInstruction = permission
                                     } else {
-                                        handlePermissionRequest(permission, permissionAggregatedState)
+                                        handlePermissionRequest(
+                                            permission,
+                                            permissionAggregatedState
+                                        )
                                     }
                                 }
                             },

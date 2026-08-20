@@ -50,10 +50,13 @@ open class SensorStore<T : BaseEntity>(
     protected val box: Box<T> = boxStore.boxFor(entityClass)
 
     private val metaClass = Class.forName("${entityClass.name}_")
+
     @Suppress("UNCHECKED_CAST")
     private val timestampProperty = metaClass.getField("timestamp").get(null) as Property<T>
+
     @Suppress("UNCHECKED_CAST")
     private val deviceTypeProperty = metaClass.getField("deviceType").get(null) as Property<T>
+
     @Suppress("UNCHECKED_CAST")
     private val idProperty = metaClass.getField("id").get(null) as Property<T>
 

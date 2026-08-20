@@ -48,8 +48,15 @@ class ConnectivityEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.transportTypes = transportTypes
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,networkType,isConnected,hasInternet,transportTypes"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$networkType,$isConnected,$hasInternet,$transportTypes"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,networkType,isConnected,hasInternet,transportTypes"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Network" to networkType, "Connected" to isConnected.toString()))
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$networkType,$isConnected,$hasInternet,$transportTypes"
+
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Network" to networkType, "Connected" to isConnected.toString())
+    )
 }

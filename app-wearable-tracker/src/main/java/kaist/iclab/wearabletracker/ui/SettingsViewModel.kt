@@ -117,20 +117,21 @@ class SettingsViewModel(
         campaignSensorConfigRepository.configFlow
     ) { sensorState, config ->
         sensorState.flag != SensorState.FLAG.UNAVAILABLE &&
-            (config.activeSensorIds == null || ecgSensor.id in config.activeSensorIds)
+                (config.activeSensorIds == null || ecgSensor.id in config.activeSensorIds)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     // Names (not bare ids) of sensors active for the wearer's campaign, translated via
     // `sensorController.sensors` since `sensorState`/`sensorMap` below are keyed by `.name`
     // (the human-readable display form, e.g. "Skin Temperature") rather than `.id`.
     // Null means "never synced with the phone" and fails open (shows every sensor).
-    val activeCampaignSensorNames: StateFlow<Set<String>?> = campaignSensorConfigRepository.configFlow
-        .map { config ->
-            config.activeSensorIds?.let { ids ->
-                sensorController.sensors.filter { it.id in ids }.map { it.name }.toSet()
+    val activeCampaignSensorNames: StateFlow<Set<String>?> =
+        campaignSensorConfigRepository.configFlow
+            .map { config ->
+                config.activeSensorIds?.let { ids ->
+                    sensorController.sensors.filter { it.id in ids }.map { it.name }.toSet()
+                }
             }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val ecgPermissions: Array<String> get() = ecgSensor.permissions
 
@@ -164,11 +165,13 @@ class SettingsViewModel(
                             _recordingStartTime.value = System.currentTimeMillis()
                         }
                     }
+
                     ControllerState.FLAG.PAUSED -> {
                         // Sensors are paused (watch not worn) — keep SensorDataReceiver
                         // alive since no data arrives anyway, and preserve recording
                         // start time so the elapsed timer isn't reset on resume.
                     }
+
                     else -> {
                         sensorDataReceiver.stopBackgroundCollection()
                         _recordingStartTime.value = null

@@ -46,5 +46,9 @@ class AppListChangeEntity : BaseEntity, CsvSerializable, RecordSerializable {
         return "$eventId,$uuid,$received,$timestamp,\"$escapedChangedApp\",\"$escapedAppList\""
     }
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Changed" to (changedAppJson?.take(50) ?: "N/A")))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Changed" to (changedAppJson?.take(50) ?: "N/A"))
+    )
 }

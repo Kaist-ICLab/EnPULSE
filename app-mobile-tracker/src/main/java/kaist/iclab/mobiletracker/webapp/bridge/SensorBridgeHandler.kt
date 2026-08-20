@@ -32,17 +32,29 @@ class SensorBridgeHandler(
         val sensorId = params["sensor_id"]?.jsonPrimitive?.content
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing sensor_id")
         val startTime = params["start_time"]?.jsonPrimitive?.longOrNull
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing start_time")
+            ?: return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Missing start_time"
+            )
         val endTime = params["end_time"]?.jsonPrimitive?.longOrNull
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing end_time")
 
         val webApp = webAppRegistry.get(callerWebAppId)
         if (webApp == null) {
-            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown caller webapp: $callerWebAppId")
+            return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Unknown caller webapp: $callerWebAppId"
+            )
         }
 
         val handler = handlerRegistry.getHandler(sensorId)
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown sensor_id: $sensorId")
+            ?: return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Unknown sensor_id: $sensorId"
+            )
 
         val records = handler.getRecordsJsonPaginated(
             afterTimestamp = startTime,
@@ -63,18 +75,29 @@ class SensorBridgeHandler(
         )
     }
 
-    suspend fun getLatestSensorReading(request: BridgeRequest, callerWebAppId: String): BridgeResponse {
+    suspend fun getLatestSensorReading(
+        request: BridgeRequest,
+        callerWebAppId: String
+    ): BridgeResponse {
         val params = request.payload.jsonObject
         val sensorId = params["sensor_id"]?.jsonPrimitive?.content
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing sensor_id")
 
         val webApp = webAppRegistry.get(callerWebAppId)
         if (webApp == null) {
-            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown caller webapp: $callerWebAppId")
+            return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Unknown caller webapp: $callerWebAppId"
+            )
         }
 
         val handler = handlerRegistry.getHandler(sensorId)
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown sensor_id: $sensorId")
+            ?: return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Unknown sensor_id: $sensorId"
+            )
 
         // Fetch just the single latest record
         val records = handler.getRecordsJsonPaginated(

@@ -14,7 +14,10 @@ data class WatchSensorDescriptor(
     val store: WatchSensorStore<*>? = null
 )
 
-inline fun <reified C : Any> Scope.sensorConfig(sensorClass: KClass<*>, default: C): CouchbaseStateStorage<C> =
+inline fun <reified C : Any> Scope.sensorConfig(
+    sensorClass: KClass<*>,
+    default: C
+): CouchbaseStateStorage<C> =
     CouchbaseStateStorage(
         couchbase = get(),
         defaultVal = default,

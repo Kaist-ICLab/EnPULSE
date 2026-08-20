@@ -6,7 +6,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.put
 
 /**
  * Couchbase-backed key-value storage for third-party webapps (bridge `getStorageData`/`setStorageData`).

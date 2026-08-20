@@ -20,6 +20,8 @@ import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.mobiletracker.services.SurveyService
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.completionEvents
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.uploadState
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
@@ -128,7 +130,11 @@ class DataUploadService : LifecycleService(), KoinComponent {
                     }
                     ContextCompat.startForegroundService(context, intent)
                 } catch (e: Exception) {
-                    Log.e(TAG, "Failed to start DataUploadService, will retry next cycle: ${e.message}", e)
+                    Log.e(
+                        TAG,
+                        "Failed to start DataUploadService, will retry next cycle: ${e.message}",
+                        e
+                    )
                     completionDeferred = null
                     deferred.complete(Unit)
                 }
@@ -285,11 +291,17 @@ class DataUploadService : LifecycleService(), KoinComponent {
         val microEmaJob = lifecycleScope.async(Dispatchers.IO) {
             when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
                 is Result.Success -> {
-                    if (result.data > 0) successfulSensors.add("MicroEMA") else upToDateSensors.add("MicroEMA")
+                    if (result.data > 0) successfulSensors.add("MicroEMA") else upToDateSensors.add(
+                        "MicroEMA"
+                    )
                 }
 
                 is Result.Error -> {
-                    Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
+                    Log.e(
+                        TAG,
+                        "Failed to upload MicroEMA responses: ${result.message}",
+                        result.exception
+                    )
                     failedSensors.add("MicroEMA")
                 }
             }
@@ -303,7 +315,11 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 }
 
                 is Result.Error -> {
-                    Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
+                    Log.e(
+                        TAG,
+                        "Failed to upload survey responses: ${result.message}",
+                        result.exception
+                    )
                     failedSensors.add("Survey")
                 }
             }
@@ -312,7 +328,11 @@ class DataUploadService : LifecycleService(), KoinComponent {
 
         (sensorJobs + microEmaJob + surveyJob).awaitAll()
 
-        finishAndNotify(successfulSensors.toList(), failedSensors.toList(), upToDateSensors.toList())
+        finishAndNotify(
+            successfulSensors.toList(),
+            failedSensors.toList(),
+            upToDateSensors.toList()
+        )
     }
 
     private fun updateProgress(currentLabel: String, index: Int, total: Int) {
@@ -404,7 +424,14 @@ class DataUploadService : LifecycleService(), KoinComponent {
             pendingIntent = pendingIntent
         ).build()
 
-        NotificationHelper.showNotification(this, Constants.Notification.ID_DATA_UPLOAD_RESULT, notification)
-        Log.d(TAG, "Result notification shown: ${summary.successCount} succeeded, ${summary.failedCount} failed")
+        NotificationHelper.showNotification(
+            this,
+            Constants.Notification.ID_DATA_UPLOAD_RESULT,
+            notification
+        )
+        Log.d(
+            TAG,
+            "Result notification shown: ${summary.successCount} succeeded, ${summary.failedCount} failed"
+        )
     }
 }

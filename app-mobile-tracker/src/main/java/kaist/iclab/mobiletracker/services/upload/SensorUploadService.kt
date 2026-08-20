@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.services.upload
 
-import kotlinx.coroutines.CancellationException
 import android.util.Log
 import io.github.jan.supabase.auth.auth
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
@@ -10,6 +9,7 @@ import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
+import kotlinx.coroutines.CancellationException
 
 class SensorUploadService(
     private val handlerRegistry: SensorUploadHandlerRegistry,
@@ -76,6 +76,7 @@ class SensorUploadService(
 
                     Result.Success(Unit)
                 }
+
                 is Result.Error -> result
             }
         } catch (e: Exception) {

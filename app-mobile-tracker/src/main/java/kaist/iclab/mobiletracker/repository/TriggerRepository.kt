@@ -69,7 +69,11 @@ class TriggerRepositoryImpl(
             try {
                 parseTriggerEntity(entity)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to parse trigger '${entity.name}' (id=${entity.id}): ${e.message}", e)
+                Log.e(
+                    TAG,
+                    "Failed to parse trigger '${entity.name}' (id=${entity.id}): ${e.message}",
+                    e
+                )
                 null
             }
         }

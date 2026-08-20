@@ -8,8 +8,8 @@ import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.MainActivity
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
@@ -43,7 +43,10 @@ class WatchNotificationTriggerReceiver(
             handleNotificationTrigger(json)
         }
 
-        Log.d(TAG, "Started listening for watch notification triggers on BLE key: ${Constants.BLE.KEY_WATCH_NOTIFICATION_TRIGGER}")
+        Log.d(
+            TAG,
+            "Started listening for watch notification triggers on BLE key: ${Constants.BLE.KEY_WATCH_NOTIFICATION_TRIGGER}"
+        )
     }
 
     private fun handleNotificationTrigger(json: JsonElement) {

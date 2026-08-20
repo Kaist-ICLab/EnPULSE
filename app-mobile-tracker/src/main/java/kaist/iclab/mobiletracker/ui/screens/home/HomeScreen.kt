@@ -326,7 +326,11 @@ fun HomeScreen(
                 ) { sensor ->
                     InsightRow(
                         title = getSensorDisplayName(sensor.sensorId),
-                        value = pluralStringResource(R.plurals.home_logs_unit, sensor.count, sensor.count),
+                        value = pluralStringResource(
+                            R.plurals.home_logs_unit,
+                            sensor.count,
+                            sensor.count
+                        ),
                         icon = sensor.icon,
                         iconColor = sensor.iconColor
                     )

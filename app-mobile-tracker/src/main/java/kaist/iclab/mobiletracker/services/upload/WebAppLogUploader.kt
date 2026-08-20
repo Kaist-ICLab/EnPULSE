@@ -89,7 +89,8 @@ class WebAppLogUploader(
                         properties = entity.propertiesJson
                     )
                 }
-                supabaseHelper.supabaseClient.from(AppConfig.SupabaseTables.WEB_APP_LOG).insert(rows)
+                supabaseHelper.supabaseClient.from(AppConfig.SupabaseTables.WEB_APP_LOG)
+                    .insert(rows)
 
                 store.markSynced(batch.map { it.id })
                 uploaded += batch.size
