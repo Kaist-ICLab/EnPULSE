@@ -89,15 +89,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         // Process the data locally (now successfully saves to Room DB and syncs to Supabase)
         listener["ActivityRecognition"]?.invoke(entity)
 
-        val label = when (activityEntity.activityType) {
-            com.google.android.gms.location.DetectedActivity.STILL -> "Still"
-            com.google.android.gms.location.DetectedActivity.WALKING -> "Walking"
-            com.google.android.gms.location.DetectedActivity.RUNNING -> "Running"
-            com.google.android.gms.location.DetectedActivity.ON_FOOT -> "On Foot"
-            com.google.android.gms.location.DetectedActivity.ON_BICYCLE -> "On Bicycle"
-            com.google.android.gms.location.DetectedActivity.IN_VEHICLE -> "In Vehicle"
-            else -> "Unknown"
-        }
+        val label = ActivityRecognitionSensor.getActivityName(activityEntity.activityType)
 
         if (label != "Unknown") {
             Log.d(TAG, "Phone activity detected: $label. Syncing to watch...")

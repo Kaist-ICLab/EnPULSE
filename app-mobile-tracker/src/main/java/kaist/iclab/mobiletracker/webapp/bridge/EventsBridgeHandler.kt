@@ -1,6 +1,7 @@
 package kaist.iclab.mobiletracker.webapp.bridge
 
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
+import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.doubleOrNull
@@ -35,7 +36,7 @@ class EventsBridgeHandler(
                     put("timestamp", obj["timestamp"]?.jsonPrimitive?.longOrNull ?: 0L)
                     put(
                         "activityType",
-                        obj["activity_type"]?.jsonPrimitive?.intOrNull?.toString() ?: "0"
+                        ActivityRecognitionSensor.getActivityName(obj["activity_type"]?.jsonPrimitive?.intOrNull)
                     )
                     put("durationMs", 0L) // Default or computed later
                 })
