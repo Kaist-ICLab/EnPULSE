@@ -101,25 +101,50 @@ class SensorUploadService(
             Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES
 
         return try {
+            val onBatchUploadedImpl: suspend (Long) -> Unit = { cursor ->
+                syncTimestampService.setUploadCursor(sensorId, cursor)
+                syncTimestampService.addUploadStats(sensorId, succeededBatches = 1)
+                onBatchUploaded()
+            }
+
+            val onBatchQuarantinedImpl: suspend (Long, Int, String) -> Unit = { cursor, recordCount, reason ->
+                syncTimestampService.setUploadCursor(sensorId, cursor)
+                syncTimestampService.addUploadStats(sensorId, quarantinedRecordCount = recordCount)
+                Log.w(TAG, "Gave up on $recordCount $sensorId record(s) up to cursor $cursor: $reason")
+                onBatchUploaded()
+            }
+
             // Persist the cursor as each batch lands rather than only once the sensor finishes, so
             // an error part-way through a large backlog keeps the batches that already reached
             // Supabase instead of re-uploading them on every retry.
-            val result = handler.uploadData(
+            var result = handler.uploadData(
                 userUuid,
-                lastUploadCursor,
+                syncTimestampService.getUploadCursor(sensorId),
                 allowQuarantine = allowQuarantine,
-                onBatchUploaded = { cursor ->
-                    syncTimestampService.setUploadCursor(sensorId, cursor)
-                    syncTimestampService.addUploadStats(sensorId, succeededBatches = 1)
-                    onBatchUploaded()
-                },
-                onBatchQuarantined = { cursor, recordCount, reason ->
-                    syncTimestampService.setUploadCursor(sensorId, cursor)
-                    syncTimestampService.addUploadStats(sensorId, quarantinedRecordCount = recordCount)
-                    Log.w(TAG, "Gave up on $recordCount $sensorId record(s) up to cursor $cursor: $reason")
-                    onBatchUploaded()
-                }
+                onBatchUploaded = onBatchUploadedImpl,
+                onBatchQuarantined = onBatchQuarantinedImpl
             )
+
+            // If the upload failed due to an expired token (RLS 401), attempt to refresh the session and retry
+            if (result is Result.Error && result.exception is AppError.Auth) {
+                Log.w(TAG, "Auth error during upload for $sensorId, attempting to refresh session and retry")
+                try {
+                    supabaseHelper.supabaseClient.auth.refreshCurrentSession()
+                    Log.d(TAG, "Session refreshed successfully, retrying upload")
+                    
+                    // Retry with the latest cursor (in case some batches succeeded before the auth error)
+                    result = handler.uploadData(
+                        userUuid,
+                        syncTimestampService.getUploadCursor(sensorId),
+                        allowQuarantine = allowQuarantine,
+                        onBatchUploaded = onBatchUploadedImpl,
+                        onBatchQuarantined = onBatchQuarantinedImpl
+                    )
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    Log.e(TAG, "Failed to refresh session or retry upload: ${e.message}", e)
+                }
+            }
 
             // Records this call actually moved past, whether uploaded or quarantined: the cursor
             // is a local row id and this app never prunes data, so its delta over the call is the

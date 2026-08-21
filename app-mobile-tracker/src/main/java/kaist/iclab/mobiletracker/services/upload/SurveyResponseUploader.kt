@@ -67,7 +67,7 @@ class SurveyResponseUploader(
             return@withLock Result.Success(0)
         }
 
-        ErrorClassifier.runClassified(TAG, "upload survey responses") {
+        var result = ErrorClassifier.runClassified(TAG, "Upload survey responses") {
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var uploaded = 0
 
@@ -97,6 +97,50 @@ class SurveyResponseUploader(
             Log.d(TAG, "Uploaded $uploaded survey response rows")
             uploaded
         }
+
+        if (result is Result.Error && result.exception is AppError.Auth) {
+            Log.w(TAG, "Auth error during upload, attempting to refresh session and retry")
+            try {
+                supabaseHelper.supabaseClient.auth.refreshCurrentSession()
+                Log.d(TAG, "Session refreshed successfully, retrying upload")
+
+                result = ErrorClassifier.runClassified(TAG, "upload survey responses (retry)") {
+                    val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
+                    var uploaded = 0
+
+                    while (true) {
+                        val batch = store.unsynced(batchSize.toLong())
+                        if (batch.isEmpty()) break
+
+                        val rows = batch.map { entity ->
+                            SurveyQuestionResponseInsert(
+                                questionId = entity.questionId,
+                                uuid = userUuid,
+                                triggerTime = DateTimeFormatter.formatToIsoOffset(entity.triggerTime),
+                                actualTriggerTime = DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime),
+                                surveyStartTime = DateTimeFormatter.formatToIsoOffset(entity.surveyStartTime),
+                                responseSubmissionTime = DateTimeFormatter.formatToIsoOffset(entity.responseSubmissionTime),
+                                response = Json.parseToJsonElement(entity.responseJson)
+                            )
+                        }
+                        supabaseHelper.supabaseClient.from(Constants.DB.TABLE_RESPONSE).insert(rows)
+
+                        store.markSynced(batch.map { it.id })
+                        uploaded += batch.size
+
+                        if (batch.size < batchSize) break
+                    }
+
+                    Log.d(TAG, "Uploaded $uploaded survey response rows on retry")
+                    uploaded
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Log.e(TAG, "Failed to refresh session or retry upload: ${e.message}", e)
+            }
+        }
+
+        return@withLock result
     }
 
     private fun getUserUuid(): String? {

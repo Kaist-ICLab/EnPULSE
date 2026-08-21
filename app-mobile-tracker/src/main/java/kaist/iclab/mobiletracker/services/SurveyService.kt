@@ -22,6 +22,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
+import io.github.jan.supabase.auth.auth
 
 /**
  * Service for fetching survey configuration from Supabase
@@ -201,9 +202,27 @@ class SurveyService(
      * Directly inserts a list of survey responses into the Supabase 'survey_question_response' table.
      */
     suspend fun submitSurveyResponses(responses: List<SurveyQuestionResponseInsert>): Result<Unit> {
-        return ErrorClassifier.runClassified(TAG, "submitSurveyResponses") {
+        var result: Result<Unit> = ErrorClassifier.runClassified(TAG, "submitSurveyResponses") {
             supabaseClient.from(Constants.DB.TABLE_RESPONSE).insert(responses)
+            Unit
         }
+
+        if (result is Result.Error && result.exception is AppError.Auth) {
+            Log.w(TAG, "Auth error during submitSurveyResponses, attempting to refresh session and retry")
+            try {
+                supabaseClient.auth.refreshCurrentSession()
+                Log.d(TAG, "Session refreshed successfully, retrying submitSurveyResponses")
+                result = ErrorClassifier.runClassified(TAG, "submitSurveyResponses (retry)") {
+                    supabaseClient.from(Constants.DB.TABLE_RESPONSE).insert(responses)
+                    Unit
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Log.e(TAG, "Failed to refresh session or retry upload: ${e.message}", e)
+            }
+        }
+        
+        return result
     }
 
     /**

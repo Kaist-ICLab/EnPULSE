@@ -82,7 +82,7 @@ class WebAppLogUploader(
             return@withLock Result.Success(0)
         }
 
-        ErrorClassifier.runClassified(TAG, "upload webapp logs") {
+        var result = ErrorClassifier.runClassified(TAG, "upload webapp logs") {
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var uploaded = 0
 
@@ -110,6 +110,48 @@ class WebAppLogUploader(
             Log.d(TAG, "Uploaded $uploaded webapp log rows")
             uploaded
         }
+
+        if (result is Result.Error && result.exception is kaist.iclab.mobiletracker.repository.AppError.Auth) {
+            Log.w(TAG, "Auth error during upload, attempting to refresh session and retry")
+            try {
+                supabaseHelper.supabaseClient.auth.refreshCurrentSession()
+                Log.d(TAG, "Session refreshed successfully, retrying upload")
+                
+                result = ErrorClassifier.runClassified(TAG, "upload webapp logs (retry)") {
+                    val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
+                    var uploaded = 0
+
+                    while (true) {
+                        val batch = store.unsynced(batchSize.toLong())
+                        if (batch.isEmpty()) break
+
+                        val rows = batch.map { entity ->
+                            WebAppLogRow(
+                                uuid = userUuid,
+                                timestamp = entity.timestamp,
+                                webAppId = entity.webAppId,
+                                eventType = entity.eventType,
+                                properties = entity.propertiesJson
+                            )
+                        }
+                        supabaseHelper.supabaseClient.from(AppConfig.SupabaseTables.WEB_APP_LOG).insert(rows)
+
+                        store.markSynced(batch.map { it.id })
+                        uploaded += batch.size
+
+                        if (batch.size < batchSize) break
+                    }
+
+                    Log.d(TAG, "Uploaded $uploaded webapp log rows on retry")
+                    uploaded
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Log.e(TAG, "Failed to refresh session or retry upload: ${e.message}", e)
+            }
+        }
+        
+        return@withLock result
     }
 
     private fun getUserUuid(): String? {
