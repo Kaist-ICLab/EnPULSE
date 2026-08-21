@@ -9,6 +9,7 @@ import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
 import kaist.iclab.mobiletracker.db.obx.JsonStringElementSerializer
 import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
+import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.services.SyncTimestampService
@@ -111,7 +112,7 @@ class WebAppLogUploader(
             uploaded
         }
 
-        if (result is Result.Error && result.exception is kaist.iclab.mobiletracker.repository.AppError.Auth) {
+        if (result is Result.Error && result.exception is AppError.Auth) {
             Log.w(TAG, "Auth error during upload, attempting to refresh session and retry")
             try {
                 supabaseHelper.supabaseClient.auth.refreshCurrentSession()
