@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
@@ -209,6 +210,16 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         }
     }
 
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "$TAG::WakeLock")
+        wakeLock?.acquire()
+        Log.d(TAG, "WakeLock acquired")
+    }
+
     override fun onDestroy() {
         // Only remove if we registered
         if (listenersRegistered) {
@@ -231,6 +242,13 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
             }
             if (flushed == null) {
                 Log.w(TAG, "onDestroy flush timed out after 3s — some buffered data may be lost")
+            }
+        }
+        
+        wakeLock?.let {
+            if (it.isHeld) {
+                it.release()
+                Log.d(TAG, "WakeLock released")
             }
         }
 
