@@ -17,6 +17,7 @@ import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -147,7 +148,7 @@ class WebAppLogUploader(
                     uploaded
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Failed to refresh session or retry upload: ${e.message}", e)
             }
         }

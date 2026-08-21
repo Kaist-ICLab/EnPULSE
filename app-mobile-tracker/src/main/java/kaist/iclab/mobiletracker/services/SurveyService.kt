@@ -24,6 +24,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.CancellationException
 
 /**
  * Service for fetching survey configuration from Supabase
@@ -218,7 +219,7 @@ class SurveyService(
                     Unit
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is CancellationException) throw e
                 Log.e(TAG, "Failed to refresh session or retry upload: ${e.message}", e)
             }
         }
