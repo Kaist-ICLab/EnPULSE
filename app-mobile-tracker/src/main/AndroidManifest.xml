@@ -191,11 +191,22 @@
         </service>
 
         <!-- Foreground service that performs data uploads to Supabase, triggered by either the
-             "Upload Now" button or AutoSyncService, with a progress notification -->
+             "Upload Now" button or AutoSyncService, with a progress notification.
+
+             specialUse rather than the seemingly obvious dataSync, matching AutoSyncService above
+             (which is what ran these uploads before they were split out into this service): API 34+
+             caps a dataSync foreground service at 6 hours of runtime per 24 hours, counted
+             cumulatively across runs, and kills the app that doesn't stop at the limit. A research
+             device draining a multi-day sensor backlog blows through that, so uploads were dying
+             part-way. specialUse carries no such cap. -->
         <service
             android:name="kaist.iclab.mobiletracker.services.upload.DataUploadService"
             android:exported="false"
-            android:foregroundServiceType="dataSync"></service>
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Data synchronization for research purposes." />
+        </service>
 
         <activity
             android:name=".MainActivity"

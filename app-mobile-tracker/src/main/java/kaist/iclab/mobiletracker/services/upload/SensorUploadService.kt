@@ -73,7 +73,12 @@ class SensorUploadService(
         }
 
         val lastUploadCursor = syncTimestampService.getUploadCursor(sensorId)
-        val quarantinedBefore = syncTimestampService.getUploadStats(sensorId).quarantinedRecordCount
+        // The denominator of the success rate, measured before a single row is sent: everything
+        // sitting in local storage that this run set out to upload. It cannot be derived after the
+        // fact from how far the cursor moved — a run cut short by the network leaves the cursor
+        // exactly where the last accepted batch put it, so "records the cursor passed" counts only
+        // the successes and every interrupted upload would report a perfect 100%.
+        val pendingBefore = handler.pendingRecordCount(lastUploadCursor)
 
         // Belt-and-suspenders: normally SupabaseHelper's enableLifecycleCallbacks = false keeps
         // SessionStatus from ever getting stuck at Initializing mid-upload. If it does anyway (any
@@ -100,6 +105,12 @@ class SensorUploadService(
         val allowQuarantine = syncTimestampService.getUploadFailureStreak(sensorId) >=
             Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES
 
+        // Counted per batch from what the handler actually sent, rather than inferred from the
+        // cursor delta: the cursor is a row id, and deleted rows (deleteRecord / pruneData) leave
+        // gaps in it, which would inflate the count.
+        var succeededRecords = 0
+        var quarantinedRecords = 0
+
         return try {
             // Persist the cursor as each batch lands rather than only once the sensor finishes, so
             // an error part-way through a large backlog keeps the batches that already reached
@@ -108,28 +119,28 @@ class SensorUploadService(
                 userUuid,
                 lastUploadCursor,
                 allowQuarantine = allowQuarantine,
-                onBatchUploaded = { cursor ->
+                onBatchUploaded = { cursor, recordCount ->
                     syncTimestampService.setUploadCursor(sensorId, cursor)
                     syncTimestampService.addUploadStats(sensorId, succeededBatches = 1)
+                    succeededRecords += recordCount
                     onBatchUploaded()
                 },
                 onBatchQuarantined = { cursor, recordCount, reason ->
                     syncTimestampService.setUploadCursor(sensorId, cursor)
                     syncTimestampService.addUploadStats(sensorId, quarantinedRecordCount = recordCount)
+                    quarantinedRecords += recordCount
                     Log.w(TAG, "Gave up on $recordCount $sensorId record(s) up to cursor $cursor: $reason")
                     onBatchUploaded()
                 }
             )
 
-            // Records this call actually moved past, whether uploaded or quarantined: the cursor
-            // is a local row id and this app never prunes data, so its delta over the call is the
-            // record count that was processed (see SyncTimestampService.getUploadedRecordCountFromCursor
-            // for the lifetime version of this same trick).
             val cursorAfter = syncTimestampService.getUploadCursor(sensorId)
-            val quarantinedAfter = syncTimestampService.getUploadStats(sensorId).quarantinedRecordCount
-            val attempted = (cursorAfter - lastUploadCursor).toInt().coerceAtLeast(0)
-            val quarantinedThisRun = (quarantinedAfter - quarantinedBefore).toInt().coerceAtLeast(0)
-            val succeeded = (attempted - quarantinedThisRun).coerceAtLeast(0)
+            val succeeded = succeededRecords
+            // What this run took on. Normally that's the backlog measured up front, but sensors keep
+            // collecting while the upload runs and each pass drains until the store is empty, so a
+            // long run can legitimately get through more than it started with — hence the max,
+            // which also keeps the rate from ever exceeding 100%.
+            val attempted = maxOf(pendingBefore, succeeded + quarantinedRecords)
 
             when (result) {
                 is Result.Success -> {
@@ -174,7 +185,14 @@ class SensorUploadService(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.e(TAG, "Error uploading sensor data for $sensorId: ${e.message}", e)
-            SensorUploadOutcome(0, 0, isUpToDate = false, error = e)
+            // Same accounting as the Result.Error path above — batches that landed before this
+            // threw still count, so the summary reports how far it got rather than a flat zero.
+            SensorUploadOutcome(
+                succeededRecords,
+                maxOf(pendingBefore, succeededRecords + quarantinedRecords),
+                isUpToDate = false,
+                error = e
+            )
         }
     }
 

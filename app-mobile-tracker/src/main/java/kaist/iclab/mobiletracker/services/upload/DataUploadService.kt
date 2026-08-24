@@ -6,6 +6,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
@@ -27,6 +28,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -37,6 +39,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
@@ -211,6 +214,13 @@ class DataUploadService : LifecycleService(), KoinComponent {
     private var latestStartId: Int = 0
 
     /**
+     * The coroutine doing the actual uploading, kept so [onTimeout] can cut it short: the system
+     * gives only a few seconds there before it kills the app outright.
+     */
+    @Volatile
+    private var uploadJob: Job? = null
+
+    /**
      * Resolved once instead of per notification update: progress is now posted per upload batch,
      * which is far more often than the old per-sensor updates.
      */
@@ -239,7 +249,24 @@ class DataUploadService : LifecycleService(), KoinComponent {
             Constants.Notification.CHANNEL_ID_DATA_UPLOAD,
             Constants.Notification.CHANNEL_NAME_DATA_UPLOAD
         )
-        startForegroundWithNotification(buildProgressNotification("", 0, 0))
+        try {
+            startForegroundWithNotification(buildProgressNotification("", 0, 0))
+        } catch (e: Exception) {
+            // The system can refuse foreground status outright — ForegroundServiceStartNotAllowedException
+            // for a background start on API 31+, or once a timed-out service type has spent its quota
+            // (see [onTimeout]). start() guards its own startForegroundService() call, but this one
+            // runs inside the service, where an escaping exception takes down the whole process
+            // rather than just skipping a cycle.
+            Log.e(TAG, "Cannot enter the foreground; skipping this upload: ${e.message}", e)
+            // Only tear down if no run is already underway. If one is, it owns the foreground
+            // notification and will complete this request's Deferred through notifyCompletion() as
+            // usual — stopping the service here would kill an upload that is working fine.
+            if (claimRun()) {
+                notifyCompletion()
+                stopSelf(startId)
+            }
+            return START_NOT_STICKY
+        }
 
         if (!claimRun()) {
             // A run is already underway; this request rides along with it — start() has already
@@ -249,7 +276,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
 
         val requestedSensorIds = intent?.getStringArrayListExtra(EXTRA_SENSOR_IDS)
         val tally = UploadTally()
-        lifecycleScope.launch(Dispatchers.IO) {
+        uploadJob = lifecycleScope.launch(Dispatchers.IO) {
             SupabaseLoadingInterceptor.suppressGlobalLoading = true
             try {
                 if (requestedSensorIds != null) {
@@ -289,9 +316,46 @@ class DataUploadService : LifecycleService(), KoinComponent {
         super.onDestroy()
     }
 
+    /**
+     * Nothing should reach this while the service runs as `specialUse`, which carries no runtime
+     * cap — it is here because the type this service used to have, `dataSync`, does: API 34+ allows
+     * one only ~6 hours per 24 hours, counted cumulatively across runs, and kills an app that
+     * doesn't stop at the limit with `ForegroundServiceDidNotStopInTimeException`. That crash is
+     * what large uploads were hitting. Kept as a safety net in case the type moves back, and for
+     * Google extending timeouts to further types the way API 35 did to `mediaProcessing`.
+     *
+     * Stopping here is safe and nearly free: every batch that landed has already persisted its
+     * cursor, and the run's own `finally` still emits a summary of what got through, so the next
+     * cycle resumes from where this left off.
+     */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    override fun onTimeout(startId: Int) {
+        handleForegroundTimeout(startId)
+    }
+
+    /** API 35+ calls this overload instead of [onTimeout]; both must be handled. */
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        handleForegroundTimeout(startId)
+    }
+
+    private fun handleForegroundTimeout(startId: Int) {
+        Log.w(TAG, "dataSync foreground service timed out; pausing the upload (startId=$startId)")
+        // Cancelling rather than waiting for the run to notice: the deadline here is a few seconds,
+        // far less than a batch can take. The run's finally still reports what it managed to send.
+        uploadJob?.cancel(CancellationException("dataSync foreground service timed out"))
+        SupabaseLoadingInterceptor.suppressGlobalLoading = false
+        _uploadState.value = DataUploadState.Idle
+        notifyCompletion()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
     private fun startForegroundWithNotification(notification: android.app.Notification) {
+        // Must match android:foregroundServiceType in the manifest — startForeground() rejects a
+        // type that wasn't declared there. See the manifest for why this is specialUse, not dataSync.
         val serviceType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         } else {
             0
         }
@@ -399,77 +463,85 @@ class DataUploadService : LifecycleService(), KoinComponent {
      * upload share one implementation and one progress/notification surface.
      */
     private suspend fun runFullSync(tally: UploadTally) {
-        // Only sensors currently included in the joined campaign are uploaded — a sensor that
-        // was removed from (or never added to) the campaign has nothing to upload for the same
-        // reason an up-to-date one doesn't, but listing it as "already up to date" in the summary
-        // would wrongly imply it's still being tracked, so it's excluded outright instead.
-        val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds)
-            .filter { sensorUploadService.isSensorActive(it) }
-        val results = tally.results
-        val upToDateSensors = tally.upToDate
-        // + 1 unit each for MicroEMA and Survey, which flush in one go rather than in batches.
-        val progress = BatchProgress(allSensorIds.sumOf { sensorUploadService.pendingBatchCount(it) } + 2)
+        // supervisorScope, so the jobs below are children of this call rather than of
+        // lifecycleScope. Cancelling the run has to actually stop the uploading: [onTimeout]
+        // cancels uploadJob, and jobs launched on lifecycleScope are that job's siblings, not its
+        // children — they would carry on uploading while the service tears down around them.
+        // Supervisor rather than plain coroutineScope to keep the existing behaviour that one
+        // sensor blowing up doesn't cancel the others.
+        supervisorScope {
+            // Only sensors currently included in the joined campaign are uploaded — a sensor that
+            // was removed from (or never added to) the campaign has nothing to upload for the same
+            // reason an up-to-date one doesn't, but listing it as "already up to date" in the summary
+            // would wrongly imply it's still being tracked, so it's excluded outright instead.
+            val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds)
+                .filter { sensorUploadService.isSensorActive(it) }
+            val results = tally.results
+            val upToDateSensors = tally.upToDate
+            // + 1 unit each for MicroEMA and Survey, which flush in one go rather than in batches.
+            val progress = BatchProgress(allSensorIds.sumOf { sensorUploadService.pendingBatchCount(it) } + 2)
 
-        updateProgress("", progress)
+            updateProgress("", progress)
 
-        // Sensors upload concurrently, so the name shown is whichever of them most recently
-        // started or finished a batch — always one that is genuinely in flight.
-        val sensorJobs = allSensorIds.map { sensorId ->
-            lifecycleScope.async(Dispatchers.IO) {
-                val displayName = localizedDisplayName(sensorId)
-                if (sensorUploadService.hasDataToUpload(sensorId)) {
-                    updateProgress(displayName, progress)
-                    val outcome = sensorUploadService.uploadSensorData(sensorId) {
-                        progress.advance()
+            // Sensors upload concurrently, so the name shown is whichever of them most recently
+            // started or finished a batch — always one that is genuinely in flight.
+            val sensorJobs = allSensorIds.map { sensorId ->
+                async(Dispatchers.IO) {
+                    val displayName = localizedDisplayName(sensorId)
+                    if (sensorUploadService.hasDataToUpload(sensorId)) {
                         updateProgress(displayName, progress)
+                        val outcome = sensorUploadService.uploadSensorData(sensorId) {
+                            progress.advance()
+                            updateProgress(displayName, progress)
+                        }
+                        if (outcome.isError) {
+                            Log.e(TAG, "Upload failed for $sensorId: ${outcome.error?.message}", outcome.error)
+                        }
+                        results.add(SensorUploadResult(displayName, outcome.succeededCount, outcome.attemptedCount, outcome.isError))
+                    } else {
+                        upToDateSensors.add(displayName)
                     }
-                    if (outcome.isError) {
-                        Log.e(TAG, "Upload failed for $sensorId: ${outcome.error?.message}", outcome.error)
+                }
+            }
+
+            val microEmaJob = async(Dispatchers.IO) {
+                // No quarantine concept for MicroEMA/Survey — they're insert-only flushes, so
+                // result.data (the count Supabase actually accepted) doubles as both succeeded and
+                // attempted.
+                when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
+                    is Result.Success -> {
+                        if (result.data > 0) results.add(SensorUploadResult("MicroEMA", result.data, result.data, isError = false))
+                        else upToDateSensors.add("MicroEMA")
                     }
-                    results.add(SensorUploadResult(displayName, outcome.succeededCount, outcome.attemptedCount, outcome.isError))
-                } else {
-                    upToDateSensors.add(displayName)
+
+                    is Result.Error -> {
+                        Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
+                        results.add(SensorUploadResult("MicroEMA", 0, 0, isError = true))
+                    }
                 }
+                progress.advance()
+                updateProgress("MicroEMA", progress)
             }
-        }
 
-        val microEmaJob = lifecycleScope.async(Dispatchers.IO) {
-            // No quarantine concept for MicroEMA/Survey — they're insert-only flushes, so
-            // result.data (the count Supabase actually accepted) doubles as both succeeded and
-            // attempted.
-            when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
-                is Result.Success -> {
-                    if (result.data > 0) results.add(SensorUploadResult("MicroEMA", result.data, result.data, isError = false))
-                    else upToDateSensors.add("MicroEMA")
-                }
+            val surveyJob = async(Dispatchers.IO) {
+                val displayName = localizedDisplayName(SurveyResponseDataHandler.SENSOR_ID)
+                when (val result = surveyResponseUploader.flush()) {
+                    is Result.Success -> {
+                        if (result.data > 0) results.add(SensorUploadResult(displayName, result.data, result.data, isError = false))
+                        else upToDateSensors.add(displayName)
+                    }
 
-                is Result.Error -> {
-                    Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
-                    results.add(SensorUploadResult("MicroEMA", 0, 0, isError = true))
+                    is Result.Error -> {
+                        Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
+                        results.add(SensorUploadResult(displayName, 0, 0, isError = true))
+                    }
                 }
+                progress.advance()
+                updateProgress(displayName, progress)
             }
-            progress.advance()
-            updateProgress("MicroEMA", progress)
+
+            (sensorJobs + microEmaJob + surveyJob).awaitAll()
         }
-
-        val surveyJob = lifecycleScope.async(Dispatchers.IO) {
-            val displayName = localizedDisplayName(SurveyResponseDataHandler.SENSOR_ID)
-            when (val result = surveyResponseUploader.flush()) {
-                is Result.Success -> {
-                    if (result.data > 0) results.add(SensorUploadResult(displayName, result.data, result.data, isError = false))
-                    else upToDateSensors.add(displayName)
-                }
-
-                is Result.Error -> {
-                    Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
-                    results.add(SensorUploadResult(displayName, 0, 0, isError = true))
-                }
-            }
-            progress.advance()
-            updateProgress(displayName, progress)
-        }
-
-        (sensorJobs + microEmaJob + surveyJob).awaitAll()
     }
 
     private fun updateProgress(currentLabel: String, progress: BatchProgress) {

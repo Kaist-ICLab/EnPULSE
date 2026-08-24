@@ -50,7 +50,7 @@ class SensorUploadHandlerImpl<T>(
         userUuid: String,
         lastUploadCursor: Long,
         allowQuarantine: Boolean,
-        onBatchUploaded: suspend (cursor: Long) -> Unit,
+        onBatchUploaded: suspend (cursor: Long, recordCount: Int) -> Unit,
         onBatchQuarantined: suspend (cursor: Long, recordCount: Int, reason: String) -> Unit
     ): Result<Long> {
         return ErrorClassifier.runClassified(sensorId, "upload $sensorId") {
@@ -74,7 +74,7 @@ class SensorUploadHandlerImpl<T>(
                     is Result.Success -> {
                         currentCursor = entities.maxOf { it.id }
                         uploadedRows += entities.size
-                        onBatchUploaded(currentCursor)
+                        onBatchUploaded(currentCursor, entities.size)
                     }
                     is Result.Error -> {
                         if (allowQuarantine && result.exception is AppError.ServerRejected) {
@@ -120,6 +120,9 @@ class SensorUploadHandlerImpl<T>(
         val pendingRows = store.countWithIdAfter(lastUploadCursor)
         return ((pendingRows + batchSize - 1) / batchSize).toInt()
     }
+
+    override suspend fun pendingRecordCount(lastUploadCursor: Long): Int =
+        store.countWithIdAfter(lastUploadCursor).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
 
     override suspend fun pruneData(beforeTimestamp: Long) {
         store.removeBefore(beforeTimestamp)
