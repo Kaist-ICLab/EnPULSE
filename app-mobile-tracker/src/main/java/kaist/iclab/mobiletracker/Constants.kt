@@ -110,6 +110,14 @@ object Constants {
         const val ID_DATA_UPLOAD_PROGRESS = 1001
         const val ID_DATA_UPLOAD_RESULT = 1002
 
+        // Progress channel — separate from the one above and deliberately IMPORTANCE_LOW. The
+        // progress notification is re-posted once per upload batch, and on a DEFAULT-importance
+        // channel every one of those updates re-alerts (sound + heads-up), so a long upload rang
+        // continuously. A new channel id is needed rather than lowering the existing one: the
+        // system ignores importance changes to a channel that already exists on the device.
+        const val CHANNEL_ID_DATA_UPLOAD_PROGRESS = "data_upload_progress_channel"
+        const val CHANNEL_NAME_DATA_UPLOAD_PROGRESS = "Data Upload Progress"
+
         // Auto Sync Channel — AutoSyncService's own persistent "running" notification, required
         // since it's a real foreground service. Distinct from the Data Upload channel above:
         // this one just says auto-sync is active; per-cycle success/failure comes from

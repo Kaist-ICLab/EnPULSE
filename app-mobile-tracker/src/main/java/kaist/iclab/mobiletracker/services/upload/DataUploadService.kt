@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
@@ -248,6 +249,12 @@ class DataUploadService : LifecycleService(), KoinComponent {
             this,
             Constants.Notification.CHANNEL_ID_DATA_UPLOAD,
             Constants.Notification.CHANNEL_NAME_DATA_UPLOAD
+        )
+        NotificationHelper.ensureNotificationChannel(
+            this,
+            Constants.Notification.CHANNEL_ID_DATA_UPLOAD_PROGRESS,
+            Constants.Notification.CHANNEL_NAME_DATA_UPLOAD_PROGRESS,
+            android.app.NotificationManager.IMPORTANCE_LOW
         )
         try {
             startForegroundWithNotification(buildProgressNotification("", 0, 0))
@@ -578,13 +585,20 @@ class DataUploadService : LifecycleService(), KoinComponent {
         }
         return NotificationHelper.buildNotification(
             context = this,
-            channelId = Constants.Notification.CHANNEL_ID_DATA_UPLOAD,
+            channelId = Constants.Notification.CHANNEL_ID_DATA_UPLOAD_PROGRESS,
             title = localizedContext.getString(R.string.upload_dialog_title),
             text = text,
+            priority = NotificationCompat.PRIORITY_LOW,
             ongoing = true,
             autoCancel = false
         ).apply {
             setProgress(total.coerceAtLeast(1), current, total == 0)
+            // This notification is re-posted on every batch (see [updateProgress]). Without these
+            // two, each re-post alerts again and the phone buzzes for the whole upload: the channel
+            // handles API 26+, setOnlyAlertOnce/setSilent cover the pre-O priority path and keep a
+            // user who re-enables the channel's importance from getting the ringing back.
+            setOnlyAlertOnce(true)
+            setSilent(true)
         }.build()
     }
 
