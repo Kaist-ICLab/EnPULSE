@@ -75,9 +75,10 @@ class SupabaseAuth(
                 // persisted session, so currentSessionOrNull() below reflects the truth. Bounded so
                 // a SessionStatus stuck at Initializing (see SensorUploadService's identical guard)
                 // reports "logged out" instead of leaving isInitializing = true forever.
-                val initialized = withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
-                    supabaseClient.auth.awaitInitialization()
-                } != null
+                val initialized =
+                    withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
+                        supabaseClient.auth.awaitInitialization()
+                    } != null
                 if (!initialized) {
                     Log.w(TAG, "Timed out waiting for Supabase auth to initialize")
                 }

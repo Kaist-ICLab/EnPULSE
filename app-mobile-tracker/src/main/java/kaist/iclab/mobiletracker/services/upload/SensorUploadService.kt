@@ -84,18 +84,29 @@ class SensorUploadService(
         // SessionStatus from ever getting stuck at Initializing mid-upload. If it does anyway (any
         // other cause), don't let this sensor's upload wedge every sensor queued after it — fail
         // this one cleanly and let the caller move on, same as a real timed-out network call would.
-        val initialized = withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS.milliseconds) {
-            supabaseHelper.supabaseClient.auth.awaitInitialization()
-        } != null
+        val initialized =
+            withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS.milliseconds) {
+                supabaseHelper.supabaseClient.auth.awaitInitialization()
+            } != null
         if (!initialized) {
             Log.e(TAG, "Timed out waiting for Supabase auth to initialize; skipping $sensorId")
-            return SensorUploadOutcome(0, 0, isUpToDate = false, error = IllegalStateException("Auth session not ready"))
+            return SensorUploadOutcome(
+                0,
+                0,
+                isUpToDate = false,
+                error = IllegalStateException("Auth session not ready")
+            )
         }
 
         val userUuid = getUserUuid()
         if (userUuid == null) {
             Log.e(TAG, "Cannot upload data: No user UUID available")
-            return SensorUploadOutcome(0, 0, isUpToDate = false, error = IllegalStateException("User not logged in"))
+            return SensorUploadOutcome(
+                0,
+                0,
+                isUpToDate = false,
+                error = IllegalStateException("User not logged in")
+            )
         }
 
         // Only start skipping a whole "poison" batch once the exact same spot has already failed
@@ -103,7 +114,7 @@ class SensorUploadService(
         // SyncTimestampService.recordUploadFailureAtCursor) — a single rejection is treated
         // normally first, in case it's transient-looking rather than a genuinely bad batch.
         val allowQuarantine = syncTimestampService.getUploadFailureStreak(sensorId) >=
-            Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES
+                Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES
 
         // Counted per batch from what the handler actually sent, rather than inferred from the
         // cursor delta: the cursor is a row id, and deleted rows (deleteRecord / pruneData) leave
@@ -127,9 +138,15 @@ class SensorUploadService(
                 },
                 onBatchQuarantined = { cursor, recordCount, reason ->
                     syncTimestampService.setUploadCursor(sensorId, cursor)
-                    syncTimestampService.addUploadStats(sensorId, quarantinedRecordCount = recordCount)
+                    syncTimestampService.addUploadStats(
+                        sensorId,
+                        quarantinedRecordCount = recordCount
+                    )
                     quarantinedRecords += recordCount
-                    Log.w(TAG, "Gave up on $recordCount $sensorId record(s) up to cursor $cursor: $reason")
+                    Log.w(
+                        TAG,
+                        "Gave up on $recordCount $sensorId record(s) up to cursor $cursor: $reason"
+                    )
                     onBatchUploaded()
                 }
             )
@@ -164,6 +181,7 @@ class SensorUploadService(
 
                     SensorUploadOutcome(succeeded, attempted, isUpToDate = false)
                 }
+
                 is Result.Error -> {
                     // Only a decisive server rejection counts toward the quarantine streak — a
                     // network/timeout/auth-not-ready failure says nothing about whether this data
@@ -172,14 +190,20 @@ class SensorUploadService(
                     if (result.exception is AppError.ServerRejected) {
                         // onBatchUploaded already persisted the cursor for whatever got through
                         // before the failing batch, so this read reflects exactly where it's stuck.
-                        val streak = syncTimestampService.recordUploadFailureAtCursor(sensorId, cursorAfter)
+                        val streak =
+                            syncTimestampService.recordUploadFailureAtCursor(sensorId, cursorAfter)
                         Log.w(
                             TAG,
                             "$sensorId upload rejected by server (cycle $streak/" +
-                                "${Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES} at this spot)"
+                                    "${Constants.Network.QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES} at this spot)"
                         )
                     }
-                    SensorUploadOutcome(succeeded, attempted, isUpToDate = false, error = result.exception)
+                    SensorUploadOutcome(
+                        succeeded,
+                        attempted,
+                        isUpToDate = false,
+                        error = result.exception
+                    )
                 }
 
             }

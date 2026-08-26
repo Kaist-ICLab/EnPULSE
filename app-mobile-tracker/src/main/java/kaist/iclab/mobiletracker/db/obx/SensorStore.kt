@@ -80,7 +80,7 @@ open class SensorStore<T : BaseEntity>(
         if (cacheInitialized) return
         cachedCount = box.count().toInt()
         cachedLatestTimestamp = if (box.isEmpty) null
-            else box.query().build().use { it.property(timestampProperty).max() }
+        else box.query().build().use { it.property(timestampProperty).max() }
         cacheInitialized = true
     }
 
@@ -232,7 +232,7 @@ open class SensorStore<T : BaseEntity>(
                 // way to know the new max without asking, so re-derive it here. Single-row delete
                 // is a rare, user-initiated action (not the tab-load hot path), so one query is fine.
                 cachedLatestTimestamp = if (box.isEmpty) null
-                    else box.query().build().use { it.property(timestampProperty).max() }
+                else box.query().build().use { it.property(timestampProperty).max() }
             }
         }
         return removed
@@ -247,7 +247,7 @@ open class SensorStore<T : BaseEntity>(
                 ensureCacheInitializedLocked()
                 cachedCount = (cachedCount - removedCount.toInt()).coerceAtLeast(0)
                 cachedLatestTimestamp = if (box.isEmpty) null
-                    else box.query().build().use { it.property(timestampProperty).max() }
+                else box.query().build().use { it.property(timestampProperty).max() }
             }
         }
         return removedCount

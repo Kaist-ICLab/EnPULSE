@@ -76,6 +76,7 @@ class SensorUploadHandlerImpl<T>(
                         uploadedRows += entities.size
                         onBatchUploaded(currentCursor, entities.size)
                     }
+
                     is Result.Error -> {
                         if (allowQuarantine && result.exception is AppError.ServerRejected) {
                             // The caller has already seen this exact spot fail this way repeatedly
@@ -88,7 +89,7 @@ class SensorUploadHandlerImpl<T>(
                             Log.e(
                                 TAG,
                                 "Quarantining $sensorId batch of ${entities.size} records up to " +
-                                    "cursor $currentCursor: $reason"
+                                        "cursor $currentCursor: $reason"
                             )
                             onBatchQuarantined(currentCursor, entities.size, reason)
                             uploadedRows += entities.size
@@ -96,7 +97,7 @@ class SensorUploadHandlerImpl<T>(
                             Log.w(
                                 TAG,
                                 "Partial upload for $sensorId: $uploadedRows rows committed up to " +
-                                    "cursor $currentCursor, resuming from there next run",
+                                        "cursor $currentCursor, resuming from there next run",
                                 result.exception
                             )
                             throw result.exception

@@ -34,7 +34,7 @@ class WebAppLogStore(boxStore: BoxStore) {
         if (cacheInitialized) return
         cachedCount = box.count().toInt()
         cachedLatestTimestamp = if (box.isEmpty) null
-            else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
+        else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
         cacheInitialized = true
     }
 
@@ -103,7 +103,7 @@ class WebAppLogStore(boxStore: BoxStore) {
                 ensureCacheInitializedLocked()
                 cachedCount = (cachedCount - 1).coerceAtLeast(0)
                 cachedLatestTimestamp = if (box.isEmpty) null
-                    else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
+                else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
             }
         }
         return removed

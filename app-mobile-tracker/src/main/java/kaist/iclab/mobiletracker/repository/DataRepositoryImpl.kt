@@ -121,9 +121,17 @@ class DataRepositoryImpl(
         syncTimestampService.clearLastSuccessfulUpload(sensorId)
     }
 
-    override suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit): SensorUploadOutcome {
+    override suspend fun uploadSensorData(
+        sensorId: String,
+        onBatchUploaded: suspend () -> Unit
+    ): SensorUploadOutcome {
         if (syncingSensors.putIfAbsent(sensorId, true) != null) {
-            return SensorUploadOutcome(0, 0, isUpToDate = false, error = IllegalStateException("$sensorId is already syncing"))
+            return SensorUploadOutcome(
+                0,
+                0,
+                isUpToDate = false,
+                error = IllegalStateException("$sensorId is already syncing")
+            )
         }
         try {
             // Survey and webapp logs don't ride SensorUploadService (insert-only, not
@@ -134,17 +142,37 @@ class DataRepositoryImpl(
                     // count as one batch towards the caller's progress bar, and result.data is the
                     // real count uploaded — no quarantine concept here, so attempted == succeeded.
                     is Result.Success ->
-                        if (result.data > 0) SensorUploadOutcome(result.data, result.data, isUpToDate = false)
+                        if (result.data > 0) SensorUploadOutcome(
+                            result.data,
+                            result.data,
+                            isUpToDate = false
+                        )
                         else SensorUploadOutcome.UP_TO_DATE
-                    is Result.Error -> SensorUploadOutcome(0, 0, isUpToDate = false, error = result.exception)
+
+                    is Result.Error -> SensorUploadOutcome(
+                        0,
+                        0,
+                        isUpToDate = false,
+                        error = result.exception
+                    )
                 }.also { onBatchUploaded() }
             }
             if (sensorId == WebAppLogDataHandler.SENSOR_ID) {
                 return when (val result = webAppLogUploader.flush()) {
                     is Result.Success ->
-                        if (result.data > 0) SensorUploadOutcome(result.data, result.data, isUpToDate = false)
+                        if (result.data > 0) SensorUploadOutcome(
+                            result.data,
+                            result.data,
+                            isUpToDate = false
+                        )
                         else SensorUploadOutcome.UP_TO_DATE
-                    is Result.Error -> SensorUploadOutcome(0, 0, isUpToDate = false, error = result.exception)
+
+                    is Result.Error -> SensorUploadOutcome(
+                        0,
+                        0,
+                        isUpToDate = false,
+                        error = result.exception
+                    )
                 }.also { onBatchUploaded() }
             }
 

@@ -31,7 +31,8 @@ class SurveyResponseStore(boxStore: BoxStore) {
         if (cacheInitialized) return
         cachedCount = box.count().toInt()
         cachedLatestTimestamp = if (box.isEmpty) null
-            else box.query().build().use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
+        else box.query().build()
+            .use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
         cacheInitialized = true
     }
 
@@ -108,7 +109,8 @@ class SurveyResponseStore(boxStore: BoxStore) {
                 ensureCacheInitializedLocked()
                 cachedCount = (cachedCount - 1).coerceAtLeast(0)
                 cachedLatestTimestamp = if (box.isEmpty) null
-                    else box.query().build().use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
+                else box.query().build()
+                    .use { it.property(SurveyResponseEntity_.responseSubmissionTime).max() }
             }
         }
         return removed
