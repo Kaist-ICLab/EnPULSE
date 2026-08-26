@@ -122,7 +122,7 @@ fun SensorDetailScreen(
                 }
             }
 
-            uiState.error != null -> {
+            uiState.error != null && uiState.sensorInfo == null -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -185,8 +185,34 @@ fun SensorDetailScreen(
                         )
                     }
 
-                    // Records
-                    if (uiState.records.isEmpty()) {
+                    // Records - loads independently of the summary card above, so
+                    // paging/filter changes only spin this section.
+                    if (uiState.isLoadingRecords) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Styles.EMPTY_STATE_VERTICAL_PADDING),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = AppColors.PrimaryColor)
+                            }
+                        }
+                    } else if (uiState.error != null) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Styles.EMPTY_STATE_VERTICAL_PADDING),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = uiState.error ?: "",
+                                    color = AppColors.TextSecondary
+                                )
+                            }
+                        }
+                    } else if (uiState.records.isEmpty()) {
                         item {
                             Box(
                                 modifier = Modifier
@@ -221,6 +247,7 @@ fun SensorDetailScreen(
                     PaginationControls(
                         currentPage = uiState.currentPage,
                         totalPages = uiState.totalPages,
+                        enabled = !uiState.isLoadingRecords,
                         onPageChange = { viewModel.loadPage(it) }
                     )
                 }
@@ -788,6 +815,7 @@ private fun getSortOrderLabel(sortOrder: SortOrder): String {
 private fun PaginationControls(
     currentPage: Int,
     totalPages: Int,
+    enabled: Boolean = true,
     onPageChange: (Int) -> Unit
 ) {
     Row(
@@ -800,13 +828,13 @@ private fun PaginationControls(
         // Previous Button
         IconButton(
             onClick = { onPageChange(currentPage - 1) },
-            enabled = currentPage > 1
+            enabled = enabled && currentPage > 1
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                 contentDescription = stringResource(R.string.pagination_previous),
                 modifier = Modifier.size(Dimens.ButtonHeightSmall),
-                tint = if (currentPage > 1) AppColors.PrimaryColor else AppColors.TextSecondary.copy(
+                tint = if (enabled && currentPage > 1) AppColors.PrimaryColor else AppColors.TextSecondary.copy(
                     alpha = 0.3f
                 )
             )
@@ -823,13 +851,13 @@ private fun PaginationControls(
         // Next Button
         IconButton(
             onClick = { onPageChange(currentPage + 1) },
-            enabled = currentPage < totalPages
+            enabled = enabled && currentPage < totalPages
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = stringResource(R.string.pagination_next),
                 modifier = Modifier.size(Dimens.ButtonHeightSmall),
-                tint = if (currentPage < totalPages) AppColors.PrimaryColor else AppColors.TextSecondary.copy(
+                tint = if (enabled && currentPage < totalPages) AppColors.PrimaryColor else AppColors.TextSecondary.copy(
                     alpha = 0.3f
                 )
             )

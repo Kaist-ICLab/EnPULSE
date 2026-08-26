@@ -135,8 +135,13 @@ fun WebAppRow(
                         }
                         // Reuse the row's already-downloaded icon when available; otherwise fall
                         // back to the app launcher icon (same default as before this icon exists).
+                        //
+                        // Uses createWithAdaptiveBitmap (not createWithBitmap): pinned-shortcut
+                        // icons on API 26+ are expected to be adaptive icons, and some OEM
+                        // launchers (e.g. Samsung One UI) silently substitute the app's own
+                        // launcher icon for a plain flat bitmap instead of rendering it.
                         val icon = (iconBitmap ?: iconCache.getBitmap(webApp.iconPath))
-                            ?.let { IconCompat.createWithBitmap(it) }
+                            ?.let { IconCompat.createWithAdaptiveBitmap(it) }
                             ?: IconCompat.createWithResource(context, R.mipmap.ic_launcher)
                         val shortcutInfo =
                             ShortcutInfoCompat.Builder(context, "webapp_${webApp.id}")

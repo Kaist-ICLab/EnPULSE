@@ -15,6 +15,7 @@ import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -65,7 +66,16 @@ class WebAppLogUploader(
     suspend fun flush(): Result<Int> = flushMutex.withLock {
         if (!store.hasUnsynced()) return@withLock Result.Success(0)
 
-        supabaseHelper.supabaseClient.auth.awaitInitialization()
+        // See SensorUploadService.uploadSensorData's identical guard: don't suspend forever if
+        // SessionStatus is ever stuck at Initializing (normally prevented by SupabaseHelper's
+        // enableLifecycleCallbacks = false).
+        val initialized = withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
+            supabaseHelper.supabaseClient.auth.awaitInitialization()
+        } != null
+        if (!initialized) {
+            Log.w(TAG, "Timed out waiting for Supabase auth to initialize; keeping webapp log rows pending")
+            return@withLock Result.Success(0)
+        }
         val userUuid = getUserUuid()
         if (userUuid == null) {
             Log.d(TAG, "No user UUID available; keeping webapp log rows pending")

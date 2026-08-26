@@ -60,7 +60,16 @@ class DataRepositoryImpl(
                     recordCount = handler.getRecordCount(),
                     lastRecordedTime = handler.getLatestTimestamp(),
                     isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
-                    isPhoneSensor = handler.isPhoneSensor
+                    isPhoneSensor = handler.isPhoneSensor,
+                    // Survey/WebAppLog track "uploaded" per row (isSynced) rather than a cursor
+                    // (see their handlers' doc comments), so they count it directly — cheap, since
+                    // unlike the ~30 sensor stores this isn't queried per-sensor on every Data tab
+                    // load. Everything else derives it from the cursor, no query needed.
+                    uploadedRecordCount = when (handler) {
+                        is SurveyResponseDataHandler -> handler.getUploadedRecordCount()
+                        is WebAppLogDataHandler -> handler.getUploadedRecordCount()
+                        else -> syncTimestampService.getUploadedRecordCountFromCursor(handler.sensorId)
+                    }
                 )
             }.sortedBy { it.displayName }
 
@@ -70,6 +79,7 @@ class DataRepositoryImpl(
     override suspend fun getSensorDetailInfo(sensorId: String): SensorDetailInfo? {
         val handler = handlerRegistry.getHandler(sensorId) ?: return null
         val startOfToday = getStartOfToday()
+        val uploadStats = syncTimestampService.getUploadStats(sensorId)
 
         return SensorDetailInfo(
             sensorId = handler.sensorId,
@@ -79,7 +89,10 @@ class DataRepositoryImpl(
             lastRecordedTime = handler.getLatestTimestamp(),
             lastSyncTimestamp = syncTimestampService.getLastSuccessfulUploadTimestamp(sensorId),
             isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
-            isPhoneSensor = handler.isPhoneSensor
+            isPhoneSensor = handler.isPhoneSensor,
+            uploadSucceededBatches = uploadStats.succeededBatches,
+            uploadQuarantinedBatches = uploadStats.quarantinedBatches,
+            uploadQuarantinedRecordCount = uploadStats.quarantinedRecordCount
         )
     }
 
@@ -108,29 +121,35 @@ class DataRepositoryImpl(
         syncTimestampService.clearLastSuccessfulUpload(sensorId)
     }
 
-    override suspend fun uploadSensorData(sensorId: String): Int {
-        if (syncingSensors.putIfAbsent(sensorId, true) != null) return -2
+    override suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit): SensorUploadOutcome {
+        if (syncingSensors.putIfAbsent(sensorId, true) != null) {
+            return SensorUploadOutcome(0, 0, isUpToDate = false, error = IllegalStateException("$sensorId is already syncing"))
+        }
         try {
             // Survey and webapp logs don't ride SensorUploadService (insert-only, not
             // upsert-by-eventId; see their handlers' doc comments), so each gets its own uploader.
             if (sensorId == SurveyResponseDataHandler.SENSOR_ID) {
                 return when (val result = surveyResponseUploader.flush()) {
-                    is Result.Success -> if (result.data > 0) 1 else 0
-                    is Result.Error -> -1
-                }
+                    // These drain in a single flush rather than in cursor-tracked batches, so they
+                    // count as one batch towards the caller's progress bar, and result.data is the
+                    // real count uploaded — no quarantine concept here, so attempted == succeeded.
+                    is Result.Success ->
+                        if (result.data > 0) SensorUploadOutcome(result.data, result.data, isUpToDate = false)
+                        else SensorUploadOutcome.UP_TO_DATE
+                    is Result.Error -> SensorUploadOutcome(0, 0, isUpToDate = false, error = result.exception)
+                }.also { onBatchUploaded() }
             }
             if (sensorId == WebAppLogDataHandler.SENSOR_ID) {
                 return when (val result = webAppLogUploader.flush()) {
-                    is Result.Success -> if (result.data > 0) 1 else 0
-                    is Result.Error -> -1
-                }
+                    is Result.Success ->
+                        if (result.data > 0) SensorUploadOutcome(result.data, result.data, isUpToDate = false)
+                        else SensorUploadOutcome.UP_TO_DATE
+                    is Result.Error -> SensorUploadOutcome(0, 0, isUpToDate = false, error = result.exception)
+                }.also { onBatchUploaded() }
             }
 
-            if (!sensorUploadService.hasDataToUpload(sensorId)) return 0
-            return when (sensorUploadService.uploadSensorData(sensorId)) {
-                is Result.Success -> 1
-                is Result.Error -> -1
-            }
+            if (!sensorUploadService.hasDataToUpload(sensorId)) return SensorUploadOutcome.UP_TO_DATE
+            return sensorUploadService.uploadSensorData(sensorId, onBatchUploaded)
         } finally {
             syncingSensors.remove(sensorId)
         }
@@ -145,14 +164,13 @@ class DataRepositoryImpl(
         var failedCount = 0
         for (sensor in allSensors) {
             try {
-                val result = uploadSensorData(sensor.sensorId)
-                if (result > 0) {
+                val outcome = uploadSensorData(sensor.sensorId)
+                if (outcome.succeededCount > 0) {
                     successCount++
-                } else if (result == -1) {
+                } else if (outcome.isError) {
                     failedCount++
                 }
-                // result == 0 means no data for this sensor (skip)
-                // result == -2 means already syncing (skip)
+                // isUpToDate means no data for this sensor (skip)
             } catch (e: Exception) {
                 failedCount++
                 Log.e(TAG, "Unexpected error uploading ${sensor.sensorId}", e)

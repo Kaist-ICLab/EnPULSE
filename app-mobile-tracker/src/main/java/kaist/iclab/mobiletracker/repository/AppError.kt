@@ -30,6 +30,19 @@ sealed class AppError(message: String, cause: Throwable? = null) : Exception(mes
     /** Operation exceeded the allowed time limit. */
     class Timeout(message: String, cause: Throwable? = null) : AppError(message, cause)
 
+    /**
+     * The server received the request and explicitly rejected it — an RLS policy, a constraint
+     * violation, a malformed payload, etc. Unlike [Network]/[Timeout]/[Auth], this is a decisive
+     * answer: retrying the exact same data will keep failing the exact same way, which is what
+     * upload code uses to tell "this data is the problem" apart from "try again later".
+     */
+    class ServerRejected(
+        message: String,
+        val statusCode: Int?,
+        val postgresErrorCode: String?,
+        cause: Throwable? = null
+    ) : AppError(message, cause)
+
     /** Catch-all for unexpected / unclassifiable errors. */
     class Unknown(message: String, cause: Throwable? = null) : AppError(message, cause)
 

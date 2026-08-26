@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +59,7 @@ import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.repository.SensorInfo
+import kaist.iclab.mobiletracker.services.upload.SensorUploadResult
 import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
@@ -197,6 +199,16 @@ fun DataScreen(
                                     lastSuccessfulUpload = uiState.lastSuccessfulUpload,
                                     totalRecords = uiState.totalRecords,
                                     isUploading = uiState.uploadProgress?.isComplete == false,
+                                    uploadingLabel = uiState.uploadProgress
+                                        ?.takeIf { !it.isComplete && it.currentSensorName.isNotBlank() && it.totalBatches > 0 }
+                                        ?.let {
+                                            stringResource(
+                                                R.string.sync_status_uploading_sensor,
+                                                it.currentSensorName,
+                                                it.currentBatch,
+                                                it.totalBatches
+                                            )
+                                        },
                                     isDeleting = uiState.isDeleting,
                                     isExporting = uiState.isExporting,
                                     onUploadClick = { showUploadConfirm = true },
@@ -334,67 +346,41 @@ fun DataScreen(
     }
 
     // Upload Summary Dialog — the in-progress state itself is shown inline (non-blocking) in
-    // SummaryCard below, not as a modal, so this only fires once the upload finishes.
+    // SummaryCard below, not as a modal, so this only fires once the upload finishes. Per-sensor
+    // record counts (not just success/fail) so subjects can see how much of what was attempted
+    // actually reached the server, rather than a bare pass/fail flag.
     uiState.uploadProgress?.let { progress ->
         if (progress.isComplete) {
             PopupDialog(
                 title = stringResource(R.string.upload_complete_title),
                 content = {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        if (progress.successCount > 0) {
-                            Text(
-                                text = stringResource(
-                                    R.string.upload_success_header,
-                                    progress.successCount
-                                ),
-                                color = AppColors.PrimaryColor,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = progress.successfulSensors.joinToString(", "),
-                                fontSize = 12.sp,
-                                color = AppColors.TextSecondary
-                            )
-                        } else if (progress.failedCount == 0) {
-                            Text(
-                                text = stringResource(R.string.upload_no_data),
-                                color = AppColors.TextPrimary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
-                        if (progress.failedCount > 0) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(
-                                    R.string.upload_failed_header,
-                                    progress.failedCount
-                                ),
-                                color = AppColors.ErrorColor,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = progress.failedSensors.joinToString(", "),
-                                fontSize = 12.sp,
-                                color = AppColors.TextSecondary
-                            )
-                        }
-
-                        if (progress.upToDateCount > 0) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = stringResource(
-                                    R.string.upload_uptodate_header,
-                                    progress.upToDateCount
-                                ),
-                                color = AppColors.TextPrimary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = progress.upToDateSensors.joinToString(", "),
-                                fontSize = 12.sp,
-                                color = AppColors.TextSecondary
-                            )
+                    if (progress.results.isEmpty() && progress.upToDateCount == 0) {
+                        Text(
+                            text = stringResource(R.string.upload_no_data),
+                            color = AppColors.TextPrimary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    } else {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            progress.results.forEach { result ->
+                                UploadResultRow(result)
+                            }
+                            if (progress.upToDateCount > 0) {
+                                if (progress.results.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                Text(
+                                    text = stringResource(R.string.upload_uptodate_header, progress.upToDateCount),
+                                    color = AppColors.TextSecondary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = progress.upToDateSensors.joinToString(", "),
+                                    fontSize = 12.sp,
+                                    color = AppColors.TextSecondary
+                                )
+                            }
                         }
                     }
                 },
@@ -409,12 +395,54 @@ fun DataScreen(
 }
 
 @Composable
+private fun UploadResultRow(result: SensorUploadResult) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = result.displayName,
+            fontSize = 13.sp,
+            color = AppColors.TextPrimary,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        val percent = result.successRatePercent
+        val valueText = if (percent != null) {
+            stringResource(
+                R.string.upload_result_row_value,
+                formatRecordCount(result.succeededCount),
+                formatRecordCount(result.attemptedCount),
+                percent
+            )
+        } else {
+            stringResource(R.string.upload_result_row_failed)
+        }
+        // 100% and no error reads as healthy (green); anything less than everything landing —
+        // whether an outright error or some data quarantined — is flagged in red so a partial
+        // success can't be mistaken for a clean one.
+        val valueColor = if (percent == 100 && !result.isError) AppColors.SecondaryColor else AppColors.ErrorColor
+        Text(
+            text = valueText,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            color = valueColor
+        )
+    }
+}
+
+@Composable
 private fun SummaryCard(
     currentTime: String,
     lastWatchData: String?,
     lastSuccessfulUpload: String?,
     totalRecords: Int,
     isUploading: Boolean,
+    uploadingLabel: String?,
     isDeleting: Boolean,
     isExporting: Boolean,
     onUploadClick: () -> Unit,
@@ -450,9 +478,10 @@ private fun SummaryCard(
                 value = lastSuccessfulUpload ?: "--"
             )
 
-            // Lightweight status indicator only — the actual progress bar (with X of Y / percent)
-            // lives in DataUploadService's notification, not here, so it isn't duplicated in-app.
-            // Non-blocking either way: this never covers the screen or stops navigation.
+            // Lightweight status indicator only — it names the sensor being uploaded and its
+            // batch counts, but the progress bar itself lives in DataUploadService's notification
+            // so it isn't duplicated in-app. Non-blocking either way: this never covers the screen
+            // or stops navigation.
             if (isUploading || isDeleting || isExporting) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -468,7 +497,8 @@ private fun SummaryCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = when {
-                            isUploading -> stringResource(R.string.sync_status_uploading)
+                            isUploading -> uploadingLabel
+                                ?: stringResource(R.string.sync_status_uploading)
                             isDeleting -> stringResource(R.string.sync_status_deleting)
                             else -> stringResource(R.string.sync_status_exporting)
                         },
@@ -676,15 +706,22 @@ private fun SensorListItem(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.offset(y = (-2).dp)
                 )
+                sensor.uploadedPercent?.let { percent ->
+                    Text(
+                        text = stringResource(
+                            R.string.data_screen_uploaded_count,
+                            formatRecordCount(sensor.uploadedRecordCount),
+                            formatRecordCount(sensor.recordCount),
+                            percent
+                        ),
+                        fontSize = Styles.LAST_RECORDED_FONT_SIZE,
+                        color = AppColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.offset(y = (-2).dp)
+                    )
+                }
             }
-
-            // Record count
-            Text(
-                text = formatRecordCount(sensor.recordCount),
-                fontSize = Styles.RECORD_COUNT_FONT_SIZE,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.TextPrimary
-            )
 
             Spacer(modifier = Modifier.width(Styles.CHEVRON_SPACING))
 
@@ -710,20 +747,20 @@ private fun formatLastRecorded(timestamp: Long?): String {
     val diff = now - timestamp
 
     return when {
-        diff < TimeUnit.MINUTES.toMillis(1) -> "Just now"
+        diff < TimeUnit.MINUTES.toMillis(1) -> stringResource(R.string.last_recorded_just_now)
         diff < TimeUnit.HOURS.toMillis(1) -> {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(diff)
-            "$minutes min ago"
+            stringResource(R.string.last_recorded_min_ago, minutes)
         }
 
         diff < TimeUnit.DAYS.toMillis(1) -> {
             val hours = TimeUnit.MILLISECONDS.toHours(diff)
-            "$hours hour${if (hours > 1) "s" else ""} ago"
+            pluralStringResource(R.plurals.last_recorded_hour_ago, hours.toInt(), hours)
         }
 
         diff < TimeUnit.DAYS.toMillis(7) -> {
             val days = TimeUnit.MILLISECONDS.toDays(diff)
-            "$days day${if (days > 1) "s" else ""} ago"
+            pluralStringResource(R.plurals.last_recorded_day_ago, days.toInt(), days)
         }
 
         else -> {
@@ -736,7 +773,9 @@ private fun formatLastRecorded(timestamp: Long?): String {
 /**
  * Format record count with K/M suffix for large numbers.
  */
-private fun formatRecordCount(count: Int): String {
+private fun formatRecordCount(count: Int): String = formatRecordCount(count.toLong())
+
+private fun formatRecordCount(count: Long): String {
     return count.toString()
 }
 

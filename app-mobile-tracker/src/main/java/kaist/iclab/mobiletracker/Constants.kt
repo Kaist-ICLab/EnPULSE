@@ -80,6 +80,23 @@ object Constants {
 
         /** Max records per batch to avoid HTTP timeouts on large uploads */
         const val UPLOAD_BATCH_SIZE = 500
+
+        /**
+         * Timeout for `Auth.awaitInitialization()`, which otherwise suspends forever if
+         * [SessionStatus][io.github.jan.supabase.auth.status.SessionStatus] gets stuck at
+         * `Initializing` — normally only cleared by the app coming back to the foreground. Outside
+         * this timeout, that call sits outside [SUPABASE_REQUEST_TIMEOUT_MS]'s protection entirely,
+         * which is what let one sensor's upload wedge every sensor queued after it.
+         */
+        const val AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS = 30_000L
+
+        /**
+         * How many separate upload cycles must fail at the exact same spot with a decisive server
+         * rejection (RLS/constraint/malformed payload — see [kaist.iclab.mobiletracker.repository.AppError.ServerRejected])
+         * before that record is isolated and skipped, so it can't block everything captured after
+         * it forever. See [kaist.iclab.mobiletracker.services.upload.SensorUploadService].
+         */
+        const val QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES = 1
     }
 
     /**
@@ -92,6 +109,14 @@ object Constants {
         const val CHANNEL_NAME_DATA_UPLOAD = "Data Upload"
         const val ID_DATA_UPLOAD_PROGRESS = 1001
         const val ID_DATA_UPLOAD_RESULT = 1002
+
+        // Progress channel — separate from the one above and deliberately IMPORTANCE_LOW. The
+        // progress notification is re-posted once per upload batch, and on a DEFAULT-importance
+        // channel every one of those updates re-alerts (sound + heads-up), so a long upload rang
+        // continuously. A new channel id is needed rather than lowering the existing one: the
+        // system ignores importance changes to a channel that already exists on the device.
+        const val CHANNEL_ID_DATA_UPLOAD_PROGRESS = "data_upload_progress_channel"
+        const val CHANNEL_NAME_DATA_UPLOAD_PROGRESS = "Data Upload Progress"
 
         // Auto Sync Channel — AutoSyncService's own persistent "running" notification, required
         // since it's a real foreground service. Distinct from the Data Upload channel above:

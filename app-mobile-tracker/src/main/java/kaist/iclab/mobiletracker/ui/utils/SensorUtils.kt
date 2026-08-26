@@ -71,6 +71,7 @@ fun getSensorTitleResId(sensorId: String): Int {
         "IMU" -> R.string.sensor_imu
         "Gesture" -> R.string.sensor_gesture
         "Stress" -> R.string.sensor_stress
+        "WebAppLog" -> R.string.sensor_web_app_log
         else -> R.string.sensor_desc_default
     }
 }
@@ -111,6 +112,7 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "IMU" -> R.string.sensor_desc_imu
         "Gesture" -> R.string.sensor_desc_gesture
         "Stress" -> R.string.sensor_desc_stress
+        "WebAppLog" -> R.string.sensor_desc_web_app_log
         else -> R.string.sensor_desc_default
     }
 }

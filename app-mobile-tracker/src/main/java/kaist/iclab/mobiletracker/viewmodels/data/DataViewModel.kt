@@ -10,6 +10,7 @@ import kaist.iclab.mobiletracker.repository.SensorInfo
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.DataUploadService
 import kaist.iclab.mobiletracker.services.upload.DataUploadState
+import kaist.iclab.mobiletracker.services.upload.SensorUploadResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,13 +29,11 @@ import kotlin.time.Duration.Companion.milliseconds
 data class UploadProgressState(
     val isComplete: Boolean = false,
     val currentSensorName: String = "",
-    val currentIndex: Int = 0,
-    val totalSensors: Int = 0,
-    val successCount: Int = 0,
-    val failedCount: Int = 0,
+    val currentBatch: Int = 0,
+    val totalBatches: Int = 0,
+    /** Per-sensor record counts once the run finishes — see [SensorUploadResult]. */
+    val results: List<SensorUploadResult> = emptyList(),
     val upToDateCount: Int = 0,
-    val successfulSensors: List<String> = emptyList(),
-    val failedSensors: List<String> = emptyList(),
     val upToDateSensors: List<String> = emptyList()
 )
 
@@ -90,15 +89,30 @@ class DataViewModel(
     private fun observeUploadService() {
         viewModelScope.launch {
             DataUploadService.uploadState.collect { state ->
-                if (state is DataUploadState.InProgress) {
-                    _uiState.value = _uiState.value.copy(
-                        uploadProgress = UploadProgressState(
-                            isComplete = false,
-                            currentSensorName = state.currentSensorName,
-                            currentIndex = state.currentIndex,
-                            totalSensors = state.totalSensors
+                when (state) {
+                    is DataUploadState.InProgress -> {
+                        _uiState.value = _uiState.value.copy(
+                            uploadProgress = UploadProgressState(
+                                isComplete = false,
+                                currentSensorName = state.currentSensorName,
+                                currentBatch = state.currentBatch,
+                                totalBatches = state.totalBatches
+                            )
                         )
-                    )
+                    }
+
+                    // The run is over. Normally the completion event has already replaced this
+                    // with the finished summary, and that must survive — so only a still-running
+                    // snapshot is dropped. Without this the in-progress state was a dead end:
+                    // if the summary never arrived (or arrived before this ViewModel existed),
+                    // the indicator kept spinning and DataScreen kept the Upload button disabled
+                    // with no way back, since clearUploadProgress() is only reachable from the
+                    // summary dialog.
+                    DataUploadState.Idle -> {
+                        if (_uiState.value.uploadProgress?.isComplete == false) {
+                            _uiState.value = _uiState.value.copy(uploadProgress = null)
+                        }
+                    }
                 }
             }
         }
@@ -107,11 +121,8 @@ class DataViewModel(
                 _uiState.value = _uiState.value.copy(
                     uploadProgress = UploadProgressState(
                         isComplete = true,
-                        successCount = summary.successCount,
-                        failedCount = summary.failedCount,
+                        results = summary.results,
                         upToDateCount = summary.upToDateCount,
-                        successfulSensors = summary.successfulSensors,
-                        failedSensors = summary.failedSensors,
                         upToDateSensors = summary.upToDateSensors
                     )
                 )

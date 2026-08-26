@@ -1,6 +1,9 @@
 package kaist.iclab.mobiletracker.repository
 
 import android.util.Log
+import io.github.jan.supabase.exceptions.RestException
+import io.github.jan.supabase.exceptions.UnauthorizedRestException
+import io.github.jan.supabase.postgrest.exception.PostgrestRestException
 import kotlinx.coroutines.TimeoutCancellationException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -42,6 +45,18 @@ object ErrorClassifier {
             is NoSuchElementException ->
                 AppError.NotFound(msg, e)
 
+            // The server responded with 401 — treat like any other auth failure, not a data problem.
+            is UnauthorizedRestException ->
+                AppError.Auth(msg, e)
+
+            // The server received the request and rejected it (RLS policy, unique/check constraint,
+            // malformed payload, etc.) — a decisive answer, unlike a network/timeout/auth failure
+            // where the same data might well succeed on the next attempt. Upload code uses this
+            // distinction to tell "this exact data is the problem" apart from "try again later"
+            // (see SensorUploadHandlerImpl's quarantine logic).
+            is RestException ->
+                AppError.ServerRejected(msg, e.statusCode, (e as? PostgrestRestException)?.code, e)
+
             // Invalid arguments / validation
             is IllegalArgumentException ->
                 AppError.Validation(msg, e)
@@ -55,9 +70,6 @@ object ErrorClassifier {
                 val className = e.javaClass.name
                 when {
                     className.contains("Auth", ignoreCase = true) ->
-                        AppError.Auth(msg, e)
-
-                    className.contains("UnauthorizedRestException", ignoreCase = true) ->
                         AppError.Auth(msg, e)
 
                     className.contains("SQLite", ignoreCase = true) ->

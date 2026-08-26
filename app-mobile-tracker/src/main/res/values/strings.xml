@@ -149,6 +149,7 @@
     <string name="data_screen_subtitle">Total %1$d Records</string>
     <string name="data_screen_hide_empty_sensors">Hide Empty Data Sensors</string>
     <string name="data_screen_no_result">No collected data found</string>
+    <string name="data_screen_uploaded_count">%1$s / %2$s uploaded (%3$d%%)</string>
 
 
     <!-- Sensor Detail Screen -->
@@ -157,6 +158,8 @@
     <string name="sensor_detail_total_records">Total Records</string>
     <string name="sensor_detail_today">Today</string>
     <string name="sensor_detail_last_recorded">Last Recorded</string>
+    <string name="sensor_detail_upload_success_rate">Upload Success Rate</string>
+    <string name="sensor_detail_upload_success_rate_value">%1$d / %2$d (%3$d%%)</string>
     <string name="sensor_detail_raw_data">All Recorded Data</string>
     <string name="sensor_detail_no_records">No records found</string>
     <string name="data_screen_last_recorded_none">No data</string>
@@ -222,6 +225,7 @@
     <string name="sensor_desc_ecg">Watch ECG sensor data</string>
     <string name="sensor_desc_default">Sensor data collection</string>
     <string name="sensor_desc_activity_recognition">Recognize user physical activity</string>
+    <string name="sensor_desc_web_app_log">Event logs collected from webapp usage</string>
     <!-- Watch Sensor Descriptions -->
     <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
     <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>
@@ -270,6 +274,7 @@
     <string name="sync_clear_data_confirm">Clear</string>
     <string name="sync_clear_data_cancel">Cancel</string>
     <string name="sync_status_uploading">Uploading…</string>
+    <string name="sync_status_uploading_sensor">Uploading %1$s… (%2$d / %3$d)</string>
     <string name="sync_status_exporting">Exporting…</string>
     <string name="sync_status_deleting">Deleting…</string>
 
@@ -307,6 +312,7 @@
     <string name="sensor_exercise">Exercise</string>
     <string name="sensor_sleep">Sleep</string>
     <string name="sensor_activity_recognition">Activity Recognition</string>
+    <string name="sensor_web_app_log">Web App Log</string>
 
 
     <!-- Toast Messages -->
@@ -382,12 +388,13 @@
     <!-- Data Upload Dialog -->
     <string name="upload_dialog_title">Uploading Data</string>
     <string name="upload_dialog_status">Uploading %1$s…</string>
-    <string name="upload_dialog_progress">%1$d of %2$d</string>
+    <string name="upload_dialog_progress">%1$d / %2$d</string>
+    <string name="upload_dialog_progress_sensor">%1$s · %2$d of %3$d</string>
     <string name="upload_complete_title">Upload Complete</string>
-    <string name="upload_success_header">Successfully uploaded %1$d sensor(s):</string>
     <string name="upload_no_data">No new data to upload.</string>
-    <string name="upload_failed_header">Failed to upload %1$d sensor(s):</string>
     <string name="upload_uptodate_header">Already up to date (%1$d sensor(s)):</string>
+    <string name="upload_result_row_value">%1$s / %2$s (%3$d%%)</string>
+    <string name="upload_result_row_failed">Failed</string>
     <string name="ok">OK</string>
 
     <string name="permission_instruction_title">Action Required</string>
@@ -396,4 +403,15 @@
     <!-- WebView Error Strings -->
     <string name="webview_failed_to_load">Failed to load</string>
     <string name="webview_check_connection">Please check your connection and try again.</string>
+    <string name="last_recorded_just_now">Just now</string>
+    <string name="last_recorded_min_ago">%1$d min ago</string>
+
+    <plurals name="last_recorded_hour_ago">
+        <item quantity="one">%1$d hour ago</item>
+        <item quantity="other">%1$d hours ago</item>
+    </plurals>
+    <plurals name="last_recorded_day_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
 </resources>

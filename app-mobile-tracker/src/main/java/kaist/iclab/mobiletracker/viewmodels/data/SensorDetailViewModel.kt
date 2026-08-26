@@ -11,6 +11,7 @@ import kaist.iclab.mobiletracker.repository.SensorDetailInfo
 import kaist.iclab.mobiletracker.repository.SensorRecord
 import kaist.iclab.mobiletracker.repository.SortOrder
 import kaist.iclab.mobiletracker.utils.CsvExportHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,12 +19,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * UI state for the Sensor Detail screen.
  */
 data class SensorDetailUiState(
     val isLoading: Boolean = true,
+    val isLoadingRecords: Boolean = false,
     val sensorInfo: SensorDetailInfo? = null,
     val records: List<SensorRecord> = emptyList(),
     val filteredCount: Int = 0,
@@ -72,18 +75,36 @@ class SensorDetailViewModel(
      */
     fun loadPage(page: Int, loadInfo: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            try {
-                val dateFilter = _uiState.value.dateFilter
-                val pageSize = _uiState.value.pageSize.value
+            val dateFilter = _uiState.value.dateFilter
+            val pageSize = _uiState.value.pageSize.value
+            val haveInfoAlready = _uiState.value.sensorInfo != null
 
+            // Only block the whole screen before we have anything to show yet.
+            // Once the summary is up, further loads (paging, filter changes) only
+            // spin the records section so the summary card stays put.
+            _uiState.value = _uiState.value.copy(
+                isLoading = !haveInfoAlready,
+                isLoadingRecords = true,
+                error = null
+            )
+
+            try {
                 // Load info and count if needed (or if not loaded yet)
                 var info = _uiState.value.sensorInfo
                 var filteredCount = _uiState.value.filteredCount
 
                 if (loadInfo || info == null) {
-                    info = dataRepository.getSensorDetailInfo(sensorId)
-                    filteredCount = dataRepository.getSensorRecordCount(sensorId, dateFilter)
+                    info = withContext(Dispatchers.IO) { dataRepository.getSensorDetailInfo(sensorId) }
+                    filteredCount = withContext(Dispatchers.IO) {
+                        dataRepository.getSensorRecordCount(sensorId, dateFilter)
+                    }
+                    // Publish the summary as soon as it's ready, before the record
+                    // page (which can be slower) has come back.
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        sensorInfo = info,
+                        filteredCount = filteredCount
+                    )
                 }
 
                 // Calculate total pages
@@ -97,25 +118,27 @@ class SensorDetailViewModel(
                 val safePage = page.coerceIn(1, totalPages)
                 val offset = (safePage - 1) * pageSize
 
-                val records = dataRepository.getSensorRecords(
-                    sensorId = sensorId,
-                    dateFilter = dateFilter,
-                    sortOrder = _uiState.value.sortOrder,
-                    limit = pageSize,
-                    offset = offset
-                )
+                val records = withContext(Dispatchers.IO) {
+                    dataRepository.getSensorRecords(
+                        sensorId = sensorId,
+                        dateFilter = dateFilter,
+                        sortOrder = _uiState.value.sortOrder,
+                        limit = pageSize,
+                        offset = offset
+                    )
+                }
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    sensorInfo = info,
+                    isLoadingRecords = false,
                     records = records,
-                    filteredCount = filteredCount,
                     currentPage = safePage,
                     totalPages = totalPages
                 )
             } catch (e: Exception) {
-                _uiState.value = SensorDetailUiState(
+                _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    isLoadingRecords = false,
                     error = e.message ?: "Failed to load sensor data"
                 )
             }
@@ -188,7 +211,7 @@ class SensorDetailViewModel(
     fun deleteRecord(recordId: Long) {
         viewModelScope.launch {
             try {
-                dataRepository.deleteRecord(sensorId, recordId)
+                withContext(Dispatchers.IO) { dataRepository.deleteRecord(sensorId, recordId) }
                 // Remove from local list and refresh counts
                 val updatedRecords = _uiState.value.records.filter { it.id != recordId }
                 _uiState.value = _uiState.value.copy(
@@ -218,15 +241,15 @@ class SensorDetailViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUploading = true)
             try {
-                val result = dataRepository.uploadSensorData(sensorId)
+                val outcome = withContext(Dispatchers.IO) { dataRepository.uploadSensorData(sensorId) }
                 when {
-                    result > 0 -> {
+                    outcome.succeededCount > 0 -> {
                         _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_uploaded))
                         // Refresh to update sync timestamp
                         loadSensorDetail()
                     }
 
-                    result == 0 -> {
+                    outcome.isUpToDate -> {
                         _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_upload))
                     }
 
@@ -252,7 +275,7 @@ class SensorDetailViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isDeleting = true)
             try {
-                dataRepository.deleteAllSensorData(sensorId)
+                withContext(Dispatchers.IO) { dataRepository.deleteAllSensorData(sensorId) }
                 _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_deleted))
                 // Refresh list
                 loadSensorDetail()
@@ -274,16 +297,18 @@ class SensorDetailViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isExporting = true)
             try {
-                val records = dataRepository.getAllSensorRecordsForExport(
-                    sensorId = sensorId,
-                    dateFilter = _uiState.value.dateFilter
-                )
+                val records = withContext(Dispatchers.IO) {
+                    dataRepository.getAllSensorRecordsForExport(
+                        sensorId = sensorId,
+                        dateFilter = _uiState.value.dateFilter
+                    )
+                }
 
                 if (records.isEmpty()) {
                     _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_export))
                 } else {
                     val sensorName = _uiState.value.sensorInfo?.displayName ?: sensorId
-                    val uri = csvExportHelper.exportToCsv(sensorName, records)
+                    val uri = withContext(Dispatchers.IO) { csvExportHelper.exportToCsv(sensorName, records) }
 
                     if (uri != null) {
                         csvExportHelper.shareCsv(uri, sensorName)

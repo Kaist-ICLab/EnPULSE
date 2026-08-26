@@ -41,6 +41,16 @@ enum class DedupStrategy {
  *
  * Deletes go through the Box, and the reactive count uses ObjectBox's own change notifications, so
  * observers (the home-screen daily counts) still update on mutation.
+ *
+ * The unfiltered [count]/[latestTimestamp] — what the Data tab asks every registered sensor for —
+ * are backed by an in-memory running total ([cachedCount]/[cachedLatestTimestamp]) instead of a
+ * live query, since scanning every store on every tab visit is what made that screen slow. It's
+ * bootstrapped once (lazily, from an actual query) and from then on only adjusted by the delta of
+ * each [insert]/[insertBatch]/[removeById]/[removeBefore]/[removeAll] call, so reads are O(1)
+ * regardless of how large the table gets or how often the screen is reloaded/force-refreshed.
+ * `box.count()` is used (rather than trusting how many entities were passed in) to get the real
+ * delta even when a put turns into an eventId-REPLACE or a [DedupStrategy.TIMESTAMP] update rather
+ * than a net-new row.
  */
 open class SensorStore<T : BaseEntity>(
     protected val boxStore: BoxStore,
@@ -60,14 +70,49 @@ open class SensorStore<T : BaseEntity>(
     @Suppress("UNCHECKED_CAST")
     private val idProperty = metaClass.getField("id").get(null) as Property<T>
 
+    private val cacheLock = Any()
+    private var cacheInitialized = false
+    private var cachedCount = 0
+    private var cachedLatestTimestamp: Long? = null
+
+    /** Must be called while holding [cacheLock]. One real query per store, ever (at most). */
+    private fun ensureCacheInitializedLocked() {
+        if (cacheInitialized) return
+        cachedCount = box.count().toInt()
+        cachedLatestTimestamp = if (box.isEmpty) null
+            else box.query().build().use { it.property(timestampProperty).max() }
+        cacheInitialized = true
+    }
+
     fun insert(entity: T): Long {
         val deduped = applyDedup(listOf(entity))
         val toPut = deduped.firstOrNull() ?: entity
-        return box.put(toPut)
+        return synchronized(cacheLock) {
+            ensureCacheInitializedLocked()
+            val before = box.count()
+            val id = box.put(toPut)
+            cachedCount += (box.count() - before).toInt()
+            if (cachedLatestTimestamp == null || toPut.timestamp > cachedLatestTimestamp!!) {
+                cachedLatestTimestamp = toPut.timestamp
+            }
+            id
+        }
     }
 
     fun insertBatch(entities: List<T>) {
-        box.put(applyDedup(entities))
+        val deduped = applyDedup(entities)
+        synchronized(cacheLock) {
+            ensureCacheInitializedLocked()
+            val before = box.count()
+            box.put(deduped)
+            cachedCount += (box.count() - before).toInt()
+            val maxTimestamp = deduped.maxOfOrNull { it.timestamp }
+            if (maxTimestamp != null &&
+                (cachedLatestTimestamp == null || maxTimestamp > cachedLatestTimestamp!!)
+            ) {
+                cachedLatestTimestamp = maxTimestamp
+            }
+        }
     }
 
     private fun applyDedup(entities: List<T>): List<T> = when (dedupStrategy) {
@@ -101,13 +146,16 @@ open class SensorStore<T : BaseEntity>(
         return deduped
     }
 
-    fun count(deviceType: Int? = null): Int = box.query().run {
+    fun count(deviceType: Int? = null): Int {
         if (deviceType != null) {
-            equal(deviceTypeProperty, deviceType.toLong())
-        } else {
-            this
+            return box.query().equal(deviceTypeProperty, deviceType.toLong())
+                .build().use { it.count().toInt() }
         }
-    }.build().use { it.count().toInt() }
+        return synchronized(cacheLock) {
+            ensureCacheInitializedLocked()
+            cachedCount
+        }
+    }
 
     fun countAfter(afterTimestamp: Long, deviceType: Int? = null): Long =
         box.query().run {
@@ -124,10 +172,15 @@ open class SensorStore<T : BaseEntity>(
             .use { it.count() > 0 }
 
     fun latestTimestamp(deviceType: Int? = null): Long? {
-        if (box.isEmpty) return null
-        return box.query().run {
-            if (deviceType != null) equal(deviceTypeProperty, deviceType.toLong()) else this
-        }.build().use { it.property(timestampProperty).max() }
+        if (deviceType != null) {
+            if (box.isEmpty) return null
+            return box.query().equal(deviceTypeProperty, deviceType.toLong())
+                .build().use { it.property(timestampProperty).max() }
+        }
+        return synchronized(cacheLock) {
+            ensureCacheInitializedLocked()
+            cachedLatestTimestamp
+        }
     }
 
     fun recordsAfter(
@@ -156,6 +209,10 @@ open class SensorStore<T : BaseEntity>(
     fun hasDataWithIdAfter(afterId: Long): Boolean =
         box.query().greater(idProperty, afterId).build().use { it.count() > 0 }
 
+    /** How many rows have ObjectBox id > [afterId] — the pending upload backlog, in rows. */
+    fun countWithIdAfter(afterId: Long): Long =
+        box.query().greater(idProperty, afterId).build().use { it.count() }
+
     /** Rows with ObjectBox id > [afterId], ordered by id ascending — the actual upload batch. */
     fun recordsWithIdAfter(afterId: Long, limit: Int): List<T> =
         box.query().greater(idProperty, afterId).order(idProperty).build()
@@ -165,14 +222,45 @@ open class SensorStore<T : BaseEntity>(
 
     fun eventIdById(id: Long): String? = box.get(id)?.eventId
 
-    fun removeById(id: Long): Boolean = box.remove(id)
+    fun removeById(id: Long): Boolean {
+        val removed = box.remove(id)
+        if (removed) {
+            synchronized(cacheLock) {
+                ensureCacheInitializedLocked()
+                cachedCount = (cachedCount - 1).coerceAtLeast(0)
+                // The deleted row may have held the current max; unlike insert, there's no cheap
+                // way to know the new max without asking, so re-derive it here. Single-row delete
+                // is a rare, user-initiated action (not the tab-load hot path), so one query is fine.
+                cachedLatestTimestamp = if (box.isEmpty) null
+                    else box.query().build().use { it.property(timestampProperty).max() }
+            }
+        }
+        return removed
+    }
 
-    fun removeBefore(timestamp: Long, deviceType: Int? = null): Long =
-        box.query().run {
+    fun removeBefore(timestamp: Long, deviceType: Int? = null): Long {
+        val removedCount = box.query().run {
             if (deviceType != null) equal(deviceTypeProperty, deviceType.toLong()) else this
         }.less(timestampProperty, timestamp).build().use { it.remove() }
+        if (removedCount > 0) {
+            synchronized(cacheLock) {
+                ensureCacheInitializedLocked()
+                cachedCount = (cachedCount - removedCount.toInt()).coerceAtLeast(0)
+                cachedLatestTimestamp = if (box.isEmpty) null
+                    else box.query().build().use { it.property(timestampProperty).max() }
+            }
+        }
+        return removedCount
+    }
 
-    fun removeAll() = box.removeAll()
+    fun removeAll() {
+        box.removeAll()
+        synchronized(cacheLock) {
+            cachedCount = 0
+            cachedLatestTimestamp = null
+            cacheInitialized = true
+        }
+    }
 
     /**
      * Emits the count of records at/after [afterTimestamp] and re-emits whenever this entity's data

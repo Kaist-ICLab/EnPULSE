@@ -42,6 +42,9 @@ class WebAppLogDataHandler(
     override suspend fun getRecordCountAfterTimestamp(timestamp: Long): Int =
         store.countAfter(timestamp).toInt()
 
+    /** Records Supabase has actually accepted — see [WebAppLogStore.syncedCount]. */
+    suspend fun getUploadedRecordCount(): Long = store.syncedCount()
+
     override suspend fun getRecordsPaginated(
         afterTimestamp: Long,
         isAscending: Boolean,

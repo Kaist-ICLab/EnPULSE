@@ -16,6 +16,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.IDToken
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Supabase-based authentication implementation using Google Sign-In.
@@ -70,11 +72,18 @@ class SupabaseAuth(
         authScope.launch {
             try {
                 // Suspend until the Auth plugin has finished restoring/refreshing the
-                // persisted session, so currentSessionOrNull() below reflects the truth.
-                supabaseClient.auth.awaitInitialization()
+                // persisted session, so currentSessionOrNull() below reflects the truth. Bounded so
+                // a SessionStatus stuck at Initializing (see SensorUploadService's identical guard)
+                // reports "logged out" instead of leaving isInitializing = true forever.
+                val initialized = withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
+                    supabaseClient.auth.awaitInitialization()
+                } != null
+                if (!initialized) {
+                    Log.w(TAG, "Timed out waiting for Supabase auth to initialize")
+                }
 
                 // Get current session (Supabase automatically loads from persisted storage)
-                val session = supabaseClient.auth.currentSessionOrNull()
+                val session = if (initialized) supabaseClient.auth.currentSessionOrNull() else null
 
                 if (session != null) {
                     // Store UUID in SharedPreferences for background operations

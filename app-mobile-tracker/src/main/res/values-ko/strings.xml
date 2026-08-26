@@ -148,6 +148,7 @@
     <string name="data_screen_subtitle">총 %1$d개 레코드</string>
     <string name="data_screen_hide_empty_sensors">빈 센서 숨기기</string>
     <string name="data_screen_no_result">수집된 데이터가 없습니다.</string>
+    <string name="data_screen_uploaded_count">%1$s / %2$s 업로드됨 (%3$d%%)</string>
 
 
     <!-- Sensor Detail Screen -->
@@ -156,6 +157,8 @@
     <string name="sensor_detail_total_records">총 레코드</string>
     <string name="sensor_detail_today">오늘</string>
     <string name="sensor_detail_last_recorded">마지막 기록</string>
+    <string name="sensor_detail_upload_success_rate">업로드 성공률</string>
+    <string name="sensor_detail_upload_success_rate_value">%1$d / %2$d (%3$d%%)</string>
     <string name="sensor_detail_raw_data">모든 기록된 데이터</string>
     <string name="sensor_detail_no_records">레코드가 없습니다</string>
     <string name="data_screen_last_recorded_none">데이터 없음</string>
@@ -221,6 +224,7 @@
     <string name="sensor_desc_ecg">워치 심전도 센서 데이터</string>
     <string name="sensor_desc_default">센서 데이터 수집</string>
     <string name="sensor_desc_activity_recognition">사용자 신체 활동 인식</string>
+    <string name="sensor_desc_web_app_log">웹앱 사용에서 수집된 이벤트 로그</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -286,6 +290,7 @@
     <string name="sync_clear_data_confirm">삭제</string>
     <string name="sync_clear_data_cancel">취소</string>
     <string name="sync_status_uploading">업로드 중…</string>
+    <string name="sync_status_uploading_sensor">%1$s 업로드 중… (%2$d / %3$d)</string>
     <string name="sync_status_exporting">내보내는 중…</string>
     <string name="sync_status_deleting">삭제 중…</string>
 
@@ -329,6 +334,7 @@
     <string name="sensor_desc_skin_temperature">피부 온도 데이터</string>
     <string name="sensor_desc_eda">땀 등 수분으로 인한 피부 전도도 측정</string>
     <string name="sensor_desc_audio">소리 시그널</string>
+    <string name="sensor_web_app_log">웹앱 로그</string>
 
 
     <!-- Toast Messages -->
@@ -382,11 +388,12 @@
     <string name="upload_dialog_title">데이터 업로드 중</string>
     <string name="upload_dialog_status">%1$s 업로드 중…</string>
     <string name="upload_dialog_progress">%1$d / %2$d</string>
+    <string name="upload_dialog_progress_sensor">%1$s · %2$d / %3$d</string>
     <string name="upload_complete_title">업로드 완료</string>
-    <string name="upload_success_header">%1$d개 센서 업로드 성공:</string>
     <string name="upload_no_data">업로드할 새로운 데이터가 없습니다.</string>
-    <string name="upload_failed_header">%1$d개 센서 업로드 실패:</string>
     <string name="upload_uptodate_header">최신 상태 유지 중 (%1$d개 센서):</string>
+    <string name="upload_result_row_value">%1$s / %2$s (%3$d%%)</string>
+    <string name="upload_result_row_failed">실패</string>
     <string name="ok">확인</string>
 
     <string name="permission_instruction_title">작업 필요</string>
@@ -395,5 +402,17 @@
     <!-- WebView Error Strings -->
     <string name="webview_failed_to_load">로드하지 못했습니다</string>
     <string name="webview_check_connection">네트워크 연결 상태를 확인하고 다시 시도해 주세요.</string>
+
+    <string name="last_recorded_just_now">Just now</string>
+    <string name="last_recorded_min_ago">%1$d분 전</string>
+
+    <plurals name="last_recorded_hour_ago" tools:ignore="UnusedQuantity">
+        <item quantity="one">%1$d시간 전</item>
+        <item quantity="other">%1$d시간 전</item>
+    </plurals>
+    <plurals name="last_recorded_day_ago" tools:ignore="UnusedQuantity">
+        <item quantity="one">%1$d일 전</item>
+        <item quantity="other">%1$d일 전</item>
+    </plurals>
 </resources>
 
