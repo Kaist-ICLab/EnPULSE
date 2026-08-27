@@ -69,6 +69,8 @@ class EnPulseBridge(
                     "requestPermissions" -> permissionHandler.requestPermissions(request)
                     "showNativeToast" -> appHandler.showNativeToast(request)
                     "vibrate" -> appHandler.vibrate(request)
+                    "vibratePattern" -> appHandler.vibratePattern(request)
+                    "setKeepScreenOn" -> appHandler.setKeepScreenOn(request)
                     "showNativeNotification" -> appHandler.showNativeNotification(request)
                     "closeWebApp" -> appHandler.closeWebApp(request)
                     "openNativeSettings" -> appHandler.openNativeSettings(request)
