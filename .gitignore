@@ -26,6 +26,6 @@ samsung-health-sensor-api/*.aar
 google-services.json
 
 # Development stuffs
-.artifacts
+/.artifacts
 /.claude/
 /.vscode/
