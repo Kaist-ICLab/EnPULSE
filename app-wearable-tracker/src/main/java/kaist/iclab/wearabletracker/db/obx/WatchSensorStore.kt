@@ -15,6 +15,7 @@ class WatchSensorStore<T>(
 
     private val box: Box<T> = boxStore.boxFor(entityClass)
     private val metaClass = Class.forName("${entityClass.name}_")
+
     @Suppress("UNCHECKED_CAST")
     private val timestampProperty = metaClass.getField("timestamp").get(null) as Property<T>
 

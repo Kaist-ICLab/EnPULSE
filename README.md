@@ -33,16 +33,6 @@ EnPULSE supports dynamic, remote-configured web applications (WebApps) that can 
 
 ## Installation & Setup
 
-### For Users (Manual Installation via APK)
-
-Pre-built APKs downloaded from GitHub Releases are **fully pre-configured** and ready to run — users do not need to set up any configuration or keys.
-
-1. Download `EnPULSE-Mobile.apk` and `EnPULSE-Watch.apk` from the [Releases](https://github.com/Kaist-ICLab/EnPULSE/releases) section.
-2. Install `EnPULSE-Mobile.apk` on your Samsung mobile device.
-3. Install `EnPULSE-Watch.apk` on your Galaxy Watch device (e.g., via ADB or tools like Easy Fire Tools).
-
----
-
 ## For Developers: Building from Source
 
 ### Required Configuration
@@ -74,7 +64,7 @@ The Samsung Health SDKs are required for collecting real-time biosignals from Ga
 Because `google-services.json` is untracked by Git for security, you must provide your own Firebase project configuration when building from source:
 
 1. Create or open a project in the [Firebase Console](https://console.firebase.google.com/).
-2. Add an Android App registered with package name `kaist.iclab.trackerSystem` (refer to [google-services.json.example](file:///Volumes/Personal Data/Projects/Study/android-tracker/app-mobile-tracker/google-services.json.example) for template structure).
+2. Add an Android App registered with package name `kaist.iclab.trackerSystem` (refer to [google-services.json.example](app-mobile-tracker/google-services.json.example) for template structure).
 3. Download `google-services.json` and place it inside the `app-mobile-tracker/` directory.
 4. (Optional) Enable Google Sign-In under Firebase Authentication settings.
 

@@ -21,9 +21,9 @@ import kaist.iclab.tracker.storage.core.RmssdHistory
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
@@ -42,15 +42,15 @@ import kaist.iclab.wearabletracker.repository.WatchSensorRepository
 import kaist.iclab.wearabletracker.repository.WatchSensorRepositoryImpl
 import kaist.iclab.wearabletracker.storage.ObjectBoxRmssdHistory
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
-import kaist.iclab.wearabletracker.ui.SettingsViewModel
-import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
-import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
-import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.trigger.DetectionStateForwarder
 import kaist.iclab.wearabletracker.trigger.WatchEmaTriggerReceiver
 import kaist.iclab.wearabletracker.trigger.WatchNotificationTriggerReceiver
-import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigStorage
 import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigReceiver
+import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigStorage
+import kaist.iclab.wearabletracker.ui.SettingsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
@@ -124,7 +124,10 @@ val koinModule = module {
     single {
         SkinTemperatureSensor(
             permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(SkinTemperatureSensor::class, SkinTemperatureSensor.Config()),
+            configStorage = sensorConfig(
+                SkinTemperatureSensor::class,
+                SkinTemperatureSensor.Config()
+            ),
             stateStorage = sensorState(SkinTemperatureSensor::class),
             samsungHealthSensorInitializer = get()
         )

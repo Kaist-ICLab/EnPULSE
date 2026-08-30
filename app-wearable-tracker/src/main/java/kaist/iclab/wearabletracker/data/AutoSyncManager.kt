@@ -44,7 +44,8 @@ class AutoSyncManager(
             // Only sync if data collection is actively running or paused (off-wrist still has buffered data)
             val controllerState = controllerStateFlow.value
             if (controllerState.flag != ControllerState.FLAG.RUNNING &&
-                controllerState.flag != ControllerState.FLAG.PAUSED) {
+                controllerState.flag != ControllerState.FLAG.PAUSED
+            ) {
                 return@launch
             }
 

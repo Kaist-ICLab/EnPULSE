@@ -40,7 +40,8 @@ class WatchNotificationTapReceiver : BroadcastReceiver(), KoinComponent {
         val pendingResult = goAsync()
         coroutineScope.launch {
             try {
-                phoneCommunicationManager.getBleChannel().send(Constants.BLE.KEY_PHONE_OPEN_URL_TRIGGER, url, isUrgent = true)
+                phoneCommunicationManager.getBleChannel()
+                    .send(Constants.BLE.KEY_PHONE_OPEN_URL_TRIGGER, url, isUrgent = true)
                 Log.d(TAG, "Relayed url to phone: $url")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to relay url to phone: ${e.message}", e)

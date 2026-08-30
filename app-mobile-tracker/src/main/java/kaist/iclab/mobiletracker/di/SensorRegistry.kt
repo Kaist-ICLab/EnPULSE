@@ -41,8 +41,8 @@ import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.handlers.GenericSensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
 import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
-import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerImpl
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
+import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerImpl
 import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
@@ -88,16 +88,18 @@ class SensorDescriptor<T>(
         serializer = serializer
     )
 
-    fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler = SensorUploadHandlerImpl(
-        sensorId = sensorId,
-        store = store,
-        serializer = serializer,
-        tableName = supabaseTable,
-        sensorName = displayName,
-        supabase = supabase
-    )
+    fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler =
+        SensorUploadHandlerImpl(
+            sensorId = sensorId,
+            store = store,
+            serializer = serializer,
+            tableName = supabaseTable,
+            sensorName = displayName,
+            supabase = supabase
+        )
 
-    fun toPhoneSensorStore(): PhoneSensorStore<T>? = fromSensorEntity?.let { PhoneSensorStore(store, it) }
+    fun toPhoneSensorStore(): PhoneSensorStore<T>? =
+        fromSensorEntity?.let { PhoneSensorStore(store, it) }
 }
 
 fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
@@ -131,7 +133,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = AmbientLightEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as AmbientLightSensor.Entity
-                AmbientLightEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, accuracy = e.accuracy, value = e.value)
+                AmbientLightEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    accuracy = e.accuracy,
+                    value = e.value
+                )
             }
         ),
         SensorDescriptor(
@@ -143,7 +151,12 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = AppListChangeEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as AppListChangeSensor.Entity
-                AppListChangeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, changedAppJson = e.changedApp?.let { SupabaseJson.encodeToString(it) }, appListJson = e.appList?.let { SupabaseJson.encodeToString(it) })
+                AppListChangeEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    changedAppJson = e.changedApp?.let { SupabaseJson.encodeToString(it) },
+                    appListJson = e.appList?.let { SupabaseJson.encodeToString(it) })
             }
         ),
         SensorDescriptor(
@@ -155,7 +168,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = AppUsageLogEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as AppUsageLogSensor.Entity
-                AppUsageLogEntity(uuid = uuid ?: "", eventId = e.eventId, received = e.received, timestamp = e.timestamp, packageName = e.packageName, installedBy = e.installedBy, eventType = e.eventType)
+                AppUsageLogEntity(
+                    uuid = uuid ?: "",
+                    eventId = e.eventId,
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    packageName = e.packageName,
+                    installedBy = e.installedBy,
+                    eventType = e.eventType
+                )
             }
         ),
         SensorDescriptor(
@@ -167,7 +188,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = BatteryEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as BatterySensor.Entity
-                BatteryEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, connectedType = e.connectedType, status = e.status, level = e.level, temperature = e.temperature)
+                BatteryEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    connectedType = e.connectedType,
+                    status = e.status,
+                    level = e.level,
+                    temperature = e.temperature
+                )
             }
         ),
         SensorDescriptor(
@@ -179,7 +208,19 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = BluetoothScanEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as BluetoothScanSensor.Entity
-                BluetoothScanEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, name = e.name, alias = e.alias, address = e.address, bondState = e.bondState, connectionType = e.connectionType, classType = e.classType, rssi = e.rssi, isLE = e.isLE)
+                BluetoothScanEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    name = e.name,
+                    alias = e.alias,
+                    address = e.address,
+                    bondState = e.bondState,
+                    connectionType = e.connectionType,
+                    classType = e.classType,
+                    rssi = e.rssi,
+                    isLE = e.isLE
+                )
             }
         ),
         SensorDescriptor(
@@ -191,7 +232,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = CallLogEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as CallLogSensor.Entity
-                CallLogEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, duration = e.duration, number = e.number, type = e.type)
+                CallLogEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    duration = e.duration,
+                    number = e.number,
+                    type = e.type
+                )
             }
         ),
         SensorDescriptor(
@@ -203,7 +251,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = ConnectivityEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as ConnectivitySensor.Entity
-                ConnectivityEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, networkType = e.networkType, isConnected = e.isConnected, hasInternet = e.hasInternet, transportTypes = e.transportTypes.joinToString(","))
+                ConnectivityEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    networkType = e.networkType,
+                    isConnected = e.isConnected,
+                    hasInternet = e.hasInternet,
+                    transportTypes = e.transportTypes.joinToString(",")
+                )
             }
         ),
         SensorDescriptor(
@@ -215,7 +271,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = DataTrafficEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as DataTrafficSensor.Entity
-                DataTrafficEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, totalRx = e.totalRx, totalTx = e.totalTx, mobileRx = e.mobileRx, mobileTx = e.mobileTx)
+                DataTrafficEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    totalRx = e.totalRx,
+                    totalTx = e.totalTx,
+                    mobileRx = e.mobileRx,
+                    mobileTx = e.mobileTx
+                )
             }
         ),
         SensorDescriptor(
@@ -227,7 +291,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = DeviceModeEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as DeviceModeSensor.Entity
-                DeviceModeEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, eventType = e.eventType, value = e.value)
+                DeviceModeEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    eventType = e.eventType,
+                    value = e.value
+                )
             }
         ),
         SensorDescriptor(
@@ -274,7 +344,17 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = LocationEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as LocationSensor.Entity
-                LocationEntity(uuid = uuid ?: "", deviceType = DeviceType.PHONE.value, received = e.received, timestamp = e.timestamp, latitude = e.latitude, longitude = e.longitude, altitude = e.altitude, speed = e.speed, accuracy = e.accuracy)
+                LocationEntity(
+                    uuid = uuid ?: "",
+                    deviceType = DeviceType.PHONE.value,
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    latitude = e.latitude,
+                    longitude = e.longitude,
+                    altitude = e.altitude,
+                    speed = e.speed,
+                    accuracy = e.accuracy
+                )
             }
         ),
         SensorDescriptor(
@@ -286,7 +366,20 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = MediaEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as MediaSensor.Entity
-                MediaEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, operation = e.operation, mediaType = e.mediaType, storageType = e.storageType, uri = e.uri, fileName = e.fileName, mimeType = e.mimeType, size = e.size, dateAdded = e.dateAdded, dateModified = e.dateModified)
+                MediaEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    operation = e.operation,
+                    mediaType = e.mediaType,
+                    storageType = e.storageType,
+                    uri = e.uri,
+                    fileName = e.fileName,
+                    mimeType = e.mimeType,
+                    size = e.size,
+                    dateAdded = e.dateAdded,
+                    dateModified = e.dateModified
+                )
             }
         ),
         SensorDescriptor(
@@ -298,7 +391,14 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = MessageLogEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as MessageLogSensor.Entity
-                MessageLogEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, number = e.number, messageType = e.messageType, contactType = e.contactType)
+                MessageLogEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    number = e.number,
+                    messageType = e.messageType,
+                    contactType = e.contactType
+                )
             }
         ),
         SensorDescriptor(
@@ -310,7 +410,17 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = NotificationEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as NotificationSensor.Entity
-                NotificationEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, packageName = e.packageName, eventType = e.eventType, title = e.title, text = e.text, visibility = e.visibility, category = e.category)
+                NotificationEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    packageName = e.packageName,
+                    eventType = e.eventType,
+                    title = e.title,
+                    text = e.text,
+                    visibility = e.visibility,
+                    category = e.category
+                )
             }
         ),
         SensorDescriptor(
@@ -322,7 +432,12 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = ScreenEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as ScreenSensor.Entity
-                ScreenEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, type = e.type)
+                ScreenEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    type = e.type
+                )
             }
         ),
         SensorDescriptor(
@@ -353,7 +468,13 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = StepEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as StepSensor.Entity
-                StepEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, duration = e.duration, steps = e.steps)
+                StepEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    duration = e.duration,
+                    steps = e.steps
+                )
             }
         ),
         SensorDescriptor(
@@ -365,7 +486,16 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = UserInteractionEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as UserInteractionSensor.Entity
-                UserInteractionEntity(uuid = uuid ?: "", eventId = e.eventId, received = e.received, timestamp = e.timestamp, packageName = e.packageName, className = e.className, eventType = e.eventType, text = e.text)
+                UserInteractionEntity(
+                    uuid = uuid ?: "",
+                    eventId = e.eventId,
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    packageName = e.packageName,
+                    className = e.className,
+                    eventType = e.eventType,
+                    text = e.text
+                )
             }
         ),
         SensorDescriptor(
@@ -377,7 +507,15 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             serializer = WifiScanEntity.serializer(),
             fromSensorEntity = { e, uuid ->
                 e as WifiScanSensor.Entity
-                WifiScanEntity(uuid = uuid ?: "", received = e.received, timestamp = e.timestamp, ssid = e.ssid, bssid = e.bssid, frequency = e.frequency, level = e.level)
+                WifiScanEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    ssid = e.ssid,
+                    bssid = e.bssid,
+                    frequency = e.frequency,
+                    level = e.level
+                )
             }
         ),
         // Watch sensors — written via WatchSensorRepository (BLE), no phone-side store needed

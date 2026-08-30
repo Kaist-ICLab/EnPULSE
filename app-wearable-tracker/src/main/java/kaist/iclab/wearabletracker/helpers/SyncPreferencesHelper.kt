@@ -103,7 +103,8 @@ class SyncPreferencesHelper(context: Context) {
     }
 
     private fun sensorPendingUpToKey(sensorId: String) = "$KEY_SENSOR_PENDING_UPTO_PREFIX$sensorId"
-    private fun sensorPendingSentAtKey(sensorId: String) = "$KEY_SENSOR_PENDING_SENT_AT_PREFIX$sensorId"
+    private fun sensorPendingSentAtKey(sensorId: String) =
+        "$KEY_SENSOR_PENDING_SENT_AT_PREFIX$sensorId"
 
     /**
      * Derived "last synced" value for UI display and the auto-sync interval gate: the max
