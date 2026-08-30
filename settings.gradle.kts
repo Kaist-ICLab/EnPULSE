@@ -39,6 +39,9 @@ include(":tracker-library")
 include(":app-wearable-tracker")
 include(":app-mobile-tracker")
 
+// Benchmark
+include(":app-benchmark")
+
 // Test Modules
 //include(":test-controller")
 //include(":test-galaxywatch-sensor")
