@@ -100,7 +100,7 @@
     <string name="turn_off_data_collection_first">Data collection is still running</string>
     <string name="notification_low_storage_title">Storage Critically Low</string>
     <string name="notification_low_storage_message">Data collection stopped to protect device stability. Please free up space.</string>
-    
+
     <!-- ECG (on-demand) -->
     <string name="measure_ecg">Measure ECG</string>
     <string name="ecg_instruction_title">Prepare for ECG</string>

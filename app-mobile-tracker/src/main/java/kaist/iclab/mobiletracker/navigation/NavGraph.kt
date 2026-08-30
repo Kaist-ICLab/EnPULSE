@@ -19,7 +19,6 @@ import androidx.compose.ui.res.integerResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import kaist.iclab.mobiletracker.ui.screens.webapp.WebAppsScreen
 import kaist.iclab.mobiletracker.ui.screens.data.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.home.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.login.LoginScreen
@@ -34,6 +33,7 @@ import kaist.iclab.mobiletracker.ui.screens.settings.permission.PermissionSettin
 import kaist.iclab.mobiletracker.ui.screens.settings.sensor.PhoneSensorConfigSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.server.ServerConnectionScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.sync.ServerSyncSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.webapp.WebAppsScreen
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthUiEvent
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
@@ -91,7 +91,8 @@ fun NavGraph(
 //        400 // Fallback to 300ms if system resource is unavailable
 //    }
 
-    val animationDuration = integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
+    val animationDuration =
+        integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
 
     // Handle language change by recreating activity
     val onLanguageChanged: () -> Unit = {

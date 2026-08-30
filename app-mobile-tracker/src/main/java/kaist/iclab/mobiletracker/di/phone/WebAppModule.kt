@@ -9,6 +9,7 @@ import kaist.iclab.mobiletracker.webapp.WebAppIconCache
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
 import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
+import kaist.iclab.mobiletracker.webapp.bridge.EventsBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SensorBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.StorageBridgeHandler
@@ -88,6 +89,12 @@ val webAppModule = module {
         LogBridgeHandler(
             webAppLogStore = get(),
             webAppRegistry = get<WebAppRegistry>()
+        )
+    }
+
+    factory {
+        EventsBridgeHandler(
+            handlerRegistry = get()
         )
     }
 

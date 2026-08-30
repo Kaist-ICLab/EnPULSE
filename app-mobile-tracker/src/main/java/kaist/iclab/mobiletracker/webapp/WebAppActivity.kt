@@ -17,6 +17,7 @@ import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.webapp.bridge.AppBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.DeviceBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.EnPulseBridge
+import kaist.iclab.mobiletracker.webapp.bridge.EventsBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.LogBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.PermissionBridgeHandler
 import kaist.iclab.mobiletracker.webapp.bridge.SensorBridgeHandler
@@ -54,14 +55,16 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
     private val storageBridgeHandler by inject<StorageBridgeHandler>()
     private val deviceBridgeHandler by inject<DeviceBridgeHandler>()
     private val logBridgeHandler by inject<LogBridgeHandler>()
+    private val eventsBridgeHandler by inject<EventsBridgeHandler>()
     private val permissionManager by inject<AndroidPermissionManager>()
     private val appScope by inject<AppCoroutineScope>()
 
     private lateinit var webView: WebView
-    
+
     private val permissionHelper = WebAppPermissionHelper(this) { b64 ->
         if (::webView.isInitialized) {
-            val js = "window.dispatchEvent(new MessageEvent('message', { data: decodeURIComponent(escape(window.atob('$b64'))) }));"
+            val js =
+                "window.dispatchEvent(new MessageEvent('message', { data: decodeURIComponent(escape(window.atob('$b64'))) }));"
             webView.evaluateJavascript(js, null)
         }
     }
@@ -85,14 +88,21 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         // Validate URL host against allowedOrigin to prevent phishing/spoofing attacks from malicious intents
         val intentHost = try {
             url.toUri().host
-        } catch (_: Exception) { null }
+        } catch (_: Exception) {
+            null
+        }
 
         val allowedHost = try {
             webApp.allowedOrigin.toUri().host
-        } catch (_: Exception) { null }
-        
+        } catch (_: Exception) {
+            null
+        }
+
         if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
-            Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
+            Log.e(
+                TAG,
+                "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL."
+            )
             url = webApp.url
         }
 
@@ -117,12 +127,13 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
             webChromeClient = ExternalLinkWebChromeClient()
         }
         setContentView(webView)
-        
+
         val appBridgeHandler = AppBridgeHandler(this) { finish() }
-        
-        val permissionBridgeHandler = PermissionBridgeHandler(this, permissionManager) { permissions, request ->
-            permissionHelper.requestPermissions(permissions, request)
-        }
+
+        val permissionBridgeHandler =
+            PermissionBridgeHandler(this, permissionManager) { permissions, request ->
+                permissionHelper.requestPermissions(permissions, request)
+            }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             val sanitizedOrigin = try {
@@ -152,12 +163,17 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
                         appHandler = appBridgeHandler,
                         permissionHandler = permissionBridgeHandler,
                         logHandler = logBridgeHandler,
+                        eventsHandler = eventsBridgeHandler,
                         callerWebAppId = webApp.id,
                         appScope = appScope
                     )
                 )
             } catch (e: IllegalArgumentException) {
-                Log.e(TAG, "Failed to add web message listener for origin '$sanitizedOrigin': ${e.message}", e)
+                Log.e(
+                    TAG,
+                    "Failed to add web message listener for origin '$sanitizedOrigin': ${e.message}",
+                    e
+                )
             }
         } else {
             Log.e(TAG, "WEB_MESSAGE_LISTENER unsupported on this WebView; native bridge disabled")
@@ -180,10 +196,21 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
 
         var url = originalUrl
         if (url != null && webApp != null) {
-            val intentHost = try { url.toUri().host } catch (_: Exception) { null }
-            val allowedHost = try { webApp.allowedOrigin.toUri().host } catch (_: Exception) { null }
+            val intentHost = try {
+                url.toUri().host
+            } catch (_: Exception) {
+                null
+            }
+            val allowedHost = try {
+                webApp.allowedOrigin.toUri().host
+            } catch (_: Exception) {
+                null
+            }
             if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
-                Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
+                Log.e(
+                    TAG,
+                    "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL."
+                )
                 url = webApp.url
             }
         }

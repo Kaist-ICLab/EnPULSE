@@ -127,7 +127,9 @@ fun DataActionsRow(
         Button(
             onClick = upload,
             colors = ButtonDefaults.secondaryButtonColors(),
-            modifier = Modifier.fillMaxWidth().height(AppSizes.buttonMedium)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(AppSizes.buttonMedium)
         ) {
             Text(
                 text = stringResource(R.string.upload_data),
@@ -138,7 +140,9 @@ fun DataActionsRow(
         Button(
             onClick = flush,
             colors = ButtonDefaults.secondaryButtonColors(),
-            modifier = Modifier.fillMaxWidth().height(AppSizes.buttonMedium)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(AppSizes.buttonMedium)
         ) {
             Text(
                 text = stringResource(R.string.flush_data),

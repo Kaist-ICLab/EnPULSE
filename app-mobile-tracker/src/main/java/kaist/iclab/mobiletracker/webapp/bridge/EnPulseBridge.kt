@@ -27,6 +27,7 @@ class EnPulseBridge(
     private val appHandler: AppBridgeHandler,
     private val permissionHandler: PermissionBridgeHandler,
     private val logHandler: LogBridgeHandler,
+    private val eventsHandler: EventsBridgeHandler,
     private val callerWebAppId: String,
     private val appScope: AppCoroutineScope
 ) : WebViewCompat.WebMessageListener {
@@ -54,7 +55,11 @@ class EnPulseBridge(
                     "getAllSurvey" -> surveyHandler.getAllSurvey(request)
                     "submitSurveyResponse" -> surveyHandler.submitSurveyResponse(request)
                     "getSensorData" -> sensorHandler.getSensorData(request, callerWebAppId)
-                    "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(request, callerWebAppId)
+                    "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(
+                        request,
+                        callerWebAppId
+                    )
+
                     "getStorageData" -> storageHandler.get(request, callerWebAppId)
                     "setStorageData" -> storageHandler.set(request, callerWebAppId)
                     "getDeviceInfo" -> deviceHandler.getDeviceInfo(request)
@@ -64,13 +69,30 @@ class EnPulseBridge(
                     "requestPermissions" -> permissionHandler.requestPermissions(request)
                     "showNativeToast" -> appHandler.showNativeToast(request)
                     "vibrate" -> appHandler.vibrate(request)
+                    "vibratePattern" -> appHandler.vibratePattern(request)
+                    "setKeepScreenOn" -> appHandler.setKeepScreenOn(request)
                     "showNativeNotification" -> appHandler.showNativeNotification(request)
                     "closeWebApp" -> appHandler.closeWebApp(request)
                     "openNativeSettings" -> appHandler.openNativeSettings(request)
                     // Accepts both names: the TS client posts action "log" with a payload that also
                     // carries `action: "logEvent"`, so either reading of the envelope dispatches here.
                     "log" -> logHandler.log(request, callerWebAppId)
-                    else -> BridgeResponse(request.requestId, "error", errorMessage = "Unknown action: ${request.action}")
+                    "getDailyActivities" -> eventsHandler.getDailyActivities(
+                        request,
+                        callerWebAppId
+                    )
+
+                    "getDailyLocations" -> eventsHandler.getDailyLocations(request, callerWebAppId)
+                    "getDailyPhoneUsages" -> eventsHandler.getDailyPhoneUsages(
+                        request,
+                        callerWebAppId
+                    )
+
+                    else -> BridgeResponse(
+                        request.requestId,
+                        "error",
+                        errorMessage = "Unknown action: ${request.action}"
+                    )
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

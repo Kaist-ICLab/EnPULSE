@@ -36,5 +36,6 @@ class StepEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun csvHeader() = "eventId,uuid,received,timestamp,duration,steps"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$duration,$steps"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Steps" to steps.toString()))
+    override fun toRecord() =
+        SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Steps" to steps.toString()))
 }

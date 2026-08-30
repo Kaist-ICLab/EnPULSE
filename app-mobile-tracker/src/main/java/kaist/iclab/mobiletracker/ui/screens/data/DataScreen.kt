@@ -370,7 +370,10 @@ fun DataScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
                                 }
                                 Text(
-                                    text = stringResource(R.string.upload_uptodate_header, progress.upToDateCount),
+                                    text = stringResource(
+                                        R.string.upload_uptodate_header,
+                                        progress.upToDateCount
+                                    ),
                                     color = AppColors.TextSecondary,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -425,7 +428,8 @@ private fun UploadResultRow(result: SensorUploadResult) {
         // 100% and no error reads as healthy (green); anything less than everything landing —
         // whether an outright error or some data quarantined — is flagged in red so a partial
         // success can't be mistaken for a clean one.
-        val valueColor = if (percent == 100 && !result.isError) AppColors.SecondaryColor else AppColors.ErrorColor
+        val valueColor =
+            if (percent == 100 && !result.isError) AppColors.SecondaryColor else AppColors.ErrorColor
         Text(
             text = valueText,
             fontSize = 13.sp,
@@ -499,6 +503,7 @@ private fun SummaryCard(
                         text = when {
                             isUploading -> uploadingLabel
                                 ?: stringResource(R.string.sync_status_uploading)
+
                             isDeleting -> stringResource(R.string.sync_status_deleting)
                             else -> stringResource(R.string.sync_status_exporting)
                         },

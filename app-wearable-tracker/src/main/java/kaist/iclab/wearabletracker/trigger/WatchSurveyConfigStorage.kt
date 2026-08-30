@@ -2,8 +2,8 @@ package kaist.iclab.wearabletracker.trigger
 
 import android.content.Context
 import android.util.Log
-import kotlinx.serialization.json.Json
 import androidx.core.content.edit
+import kotlinx.serialization.json.Json
 
 /**
  * Persists the watch survey (question content) configuration to disk. This ensures survey

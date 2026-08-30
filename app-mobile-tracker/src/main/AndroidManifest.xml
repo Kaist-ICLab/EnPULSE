@@ -18,7 +18,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"
+    <uses-permission
+        android:name="android.permission.USE_FULL_SCREEN_INTENT"
         tools:ignore="FullScreenIntentPolicy" />
 
     <!-- Location -->
@@ -225,15 +226,14 @@
 
         <activity
             android:name=".webapp.WebAppActivity"
-            android:exported="true"
-            android:documentLaunchMode="intoExisting"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:documentLaunchMode="intoExisting"
             android:theme="@style/Theme.MobileTracker" />
 
         <activity
             android:name=".webapp.SimpleWebViewActivity"
-            android:exported="false"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false"
             android:theme="@style/Theme.MobileTracker" />
 
         <!-- Developer test receiver to trigger WebApp notifications via ADB -->

@@ -1,10 +1,14 @@
 # Wearable Tracker
 
-WearOS application for Galaxy Watch sensor data collection, storage, and synchronization with the companion mobile application.
+WearOS application for Galaxy Watch sensor data collection, storage, and synchronization with the
+companion mobile application.
 
 ## Overview
 
-The Wearable Tracker app runs continuously on WearOS (Galaxy Watch) devices to capture high-frequency biosignals and physical activity data. Captured sensor data is cached locally using ObjectBox and periodically synced to the companion smartphone application (`app-mobile-tracker`) over Bluetooth LE / Google Wearable Data Layer.
+The Wearable Tracker app runs continuously on WearOS (Galaxy Watch) devices to capture
+high-frequency biosignals and physical activity data. Captured sensor data is cached locally using
+ObjectBox and periodically synced to the companion smartphone application (`app-mobile-tracker`)
+over Bluetooth LE / Google Wearable Data Layer.
 
 ## Supported Sensors
 
@@ -18,10 +22,14 @@ The Wearable Tracker app runs continuously on WearOS (Galaxy Watch) devices to c
 
 ## Required Configuration
 
-1. **Samsung Health SDK Setup**: Ensure you have placed the required Samsung Health AAR files in the project root module as documented in the main [`README.md`](../README.md#download-samsung-health-sensordata-sdk).
-2. **Companion Pairing**: Install and launch `app-mobile-tracker` on your smartphone to receive synced data from the watch.
+1. **Samsung Health SDK Setup**: Ensure you have placed the required Samsung Health AAR files in the
+   project root module as documented in the main [
+   `README.md`](../README.md#download-samsung-health-sensordata-sdk).
+2. **Companion Pairing**: Install and launch `app-mobile-tracker` on your smartphone to receive
+   synced data from the watch.
 
 ## Related Modules
 
-- [`tracker-library`](../tracker-library/README.md) - Core sensor tracking engine and sensor definitions
+- [`tracker-library`](../tracker-library/README.md) - Core sensor tracking engine and sensor
+  definitions
 - [`app-mobile-tracker`](../app-mobile-tracker/README.md) - Handheld companion application

@@ -1,5 +1,8 @@
 package kaist.iclab.mobiletracker
 
+import kaist.iclab.mobiletracker.Constants.Network.SUPABASE_REQUEST_TIMEOUT_MS
+
+
 /**
  * Centralized constants for the mobile tracker app.
  *

@@ -41,7 +41,12 @@ class MessageLogEntity : BaseEntity, CsvSerializable, RecordSerializable {
     }
 
     override fun csvHeader() = "eventId,uuid,received,timestamp,number,messageType,contactType"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$number,$messageType,$contactType"
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$number,$messageType,$contactType"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Type" to messageType, "Number" to number.take(10)))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Type" to messageType, "Number" to number.take(10))
+    )
 }

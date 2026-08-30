@@ -54,11 +54,15 @@ class SurveyResponseUploader(
         // See SensorUploadService.uploadSensorData's identical guard: don't suspend forever if
         // SessionStatus is ever stuck at Initializing (normally prevented by SupabaseHelper's
         // enableLifecycleCallbacks = false).
-        val initialized = withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
-            supabaseHelper.supabaseClient.auth.awaitInitialization()
-        } != null
+        val initialized =
+            withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
+                supabaseHelper.supabaseClient.auth.awaitInitialization()
+            } != null
         if (!initialized) {
-            Log.w(TAG, "Timed out waiting for Supabase auth to initialize; keeping survey response rows pending")
+            Log.w(
+                TAG,
+                "Timed out waiting for Supabase auth to initialize; keeping survey response rows pending"
+            )
             return@withLock Result.Success(0)
         }
         val userUuid = getUserUuid()

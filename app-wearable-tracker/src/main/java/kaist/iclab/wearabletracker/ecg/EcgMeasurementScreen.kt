@@ -100,7 +100,8 @@ fun EcgMeasurementScreenContent(uiState: EcgMeasurementUiState) {
     ) {
         val running = uiState as? EcgMeasurementUiState.Running
         if (running != null) {
-            val progress = (running.remainingMs.toFloat() / running.totalMs.toFloat()).coerceIn(0f, 1f)
+            val progress =
+                (running.remainingMs.toFloat() / running.totalMs.toFloat()).coerceIn(0f, 1f)
             val color = when {
                 progress > 0.6f -> TimerSafe
                 progress > 0.3f -> TimerWarning
@@ -125,7 +126,11 @@ fun EcgMeasurementScreenContent(uiState: EcgMeasurementUiState) {
             // pivot at the screen center rather than the icon's own center. Galaxy Watch's Home
             // button sits on the right edge just above vertical center (above the Back button),
             // hence the negative (counter-clockwise) angle.
-            Box(modifier = Modifier.fillMaxSize().rotate(-25f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .rotate(-25f)
+            ) {
                 HomeButtonHint(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)

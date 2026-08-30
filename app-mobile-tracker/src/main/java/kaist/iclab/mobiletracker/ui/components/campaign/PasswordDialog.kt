@@ -136,7 +136,8 @@ fun PasswordDialog(
                             if (isValid) {
                                 onSuccess()
                             } else {
-                                passwordError = resources.getString(R.string.campaign_password_invalid)
+                                passwordError =
+                                    resources.getString(R.string.campaign_password_invalid)
 
                                 AppToast.show(context, R.string.campaign_password_invalid)
                             }

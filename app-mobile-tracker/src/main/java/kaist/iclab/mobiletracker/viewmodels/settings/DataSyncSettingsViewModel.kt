@@ -142,7 +142,11 @@ class DataSyncSettingsViewModel(
                             val outcome = sensorUploadService.uploadSensorData(sensorId)
                             if (outcome.isError) {
                                 failedCount++
-                                Log.e(TAG, "Upload failed for $sensorId: ${outcome.error?.message}", outcome.error)
+                                Log.e(
+                                    TAG,
+                                    "Upload failed for $sensorId: ${outcome.error?.message}",
+                                    outcome.error
+                                )
                             } else {
                                 uploadedCount++
                             }

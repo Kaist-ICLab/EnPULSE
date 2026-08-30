@@ -25,7 +25,8 @@ SUPABASE_URL=your_self_hosted_supabase_server_address
 
 ### Connecting the App with Firebase Backend (Google Sign-In)
 
-The `google-services.json` file is ignored by Git to keep project credentials secure. To enable Google Sign-In and Firebase services:
+The `google-services.json` file is ignored by Git to keep project credentials secure. To enable
+Google Sign-In and Firebase services:
 
 1. Go to the [Firebase Console](https://console.firebase.google.com/) and create a new project.
 2. Register an Android App using the package name `kaist.iclab.trackerSystem`.

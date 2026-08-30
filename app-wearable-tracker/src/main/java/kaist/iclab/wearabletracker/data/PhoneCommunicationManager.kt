@@ -106,7 +106,8 @@ class PhoneCommunicationManager(
 
                             dataSent = true
                             totalRecordsSentSoFar += data.size
-                            _syncProgress.value = totalRecordsSentSoFar.toFloat() / totalRecordsToSync
+                            _syncProgress.value =
+                                totalRecordsSentSoFar.toFloat() / totalRecordsToSync
 
                             val chunkStartTs = currentSensorLastTimestamp
                             val chunkMaxTimestamp = data.maxOf { it.timestamp }
@@ -138,7 +139,11 @@ class PhoneCommunicationManager(
                         // next sync attempt - which may fire before the phone ACKs this - skips
                         // past it instead of resending it from scratch.
                         if (currentSensorLastTimestamp > effectiveStart) {
-                            syncPreferencesHelper.setSensorPending(sensorId, currentSensorLastTimestamp, now)
+                            syncPreferencesHelper.setSensorPending(
+                                sensorId,
+                                currentSensorLastTimestamp,
+                                now
+                            )
                         }
                     }
 
@@ -158,6 +163,7 @@ class PhoneCommunicationManager(
                                     )
                                 }
                             }
+
                             is Result.Error -> {
                                 NotificationHelper.showPhoneCommunicationFailure(
                                     androidContext,

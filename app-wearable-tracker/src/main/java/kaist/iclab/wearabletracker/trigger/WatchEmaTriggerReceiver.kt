@@ -45,7 +45,10 @@ class WatchEmaTriggerReceiver(
             handleWatchEmaTrigger(json)
         }
 
-        Log.d(TAG, "Started listening for watch EMA triggers on BLE key: ${Constants.BLE.KEY_WATCH_EMA_TRIGGER}")
+        Log.d(
+            TAG,
+            "Started listening for watch EMA triggers on BLE key: ${Constants.BLE.KEY_WATCH_EMA_TRIGGER}"
+        )
     }
 
     private fun handleWatchEmaTrigger(json: JsonElement) {

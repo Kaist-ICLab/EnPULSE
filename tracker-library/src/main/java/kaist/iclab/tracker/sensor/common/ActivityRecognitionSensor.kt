@@ -37,6 +37,20 @@ class ActivityRecognitionSensor(
 ) {
     companion object {
         private val TAG = ActivityRecognitionSensor::class.simpleName
+
+        fun getActivityName(type: Int?): String {
+            return when (type) {
+                DetectedActivity.IN_VEHICLE -> "In Vehicle"
+                DetectedActivity.ON_BICYCLE -> "On Bicycle"
+                DetectedActivity.ON_FOOT -> "On Foot"
+                DetectedActivity.STILL -> "Still"
+                DetectedActivity.UNKNOWN -> "Unknown"
+                DetectedActivity.TILTING -> "Tilting"
+                DetectedActivity.WALKING -> "Walking"
+                DetectedActivity.RUNNING -> "Running"
+                else -> "Activity $type"
+            }
+        }
     }
 
     data class Config(

@@ -38,5 +38,9 @@ class CallLogEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun csvHeader() = "eventId,uuid,received,timestamp,duration,number,type"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$duration,$number,$type"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Type" to type.toString(), "Duration" to "${duration}s"))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Type" to type.toString(), "Duration" to "${duration}s")
+    )
 }

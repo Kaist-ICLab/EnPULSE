@@ -11,6 +11,7 @@ import androidx.core.app.NotificationCompat
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.MainActivity
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.utils.NotificationHelper.showSurveyTriggerNotification
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
 
@@ -272,7 +273,8 @@ object NotificationHelper {
         pendingIntent: PendingIntent,
         notificationId: Int
     ) {
-        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_generic_${notificationId}"
+        val channelId =
+            "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_generic_${notificationId}"
         ensureNotificationChannel(
             context,
             channelId,

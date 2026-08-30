@@ -94,7 +94,8 @@ class SensorDetailViewModel(
                 var filteredCount = _uiState.value.filteredCount
 
                 if (loadInfo || info == null) {
-                    info = withContext(Dispatchers.IO) { dataRepository.getSensorDetailInfo(sensorId) }
+                    info =
+                        withContext(Dispatchers.IO) { dataRepository.getSensorDetailInfo(sensorId) }
                     filteredCount = withContext(Dispatchers.IO) {
                         dataRepository.getSensorRecordCount(sensorId, dateFilter)
                     }
@@ -241,7 +242,8 @@ class SensorDetailViewModel(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isUploading = true)
             try {
-                val outcome = withContext(Dispatchers.IO) { dataRepository.uploadSensorData(sensorId) }
+                val outcome =
+                    withContext(Dispatchers.IO) { dataRepository.uploadSensorData(sensorId) }
                 when {
                     outcome.succeededCount > 0 -> {
                         _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_sensor_data_uploaded))
@@ -308,7 +310,12 @@ class SensorDetailViewModel(
                     _uiEvent.emit(SensorDetailUiEvent.ShowToast(R.string.toast_no_data_to_export))
                 } else {
                     val sensorName = _uiState.value.sensorInfo?.displayName ?: sensorId
-                    val uri = withContext(Dispatchers.IO) { csvExportHelper.exportToCsv(sensorName, records) }
+                    val uri = withContext(Dispatchers.IO) {
+                        csvExportHelper.exportToCsv(
+                            sensorName,
+                            records
+                        )
+                    }
 
                     if (uri != null) {
                         csvExportHelper.shareCsv(uri, sensorName)

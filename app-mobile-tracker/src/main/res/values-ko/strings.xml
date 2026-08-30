@@ -28,6 +28,8 @@
     <string name="email_label">이메일</string>
     <string name="no_email">이메일 없음</string>
     <string name="version_label">버전</string>
+    <string name="about_developer_label">개발자</string>
+    <string name="about_developer_value">KAIST Interactive Computing Lab (ICLab)</string>
     <string name="about_description">연구 데이터 수집을 위한 모바일 추적 애플리케이션</string>
     <string name="sign_out">로그아웃</string>
     <string name="sign_in_with_google">Google로 로그인</string>

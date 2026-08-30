@@ -49,10 +49,20 @@ class PhoneTriggerActionHandler(
         surveySensor.triggerSurveyNotification(action.surveyId.toString())
     }
 
-    private suspend fun handleWatchEma(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.WatchEma) {
-        Log.d(TAG, "Sending WatchEma trigger to watch: surveyId=${action.surveyId}, trigger=${trigger.name}")
+    private suspend fun handleWatchEma(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.WatchEma
+    ) {
+        Log.d(
+            TAG,
+            "Sending WatchEma trigger to watch: surveyId=${action.surveyId}, trigger=${trigger.name}"
+        )
         try {
-            bleChannel.send(AppConfig.BLEKeys.WATCH_EMA_TRIGGER, action.surveyId.toString(), isUrgent = true)
+            bleChannel.send(
+                AppConfig.BLEKeys.WATCH_EMA_TRIGGER,
+                action.surveyId.toString(),
+                isUrgent = true
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send WatchEma trigger to watch: ${e.message}", e)
         }
@@ -100,7 +110,10 @@ class PhoneTriggerActionHandler(
         webAppTriggerHandler.launch(surveyId, webAppId)
     }
 
-    private suspend fun handleNotification(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.Notification) {
+    private suspend fun handleNotification(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Notification
+    ) {
         if (action.deviceType == 1) {
             handleWatchNotification(trigger, action)
             return
@@ -118,8 +131,14 @@ class PhoneTriggerActionHandler(
      * [AppConfig.BLEKeys.PHONE_OPEN_URL_TRIGGER]/[kaist.iclab.mobiletracker.helpers.BLEHelper])
      * so the phone opens it there, since the watch has no browser of its own.
      */
-    private suspend fun handleWatchNotification(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.Notification) {
-        Log.d(TAG, "Sending watch notification: title=${action.title}, url=${action.url}, trigger=${trigger.name}")
+    private suspend fun handleWatchNotification(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Notification
+    ) {
+        Log.d(
+            TAG,
+            "Sending watch notification: title=${action.title}, url=${action.url}, trigger=${trigger.name}"
+        )
         try {
             val payload = buildJsonObject {
                 put("title", action.title)
