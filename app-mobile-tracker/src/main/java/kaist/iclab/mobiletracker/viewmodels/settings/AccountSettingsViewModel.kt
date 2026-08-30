@@ -140,11 +140,8 @@ class AccountSettingsViewModel(
         }
     }
 
-    suspend fun joinCampaign(campaignId: String, password: String): Boolean {
-        return when (val result = campaignRepository.joinCampaign(campaignId, password)) {
-            is Result.Success<Boolean> -> result.data
-            is Result.Error -> false
-        }
+    suspend fun joinCampaign(campaignId: String, password: String): Result<Boolean> {
+        return campaignRepository.joinCampaign(campaignId, password)
     }
 
     fun leaveCampaign() {

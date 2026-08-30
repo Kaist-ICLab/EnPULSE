@@ -30,6 +30,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.repository.Result
+import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
@@ -44,7 +46,7 @@ import kotlinx.coroutines.launch
 fun PasswordDialog(
     campaignName: String,
     onDismiss: () -> Unit,
-    onVerify: suspend (String) -> Boolean,
+    onVerify: suspend (String) -> Result<Boolean>,
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
@@ -132,16 +134,37 @@ fun PasswordDialog(
 
                     coroutineScope.launch {
                         try {
-                            val isValid = onVerify(password)
-                            if (isValid) {
+                            val result = onVerify(password)
+                            if (result is Result.Success && result.data) {
                                 onSuccess()
                             } else {
-                                passwordError = resources.getString(R.string.campaign_password_invalid)
-
-                                AppToast.show(context, R.string.campaign_password_invalid)
+                                val errorMsg = if (result is Result.Error) {
+                                    val exception = result.exception
+                                    val extracted = ErrorClassifier.extractErrorMessage(exception)
+                                    val raw = exception.message ?: resources.getString(R.string.campaign_password_invalid)
+                                    val cleanMsg = if (raw.startsWith("joinCampaign: ")) {
+                                        raw.removePrefix("joinCampaign: ")
+                                    } else {
+                                        raw
+                                    }
+                                    extracted ?: cleanMsg
+                                } else {
+                                    resources.getString(R.string.campaign_password_invalid)
+                                }
+                                passwordError = errorMsg
+                                AppToast.show(context, errorMsg)
                             }
-                        } catch (_: Exception) {
-                            passwordError = resources.getString(R.string.campaign_password_error)
+                        } catch (e: Exception) {
+                            val extracted = ErrorClassifier.extractErrorMessage(e)
+                            val raw = e.message ?: resources.getString(R.string.campaign_password_error)
+                            val cleanMsg = if (raw.startsWith("joinCampaign: ")) {
+                                raw.removePrefix("joinCampaign: ")
+                            } else {
+                                raw
+                            }
+                            val errorMsg = extracted ?: cleanMsg
+                            passwordError = errorMsg
+                            AppToast.show(context, errorMsg)
                         } finally {
                             isVerifying = false
                         }

@@ -583,6 +583,10 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 total
             )
         }
+        val pendingIntent = NotificationHelper.createMainActivityPendingIntent(
+            this,
+            Constants.Notification.ID_DATA_UPLOAD_PROGRESS
+        )
         return NotificationHelper.buildNotification(
             context = this,
             channelId = Constants.Notification.CHANNEL_ID_DATA_UPLOAD_PROGRESS,
@@ -590,7 +594,8 @@ class DataUploadService : LifecycleService(), KoinComponent {
             text = text,
             priority = NotificationCompat.PRIORITY_LOW,
             ongoing = true,
-            autoCancel = false
+            autoCancel = false,
+            pendingIntent = pendingIntent
         ).apply {
             setProgress(total.coerceAtLeast(1), current, total == 0)
             // This notification is re-posted on every batch (see [updateProgress]). Without these

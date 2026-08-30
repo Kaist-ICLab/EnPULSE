@@ -9,6 +9,9 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Utility for classifying raw exceptions into typed [AppError] subtypes
@@ -119,6 +122,26 @@ object ErrorClassifier {
             val classified = classify(e, context)
             Log.e(tag, classified.message, classified)
             Result.Error(classified)
+        }
+    }
+
+    /**
+     * Helper to extract human-readable error messages from Supabase API errors.
+     * TODO: When HTTP error responses are standardized across the backend, 
+     * update this parsing logic to use a structured data class instead of manual string matching.
+     */
+    fun extractErrorMessage(e: Throwable): String? {
+        val targetException = if (e is AppError) e.cause ?: e else e
+        val rawMessage = targetException.message ?: return null
+        val body = if (rawMessage.contains("URL:")) {
+            rawMessage.substringBefore("URL:").trim()
+        } else {
+            rawMessage
+        }
+        return try {
+            Json.parseToJsonElement(body).jsonObject["error"]?.jsonPrimitive?.content
+        } catch (_: Exception) {
+            null
         }
     }
 }

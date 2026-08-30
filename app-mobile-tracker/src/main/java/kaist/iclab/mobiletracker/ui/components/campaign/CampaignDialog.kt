@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.data.campaign.CampaignData
+import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
@@ -39,7 +40,7 @@ fun CampaignDialog(
     error: String? = null,
     onDismiss: () -> Unit,
     onSelect: (String) -> Unit,
-    onJoinCampaign: suspend (String, String) -> Boolean
+    onJoinCampaign: suspend (String, String) -> Result<Boolean>
 ) {
     var selected by remember { mutableStateOf(selectedCampaignId) }
 
