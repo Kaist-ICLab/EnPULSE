@@ -61,12 +61,14 @@ class MicroEmaResponseManager(
                     is JsonObject -> jsonElement
                     is JsonPrimitive ->
                         json.parseToJsonElement(jsonElement.content).jsonObject
+
                     else -> json.parseToJsonElement(jsonElement.toString()).jsonObject
                 }
 
                 val surveyId = triggerObj["surveyId"]?.jsonPrimitive?.content?.toIntOrNull() ?: 0
                 val title = triggerObj["title"]?.jsonPrimitive?.content ?: "Micro EMA"
-                val expireAfterMs = triggerObj["expireAfterMs"]?.jsonPrimitive?.content?.toLongOrNull()
+                val expireAfterMs =
+                    triggerObj["expireAfterMs"]?.jsonPrimitive?.content?.toLongOrNull()
                 val questionJson = triggerObj["question"] ?: run {
                     Log.e(TAG, "Trigger payload missing 'question' field")
                     return@addOnReceivedListener
@@ -135,7 +137,10 @@ class MicroEmaResponseManager(
         }
     }
 
-    private suspend fun syncResponsesToPhone(responses: List<MicroEmaResponse>, idsToMark: List<Long>) {
+    private suspend fun syncResponsesToPhone(
+        responses: List<MicroEmaResponse>,
+        idsToMark: List<Long>
+    ) {
         val payload = buildSyncPayload(responses, idsToMark)
         phoneCommunicationManager.getBleChannel().send(
             Constants.BLE.KEY_MICRO_EMA_RESPONSE,

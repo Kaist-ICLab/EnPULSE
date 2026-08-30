@@ -19,5 +19,6 @@ class SkinTemperatureEntity() : WatchBaseEntity(), CsvSerializable {
     }
 
     override fun csvHeader() = "eventId,received,timestamp,ambientTemp,objectTemp,status"
-    override fun toCsvRow() = "$eventId,$received,$timestamp,$ambientTemperature,$objectTemperature,$status"
+    override fun toCsvRow() =
+        "$eventId,$received,$timestamp,$ambientTemperature,$objectTemperature,$status"
 }

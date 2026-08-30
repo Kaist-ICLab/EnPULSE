@@ -31,7 +31,8 @@ class BootCompletedReceiver : BroadcastReceiver(), KoinComponent {
         // If it was RUNNING or PAUSED before the reboot, we should restart the service.
         // PAUSED means the user intended collection to be active (just off-wrist at the time).
         if (currentState.flag == ControllerState.FLAG.RUNNING ||
-            currentState.flag == ControllerState.FLAG.PAUSED) {
+            currentState.flag == ControllerState.FLAG.PAUSED
+        ) {
             Log.i(TAG, "Resuming background sensor collection after reboot.")
             try {
                 sensorController.start()

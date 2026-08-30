@@ -5,22 +5,22 @@ import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.galaxywatch.AccelerometerSensor
 import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.EDASensor
+import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
 import kaist.iclab.tracker.sensor.galaxywatch.HeartRateSensor
 import kaist.iclab.tracker.sensor.galaxywatch.IMUSensor
-import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
-import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
 import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
 import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
+import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
 import kaist.iclab.wearabletracker.db.entity.AccelerometerEntity
 import kaist.iclab.wearabletracker.db.entity.ECGEntity
 import kaist.iclab.wearabletracker.db.entity.EDAEntity
+import kaist.iclab.wearabletracker.db.entity.GestureEntity
 import kaist.iclab.wearabletracker.db.entity.HeartRateEntity
 import kaist.iclab.wearabletracker.db.entity.IMUEntity
-import kaist.iclab.wearabletracker.db.entity.GestureEntity
-import kaist.iclab.wearabletracker.db.entity.StressEntity
 import kaist.iclab.wearabletracker.db.entity.LocationEntity
 import kaist.iclab.wearabletracker.db.entity.PPGEntity
 import kaist.iclab.wearabletracker.db.entity.SkinTemperatureEntity
+import kaist.iclab.wearabletracker.db.entity.StressEntity
 
 class WatchSensorStores(boxStore: BoxStore) {
     val accelerometer = WatchSensorStore(boxStore, AccelerometerEntity::class.java) { e ->
@@ -31,21 +31,43 @@ class WatchSensorStores(boxStore: BoxStore) {
     val ppg = WatchSensorStore(boxStore, PPGEntity::class.java) { e ->
         e as PPGSensor.Entity
         e.dataPoint.map {
-            PPGEntity(it.received, it.timestamp, it.green, it.red, it.ir, it.greenStatus, it.redStatus, it.irStatus)
+            PPGEntity(
+                it.received,
+                it.timestamp,
+                it.green,
+                it.red,
+                it.ir,
+                it.greenStatus,
+                it.redStatus,
+                it.irStatus
+            )
         }
     }
 
     val heartRate = WatchSensorStore(boxStore, HeartRateEntity::class.java) { e ->
         e as HeartRateSensor.Entity
         e.dataPoint.map {
-            HeartRateEntity(it.received, it.timestamp, it.hr, it.hrStatus, it.ibi.toIntArray(), it.ibiStatus.toIntArray())
+            HeartRateEntity(
+                it.received,
+                it.timestamp,
+                it.hr,
+                it.hrStatus,
+                it.ibi.toIntArray(),
+                it.ibiStatus.toIntArray()
+            )
         }
     }
 
     val skinTemperature = WatchSensorStore(boxStore, SkinTemperatureEntity::class.java) { e ->
         e as SkinTemperatureSensor.Entity
         e.dataPoint.map {
-            SkinTemperatureEntity(it.received, it.timestamp, it.objectTemperature, it.ambientTemperature, it.status)
+            SkinTemperatureEntity(
+                it.received,
+                it.timestamp,
+                it.objectTemperature,
+                it.ambientTemperature,
+                it.status
+            )
         }
     }
 
@@ -56,23 +78,61 @@ class WatchSensorStores(boxStore: BoxStore) {
 
     val location = WatchSensorStore(boxStore, LocationEntity::class.java) { e ->
         e as LocationSensor.Entity
-        listOf(LocationEntity(e.received, e.timestamp, e.latitude, e.longitude, e.altitude, e.speed, e.accuracy))
+        listOf(
+            LocationEntity(
+                e.received,
+                e.timestamp,
+                e.latitude,
+                e.longitude,
+                e.altitude,
+                e.speed,
+                e.accuracy
+            )
+        )
     }
 
     val ecg = WatchSensorStore(boxStore, ECGEntity::class.java) { e ->
         e as ECGSensor.Entity
         e.dataPoint.map {
-            ECGEntity(it.received, it.timestamp, it.ecgMv, it.leadOff, it.sequence, it.ppgGreen, it.maxThresholdMv, it.minThresholdMv)
+            ECGEntity(
+                it.received,
+                it.timestamp,
+                it.ecgMv,
+                it.leadOff,
+                it.sequence,
+                it.ppgGreen,
+                it.maxThresholdMv,
+                it.minThresholdMv
+            )
         }
     }
     val watchIMU = WatchSensorStore(boxStore, IMUEntity::class.java) { e ->
         e as IMUSensor.Entity
-        listOf(IMUEntity(e.received, e.timestamp, e.accX, e.accY, e.accZ, e.gyroX, e.gyroY, e.gyroZ))
+        listOf(
+            IMUEntity(
+                e.received,
+                e.timestamp,
+                e.accX,
+                e.accY,
+                e.accZ,
+                e.gyroX,
+                e.gyroY,
+                e.gyroZ
+            )
+        )
     }
 
     val watchGesture = WatchSensorStore(boxStore, GestureEntity::class.java) { e ->
         e as GestureSensor.Entity
-        listOf(GestureEntity(e.received, e.timestamp, e.classIndex, e.score, e.probabilities.toIntArray()))
+        listOf(
+            GestureEntity(
+                e.received,
+                e.timestamp,
+                e.classIndex,
+                e.score,
+                e.probabilities.toIntArray()
+            )
+        )
     }
 
     val watchStress = WatchSensorStore(boxStore, StressEntity::class.java) { e ->

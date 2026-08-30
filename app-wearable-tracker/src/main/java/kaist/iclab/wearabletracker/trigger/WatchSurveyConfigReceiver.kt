@@ -62,13 +62,19 @@ class WatchSurveyConfigReceiver(
             handleConfig(jsonElement)
         }
 
-        Log.d(TAG, "Started listening for watch survey config on BLE key: ${Constants.BLE.KEY_TRIGGER_CONFIG}")
+        Log.d(
+            TAG,
+            "Started listening for watch survey config on BLE key: ${Constants.BLE.KEY_TRIGGER_CONFIG}"
+        )
 
         // Load persisted configuration on startup if it exists
         try {
             val cachedConfig = storage.loadConfig()
             if (cachedConfig != null) {
-                Log.d(TAG, "Loading cached watch survey config from disk: ${cachedConfig.surveyConfigs.size} survey(s)")
+                Log.d(
+                    TAG,
+                    "Loading cached watch survey config from disk: ${cachedConfig.surveyConfigs.size} survey(s)"
+                )
                 applyConfig(cachedConfig.surveyConfigs)
             }
         } catch (e: Exception) {

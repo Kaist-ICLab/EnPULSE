@@ -5,7 +5,7 @@ Android application for mobile sensor data collection, storage, and synchronizat
 ## Required Configuration
 
 Please make sure
-you [downloaded the Samsung Health SDKs](https://github.com/Kaist-ICLab/EnPULSE/blob/main/README.md#download-samsung-health-sensordata-sdk).
+you [downloaded the Samsung Health SDKs](../README.md#download-samsung-health-sensordata-sdk).
 
 ### Connecting the App with Supabase Backend
 
@@ -41,5 +41,5 @@ The `google-services.json` file is ignored by Git to keep project credentials se
 ## Technical Information
 
 Refer
-to [structure.md](https://github.com/Kaist-ICLab/EnPULSE/blob/main/app-mobile-tracker/structure.md)
+to [structure.md](structure.md)
 for overall architecture of the app.

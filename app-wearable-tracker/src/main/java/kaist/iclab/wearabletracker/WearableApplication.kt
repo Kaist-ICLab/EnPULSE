@@ -1,20 +1,18 @@
 package kaist.iclab.wearabletracker
 
 import android.app.Application
+import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
+import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.tracker.sensor.core.Sensor
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
+import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.SyncAckListener
-
-import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
-
-import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.trigger.DetectionStateForwarder
 import kaist.iclab.wearabletracker.trigger.WatchEmaTriggerReceiver
 import kaist.iclab.wearabletracker.trigger.WatchNotificationTriggerReceiver
 import kaist.iclab.wearabletracker.trigger.WatchSurveyConfigReceiver
-import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
-import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -54,8 +52,10 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         val allSensors = koin.get<List<Sensor<*, *>>>(named("sensors"))
         // Campaign membership gates collection; a never-synced (null) config fails open so a
         // fresh install isn't bricked before its first phone sync.
-        val activeSensorIds = koin.get<CampaignSensorConfigRepository>().configFlow.value.activeSensorIds
-        val sensors = if (activeSensorIds == null) allSensors else allSensors.filter { it.id in activeSensorIds }
+        val activeSensorIds =
+            koin.get<CampaignSensorConfigRepository>().configFlow.value.activeSensorIds
+        val sensors =
+            if (activeSensorIds == null) allSensors else allSensors.filter { it.id in activeSensorIds }
         return BackgroundControllerDependencies(
             controllerStateStorage = koin.get(named("watchControllerStateStorage")),
             sensors = sensors,

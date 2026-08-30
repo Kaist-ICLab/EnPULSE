@@ -17,10 +17,14 @@ class ECGEntity() : WatchBaseEntity(), CsvSerializable {
         maxThresholdMv: Float, minThresholdMv: Float
     ) : this() {
         initBase(received, timestamp)
-        this.ecgMv = ecgMv; this.leadOff = leadOff; this.sequence = sequence; this.ppgGreen = ppgGreen
+        this.ecgMv = ecgMv; this.leadOff = leadOff; this.sequence = sequence; this.ppgGreen =
+            ppgGreen
         this.maxThresholdMv = maxThresholdMv; this.minThresholdMv = minThresholdMv
     }
 
-    override fun csvHeader() = "eventId,received,timestamp,ecgMv,leadOff,sequence,ppgGreen,maxThresholdMv,minThresholdMv"
-    override fun toCsvRow() = "$eventId,$received,$timestamp,$ecgMv,$leadOff,$sequence,$ppgGreen,$maxThresholdMv,$minThresholdMv"
+    override fun csvHeader() =
+        "eventId,received,timestamp,ecgMv,leadOff,sequence,ppgGreen,maxThresholdMv,minThresholdMv"
+
+    override fun toCsvRow() =
+        "$eventId,$received,$timestamp,$ecgMv,$leadOff,$sequence,$ppgGreen,$maxThresholdMv,$minThresholdMv"
 }

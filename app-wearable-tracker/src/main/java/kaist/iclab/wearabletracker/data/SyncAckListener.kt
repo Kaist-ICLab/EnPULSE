@@ -68,7 +68,10 @@ class SyncAckListener(
                 }
 
                 if (endTimestamp == null) {
-                    Log.w(TAG, "Received OK ACK with no timestamp for $sensorId, nothing to confirm")
+                    Log.w(
+                        TAG,
+                        "Received OK ACK with no timestamp for $sensorId, nothing to confirm"
+                    )
                     return@runClassified
                 }
 

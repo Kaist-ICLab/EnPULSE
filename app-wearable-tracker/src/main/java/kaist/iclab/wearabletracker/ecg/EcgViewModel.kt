@@ -20,7 +20,10 @@ sealed class EcgMeasurementUiState {
     data object Checking : EcgMeasurementUiState()
     data object Unavailable : EcgMeasurementUiState()
     data object NeedsPermission : EcgMeasurementUiState()
-    data class Running(val remainingMs: Long, val totalMs: Long = EcgViewModel.MEASUREMENT_DURATION_MS) :
+    data class Running(
+        val remainingMs: Long,
+        val totalMs: Long = EcgViewModel.MEASUREMENT_DURATION_MS
+    ) :
         EcgMeasurementUiState()
 
     data object Completed : EcgMeasurementUiState()
@@ -76,7 +79,8 @@ class EcgViewModel(
         }
 
         val permissionStates = permissionManager.getPermissionFlow(ecgSensor.permissions).value
-        val allGranted = ecgSensor.permissions.all { permissionStates[it] == PermissionState.GRANTED }
+        val allGranted =
+            ecgSensor.permissions.all { permissionStates[it] == PermissionState.GRANTED }
         if (!allGranted) {
             _uiState.value = EcgMeasurementUiState.NeedsPermission
             return

@@ -5,8 +5,8 @@ import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonPrimitive

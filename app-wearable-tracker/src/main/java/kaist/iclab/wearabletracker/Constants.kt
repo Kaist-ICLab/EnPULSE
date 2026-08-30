@@ -1,5 +1,8 @@
 package kaist.iclab.wearabletracker
 
+import kaist.iclab.wearabletracker.Constants.DB.OBJECTBOX_MAX_SIZE_KB
+
+
 /**
  * Centralized constants for the wearable tracker app.
  * All constants used across the app should be defined here.

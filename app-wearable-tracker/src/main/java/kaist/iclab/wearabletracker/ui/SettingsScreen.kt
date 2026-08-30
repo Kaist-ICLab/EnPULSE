@@ -72,7 +72,7 @@ fun SettingsScreen(
     val activeCampaignSensorNames by settingsViewModel.activeCampaignSensorNames.collectAsState()
     val availableSensors = sensorStates.filter { (name, state) ->
         state.value.flag != SensorState.FLAG.UNAVAILABLE &&
-            (activeCampaignSensorNames == null || name in activeCampaignSensorNames!!)
+                (activeCampaignSensorNames == null || name in activeCampaignSensorNames!!)
     }.keys.associateWith { name -> sensorState[name]!! }
 
     var showFlushDialog by remember { mutableStateOf(false) }
@@ -333,7 +333,8 @@ fun SettingsScreenContent(
                                     start = AppSpacing.sensorChipHorizontal,
                                     end = AppSpacing.sensorChipHorizontal,
                                     bottom = AppSpacing.sensorChipBottom
-                                ).height(AppSizes.sensorChipHeight),
+                                )
+                                .height(AppSizes.sensorChipHeight),
                         )
                     }
 
@@ -485,7 +486,11 @@ private fun SettingsScreenContentRecordingPreview() {
     }
 }
 
-@Preview(name = "Flush Confirmation Dialog", device = WearDevices.SMALL_ROUND, showBackground = true)
+@Preview(
+    name = "Flush Confirmation Dialog",
+    device = WearDevices.SMALL_ROUND,
+    showBackground = true
+)
 @Composable
 private fun SettingsScreenContentFlushDialogPreview() {
     WearableTrackerTheme {
@@ -573,7 +578,11 @@ private fun SettingsScreenContentSdkPolicyErrorPreview() {
     }
 }
 
-@Preview(name = "Samsung Health Connection Error", device = WearDevices.SMALL_ROUND, showBackground = true)
+@Preview(
+    name = "Samsung Health Connection Error",
+    device = WearDevices.SMALL_ROUND,
+    showBackground = true
+)
 @Composable
 private fun SettingsScreenContentConnectionErrorPreview() {
     WearableTrackerTheme {

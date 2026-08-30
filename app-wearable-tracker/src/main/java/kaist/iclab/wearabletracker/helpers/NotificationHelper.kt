@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.R
+import kaist.iclab.wearabletracker.helpers.NotificationHelper.showSurveyTriggerNotification
 
 /**
  * Helper class for creating and showing notifications in the wearable tracker app.
