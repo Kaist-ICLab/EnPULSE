@@ -17,9 +17,14 @@ data class MetricsSnapshot(
     val batteryTemperature: Float,  // °C
     val batteryCurrent: Int,        // mA (negative = discharging)
     val batteryStatus: String,      // "charging" | "discharging" | "full" | "not_charging" | "unknown"
+    val batteryChargeUah: Long,     // Microamp-hours
+    val batteryEnergyNwh: Long,     // Nanowatt-hours
+    val thermalStatus: Int,         // OS thermal status code (API 29+)
     val cpuUsagePercent: Float,     // 0-100
+    val cpuTemperature: Float,     // Best-effort SoC/CPU temp in °C
     val appMemoryMb: Float,        // MB used by this process
     val availableRamMb: Float,     // MB free system RAM
+    val nativeHeapBytes: Long,     // Native heap allocated
 )
 
 /**
@@ -55,8 +60,19 @@ class MetricsCollector(private val context: Context) {
             BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "not_charging"
             else -> "unknown"
         }
+        
+        val chargeUah = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+        val energyNwh = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER)
+        
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        val thermalStatus = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            powerManager.currentThermalStatus
+        } else {
+            -1
+        }
 
         val cpuUsage = readCpuUsage()
+        val cpuTemp = readCpuTemperature()
 
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memInfo = ActivityManager.MemoryInfo()
@@ -68,6 +84,8 @@ class MetricsCollector(private val context: Context) {
         val appMemoryMb = if (procMemInfo.isNotEmpty()) {
             procMemInfo[0].totalPss / 1024f // PSS is in KB
         } else 0f
+        
+        val nativeHeapBytes = android.os.Debug.getNativeHeapAllocatedSize()
 
         return MetricsSnapshot(
             timestampMs = System.currentTimeMillis(),
@@ -76,9 +94,14 @@ class MetricsCollector(private val context: Context) {
             batteryTemperature = temperature,
             batteryCurrent = currentMa,
             batteryStatus = statusStr,
+            batteryChargeUah = chargeUah,
+            batteryEnergyNwh = energyNwh,
+            thermalStatus = thermalStatus,
             cpuUsagePercent = cpuUsage,
+            cpuTemperature = cpuTemp,
             appMemoryMb = appMemoryMb,
             availableRamMb = availableRamMb,
+            nativeHeapBytes = nativeHeapBytes,
         )
     }
 
@@ -120,5 +143,53 @@ class MetricsCollector(private val context: Context) {
         } catch (e: Exception) {
             -1f
         }
+    }
+
+    /**
+     * Attempts to read CPU/SoC temperature from sysfs thermal zones.
+     * Returns the average temperature in Celsius, or -1f if unsupported/denied.
+     */
+    private fun readCpuTemperature(): Float {
+        try {
+            val dir = java.io.File("/sys/class/thermal")
+            if (dir.exists() && dir.isDirectory) {
+                val zones = dir.listFiles { file -> file.name.startsWith("thermal_zone") }
+                if (zones != null) {
+                    var sum = 0f
+                    var count = 0
+                    for (zone in zones) {
+                        try {
+                            val typeFile = java.io.File(zone, "type")
+                            val tempFile = java.io.File(zone, "temp")
+                            if (typeFile.exists() && tempFile.exists()) {
+                                val type = typeFile.readText().trim().lowercase(java.util.Locale.US)
+                                // Look for common CPU/SoC thermal zone names
+                                if (type.contains("cpu") || type.contains("soc") || type.contains("tsens") || type.contains("mtktscpu")) {
+                                    val tempStr = tempFile.readText().trim()
+                                    var temp = tempStr.toFloatOrNull() ?: continue
+                                    // Some devices report in millidegrees Celsius
+                                    if (temp > 1000) {
+                                        temp /= 1000f
+                                    }
+                                    // Ignore clearly invalid temperatures
+                                    if (temp in -30f..150f) {
+                                        sum += temp
+                                        count++
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // Ignore read errors for individual zones
+                        }
+                    }
+                    if (count > 0) {
+                        return sum / count
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Ignored, likely permission denied or path missing
+        }
+        return -1f
     }
 }

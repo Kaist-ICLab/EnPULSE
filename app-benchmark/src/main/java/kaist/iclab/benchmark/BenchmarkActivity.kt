@@ -39,8 +39,10 @@ class BenchmarkActivity : AppCompatActivity() {
     }
 
     private lateinit var editInterval: EditText
+    private lateinit var editDuration: EditText
     private lateinit var editScenarioName: EditText
     private lateinit var btnStart: Button
+    private lateinit var btnPause: Button
     private lateinit var btnStop: Button
     private lateinit var tvStatus: TextView
 
@@ -136,6 +138,34 @@ class BenchmarkActivity : AppCompatActivity() {
             )
         })
 
+        // Duration selector
+        layout.addView(TextView(this).apply {
+            text = "Duration (minutes):"
+            textSize = 14f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+        })
+        layout.addView(TextView(this).apply {
+            text = "Auto-stop after this many minutes. Leave as 0 to run indefinitely."
+            textSize = 11.5f
+            setTextColor(0xFF666666.toInt())
+            setPadding(0, (2 * resources.displayMetrics.density).toInt(), 0, (4 * resources.displayMetrics.density).toInt())
+        })
+
+        editDuration = EditText(this).apply {
+            setText("0")
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            setSingleLine(true)
+        }
+        layout.addView(editDuration)
+
+        // Spacer
+        layout.addView(View(this).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                (12 * resources.displayMetrics.density).toInt()
+            )
+        })
+
         // Scenario name
         layout.addView(TextView(this).apply {
             text = "Scenario Name:"
@@ -174,10 +204,22 @@ class BenchmarkActivity : AppCompatActivity() {
             layoutParams = android.widget.LinearLayout.LayoutParams(
                 0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
             ).apply {
-                marginEnd = (8 * resources.displayMetrics.density).toInt()
+                marginEnd = (4 * resources.displayMetrics.density).toInt()
             }
         }
         btnLayout.addView(btnStart)
+        
+        btnPause = Button(this).apply {
+            text = "⏸ Pause"
+            isEnabled = false
+            setOnClickListener { pauseBenchmark() }
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+            ).apply {
+                marginEnd = (4 * resources.displayMetrics.density).toInt()
+            }
+        }
+        btnLayout.addView(btnPause)
 
         btnStop = Button(this).apply {
             text = "■ Stop"
@@ -262,10 +304,13 @@ class BenchmarkActivity : AppCompatActivity() {
 
         val intervalSeconds = editInterval.text.toString().toLongOrNull() ?: 60L
         val intervalMs = intervalSeconds * 1000L
+        
+        val durationMinutes = editDuration.text.toString().toLongOrNull() ?: 0L
 
         val intent = Intent(this, BenchmarkService::class.java).apply {
             putExtra(BenchmarkService.EXTRA_INTERVAL_MS, intervalMs)
             putExtra(BenchmarkService.EXTRA_SCENARIO_NAME, scenarioName)
+            putExtra(BenchmarkService.EXTRA_DURATION_MINUTES, durationMinutes)
         }
         ContextCompat.startForegroundService(this, intent)
 
@@ -276,6 +321,18 @@ class BenchmarkActivity : AppCompatActivity() {
             updateUiState()
             statusHandler.post(statusRunnable)
         }, 500)
+    }
+
+    private fun pauseBenchmark() {
+        val intent = Intent(this, BenchmarkService::class.java).apply {
+            action = if (BenchmarkService.isPaused) BenchmarkService.ACTION_RESUME else BenchmarkService.ACTION_PAUSE
+        }
+        startService(intent)
+        
+        statusHandler.postDelayed({
+            updateUiState()
+            updateStatusDisplay()
+        }, 300)
     }
 
     private fun stopBenchmark() {
@@ -293,9 +350,15 @@ class BenchmarkActivity : AppCompatActivity() {
 
     private fun updateUiState() {
         val running = BenchmarkService.isRunning
+        val paused = BenchmarkService.isPaused
+        
         btnStart.isEnabled = !running
         btnStop.isEnabled = running
+        btnPause.isEnabled = running
+        btnPause.text = if (paused) "▶ Resume" else "⏸ Pause"
+        
         editInterval.isEnabled = !running
+        editDuration.isEnabled = !running
         editScenarioName.isEnabled = !running
 
         if (!running) {
@@ -313,7 +376,7 @@ class BenchmarkActivity : AppCompatActivity() {
     private fun updateStatusDisplay() {
         if (!BenchmarkService.isRunning) return
 
-        val elapsed = (System.currentTimeMillis() - BenchmarkService.startTimeMs) / 1000
+        val elapsed = (System.currentTimeMillis() - BenchmarkService.startTimeMs - BenchmarkService.totalPausedMs) / 1000
         val hours = elapsed / 3600
         val minutes = (elapsed % 3600) / 60
         val seconds = elapsed % 60
@@ -329,9 +392,11 @@ class BenchmarkActivity : AppCompatActivity() {
         } else {
             "—"
         }
+        
+        val statusLabel = if (BenchmarkService.isPaused) "⏸ Paused" else "● Running"
 
         tvStatus.text = buildString {
-            appendLine("Status: ● Running")
+            appendLine("Status: $statusLabel")
             appendLine("Folder: ${BenchmarkService.currentFolderPath ?: "—"}")
             appendLine("Elapsed: ${hours}h ${minutes}m ${seconds}s")
             appendLine("Battery: $batteryDiffStr")
