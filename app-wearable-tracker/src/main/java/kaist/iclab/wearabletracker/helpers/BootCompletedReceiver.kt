@@ -28,11 +28,8 @@ class BootCompletedReceiver : BroadcastReceiver(), KoinComponent {
         val currentState = sensorController.controllerStateFlow.value
 
         // The BackgroundController uses persistent storage for its state.
-        // If it was RUNNING or PAUSED before the reboot, we should restart the service.
-        // PAUSED means the user intended collection to be active (just off-wrist at the time).
-        if (currentState.flag == ControllerState.FLAG.RUNNING ||
-            currentState.flag == ControllerState.FLAG.PAUSED
-        ) {
+        // If it was RUNNING before the reboot, we should restart the service.
+        if (currentState.flag == ControllerState.FLAG.RUNNING) {
             Log.i(TAG, "Resuming background sensor collection after reboot.")
             try {
                 sensorController.start()

@@ -61,7 +61,6 @@ class BackgroundController(
         BackgroundControllerServiceLocator.sensors = sensors
         BackgroundControllerServiceLocator.serviceNotification = serviceNotification
         BackgroundControllerServiceLocator.allowPartialSensing = allowPartialSensing
-        BackgroundControllerServiceLocator.offBodyDetector = OffBodyDetector(context)
     }
 
     override val controllerStateFlow: StateFlow<ControllerState> = controllerStateStorage.stateFlow
@@ -97,9 +96,7 @@ class BackgroundController(
         private lateinit var serviceNotification: ServiceNotification
         private var partialSensingAllowed: Boolean = false
 
-        private lateinit var offBodyDetector: OffBodyDetector
         private var serviceScope: CoroutineScope? = null
-        private var offBodyJob: Job? = null
 
         override fun onCreate() {
             super.onCreate()
@@ -120,7 +117,6 @@ class BackgroundController(
                 sensors = dependencies.sensors
                 serviceNotification = dependencies.serviceNotification
                 partialSensingAllowed = dependencies.allowPartialSensing
-                offBodyDetector = dependencies.offBodyDetector
                 return
             }
 
@@ -129,7 +125,6 @@ class BackgroundController(
             sensors = BackgroundControllerServiceLocator.sensors
             serviceNotification = BackgroundControllerServiceLocator.serviceNotification
             partialSensingAllowed = BackgroundControllerServiceLocator.allowPartialSensing
-            offBodyDetector = BackgroundControllerServiceLocator.offBodyDetector
         }
 
         private fun run() {
@@ -148,53 +143,9 @@ class BackgroundController(
             sensors.filter { it.sensorStateFlow.value.flag == SensorState.FLAG.ENABLED }
                 .forEach { it.start() }
             isServiceRunning = true
-
-            // Start off-body detection and observe wrist state
-            offBodyDetector.start()
-            serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-            offBodyJob = serviceScope?.launch {
-                offBodyDetector.isOnWrist.collectLatest { isWorn ->
-                    val currentFlag = stateStorage.get().flag
-                    if (!isWorn && currentFlag == ControllerState.FLAG.RUNNING) {
-                        pauseSensors()
-                    } else if (isWorn && currentFlag == ControllerState.FLAG.PAUSED) {
-                        resumeSensors()
-                    }
-                }
-            }
-        }
-
-        /**
-         * Pause all running sensors because the watch is not being worn.
-         * The foreground service stays alive to keep the off-body listener active.
-         */
-        private fun pauseSensors() {
-            Log.i(TAG, "Pausing sensors — watch not worn")
-            sensors.filter { it.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING }
-                .forEach { it.stop() }
-            stateStorage.set(ControllerState(ControllerState.FLAG.PAUSED, "Watch not worn"))
-        }
-
-        /**
-         * Resume sensors that were paused because the watch was not worn.
-         */
-        private fun resumeSensors() {
-            Log.i(TAG, "Resuming sensors — watch is worn again")
-            stateStorage.set(ControllerState(ControllerState.FLAG.RUNNING))
-            sensors.filter { it.sensorStateFlow.value.flag == SensorState.FLAG.ENABLED }
-                .forEach { it.start() }
         }
 
         private fun stop() {
-            // Clean up off-body detection
-            offBodyJob?.cancel()
-            offBodyJob = null
-            serviceScope?.cancel()
-            serviceScope = null
-            if (::offBodyDetector.isInitialized) {
-                offBodyDetector.stop()
-            }
-
             isServiceRunning = false
             stateStorage.set(ControllerState(ControllerState.FLAG.READY))
             sensors.filter {

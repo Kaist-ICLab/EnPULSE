@@ -10,7 +10,6 @@ data class ControllerState(
     enum class FLAG {
         DISABLED, // The tracker is not ready to run
         READY, // The tracker is ready to run
-        RUNNING, // The tracker is running
-        PAUSED // The tracker is paused (e.g., watch not worn)
+        RUNNING // The tracker is running
     }
 }

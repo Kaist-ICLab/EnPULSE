@@ -166,12 +166,6 @@ class SettingsViewModel(
                         }
                     }
 
-                    ControllerState.FLAG.PAUSED -> {
-                        // Sensors are paused (watch not worn) — keep SensorDataReceiver
-                        // alive since no data arrives anyway, and preserve recording
-                        // start time so the elapsed timer isn't reset on resume.
-                    }
-
                     else -> {
                         sensorDataReceiver.stopBackgroundCollection()
                         _recordingStartTime.value = null

@@ -8,6 +8,5 @@ object BackgroundControllerServiceLocator {
     lateinit var controllerStateStorage: StateStorage<ControllerState>
     lateinit var sensors: List<Sensor<*, *>>
     lateinit var serviceNotification: ServiceNotification
-    lateinit var offBodyDetector: OffBodyDetector
     var allowPartialSensing: Boolean = false
 }

@@ -51,7 +51,6 @@ fun DeviceStatusInfo(
     totalRecordCount: Int = 0,
     batteryLevel: Int = -1,
     isRecording: Boolean = false,
-    isPaused: Boolean = false,
     recordingStartTime: Long? = null,
     syncProgress: Float? = null,
     isPhoneConnected: Boolean = false,
@@ -75,24 +74,8 @@ fun DeviceStatusInfo(
                 PulsingDot(
                     modifier = Modifier.padding(end = 4.dp)
                 )
-            } else if (isPaused) {
-                PulsingDot(
-                    color = Color(0xFFFFA726), // Amber for paused
-                    modifier = Modifier.padding(end = 4.dp)
-                )
             }
             DeviceNameText(text = deviceInfo.name)
-        }
-
-        // Paused indicator
-        if (isPaused) {
-            Text(
-                text = stringResource(R.string.paused_not_worn),
-                style = TextStyle(fontSize = 9.sp, fontWeight = FontWeight.Medium),
-                color = Color(0xFFFFA726), // Amber
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 1.dp)
-            )
         }
 
         // Sync status: Show percentage if syncing, else show last sync time
