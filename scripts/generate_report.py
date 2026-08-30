@@ -26,12 +26,16 @@ except ImportError:
     print("Please install them using: pip install pandas matplotlib")
     sys.exit(1)
 
-def pull_latest_benchmark():
+def pull_latest_benchmark(serial=None):
     """Uses ADB to find and pull the latest EnPULSE benchmark folder."""
     print("📱 Searching for latest benchmark folder on device...")
     try:
+        adb_base = ["adb"]
+        if serial and serial != "default":
+            adb_base += ["-s", serial]
+            
         # List all folders matching Benchmark_* in the EnPULSE directory, sorted by time (latest first)
-        cmd = ["adb", "shell", "ls", "-td", "/sdcard/Download/EnPULSE/Benchmark_*"]
+        cmd = adb_base + ["shell", "ls", "-td", "/sdcard/Download/EnPULSE/Benchmark_*"]
         output = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL)
         folders = [line.strip() for line in output.splitlines() if line.strip()]
         
@@ -49,7 +53,7 @@ def pull_latest_benchmark():
         
         if not os.path.exists(local_path):
             print(f"📥 Pulling {folder_name} to {local_path}...")
-            subprocess.check_call(["adb", "pull", latest_folder, local_path], stdout=subprocess.DEVNULL)
+            subprocess.check_call(adb_base + ["pull", latest_folder, local_path], stdout=subprocess.DEVNULL)
         else:
             print(f"ℹ️ Folder already exists locally at {local_path}. Using existing data.")
             
@@ -183,12 +187,13 @@ def show_summary(folder_path):
 def main():
     parser = argparse.ArgumentParser(description="EnPULSE Benchmark Report Generator")
     parser.add_argument("--folder", help="Path to a local benchmark folder (bypasses ADB pull)")
+    parser.add_argument("--phone", help="ADB serial number of the target phone")
     args = parser.parse_args()
     
     if args.folder:
         folder_path = args.folder
     else:
-        folder_path = pull_latest_benchmark()
+        folder_path = pull_latest_benchmark(args.phone)
         
     if folder_path:
         generate_graph(folder_path)

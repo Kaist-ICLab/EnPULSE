@@ -338,7 +338,8 @@ class BenchmarkService : Service() {
         val elapsedMs = System.currentTimeMillis() - startTimeMs - totalPausedMs
         val hours = elapsedMs / 3600_000
         val minutes = (elapsedMs % 3600_000) / 60_000
-        val text = "⏸ PAUSED | 🔋 $latestBatteryLevel% | ⏱ ${hours}h ${minutes}m"
+        val seconds = (elapsedMs % 60_000) / 1000
+        val text = "⏸ PAUSED | 🔋 $latestBatteryLevel% | ⏱ ${hours}h ${minutes}m ${seconds}s"
         val notification = buildNotification(text, latestBatteryLevel)
         val nm = getSystemService(NotificationManager::class.java)
         nm.notify(NOTIFICATION_ID, notification)
@@ -347,7 +348,8 @@ class BenchmarkService : Service() {
     private fun updateNotification(snapshot: MetricsSnapshot, elapsedMs: Long) {
         val hours = elapsedMs / 3600_000
         val minutes = (elapsedMs % 3600_000) / 60_000
-        val text = "🔋 ${snapshot.batteryLevel}% | ⏱ ${hours}h ${minutes}m | CPU ${String.format("%.0f", snapshot.cpuUsagePercent)}%"
+        val seconds = (elapsedMs % 60_000) / 1000
+        val text = "🔋 ${snapshot.batteryLevel}% | ⏱ ${hours}h ${minutes}m ${seconds}s | CPU ${String.format("%.0f", snapshot.cpuUsagePercent)}%"
 
         val notification = buildNotification(text, snapshot.batteryLevel)
         val nm = getSystemService(NotificationManager::class.java)

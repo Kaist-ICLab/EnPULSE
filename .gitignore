@@ -29,3 +29,7 @@ google-services.json
 .artifacts
 /.claude/
 /.vscode/
+
+# Benchmark outputs
+scripts/outputs/
+scripts/results/

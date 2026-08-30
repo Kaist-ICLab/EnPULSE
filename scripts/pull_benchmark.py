@@ -27,7 +27,10 @@ WATCH_PACKAGE = "kaist.iclab.wearabletracker"
 
 def run_adb(serial: str, *args: str) -> str:
     """Run an ADB command and return stdout."""
-    cmd = ["adb", "-s", serial] + list(args)
+    cmd = ["adb"]
+    if serial and serial != "default":
+        cmd += ["-s", serial]
+    cmd += list(args)
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     if result.returncode != 0:
         print(f"  ⚠ ADB error: {result.stderr.strip()}", file=sys.stderr)
@@ -37,7 +40,10 @@ def run_adb(serial: str, *args: str) -> str:
 def pull_dir(serial: str, remote_path: str, local_path: str):
     """Pull a directory from the device."""
     os.makedirs(local_path, exist_ok=True)
-    cmd = ["adb", "-s", serial, "pull", remote_path, local_path]
+    cmd = ["adb"]
+    if serial and serial != "default":
+        cmd += ["-s", serial]
+    cmd += ["pull", remote_path, local_path]
     subprocess.run(cmd, capture_output=True, text=True, timeout=300)
 
 
@@ -64,7 +70,10 @@ def pull_batterystats(serial: str, output_file: str):
 
 def pull_bugreport(serial: str, output_file: str):
     """Pull a bugreport zip."""
-    cmd = ["adb", "-s", serial, "bugreport", output_file]
+    cmd = ["adb"]
+    if serial and serial != "default":
+        cmd += ["-s", serial]
+    cmd += ["bugreport", output_file]
     subprocess.run(cmd, capture_output=True, text=True, timeout=600)
 
 
