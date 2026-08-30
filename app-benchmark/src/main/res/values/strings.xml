@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">EnPULSE Device Benchmark Monitor</string>
+    <string name="app_name">EnPULSE Benchmark</string>
+    <string name="activity_title">EnPULSE Device Benchmark Monitor</string>
     <string name="notification_channel_name">Benchmark Logger</string>
     <string name="notification_title">Benchmark Running</string>
 </resources>

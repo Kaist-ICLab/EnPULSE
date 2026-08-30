@@ -58,6 +58,7 @@ class BenchmarkActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setTitle(R.string.activity_title)
         buildUi()
         requestNotificationPermission()
     }
