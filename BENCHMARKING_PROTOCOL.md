@@ -1,40 +1,21 @@
 # EnPULSE Benchmarking Protocol for CHI / Ubicomp
 
-This document outlines the formal evaluation protocol to validate the EnPULSE system's performance, resource consumption, and reliability for a top-tier systems paper submission (e.g., CHI, IMWUT).
+## 1. Hardware Environment
 
-## 1. Overview and Objectives
-The goal of this benchmarking is to provide defensible, empirical evidence that EnPULSE:
-1. **Is Resource Efficient**: Does not severely degrade device battery life or system performance during continuous background operation.
-2. **Is Highly Reliable**: Achieves high data yield (completeness) and maintains robust synchronization between the watch, phone, and server.
-3. **Is Scalable**: Handles different sensor configurations, from sparse intermittent sampling to dense, high-frequency continuous sensing.
-
----
-
-## 2. Hardware Environment
-
-### 2.1 Devices
+### 1.1 Devices
 | Device | Model | OS | Battery | Notes |
 |--------|-------|----|---------|-------|
 | Smartphone | Samsung Galaxy S22 | Android 13/14 (One UI 5/6) | 3,700 mAh | Primary phone app host |
 | Smartwatch | Samsung Galaxy Watch 8 40mm | Wear OS 5 | ~310 mAh | Wearable sensor host |
 
-### 2.2 Connectivity
+### 1.2 Connectivity
 | Link | Protocol | Notes |
 |------|----------|-------|
 | Watch ↔ Phone | Bluetooth LE | Standard Samsung pairing via Galaxy Wearable app |
 | Phone ↔ Server | Wi-Fi (stable, 5 GHz preferred) | Isolate cellular network variance; keep signal strong to avoid radio power spikes |
 
-### 2.3 Physical Environment
-*   **Room Temperature**: 20–25°C (consistent across all tests). Temperature affects battery chemistry; report ambient temp in the paper.
-*   **Location**: Indoor, stationary location with stable Wi-Fi coverage. Same physical spot for all tests to control for signal strength.
+### 1.3 Physical Environment
 *   **Charger**: Use the **same** charger and cable for all pre-test charging. Charge to **100%** and let the device sit on the charger for an additional 15 minutes after reaching 100% (to stabilize voltage readings).
-
-### 2.4 Physical Movement Simulation (Pedometer Shaker)
-*   **Device**: InnoCeller 6th Gen Wireless Auto Pedometer (이노셀러 6세대 무선 자동 만보기)
-*   **✅ USE for Phone & IMU testing**: Simulates continuous physical activity, preventing the OS from entering "Doze Mode" (deep sleep) which would artificially inflate battery life if left stationary on a desk. Also forces high-frequency sensors (ACC/Gyro) to continuously process realistic, uncompressed motion data.
-*   **❌ DO NOT USE for Bio-Sensors (HR, PPG, EDA, SkinTemp)**: These sensors require human skin. Strapping the watch to a plastic shaker will cause the Samsung Health SDK to either (a) max out LED brightness searching for a pulse (artificially high drain) or (b) shut down the sensor entirely (artificially low drain). Either outcome invalidates the results.
-
----
 
 ## 3. Preparation
 
