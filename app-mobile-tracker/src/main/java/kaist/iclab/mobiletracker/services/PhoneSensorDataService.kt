@@ -132,7 +132,6 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                     val prediction = runtime.run(chunkToProcess)
                     if (prediction.isSpeech) {
                         Log.d(TAG, "Phone YAMNet VAD detected speech! p=${prediction.speechProbability}")
-                        bleHelper.sendDetectionStateUpdates(mapOf("voice_activity" to "Speech"))
                     }
                 }
                 audioBufferIndex = 0
