@@ -8,10 +8,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -92,13 +90,18 @@ class BenchmarkActivity : AppCompatActivity() {
         })
         layout.addView(TextView(this).apply {
             text = "1. Set the sampling interval and scenario name.\n" +
-                   "2. Press '▶ Start' to begin background logging.\n" +
-                   "3. Start EnPULSE data collection and run your test.\n" +
-                   "4. Press '■ Stop' when done. Output is saved to:\n" +
-                   "   Downloads/EnPULSE/Benchmark_<Scenario>_<Date>/"
+                    "2. Press '▶ Start' to begin background logging.\n" +
+                    "3. Start EnPULSE data collection and run your test.\n" +
+                    "4. Press '■ Stop' when done. Output is saved to:\n" +
+                    "   Downloads/EnPULSE/Benchmark_<Scenario>_<Date>/"
             textSize = 12.5f
             setTextColor(0xFF555555.toInt())
-            setPadding(0, (4 * resources.displayMetrics.density).toInt(), 0, (14 * resources.displayMetrics.density).toInt())
+            setPadding(
+                0,
+                (4 * resources.displayMetrics.density).toInt(),
+                0,
+                (14 * resources.displayMetrics.density).toInt()
+            )
         })
 
         // Divider
@@ -119,10 +122,16 @@ class BenchmarkActivity : AppCompatActivity() {
             setTypeface(null, android.graphics.Typeface.BOLD)
         })
         layout.addView(TextView(this).apply {
-            text = "How often battery, CPU, and RAM metrics are sampled. Recommended: 60s for standard tests, 15–30s for fast micro-benchmarks."
+            text =
+                "How often battery, CPU, and RAM metrics are sampled. Recommended: 60s for standard tests, 15–30s for fast micro-benchmarks."
             textSize = 11.5f
             setTextColor(0xFF666666.toInt())
-            setPadding(0, (2 * resources.displayMetrics.density).toInt(), 0, (4 * resources.displayMetrics.density).toInt())
+            setPadding(
+                0,
+                (2 * resources.displayMetrics.density).toInt(),
+                0,
+                (4 * resources.displayMetrics.density).toInt()
+            )
         })
 
         editInterval = EditText(this).apply {
@@ -150,7 +159,12 @@ class BenchmarkActivity : AppCompatActivity() {
             text = "Auto-stop after this many minutes. Leave as 0 to run indefinitely."
             textSize = 11.5f
             setTextColor(0xFF666666.toInt())
-            setPadding(0, (2 * resources.displayMetrics.density).toInt(), 0, (4 * resources.displayMetrics.density).toInt())
+            setPadding(
+                0,
+                (2 * resources.displayMetrics.density).toInt(),
+                0,
+                (4 * resources.displayMetrics.density).toInt()
+            )
         })
 
         editDuration = EditText(this).apply {
@@ -175,10 +189,16 @@ class BenchmarkActivity : AppCompatActivity() {
             setTypeface(null, android.graphics.Typeface.BOLD)
         })
         layout.addView(TextView(this).apply {
-            text = "Name of the benchmarking scenario (e.g., A_Baseline, B_PhoneOnly, C_BioTracking, E2_Accelerometer)."
+            text =
+                "Name of the benchmarking scenario (e.g., A_Baseline, B_PhoneOnly, C_BioTracking, E2_Accelerometer)."
             textSize = 11.5f
             setTextColor(0xFF666666.toInt())
-            setPadding(0, (2 * resources.displayMetrics.density).toInt(), 0, (4 * resources.displayMetrics.density).toInt())
+            setPadding(
+                0,
+                (2 * resources.displayMetrics.density).toInt(),
+                0,
+                (4 * resources.displayMetrics.density).toInt()
+            )
         })
 
         editScenarioName = EditText(this).apply {
@@ -210,7 +230,7 @@ class BenchmarkActivity : AppCompatActivity() {
             }
         }
         btnLayout.addView(btnStart)
-        
+
         btnPause = Button(this).apply {
             text = "⏸ Pause"
             isEnabled = false
@@ -270,13 +290,14 @@ class BenchmarkActivity : AppCompatActivity() {
 
         val scrollView = android.widget.ScrollView(this)
         scrollView.addView(layout)
-        
+
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scrollView) { view, insets ->
-            val systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            val systemBars =
+                insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
             view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        
+
         setContentView(scrollView)
     }
 
@@ -284,16 +305,22 @@ class BenchmarkActivity : AppCompatActivity() {
         val pm = getSystemService(POWER_SERVICE) as android.os.PowerManager
         if (!pm.isIgnoringBatteryOptimizations(packageName)) {
             try {
-                val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = android.net.Uri.parse("package:$packageName")
-                }
+                val intent =
+                    Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = android.net.Uri.parse("package:$packageName")
+                    }
                 startActivity(intent)
             } catch (e: Exception) {
-                val intent = Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                val intent =
+                    Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                 startActivity(intent)
             }
         } else {
-            Toast.makeText(this, "Battery optimization is already disabled for Benchmark!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Battery optimization is already disabled for Benchmark!",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -306,7 +333,7 @@ class BenchmarkActivity : AppCompatActivity() {
 
         val intervalSeconds = editInterval.text.toString().toLongOrNull() ?: 60L
         val intervalMs = intervalSeconds * 1000L
-        
+
         val durationMinutes = editDuration.text.toString().toLongOrNull() ?: 0L
 
         val intent = Intent(this, BenchmarkService::class.java).apply {
@@ -327,10 +354,11 @@ class BenchmarkActivity : AppCompatActivity() {
 
     private fun pauseBenchmark() {
         val intent = Intent(this, BenchmarkService::class.java).apply {
-            action = if (BenchmarkService.isPaused) BenchmarkService.ACTION_RESUME else BenchmarkService.ACTION_PAUSE
+            action =
+                if (BenchmarkService.isPaused) BenchmarkService.ACTION_RESUME else BenchmarkService.ACTION_PAUSE
         }
         startService(intent)
-        
+
         statusHandler.postDelayed({
             updateUiState()
             updateStatusDisplay()
@@ -343,7 +371,8 @@ class BenchmarkActivity : AppCompatActivity() {
         }
         startService(intent)
 
-        Toast.makeText(this, "Benchmark stopped. Saved to Downloads/EnPULSE/", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Benchmark stopped. Saved to Downloads/EnPULSE/", Toast.LENGTH_LONG)
+            .show()
 
         statusHandler.postDelayed({
             updateUiState()
@@ -353,12 +382,12 @@ class BenchmarkActivity : AppCompatActivity() {
     private fun updateUiState() {
         val running = BenchmarkService.isRunning
         val paused = BenchmarkService.isPaused
-        
+
         btnStart.isEnabled = !running
         btnStop.isEnabled = running
         btnPause.isEnabled = running
         btnPause.text = if (paused) "▶ Resume" else "⏸ Pause"
-        
+
         editInterval.isEnabled = !running
         editDuration.isEnabled = !running
         editScenarioName.isEnabled = !running
@@ -378,14 +407,15 @@ class BenchmarkActivity : AppCompatActivity() {
     private fun updateStatusDisplay() {
         if (!BenchmarkService.isRunning) return
 
-        val elapsed = (System.currentTimeMillis() - BenchmarkService.startTimeMs - BenchmarkService.totalPausedMs) / 1000
+        val elapsed =
+            (System.currentTimeMillis() - BenchmarkService.startTimeMs - BenchmarkService.totalPausedMs) / 1000
         val hours = elapsed / 3600
         val minutes = (elapsed % 3600) / 60
         val seconds = elapsed % 60
-        
+
         val initialBattery = BenchmarkService.initialBatteryLevel
         val currentBattery = BenchmarkService.latestBatteryLevel
-        
+
         val batteryDiffStr = if (initialBattery != -1 && currentBattery != -1) {
             val dropped = initialBattery - currentBattery
             "$currentBattery% (Dropped: $dropped%)"
@@ -394,7 +424,7 @@ class BenchmarkActivity : AppCompatActivity() {
         } else {
             "—"
         }
-        
+
         val statusLabel = if (BenchmarkService.isPaused) "⏸ Paused" else "● Running"
 
         tvStatus.text = buildString {

@@ -37,7 +37,8 @@ class MetricsCollector(private val context: Context) {
     private var prevCpuTotal: Long = 0
 
     fun collect(): MetricsSnapshot {
-        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val batteryIntent =
+            context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
 
         val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
@@ -49,7 +50,8 @@ class MetricsCollector(private val context: Context) {
         val temperature = if (tempRaw > 0) tempRaw / 10.0f else -1f
 
         // Current in microamps, convert to milliamps
-        val currentMicroA = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+        val currentMicroA =
+            batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
         val currentMa = currentMicroA / 1000
 
         val statusInt = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
@@ -60,16 +62,20 @@ class MetricsCollector(private val context: Context) {
             BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "not_charging"
             else -> "unknown"
         }
-        
-        val chargeUah = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
-        val energyNwh = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER)
-        
-        val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-        val thermalStatus = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            powerManager.currentThermalStatus
-        } else {
-            -1
-        }
+
+        val chargeUah =
+            batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
+        val energyNwh =
+            batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER)
+
+        val powerManager =
+            context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        val thermalStatus =
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                powerManager.currentThermalStatus
+            } else {
+                -1
+            }
 
         val cpuUsage = readCpuUsage()
         val cpuTemp = readCpuTemperature()
@@ -84,7 +90,7 @@ class MetricsCollector(private val context: Context) {
         val appMemoryMb = if (procMemInfo.isNotEmpty()) {
             procMemInfo[0].totalPss / 1024f // PSS is in KB
         } else 0f
-        
+
         val nativeHeapBytes = android.os.Debug.getNativeHeapAllocatedSize()
 
         return MetricsSnapshot(
@@ -164,7 +170,10 @@ class MetricsCollector(private val context: Context) {
                             if (typeFile.exists() && tempFile.exists()) {
                                 val type = typeFile.readText().trim().lowercase(java.util.Locale.US)
                                 // Look for common CPU/SoC thermal zone names
-                                if (type.contains("cpu") || type.contains("soc") || type.contains("tsens") || type.contains("mtktscpu")) {
+                                if (type.contains("cpu") || type.contains("soc") || type.contains("tsens") || type.contains(
+                                        "mtktscpu"
+                                    )
+                                ) {
                                     val tempStr = tempFile.readText().trim()
                                     var temp = tempStr.toFloatOrNull() ?: continue
                                     // Some devices report in millidegrees Celsius
