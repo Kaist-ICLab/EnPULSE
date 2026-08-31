@@ -12,6 +12,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import kaist.iclab.benchmark.mobile.R
+import kotlinx.coroutines.launch
 
 /**
  * Foreground service that periodically collects device metrics and writes them to a CSV.
@@ -127,10 +128,6 @@ class BenchmarkService : Service() {
                 }
 
                 updateNotification(snapshot, elapsedMs)
-                Log.d(
-                    TAG,
-                    "Tick: battery=${snapshot.batteryLevel}%, cpu=${snapshot.cpuUsagePercent}%"
-                )
             } catch (e: Exception) {
                 Log.e(TAG, "Error collecting metrics", e)
             }
@@ -155,6 +152,10 @@ class BenchmarkService : Service() {
         csvWriter = CsvWriter(applicationContext)
         handler = Handler(Looper.getMainLooper())
         createNotificationChannel()
+
+        // Start foreground immediately in onCreate to prevent RemoteServiceException
+        val notification = buildNotification("Starting...", 0)
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -190,41 +191,39 @@ class BenchmarkService : Service() {
         targetDurationMs = durationMins * 60_000L
         val scenarioName = intent?.getStringExtra(EXTRA_SCENARIO_NAME) ?: "unnamed"
 
-        // Start foreground immediately
-        val notification = buildNotification("Starting...", 0)
-        startForeground(NOTIFICATION_ID, notification)
-
-        // Acquire partial wake lock
+        // Acquire partial wake lock with a 24-hour timeout safety net
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
             "EnPULSE-Benchmark::MetricsLogger"
-        ).apply { acquire() }
+        ).apply { acquire(24 * 60 * 60 * 1000L) }
 
-        // Open CSV file
-        try {
-            currentFolderPath = csvWriter.open(scenarioName)
-            Log.i(TAG, "CSV folder created: $currentFolderPath")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to create CSV file", e)
-            stopSelf()
-            return START_NOT_STICKY
+        // Use a coroutine to prevent main thread blocking for File IO
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                val folder = csvWriter.open(scenarioName)
+                currentFolderPath = folder
+                Log.i(TAG, "CSV folder created: $folder")
+
+                startTimeMs = System.currentTimeMillis()
+                totalPausedMs = 0L
+                isPaused = false
+                initialBatteryLevel = -1
+                latestBatteryLevel = -1
+                initialBatteryChargeUah = -1L
+                latestBatteryChargeUah = -1L
+                maxCpuTemperature = -1f
+                maxNativeHeapBytes = -1L
+                maxAppMemoryMb = -1f
+                isRunning = true
+
+                // Take an initial measurement immediately, then schedule recurring
+                handler.post(tickRunnable)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to create CSV file", e)
+                stopSelf()
+            }
         }
-
-        startTimeMs = System.currentTimeMillis()
-        totalPausedMs = 0L
-        isPaused = false
-        initialBatteryLevel = -1
-        latestBatteryLevel = -1
-        initialBatteryChargeUah = -1L
-        latestBatteryChargeUah = -1L
-        maxCpuTemperature = -1f
-        maxNativeHeapBytes = -1L
-        maxAppMemoryMb = -1f
-        isRunning = true
-
-        // Take an initial measurement immediately, then schedule recurring
-        handler.post(tickRunnable)
 
         return START_STICKY
     }

@@ -28,13 +28,6 @@ class BenchmarkActivity : AppCompatActivity() {
 
     companion object {
         private const val NOTIFICATION_PERMISSION_CODE = 1001
-
-        private val INTERVAL_OPTIONS = arrayOf(
-            "15 seconds" to 15_000L,
-            "30 seconds" to 30_000L,
-            "60 seconds (default)" to 60_000L,
-            "120 seconds" to 120_000L,
-        )
     }
 
     private lateinit var editInterval: EditText

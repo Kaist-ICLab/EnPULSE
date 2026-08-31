@@ -12,7 +12,7 @@ android {
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "kaist.iclab.benchmark.wearable"
+        applicationId = "kaist.iclab.benchmark"
         minSdk = 30
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
@@ -64,4 +64,7 @@ dependencies {
 
     // core
     implementation(libs.androidx.core.ktx)
+
+    // wearable data layer
+    implementation(libs.android.gms.wearable)
 }

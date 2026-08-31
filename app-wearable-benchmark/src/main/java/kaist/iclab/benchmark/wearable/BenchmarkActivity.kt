@@ -35,10 +35,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -51,10 +53,13 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.Chip
+import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.input.RemoteInputIntentHelper
+import kotlinx.coroutines.launch
 
 /**
  * Wear OS benchmark UI using Jetpack Compose for Wear.
@@ -142,11 +147,16 @@ fun WatchBenchmarkScreen(
     var batteryLevel by remember { mutableStateOf("—") }
     var showInstructions by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var hasData by remember { mutableStateOf(BenchmarkService.hasStoredData(context)) }
+
     // Periodic status refresh
     DisposableEffect(Unit) {
         val handler = Handler(Looper.getMainLooper())
         val runnable = object : Runnable {
             override fun run() {
+                val wasRunning = isRunning
                 isRunning = BenchmarkService.isRunning
                 isPaused = BenchmarkService.isPaused
                 if (isRunning) {
@@ -160,6 +170,9 @@ fun WatchBenchmarkScreen(
                     } else if (current != -1) {
                         "$current%"
                     } else "—"
+                } else if (wasRunning) {
+                    // Update hasData only when transitioning from running to stopped
+                    hasData = BenchmarkService.hasStoredData(context)
                 }
                 handler.postDelayed(this, 1000)
             }
@@ -203,7 +216,7 @@ fun WatchBenchmarkScreen(
 
                 item {
                     LabeledInput(
-                        label = "Interval (sec)",
+                        label = "Sampling Interval (seconds)",
                         value = intervalText,
                         onValueChange = { intervalText = it },
                         placeholder = "60",
@@ -213,7 +226,7 @@ fun WatchBenchmarkScreen(
 
                 item {
                     LabeledInput(
-                        label = "Duration (min)",
+                        label = "Duration (minutes)",
                         value = durationText,
                         onValueChange = { durationText = it },
                         placeholder = "0 = ∞",
@@ -245,17 +258,82 @@ fun WatchBenchmarkScreen(
                 // Guidelines Toggle Button
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
-                    Button(
+                    Chip(
                         onClick = { showInstructions = !showInstructions },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF333333)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                    ) {
+                        colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF222222)),
+                        modifier = Modifier.fillMaxWidth(),
+                        label = {
+                            Text(
+                                text = if (showInstructions) "▲ Hide Guidelines" else "ℹ View Guidelines",
+                                fontSize = 12.sp,
+                                color = Color.White
+                            )
+                        }
+                    )
+                }
+
+                // Manage Data Buttons
+                if (hasData) {
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (showInstructions) "▲ Hide Guidelines" else "ℹ View Guidelines",
-                            fontSize = 11.sp,
-                            color = Color.White
+                            text = "Stored Data",
+                            color = Color(0xFF999999),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            textAlign = TextAlign.Start
+                        )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Chip(
+                            onClick = {
+                                Toast.makeText(context, "Sending All Data...", Toast.LENGTH_SHORT)
+                                    .show()
+                                scope.launch {
+                                    DataTransferManager.sendAllDataToPhone(context)
+                                }
+                            },
+                            colors = ChipDefaults.primaryChipColors(
+                                backgroundColor = Color(
+                                    0xFF1E88E5
+                                )
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            label = {
+                                Text(
+                                    text = "Send All to Phone",
+                                    fontSize = 12.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Chip(
+                            onClick = {
+                                BenchmarkService.deleteAllData(context)
+                                hasData = BenchmarkService.hasStoredData(context)
+                                Toast.makeText(context, "All Data Deleted", Toast.LENGTH_SHORT)
+                                    .show()
+                            },
+                            colors = ChipDefaults.chipColors(backgroundColor = Color(0xFFE53935)),
+                            modifier = Modifier.fillMaxWidth(),
+                            label = {
+                                Text(
+                                    text = "Delete All Data",
+                                    fontSize = 12.sp,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         )
                     }
                 }
@@ -312,30 +390,32 @@ fun WatchBenchmarkScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp)
                             .background(
-                                Color(0xFF222222),
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                                Color(0xFF1E1E1E),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
                             )
-                            .padding(8.dp)
+                            .padding(12.dp)
                     ) {
                         Text(
-                            text = "Status: $statusLabel",
-                            color = if (isPaused) Color.Yellow else Color(0xFF4CAF50),
-                            fontSize = 12.sp,
+                            text = statusLabel,
+                            color = if (isPaused) Color(0xFFFFB300) else Color(0xFF43A047),
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Folder: $folderStr",
-                            color = Color(0xFFCCCCCC),
-                            fontSize = 11.sp,
+                            color = Color(0xFF999999),
+                            fontSize = 10.sp,
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Elapsed: ${hours}h ${minutes}m ${seconds}s",
-                            color = Color.White,
+                            color = Color(0xFFDDDDDD),
                             fontSize = 12.sp,
                         )
                         Text(
                             text = "Battery: $batteryLevel",
-                            color = Color.White,
+                            color = Color(0xFFDDDDDD),
                             fontSize = 12.sp,
                         )
                     }

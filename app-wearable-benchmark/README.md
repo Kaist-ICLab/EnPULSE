@@ -1,16 +1,21 @@
 # EnPULSE Watch Benchmark (`app-wearable-benchmark`)
 
-A standalone, lightweight Wear OS module designed specifically for benchmarking watch resource consumption (battery, CPU, and memory) during the EnPULSE system evaluation.
+A standalone, lightweight Wear OS module designed specifically for benchmarking watch resource
+consumption (battery, CPU, and memory) during the EnPULSE system evaluation.
 
 ## Why a standalone app?
 
-By decoupling the metrics collection from the core `tracker-library`, we ensure that the benchmarking tools themselves do not artificially inflate power consumption or cause data bottlenecks. It uses standard Android APIs with a Jetpack Compose UI tailored for Wear OS.
+By decoupling the metrics collection from the core `tracker-library`, we ensure that the
+benchmarking tools themselves do not artificially inflate power consumption or cause data
+bottlenecks. It uses standard Android APIs with a Jetpack Compose UI tailored for Wear OS.
 
 ## Features
 
-* **Zero-Supervision Logging**: Runs securely in the background via a `ForegroundService` with a partial `WakeLock`. You can walk away while it collects data.
+* **Zero-Supervision Logging**: Runs securely in the background via a `ForegroundService` with a
+  partial `WakeLock`. You can walk away while it collects data.
 * **Crash Resilience**: Writes data incrementally to a CSV file.
-* **Detailed Metrics**: Captures high-resolution power and hardware statistics specific to the wearable device.
+* **Detailed Metrics**: Captures high-resolution power and hardware statistics specific to the
+  wearable device.
 * **Auto-Summary**: Automatically calculates drain rates and total duration when stopped.
 
 ## What is Recorded
@@ -54,7 +59,8 @@ Build and install via ADB to your watch:
 
 ### 3. Data Extraction
 
-On Wear OS, `MediaStore` is often restricted or unreliable. Thus, data is saved directly to the app's external files directory.
+On Wear OS, `MediaStore` is often restricted or unreliable. Thus, data is saved directly to the
+app's external files directory.
 
 Each test run creates a new timestamped folder containing `metrics.csv` and `summary.txt`.
 

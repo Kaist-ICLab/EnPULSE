@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
+import kotlinx.coroutines.launch
 
 /**
  * Foreground service that periodically collects device metrics and writes them to a CSV.
@@ -71,6 +72,33 @@ class BenchmarkService : Service() {
 
         var maxAppMemoryMb: Float = -1f
             private set
+
+        /**
+         * Checks if there are any existing benchmark data folders stored on the device.
+         * 
+         * @param context The application context.
+         * @return `true` if at least one benchmark data folder exists, `false` otherwise.
+         */
+        fun hasStoredData(context: android.content.Context): Boolean {
+            val baseDir = context.getExternalFilesDir("Benchmarks") ?: return false
+            return baseDir.exists() && baseDir.isDirectory && (baseDir.listFiles { file ->
+                file.isDirectory && file.name.startsWith(
+                    "watch-"
+                )
+            }?.isNotEmpty() == true)
+        }
+
+        /**
+         * Deletes all benchmark data folders stored on the device.
+         * 
+         * @param context The application context.
+         */
+        fun deleteAllData(context: android.content.Context) {
+            val baseDir = context.getExternalFilesDir("Benchmarks") ?: return
+            if (baseDir.exists() && baseDir.isDirectory) {
+                baseDir.listFiles()?.forEach { it.deleteRecursively() }
+            }
+        }
     }
 
     private lateinit var metricsCollector: MetricsCollector
@@ -96,7 +124,7 @@ class BenchmarkService : Service() {
             if (targetDurationMs > 0 && elapsedMs >= targetDurationMs) {
                 Log.i(TAG, "Auto-stop duration reached: ${targetDurationMs / 60000} mins")
                 playAutoStopSound()
-                stopSelf()
+                performStop()
                 return
             }
 
@@ -125,10 +153,6 @@ class BenchmarkService : Service() {
                 }
 
                 updateNotification(snapshot, elapsedMs)
-                Log.d(
-                    TAG,
-                    "Tick: battery=${snapshot.batteryLevel}%, cpu=${snapshot.cpuUsagePercent}%"
-                )
             } catch (e: Exception) {
                 Log.e(TAG, "Error collecting metrics", e)
             }
@@ -153,12 +177,16 @@ class BenchmarkService : Service() {
         csvWriter = CsvWriter(applicationContext)
         handler = Handler(Looper.getMainLooper())
         createNotificationChannel()
+
+        // Start foreground immediately in onCreate to prevent RemoteServiceException
+        val notification = buildNotification("Starting...", 0)
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
-                stopSelf()
+                performStop()
                 return START_NOT_STICKY
             }
 
@@ -187,46 +215,52 @@ class BenchmarkService : Service() {
         targetDurationMs = durationMins * 60_000L
         val scenarioName = intent?.getStringExtra(EXTRA_SCENARIO_NAME) ?: "unnamed"
 
-        // Start foreground immediately
-        val notification = buildNotification("Starting...", 0)
-        startForeground(NOTIFICATION_ID, notification)
-
-        // Acquire partial wake lock
+        // Acquire partial wake lock with a 24-hour timeout safety net
         val pm = getSystemService(POWER_SERVICE) as PowerManager
         wakeLock = pm.newWakeLock(
             PowerManager.PARTIAL_WAKE_LOCK,
             "EnPULSE-WatchBenchmark::MetricsLogger"
-        ).apply { acquire() }
+        ).apply { acquire(24 * 60 * 60 * 1000L) }
 
-        // Open CSV file
-        try {
-            currentFolderPath = csvWriter.open(scenarioName)
-            Log.i(TAG, "CSV folder created: $currentFolderPath")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to create CSV file", e)
-            stopSelf()
-            return START_NOT_STICKY
+        // Use a coroutine to prevent main thread blocking for File IO
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                val folder = csvWriter.open(scenarioName)
+                currentFolderPath = folder
+                Log.i(TAG, "CSV folder created: $folder")
+
+                startTimeMs = System.currentTimeMillis()
+                totalPausedMs = 0L
+                isPaused = false
+                initialBatteryLevel = -1
+                latestBatteryLevel = -1
+                initialBatteryChargeUah = -1L
+                latestBatteryChargeUah = -1L
+                maxCpuTemperature = -1f
+                maxNativeHeapBytes = -1L
+                maxAppMemoryMb = -1f
+                isRunning = true
+
+                // Take an initial measurement immediately, then schedule recurring
+                handler.post(tickRunnable)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to create CSV file", e)
+                stopSelf()
+            }
         }
-
-        startTimeMs = System.currentTimeMillis()
-        totalPausedMs = 0L
-        isPaused = false
-        initialBatteryLevel = -1
-        latestBatteryLevel = -1
-        initialBatteryChargeUah = -1L
-        latestBatteryChargeUah = -1L
-        maxCpuTemperature = -1f
-        maxNativeHeapBytes = -1L
-        maxAppMemoryMb = -1f
-        isRunning = true
-
-        // Take an initial measurement immediately, then schedule recurring
-        handler.post(tickRunnable)
 
         return START_STICKY
     }
 
-    override fun onDestroy() {
+    private var isStopping = false
+
+    /**
+     * Gracefully stops the benchmark recording, calculates the summary statistics,
+     * writes the summary to the CSV folder, and initiates data transfer to the phone.
+     */
+    private fun performStop() {
+        if (isStopping) return
+        isStopping = true
         isRunning = false
         handler.removeCallbacks(tickRunnable)
 
@@ -287,6 +321,27 @@ class BenchmarkService : Service() {
             }
             csvWriter.writeSummary(summaryText)
         }
+        csvWriter.close()
+
+        val finalFolder = currentFolderPath
+        if (finalFolder != null) {
+            val notification = buildNotification("Stopping & sending data...", latestBatteryLevel)
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.notify(NOTIFICATION_ID, notification)
+
+            val ctx = applicationContext
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                DataTransferManager.sendFolderToPhone(ctx, finalFolder)
+                stopSelf()
+            }
+        } else {
+            stopSelf()
+        }
+    }
+
+    override fun onDestroy() {
+        isRunning = false
+        handler.removeCallbacks(tickRunnable)
         csvWriter.close()
 
         try {

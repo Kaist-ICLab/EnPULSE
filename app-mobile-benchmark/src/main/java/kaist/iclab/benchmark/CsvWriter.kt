@@ -45,9 +45,10 @@ class CsvWriter(private val context: Context) {
 
             val sanitizedName = scenarioName.replace(Regex("[^a-zA-Z0-9_-]"), "_")
             val timestamp = FILE_DATE_FORMAT.format(Date())
-            val folderName = "phone-Benchmark_${sanitizedName}_$timestamp"
+            val deviceModel = android.os.Build.MODEL.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val folderName = "phone-${deviceModel}_${sanitizedName}_$timestamp"
 
-            val relativeDir = "${Environment.DIRECTORY_DOWNLOADS}/$BASE_DIRECTORY/$folderName"
+            val relativeDir = "${Environment.DIRECTORY_DOWNLOADS}/$BASE_DIRECTORY/$folderName/"
             folderPath = relativeDir
             fileName = "metrics.csv"
 

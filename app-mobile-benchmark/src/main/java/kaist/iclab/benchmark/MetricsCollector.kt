@@ -9,22 +9,37 @@ import java.io.RandomAccessFile
 
 /**
  * Snapshot of device resource metrics at a single point in time.
+ *
+ * @property timestampMs The time the snapshot was taken, in milliseconds since the epoch.
+ * @property batteryLevel Current battery level as a percentage (0-100).
+ * @property batteryVoltage Current battery voltage in millivolts (mV).
+ * @property batteryTemperature Current battery temperature in degrees Celsius (°C).
+ * @property batteryCurrent Current battery current in milliamperes (mA). Negative indicates discharging, positive indicates charging.
+ * @property batteryStatus String representation of battery status (e.g., "charging", "discharging", "full", "not_charging", "unknown").
+ * @property batteryChargeUah Remaining battery capacity in microampere-hours (µAh).
+ * @property batteryEnergyNwh Remaining battery energy in nanowatt-hours (nWh).
+ * @property thermalStatus OS-level thermal status code (API 29+), indicating thermal throttling state.
+ * @property cpuUsagePercent Overall CPU usage percentage (0-100) since the last snapshot.
+ * @property cpuTemperature Best-effort average SoC/CPU temperature in degrees Celsius (°C).
+ * @property appMemoryMb Amount of memory (PSS) currently used by this application process in megabytes (MB).
+ * @property availableRamMb Amount of free system RAM available in megabytes (MB).
+ * @property nativeHeapBytes Amount of native heap memory allocated by this process in bytes.
  */
 data class MetricsSnapshot(
     val timestampMs: Long,
-    val batteryLevel: Int,          // 0-100 %
-    val batteryVoltage: Int,        // mV
-    val batteryTemperature: Float,  // °C
-    val batteryCurrent: Int,        // mA (negative = discharging)
-    val batteryStatus: String,      // "charging" | "discharging" | "full" | "not_charging" | "unknown"
-    val batteryChargeUah: Long,     // Microamp-hours
-    val batteryEnergyNwh: Long,     // Nanowatt-hours
-    val thermalStatus: Int,         // OS thermal status code (API 29+)
-    val cpuUsagePercent: Float,     // 0-100
-    val cpuTemperature: Float,     // Best-effort SoC/CPU temp in °C
-    val appMemoryMb: Float,        // MB used by this process
-    val availableRamMb: Float,     // MB free system RAM
-    val nativeHeapBytes: Long,     // Native heap allocated
+    val batteryLevel: Int,
+    val batteryVoltage: Int,
+    val batteryTemperature: Float,
+    val batteryCurrent: Int,
+    val batteryStatus: String,
+    val batteryChargeUah: Long,
+    val batteryEnergyNwh: Long,
+    val thermalStatus: Int,
+    val cpuUsagePercent: Float,
+    val cpuTemperature: Float,
+    val appMemoryMb: Float,
+    val availableRamMb: Float,
+    val nativeHeapBytes: Long,
 )
 
 /**
@@ -36,6 +51,12 @@ class MetricsCollector(private val context: Context) {
     private var prevCpuIdle: Long = 0
     private var prevCpuTotal: Long = 0
 
+    /**
+     * Collects all available device resource metrics using standard Android APIs.
+     * This function reads battery state, CPU usage, CPU temperature, and memory usage.
+     * 
+     * @return A [MetricsSnapshot] object containing the collected metrics.
+     */
     fun collect(): MetricsSnapshot {
         val batteryIntent =
             context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
@@ -52,7 +73,16 @@ class MetricsCollector(private val context: Context) {
         // Current in microamps, convert to milliamps
         val currentMicroA =
             batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
-        val currentMa = currentMicroA / 1000
+        val currentMa = if (currentMicroA != Int.MIN_VALUE && currentMicroA != 0) {
+            currentMicroA / 1000
+        } else {
+            val avgLink = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE)
+            if (avgLink != Int.MIN_VALUE && avgLink != 0) {
+                avgLink / 1000
+            } else {
+                -1
+            }
+        }
 
         val statusInt = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
         val statusStr = when (statusInt) {

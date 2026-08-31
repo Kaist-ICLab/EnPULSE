@@ -43,7 +43,8 @@ class CsvWriter(private val context: Context) {
 
             val sanitizedName = scenarioName.replace(Regex("[^a-zA-Z0-9_-]"), "_")
             val timestamp = FILE_DATE_FORMAT.format(Date())
-            val folderName = "watch-Benchmark_${sanitizedName}_$timestamp"
+            val deviceModel = android.os.Build.MODEL.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            val folderName = "watch-${deviceModel}_${sanitizedName}_$timestamp"
 
             val baseDir = context.getExternalFilesDir("Benchmarks")
                 ?: throw IllegalStateException("External files directory is not available")
