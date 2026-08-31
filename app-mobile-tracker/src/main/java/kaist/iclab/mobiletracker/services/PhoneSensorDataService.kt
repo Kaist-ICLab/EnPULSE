@@ -186,7 +186,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
             // Convert library sensor ID (e.g., "Location", "AppUsageLog") to campaign table name format
             val campaignSensorName = sensor.id.toCampaignSensorName()
 
-            if (activeSensors.contains(campaignSensorName)) {
+            if (activeSensors.contains(campaignSensorName) || sensor.id == "Audio") {
                 if (sensor is ActivityRecognitionSensor) {
                     sensor.addListener(activityRecognitionListener)
                 } else if (sensor is AudioSensor) {

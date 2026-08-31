@@ -287,7 +287,7 @@ class GestureSensor(
         if (!eventActive) return
 
         val shouldClassify = synchronized(dataLock) {
-            audioBuffer.write(entity.samples.toShortArray())
+            audioBuffer.write(entity.samples)
             if (!audioBuffer.isFull() || imuWindow.size < CLASSIFIER_WINDOW_FRAMES) {
                 return
             }

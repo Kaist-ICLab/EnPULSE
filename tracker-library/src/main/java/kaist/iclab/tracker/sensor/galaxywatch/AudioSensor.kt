@@ -58,7 +58,7 @@ class AudioSensor(
         val received: Long,
         val timestamp: Long,
         val sampleRateHz: Int,
-        val samples: List<Short>,
+        val samples: ShortArray,
     ) : SensorEntity()
 
     override val id: String = "Audio"
@@ -117,7 +117,7 @@ class AudioSensor(
                     received = timestamp,
                     timestamp = timestamp,
                     sampleRateHz = OUTPUT_SAMPLE_RATE,
-                    samples = readBuffer.copyOfRange(0, readCount).toList()
+                    samples = readBuffer.copyOfRange(0, readCount)
                 )
                 listeners.forEach { it.invoke(entity) }
             }
