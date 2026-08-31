@@ -21,6 +21,8 @@ import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
+import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
+import kaist.iclab.tracker.sensor.phone.PhoneVadRuntime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -71,6 +73,10 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     // Guards against duplicate registration / batch processing on repeated onStartCommand
     private var listenersRegistered = false
     private var batchProcessingJob: Job? = null
+    private var vadRuntime: PhoneVadRuntime? = null
+    
+    private val audioBuffer = ShortArray(PhoneVadRuntime.INPUT_SAMPLES)
+    private var audioBufferIndex = 0
 
     // Listener just sends to channel
     private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate { sensor ->
@@ -105,8 +111,40 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         }
     }
 
+    private val audioListener: (SensorEntity) -> Unit = listener@{ entity ->
+        val audioEntity = entity as? AudioSensor.Entity ?: return@listener
+
+        var srcPos = 0
+        var remainingSrc = audioEntity.samples.size
+
+        while (remainingSrc > 0) {
+            val spaceLeft = PhoneVadRuntime.INPUT_SAMPLES - audioBufferIndex
+            val toCopy = minOf(remainingSrc, spaceLeft)
+            
+            System.arraycopy(audioEntity.samples, srcPos, audioBuffer, audioBufferIndex, toCopy)
+            audioBufferIndex += toCopy
+            srcPos += toCopy
+            remainingSrc -= toCopy
+
+            if (audioBufferIndex == PhoneVadRuntime.INPUT_SAMPLES) {
+                vadRuntime?.let { runtime ->
+                    val chunkToProcess = audioBuffer.copyOf()
+                    val prediction = runtime.run(chunkToProcess)
+                    if (prediction.isSpeech) {
+                        Log.d(TAG, "Phone YAMNet VAD detected speech! p=${prediction.speechProbability}")
+                        bleHelper.sendDetectionStateUpdates(mapOf("voice_activity" to "Speech"))
+                    }
+                }
+                audioBufferIndex = 0
+            }
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        if (vadRuntime == null) {
+            vadRuntime = PhoneVadRuntime(this)
+        }
         startForegroundService()
         registerListeners()
         startBatchProcessing()
@@ -151,6 +189,8 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
             if (activeSensors.contains(campaignSensorName)) {
                 if (sensor is ActivityRecognitionSensor) {
                     sensor.addListener(activityRecognitionListener)
+                } else if (sensor is AudioSensor) {
+                    sensor.addListener(audioListener)
                 } else {
                     sensor.addListener(listener[sensor.id]!!)
                 }
@@ -234,6 +274,8 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
             }
         }
 
+        vadRuntime?.close()
+        vadRuntime = null
         super.onDestroy()
     }
 

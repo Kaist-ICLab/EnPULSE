@@ -260,8 +260,6 @@ class BenchmarkService : Service() {
                 appendLine("Interval:        ${intervalMs / 1000} seconds")
             }
             csvWriter.writeSummary(summaryText)
-        }
-        
         csvWriter.close()
 
         try {

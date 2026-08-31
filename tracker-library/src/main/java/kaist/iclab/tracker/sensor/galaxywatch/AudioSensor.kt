@@ -45,8 +45,7 @@ class AudioSensor(
     companion object {
         private const val AUDIO_SAMPLE_RATE = 16000
         private const val READ_CHUNK_SIZE = 320
-        private const val DOWNSAMPLE_STEP = 16
-        private const val OUTPUT_SAMPLE_RATE = AUDIO_SAMPLE_RATE / DOWNSAMPLE_STEP
+        private const val OUTPUT_SAMPLE_RATE = AUDIO_SAMPLE_RATE
     }
 
     @Serializable
@@ -108,22 +107,17 @@ class AudioSensor(
         repositoryScope = scope
         recordingJob = scope.launch {
             val readBuffer = ShortArray(READ_CHUNK_SIZE)
-            val downsampledBuffer = ShortArray(READ_CHUNK_SIZE / DOWNSAMPLE_STEP)
 
             while (currentCoroutineContext().isActive) {
                 val readCount = audioRecord?.read(readBuffer, 0, READ_CHUNK_SIZE) ?: -1
                 if (readCount <= 0) continue
-
-                for (index in readBuffer.indices step DOWNSAMPLE_STEP) {
-                    downsampledBuffer[index / DOWNSAMPLE_STEP] = readBuffer[index]
-                }
 
                 val timestamp = System.currentTimeMillis()
                 val entity = Entity(
                     received = timestamp,
                     timestamp = timestamp,
                     sampleRateHz = OUTPUT_SAMPLE_RATE,
-                    samples = downsampledBuffer.toList()
+                    samples = readBuffer.copyOfRange(0, readCount).toList()
                 )
                 listeners.forEach { it.invoke(entity) }
             }
