@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.db.entity
 
-import io.objectbox.annotation.BaseEntity as OBXBaseEntity
 import io.objectbox.annotation.ConflictStrategy
 import io.objectbox.annotation.Id
 import io.objectbox.annotation.Index
@@ -9,6 +8,7 @@ import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import io.objectbox.annotation.BaseEntity as OBXBaseEntity
 
 @Serializable
 @OBXBaseEntity

@@ -11,6 +11,7 @@ abstract class WatchBaseEntity {
     var id: Long = 0
     var eventId: String = ""
     var received: Long = 0
+
     @Index
     var timestamp: Long = 0
 

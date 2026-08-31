@@ -10,8 +10,8 @@ import kaist.iclab.mobiletracker.db.entity.watch.EDAEntity
 import kaist.iclab.mobiletracker.db.entity.watch.HeartRateEntity
 import kaist.iclab.mobiletracker.db.entity.watch.PPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.SkinTemperatureEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 
 /**

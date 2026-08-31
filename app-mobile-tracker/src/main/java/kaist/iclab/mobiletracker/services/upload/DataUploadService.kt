@@ -20,6 +20,12 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
 import kaist.iclab.mobiletracker.services.SurveyService
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.completionEvents
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.lock
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.notifyCompletion
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.runInFlight
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.start
+import kaist.iclab.mobiletracker.services.upload.DataUploadService.Companion.uploadState
 import kaist.iclab.mobiletracker.ui.utils.getSensorTitleResId
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper

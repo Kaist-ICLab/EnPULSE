@@ -76,7 +76,8 @@ class MetricsCollector(private val context: Context) {
         val currentMa = if (currentMicroA != Int.MIN_VALUE && currentMicroA != 0) {
             currentMicroA / 1000
         } else {
-            val avgLink = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE)
+            val avgLink =
+                batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE)
             if (avgLink != Int.MIN_VALUE && avgLink != 0) {
                 avgLink / 1000
             } else {

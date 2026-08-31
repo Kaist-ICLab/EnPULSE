@@ -3,17 +3,14 @@ package kaist.iclab.mobiletracker.webapp.bridge
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
+import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 

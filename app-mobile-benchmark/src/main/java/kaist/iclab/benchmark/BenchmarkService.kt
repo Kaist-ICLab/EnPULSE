@@ -78,6 +78,7 @@ class BenchmarkService : Service() {
     private lateinit var csvWriter: CsvWriter
     private lateinit var handler: Handler
     private var wakeLock: PowerManager.WakeLock? = null
+
     private var intervalMs: Long = 60_000L
     private var targetDurationMs: Long = 0L
     private var pauseStartTimeMs: Long = 0L
@@ -198,6 +199,7 @@ class BenchmarkService : Service() {
             "EnPULSE-Benchmark::MetricsLogger"
         ).apply { acquire(24 * 60 * 60 * 1000L) }
 
+
         // Use a coroutine to prevent main thread blocking for File IO
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
             try {
@@ -297,6 +299,8 @@ class BenchmarkService : Service() {
             }
         } catch (_: Exception) {
         }
+
+
 
         Log.i(TAG, "Service stopped. Folder: $currentFolderPath")
         super.onDestroy()

@@ -3,6 +3,7 @@ package kaist.iclab.mobiletracker.repository.handlers
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.mobiletracker.repository.SensorRecord
+import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler.Companion.SENSOR_ID
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put

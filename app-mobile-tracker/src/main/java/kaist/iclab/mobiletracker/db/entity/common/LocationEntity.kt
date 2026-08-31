@@ -8,7 +8,6 @@ import kaist.iclab.mobiletracker.repository.SensorRecord
 import kotlinx.serialization.Serializable
 import java.util.Locale
 import java.util.UUID
-import kotlin.String
 
 /**
  * ObjectBox entity for location data from both phone and watch devices, differentiated by

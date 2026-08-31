@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.services.upload
 
-import kotlinx.coroutines.CancellationException
 import android.util.Log
 import io.github.jan.supabase.auth.auth
 import kaist.iclab.mobiletracker.Constants
@@ -13,6 +12,7 @@ import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 

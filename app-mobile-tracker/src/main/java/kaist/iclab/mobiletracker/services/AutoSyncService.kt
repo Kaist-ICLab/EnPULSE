@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.services
 
-import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -18,6 +17,7 @@ import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.services.upload.DataUploadService
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.NotificationHelper
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

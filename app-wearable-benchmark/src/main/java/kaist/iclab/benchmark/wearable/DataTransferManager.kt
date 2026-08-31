@@ -30,7 +30,11 @@ object DataTransferManager {
             }
 
             val zipFile = File("${folderFile.absolutePath}.zip")
-            ZipUtil.zipFolder(sourceFolderPath = folderPath, zipFilePath = zipFile.absolutePath, includeSelf = true)
+            ZipUtil.zipFolder(
+                sourceFolderPath = folderPath,
+                zipFilePath = zipFile.absolutePath,
+                includeSelf = true
+            )
             sendZipFileToPhone(context, zipFile, "Data sent successfully", "Failed to send data")
         }
 

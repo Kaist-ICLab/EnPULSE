@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.ui.theme.Dimens
@@ -30,7 +31,6 @@ import kaist.iclab.mobiletracker.webapp.WebAppActivity
 import kaist.iclab.mobiletracker.webapp.WebAppConfig
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
 import org.koin.compose.koinInject
-import androidx.core.net.toUri
 
 /**
  * Top-level tab listing webapps registered in [WebAppRegistry].

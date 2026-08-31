@@ -5,7 +5,6 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.services.AutoSyncManager
 import kaist.iclab.mobiletracker.services.SyncTimestampService

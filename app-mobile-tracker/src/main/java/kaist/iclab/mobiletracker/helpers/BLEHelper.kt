@@ -1,16 +1,15 @@
 package kaist.iclab.mobiletracker.helpers
 
 
-import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.net.toUri
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
-
+import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
@@ -24,6 +23,7 @@ import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -38,7 +38,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import androidx.core.net.toUri
 
 /**
  * Helper class for managing BLE communication with wearable devices.

@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.BatteryManager
 import android.os.Build
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
-import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
