@@ -40,7 +40,8 @@ include(":app-wearable-tracker")
 include(":app-mobile-tracker")
 
 // Benchmark
-include(":app-benchmark")
+include(":app-mobile-benchmark")
+include(":app-wearable-benchmark")
 
 // Test Modules
 //include(":test-controller")

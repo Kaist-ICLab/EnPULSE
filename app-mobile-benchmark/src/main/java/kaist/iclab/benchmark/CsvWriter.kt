@@ -26,7 +26,7 @@ class CsvWriter(private val context: Context) {
             "cpu_usage_pct,cpu_temperature_c,app_memory_mb,available_ram_mb,native_heap_bytes\n"
 
         private val ISO_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US)
-        private val FILE_DATE_FORMAT = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+        private val FILE_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
     }
 
     private var outputStream: OutputStream? = null
@@ -45,7 +45,7 @@ class CsvWriter(private val context: Context) {
 
             val sanitizedName = scenarioName.replace(Regex("[^a-zA-Z0-9_-]"), "_")
             val timestamp = FILE_DATE_FORMAT.format(Date())
-            val folderName = "Benchmark_${sanitizedName}_$timestamp"
+            val folderName = "phone-Benchmark_${sanitizedName}_$timestamp"
             
             val relativeDir = "${Environment.DIRECTORY_DOWNLOADS}/$BASE_DIRECTORY/$folderName"
             folderPath = relativeDir

@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
+import kaist.iclab.benchmark.mobile.R
 
 /**
  * Foreground service that periodically collects device metrics and writes them to a CSV.
@@ -260,6 +261,7 @@ class BenchmarkService : Service() {
                 appendLine("Interval:        ${intervalMs / 1000} seconds")
             }
             csvWriter.writeSummary(summaryText)
+        }
         csvWriter.close()
 
         try {

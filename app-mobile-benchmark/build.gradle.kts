@@ -7,7 +7,7 @@ kotlin {
 }
 
 android {
-    namespace = "kaist.iclab.benchmark"
+    namespace = "kaist.iclab.benchmark.mobile"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {

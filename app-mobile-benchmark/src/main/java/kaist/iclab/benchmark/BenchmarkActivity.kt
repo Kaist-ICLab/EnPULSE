@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import kaist.iclab.benchmark.mobile.R
 
 /**
  * Simple UI for the benchmark logger.
