@@ -395,10 +395,10 @@ def cmd_install():
 
     proj_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ALL_APPS = [
-        {"id": "app-mobile-benchmark", "type": "Benchmark", "device": "Phone", "task": ":app-mobile-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Mobile-Benchmark.apk")},
-        {"id": "app-wearable-benchmark", "type": "Benchmark", "device": "Watch", "task": ":app-wearable-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Watch-Benchmark.apk")},
-        {"id": "app-mobile-tracker", "type": "Tracker", "device": "Phone", "task": ":app-mobile-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-tracker", "build", "outputs", "apk", "debug", "EnPULSE-Mobile.apk")},
-        {"id": "app-wearable-tracker", "type": "Tracker", "device": "Watch", "task": ":app-wearable-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-tracker", "build", "outputs", "apk", "debug", "EnPULSE-Watch.apk")}
+        {"id": "app-mobile-benchmark", "type": "Benchmark", "device": "Phone", "pkg": "kaist.iclab.benchmark", "task": ":app-mobile-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Mobile-Benchmark.apk")},
+        {"id": "app-wearable-benchmark", "type": "Benchmark", "device": "Watch", "pkg": "kaist.iclab.benchmark", "task": ":app-wearable-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Watch-Benchmark.apk")},
+        {"id": "app-mobile-tracker", "type": "Tracker", "device": "Phone", "pkg": "kaist.iclab.trackerSystem", "task": ":app-mobile-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-tracker", "build", "outputs", "apk", "debug", "EnPULSE-Mobile.apk")},
+        {"id": "app-wearable-tracker", "type": "Tracker", "device": "Watch", "pkg": "kaist.iclab.trackerSystem", "task": ":app-wearable-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-tracker", "build", "outputs", "apk", "debug", "EnPULSE-Watch.apk")}
     ]
 
     print("\n📦 Which apps do you want to install?")
@@ -506,6 +506,15 @@ def cmd_install():
         
         for app in apps_for_this_device:
             success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=120)
+            
+            # If signature mismatch occurs, automatically uninstall old version and reinstall
+            raw_reason = (err or out or "").strip()
+            if not (success and "Success" in out) and "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in raw_reason:
+                pkg_name = app.get("pkg")
+                if pkg_name:
+                    run_adb(["-s", address, "uninstall", pkg_name], timeout=30)
+                    success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=120)
+            
             if success and "Success" in out:
                 results_msg.append(f"{app['id']} ✅")
             else:
