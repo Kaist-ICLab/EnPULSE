@@ -141,7 +141,8 @@ fun PasswordDialog(
                                 val errorMsg = if (result is Result.Error) {
                                     val exception = result.exception
                                     val extracted = ErrorClassifier.extractErrorMessage(exception)
-                                    val raw = exception.message ?: resources.getString(R.string.campaign_password_invalid)
+                                    val raw = exception.message
+                                        ?: resources.getString(R.string.campaign_password_invalid)
                                     val cleanMsg = if (raw.startsWith("joinCampaign: ")) {
                                         raw.removePrefix("joinCampaign: ")
                                     } else {
@@ -156,7 +157,8 @@ fun PasswordDialog(
                             }
                         } catch (e: Exception) {
                             val extracted = ErrorClassifier.extractErrorMessage(e)
-                            val raw = e.message ?: resources.getString(R.string.campaign_password_error)
+                            val raw =
+                                e.message ?: resources.getString(R.string.campaign_password_error)
                             val cleanMsg = if (raw.startsWith("joinCampaign: ")) {
                                 raw.removePrefix("joinCampaign: ")
                             } else {

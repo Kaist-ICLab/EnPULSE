@@ -36,8 +36,11 @@ class VADEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.inferenceTimeMs = inferenceTimeMs
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,isSpeech,speechProbability,inferenceTimeMs"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$isSpeech,$speechProbability,$inferenceTimeMs"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,isSpeech,speechProbability,inferenceTimeMs"
+
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$isSpeech,$speechProbability,$inferenceTimeMs"
 
     override fun toRecord() = SensorRecord(
         id = id,

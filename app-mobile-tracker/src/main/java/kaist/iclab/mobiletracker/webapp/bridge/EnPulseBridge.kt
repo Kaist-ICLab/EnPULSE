@@ -54,7 +54,11 @@ class EnPulseBridge(
                     "getAllSurvey" -> surveyHandler.getAllSurvey(request)
                     "submitSurveyResponse" -> surveyHandler.submitSurveyResponse(request)
                     "getSensorData" -> sensorHandler.getSensorData(request, callerWebAppId)
-                    "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(request, callerWebAppId)
+                    "getLatestSensorReading" -> sensorHandler.getLatestSensorReading(
+                        request,
+                        callerWebAppId
+                    )
+
                     "getStorageData" -> storageHandler.get(request, callerWebAppId)
                     "setStorageData" -> storageHandler.set(request, callerWebAppId)
                     "getDeviceInfo" -> deviceHandler.getDeviceInfo(request)
@@ -70,7 +74,11 @@ class EnPulseBridge(
                     // Accepts both names: the TS client posts action "log" with a payload that also
                     // carries `action: "logEvent"`, so either reading of the envelope dispatches here.
                     "log" -> logHandler.log(request, callerWebAppId)
-                    else -> BridgeResponse(request.requestId, "error", errorMessage = "Unknown action: ${request.action}")
+                    else -> BridgeResponse(
+                        request.requestId,
+                        "error",
+                        errorMessage = "Unknown action: ${request.action}"
+                    )
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

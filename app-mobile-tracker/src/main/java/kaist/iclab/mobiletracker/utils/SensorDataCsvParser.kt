@@ -99,7 +99,9 @@ object SensorDataCsvParser {
             for (line in lines) {
                 val trimmedLine = line.trim()
 
-                if (trimmedLine.replace(" ", "").equals(sectionName.replace(" ", ""), ignoreCase = true)) {
+                if (trimmedLine.replace(" ", "")
+                        .equals(sectionName.replace(" ", ""), ignoreCase = true)
+                ) {
                     inSection = true
                     headerFound = false
                     continue
@@ -237,7 +239,8 @@ object SensorDataCsvParser {
                     hr = parts[3].toIntOrNull() ?: return null,
                     hrStatus = parts[4].toIntOrNull() ?: return null,
                     ibi = parts[5].split(";").mapNotNull { it.trim().toIntOrNull() }.toIntArray(),
-                    ibiStatus = parts[6].split(";").mapNotNull { it.trim().toIntOrNull() }.toIntArray()
+                    ibiStatus = parts[6].split(";").mapNotNull { it.trim().toIntOrNull() }
+                        .toIntArray()
                 )
             } else null
         } catch (e: Exception) {
@@ -260,7 +263,11 @@ object SensorDataCsvParser {
                 )
             } else null
         } catch (e: Exception) {
-            Log.e(AppConfig.LogTags.PHONE_BLE, "Error parsing skin temperature row: ${e.message}", e)
+            Log.e(
+                AppConfig.LogTags.PHONE_BLE,
+                "Error parsing skin temperature row: ${e.message}",
+                e
+            )
             null
         }
     }

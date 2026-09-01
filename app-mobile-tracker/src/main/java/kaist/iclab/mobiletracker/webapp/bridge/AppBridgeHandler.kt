@@ -24,7 +24,7 @@ class AppBridgeHandler(
         val params = request.payload.jsonObject
         val message = params["message"]?.jsonPrimitive?.content ?: ""
         val durationStr = params["duration"]?.jsonPrimitive?.content ?: "short"
-        
+
         val duration = if (durationStr == "long") Toast.LENGTH_LONG else Toast.LENGTH_SHORT
 
         // Must run on UI thread
@@ -37,7 +37,8 @@ class AppBridgeHandler(
 
     fun vibrate(request: BridgeRequest): BridgeResponse {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            val vibratorManager =
+                context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             vibratorManager.defaultVibrator
         } else {
             @Suppress("DEPRECATION")
@@ -63,7 +64,7 @@ class AppBridgeHandler(
             channelId = channelId,
             channelName = "WebApp Notifications"
         )
-        
+
         val notification = NotificationHelper.buildNotification(
             context = context,
             channelId = channelId,
@@ -71,7 +72,7 @@ class AppBridgeHandler(
             text = message,
             smallIcon = R.drawable.ic_launcher_foreground
         ).build()
-        
+
         val notificationId = message.hashCode()
         NotificationHelper.showNotification(context, notificationId, notification)
 

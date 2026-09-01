@@ -925,7 +925,10 @@ private fun DateRangePickerDialog(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = SimpleDateFormat("MMM d, yyyy", LocalLocale.current.platformLocale).format(
+                            text = SimpleDateFormat(
+                                "MMM d, yyyy",
+                                LocalLocale.current.platformLocale
+                            ).format(
                                 Date(
                                     startDate
                                 )
@@ -967,7 +970,10 @@ private fun DateRangePickerDialog(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = SimpleDateFormat("MMM d, yyyy", LocalLocale.current.platformLocale).format(
+                            text = SimpleDateFormat(
+                                "MMM d, yyyy",
+                                LocalLocale.current.platformLocale
+                            ).format(
                                 Date(
                                     endDate
                                 )

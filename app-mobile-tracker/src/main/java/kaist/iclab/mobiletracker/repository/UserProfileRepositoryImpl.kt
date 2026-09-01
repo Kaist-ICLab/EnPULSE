@@ -112,7 +112,8 @@ class UserProfileRepositoryImpl(
             // 3. Apply TimingSensor's config from the campaign_table row we just fetched above
             //    (name = TimingSensor.CAMPAIGN_TABLE_NAME) — same generic per-sensor config
             //    column every sensor will eventually read from, not a dedicated table.
-            val timingConfigJson = campaignSensorRepository.getSensorConfig(TimingSensor.CAMPAIGN_TABLE_NAME)
+            val timingConfigJson =
+                campaignSensorRepository.getSensorConfig(TimingSensor.CAMPAIGN_TABLE_NAME)
             timingSensorConfigStorage.set(
                 if (timingConfigJson != null) {
                     try {
@@ -136,7 +137,11 @@ class UserProfileRepositoryImpl(
             val surveys = surveyRepository.getCachedSurveys().configs
             watchSurveyConfigPusher.pushToWatch(surveys)
 
-            bleHelper.sendActiveSensorConfig(SensorTypeHelper.activeWatchSensorIds(campaignSensorRepository))
+            bleHelper.sendActiveSensorConfig(
+                SensorTypeHelper.activeWatchSensorIds(
+                    campaignSensorRepository
+                )
+            )
         } else {
             campaignSensorRepository.clearCache()
             surveyRepository.clearSurveys()

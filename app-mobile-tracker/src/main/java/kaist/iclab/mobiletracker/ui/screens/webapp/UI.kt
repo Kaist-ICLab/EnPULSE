@@ -121,7 +121,7 @@ fun WebAppRow(
                     )
             )
         }
-        
+
         if (isPinSupported) {
             TextButton(
                 onClick = {
@@ -143,12 +143,13 @@ fun WebAppRow(
                         val icon = (iconBitmap ?: iconCache.getBitmap(webApp.iconPath))
                             ?.let { IconCompat.createWithAdaptiveBitmap(it) }
                             ?: IconCompat.createWithResource(context, R.mipmap.ic_launcher)
-                        val shortcutInfo = ShortcutInfoCompat.Builder(context, "webapp_${webApp.id}")
-                            .setShortLabel(webApp.name)
-                            .setLongLabel(webApp.name)
-                            .setIcon(icon)
-                            .setIntent(intent)
-                            .build()
+                        val shortcutInfo =
+                            ShortcutInfoCompat.Builder(context, "webapp_${webApp.id}")
+                                .setShortLabel(webApp.name)
+                                .setLongLabel(webApp.name)
+                                .setIcon(icon)
+                                .setIntent(intent)
+                                .build()
                         ShortcutManagerCompat.requestPinShortcut(context, shortcutInfo, null)
                     }
                 },

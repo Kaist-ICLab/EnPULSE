@@ -171,7 +171,11 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 }
                 ContextCompat.startForegroundService(context, intent)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to start DataUploadService, will retry next cycle: ${e.message}", e)
+                Log.e(
+                    TAG,
+                    "Failed to start DataUploadService, will retry next cycle: ${e.message}",
+                    e
+                )
                 synchronized(lock) { pendingCompletions.remove(deferred) }
                 deferred.complete(Unit)
             }
@@ -449,7 +453,14 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 if (outcome.isUpToDate) {
                     upToDateSensors.add(displayName)
                 } else {
-                    results.add(SensorUploadResult(displayName, outcome.succeededCount, outcome.attemptedCount, outcome.isError))
+                    results.add(
+                        SensorUploadResult(
+                            displayName,
+                            outcome.succeededCount,
+                            outcome.attemptedCount,
+                            outcome.isError
+                        )
+                    )
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -492,7 +503,8 @@ class DataUploadService : LifecycleService(), KoinComponent {
             val results = tally.results
             val upToDateSensors = tally.upToDate
             // + 1 unit each for MicroEMA and Survey, which flush in one go rather than in batches.
-            val progress = BatchProgress(allSensorIds.sumOf { sensorUploadService.pendingBatchCount(it) } + 2)
+            val progress =
+                BatchProgress(allSensorIds.sumOf { sensorUploadService.pendingBatchCount(it) } + 2)
 
             updateProgress("", progress)
 
@@ -508,9 +520,20 @@ class DataUploadService : LifecycleService(), KoinComponent {
                             updateProgress(displayName, progress)
                         }
                         if (outcome.isError) {
-                            Log.e(TAG, "Upload failed for $sensorId: ${outcome.error?.message}", outcome.error)
+                            Log.e(
+                                TAG,
+                                "Upload failed for $sensorId: ${outcome.error?.message}",
+                                outcome.error
+                            )
                         }
-                        results.add(SensorUploadResult(displayName, outcome.succeededCount, outcome.attemptedCount, outcome.isError))
+                        results.add(
+                            SensorUploadResult(
+                                displayName,
+                                outcome.succeededCount,
+                                outcome.attemptedCount,
+                                outcome.isError
+                            )
+                        )
                     } else {
                         upToDateSensors.add(displayName)
                     }
@@ -521,14 +544,26 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 // No quarantine concept for MicroEMA/Survey — they're insert-only flushes, so
                 // result.data (the count Supabase actually accepted) doubles as both succeeded and
                 // attempted.
-                when (val result = surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
+                when (val result =
+                    surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
                     is Result.Success -> {
-                        if (result.data > 0) results.add(SensorUploadResult("MicroEMA", result.data, result.data, isError = false))
+                        if (result.data > 0) results.add(
+                            SensorUploadResult(
+                                "MicroEMA",
+                                result.data,
+                                result.data,
+                                isError = false
+                            )
+                        )
                         else upToDateSensors.add("MicroEMA")
                     }
 
                     is Result.Error -> {
-                        Log.e(TAG, "Failed to upload MicroEMA responses: ${result.message}", result.exception)
+                        Log.e(
+                            TAG,
+                            "Failed to upload MicroEMA responses: ${result.message}",
+                            result.exception
+                        )
                         results.add(SensorUploadResult("MicroEMA", 0, 0, isError = true))
                     }
                 }
@@ -540,12 +575,23 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 val displayName = localizedDisplayName(SurveyResponseDataHandler.SENSOR_ID)
                 when (val result = surveyResponseUploader.flush()) {
                     is Result.Success -> {
-                        if (result.data > 0) results.add(SensorUploadResult(displayName, result.data, result.data, isError = false))
+                        if (result.data > 0) results.add(
+                            SensorUploadResult(
+                                displayName,
+                                result.data,
+                                result.data,
+                                isError = false
+                            )
+                        )
                         else upToDateSensors.add(displayName)
                     }
 
                     is Result.Error -> {
-                        Log.e(TAG, "Failed to upload survey responses: ${result.message}", result.exception)
+                        Log.e(
+                            TAG,
+                            "Failed to upload survey responses: ${result.message}",
+                            result.exception
+                        )
                         results.add(SensorUploadResult(displayName, 0, 0, isError = true))
                     }
                 }
@@ -660,7 +706,11 @@ class DataUploadService : LifecycleService(), KoinComponent {
             pendingIntent = pendingIntent
         ).build()
 
-        NotificationHelper.showNotification(this, Constants.Notification.ID_DATA_UPLOAD_RESULT, notification)
+        NotificationHelper.showNotification(
+            this,
+            Constants.Notification.ID_DATA_UPLOAD_RESULT,
+            notification
+        )
         Log.d(TAG, "Result notification shown: ${succeeded.size} succeeded, ${failed.size} failed")
     }
 }

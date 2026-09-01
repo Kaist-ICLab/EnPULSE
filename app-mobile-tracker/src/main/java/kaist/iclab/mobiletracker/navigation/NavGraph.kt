@@ -91,7 +91,8 @@ fun NavGraph(
 //        400 // Fallback to 300ms if system resource is unavailable
 //    }
 
-    val animationDuration = integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
+    val animationDuration =
+        integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
 
     // Handle language change by recreating activity
     val onLanguageChanged: () -> Unit = {

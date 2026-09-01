@@ -7,7 +7,6 @@ import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
-import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
@@ -25,6 +24,7 @@ import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.TimingSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
+import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage

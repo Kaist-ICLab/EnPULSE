@@ -71,7 +71,11 @@ class SupabaseConfigManager(context: Context) {
             val code = conn.responseCode
             if (code == 200) {
                 val key = conn.inputStream.bufferedReader().use { it.readText() }.trim()
-                if (key.isNotBlank()) Result.success(key) else Result.failure(IllegalStateException("Empty anon key response"))
+                if (key.isNotBlank()) Result.success(key) else Result.failure(
+                    IllegalStateException(
+                        "Empty anon key response"
+                    )
+                )
             } else {
                 Result.failure(IllegalStateException("HTTP $code"))
             }

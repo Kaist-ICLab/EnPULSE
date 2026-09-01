@@ -1,4 +1,5 @@
 package kaist.iclab.mobiletracker.webapp
+
 import androidx.core.net.toUri
 import kaist.iclab.mobiletracker.storage.CouchbaseWebAppConfigStorage
 import kotlinx.coroutines.CoroutineScope
@@ -57,9 +58,17 @@ class PersistentWebAppRegistry(private val storage: CouchbaseWebAppConfigStorage
     override fun list() = storage.get().configs
 
     override fun findByUrl(url: String): WebAppConfig? {
-        val host = try { url.toUri().host } catch (_: Exception) { null } ?: return null
+        val host = try {
+            url.toUri().host
+        } catch (_: Exception) {
+            null
+        } ?: return null
         return storage.get().configs.find { config ->
-            val allowedHost = try { config.allowedOrigin.toUri().host } catch (_: Exception) { null }
+            val allowedHost = try {
+                config.allowedOrigin.toUri().host
+            } catch (_: Exception) {
+                null
+            }
             allowedHost != null && allowedHost == host
         }
     }

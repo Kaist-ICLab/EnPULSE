@@ -68,8 +68,18 @@ class MediaEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.dateModified = dateModified
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,operation,mediaType,storageType,uri,fileName,mimeType,size,dateAdded,dateModified"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$operation,$mediaType,$storageType,$uri,$fileName,$mimeType,$size,$dateAdded,$dateModified"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,operation,mediaType,storageType,uri,fileName,mimeType,size,dateAdded,dateModified"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Type" to (mimeType ?: "Unknown"), "Name" to (fileName?.take(30) ?: "Unknown")))
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$operation,$mediaType,$storageType,$uri,$fileName,$mimeType,$size,$dateAdded,$dateModified"
+
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf(
+            "Type" to (mimeType ?: "Unknown"),
+            "Name" to (fileName?.take(30) ?: "Unknown")
+        )
+    )
 }

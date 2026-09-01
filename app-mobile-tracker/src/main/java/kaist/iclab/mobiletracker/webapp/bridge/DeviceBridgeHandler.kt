@@ -45,7 +45,11 @@ class DeviceBridgeHandler(
     suspend fun getWatchConnectionStatus(request: BridgeRequest): BridgeResponse {
         val info = withTimeoutOrNull(3000L) {
             watchSensorRepository.getWatchConnectionInfo().first()
-        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Timeout querying watch status")
+        } ?: return BridgeResponse(
+            request.requestId,
+            "error",
+            errorMessage = "Timeout querying watch status"
+        )
 
         val data = buildJsonObject {
             put("status", info.status.name)

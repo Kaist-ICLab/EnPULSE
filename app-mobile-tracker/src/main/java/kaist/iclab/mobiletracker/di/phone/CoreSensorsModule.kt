@@ -8,10 +8,10 @@ import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
-import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
+import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module

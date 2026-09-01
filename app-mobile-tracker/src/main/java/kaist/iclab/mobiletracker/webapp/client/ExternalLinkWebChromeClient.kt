@@ -48,7 +48,11 @@ class ExternalLinkWebChromeClient : WebChromeClient() {
                         val intent = Intent(Intent.ACTION_VIEW, request.url)
                         tempView.context.startActivity(intent)
                     } catch (e: Exception) {
-                        Log.e(TAG, "Failed to launch external window from transport: ${request.url}", e)
+                        Log.e(
+                            TAG,
+                            "Failed to launch external window from transport: ${request.url}",
+                            e
+                        )
                     }
                     return true
                 }

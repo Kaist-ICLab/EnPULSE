@@ -85,7 +85,8 @@ class OnboardingViewModel(
     }
 
     suspend fun joinCampaign(password: String): Result<Boolean> {
-        val selectedCampaign = _uiState.value.selectedCampaign ?: return Result.Error(AppError.Validation("No campaign selected"))
+        val selectedCampaign = _uiState.value.selectedCampaign
+            ?: return Result.Error(AppError.Validation("No campaign selected"))
         return campaignRepository.joinCampaign(selectedCampaign.idString, password)
     }
 }

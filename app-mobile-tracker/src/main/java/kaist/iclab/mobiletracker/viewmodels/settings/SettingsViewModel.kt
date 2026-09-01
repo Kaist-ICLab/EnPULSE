@@ -130,7 +130,7 @@ class SettingsViewModel(
         if (!allGranted) {
             // Automatically request the missing permissions
             permissionManager.request(sensor.permissions)
-            
+
             // Wait for permissions to be granted, then enable the sensor
             observePermissionFlow(
                 permissions = sensor.permissions,
@@ -145,7 +145,7 @@ class SettingsViewModel(
             )
             return
         }
-        
+
         try {
             sensor.enable()
         } catch (e: Exception) {

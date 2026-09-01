@@ -204,9 +204,13 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                     is Result.Success -> {
                         timestampService.updateLastPhoneSensorData()
                         if (sensorId == "VAD") {
-                            Log.d(TAG, "Successfully stored batch of ${batchToInsert.size} VAD records in ObjectBox!")
+                            Log.d(
+                                TAG,
+                                "Successfully stored batch of ${batchToInsert.size} VAD records in ObjectBox!"
+                            )
                         }
                     }
+
                     is Result.Error -> Log.e(
                         TAG,
                         "Failed to insert batch for $sensorId: ${result.message}"

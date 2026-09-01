@@ -15,13 +15,17 @@ import java.util.Locale
 class WatchStressEntity : BaseEntity, CsvSerializable, RecordSerializable {
     @SerialName("rmssd_1m")
     var rmssd1m: Float = 0f
+
     @SerialName("ibi_count_1m")
     var ibiCount1m: Int = 0
+
     @SerialName("rmssd_5m")
     var rmssd5m: Float = 0f
+
     @SerialName("ibi_count_5m")
     var ibiCount5m: Int = 0
     var threshold: Float = 0f
+
     @SerialName("is_stressed")
     var isStressed: Boolean = false
 
@@ -52,6 +56,7 @@ class WatchStressEntity : BaseEntity, CsvSerializable, RecordSerializable {
 
     override fun csvHeader() =
         "eventId,uuid,received,timestamp,rmssd1m,ibiCount1m,rmssd5m,ibiCount5m,threshold,isStressed"
+
     override fun toCsvRow() =
         "$eventId,$uuid,$received,$timestamp,$rmssd1m,$ibiCount1m,$rmssd5m,$ibiCount5m,$threshold,$isStressed"
 

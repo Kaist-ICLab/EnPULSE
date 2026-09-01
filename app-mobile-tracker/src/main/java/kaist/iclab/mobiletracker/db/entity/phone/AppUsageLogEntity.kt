@@ -41,7 +41,12 @@ class AppUsageLogEntity : BaseEntity, CsvSerializable, RecordSerializable {
     }
 
     override fun csvHeader() = "eventId,uuid,received,timestamp,packageName,installedBy,eventType"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$packageName,$installedBy,$eventType"
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$packageName,$installedBy,$eventType"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Package" to packageName, "Event" to eventType.toString()))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Package" to packageName, "Event" to eventType.toString())
+    )
 }

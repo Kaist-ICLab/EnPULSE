@@ -32,7 +32,10 @@ class WebAppTriggerHandler(
             if (timestamp != null) {
                 val elapsed = System.currentTimeMillis() - timestamp
                 if (elapsed > Constants.Trigger.STALE_THRESHOLD_MS) {
-                    Log.w(TAG, "Discarded stale BLE $kind trigger: elapsed ${elapsed / 1000}s > ${Constants.Trigger.STALE_THRESHOLD_MS / 1000}s limit")
+                    Log.w(
+                        TAG,
+                        "Discarded stale BLE $kind trigger: elapsed ${elapsed / 1000}s > ${Constants.Trigger.STALE_THRESHOLD_MS / 1000}s limit"
+                    )
                     return true
                 }
             }
@@ -112,7 +115,11 @@ class WebAppTriggerHandler(
             intent.setPackage(context.packageName)
             context.sendBroadcast(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send broadcast/parse payload for BROADCAST_TRIGGER: ${e.message}", e)
+            Log.e(
+                TAG,
+                "Failed to send broadcast/parse payload for BROADCAST_TRIGGER: ${e.message}",
+                e
+            )
         }
     }
 

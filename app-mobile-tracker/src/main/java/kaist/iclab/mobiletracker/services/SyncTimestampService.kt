@@ -118,7 +118,9 @@ class SyncTimestampService(context: Context) {
      * which count that directly instead.
      */
     fun getUploadedRecordCountFromCursor(sensorId: String): Long =
-        (getUploadCursor(sensorId) - getUploadStats(sensorId).quarantinedRecordCount).coerceAtLeast(0L)
+        (getUploadCursor(sensorId) - getUploadStats(sensorId).quarantinedRecordCount).coerceAtLeast(
+            0L
+        )
 
     /**
      * How many consecutive upload cycles have ended in a [kaist.iclab.mobiletracker.repository.AppError.ServerRejected]
@@ -128,9 +130,11 @@ class SyncTimestampService(context: Context) {
      * quarantine logic. Reset to 0 whenever a cycle succeeds or the cursor moves past where it was
      * last recorded (both mean this exact spot is no longer stuck).
      */
-    fun getUploadFailureStreak(sensorId: String): Int = prefs.getInt("upload_failure_streak_$sensorId", 0)
+    fun getUploadFailureStreak(sensorId: String): Int =
+        prefs.getInt("upload_failure_streak_$sensorId", 0)
 
-    private fun getUploadFailureCursor(sensorId: String): Long = prefs.getLong("upload_failure_cursor_$sensorId", -1L)
+    private fun getUploadFailureCursor(sensorId: String): Long =
+        prefs.getLong("upload_failure_cursor_$sensorId", -1L)
 
     /**
      * Records that [sensorId]'s upload failed with a server rejection while stuck at [cursor].
@@ -138,7 +142,8 @@ class SyncTimestampService(context: Context) {
      * only if the *same* [cursor] fails again — a cursor that has moved on gets a fresh streak).
      */
     fun recordUploadFailureAtCursor(sensorId: String, cursor: Long): Int {
-        val streak = if (getUploadFailureCursor(sensorId) == cursor) getUploadFailureStreak(sensorId) + 1 else 1
+        val streak =
+            if (getUploadFailureCursor(sensorId) == cursor) getUploadFailureStreak(sensorId) + 1 else 1
         prefs.edit {
             putLong("upload_failure_cursor_$sensorId", cursor)
             putInt("upload_failure_streak_$sensorId", streak)
@@ -185,12 +190,19 @@ class SyncTimestampService(context: Context) {
      * @param quarantinedRecordCount How many records were in the quarantined batch (0 when
      * [succeededBatches] is being recorded instead).
      */
-    fun addUploadStats(sensorId: String, succeededBatches: Int = 0, quarantinedRecordCount: Int = 0) {
+    fun addUploadStats(
+        sensorId: String,
+        succeededBatches: Int = 0,
+        quarantinedRecordCount: Int = 0
+    ) {
         if (succeededBatches == 0 && quarantinedRecordCount == 0) return
         val current = getUploadStats(sensorId)
         prefs.edit {
             if (succeededBatches != 0) {
-                putLong("upload_succeeded_batches_$sensorId", current.succeededBatches + succeededBatches)
+                putLong(
+                    "upload_succeeded_batches_$sensorId",
+                    current.succeededBatches + succeededBatches
+                )
             }
             if (quarantinedRecordCount != 0) {
                 putLong("upload_quarantined_batches_$sensorId", current.quarantinedBatches + 1)
@@ -337,10 +349,10 @@ class SyncTimestampService(context: Context) {
         val allKeys = prefs.all.keys
         val keysToRemove = allKeys.filter {
             it.startsWith("last_upload_") || it.startsWith("upload_cursor_id_") ||
-                it.startsWith("upload_failure_cursor_") || it.startsWith("upload_failure_streak_") ||
-                it.startsWith("uploaded_record_count_") ||
-                it.startsWith("upload_succeeded_batches_") || it.startsWith("upload_quarantined_batches_") ||
-                it.startsWith("upload_quarantined_records_")
+                    it.startsWith("upload_failure_cursor_") || it.startsWith("upload_failure_streak_") ||
+                    it.startsWith("uploaded_record_count_") ||
+                    it.startsWith("upload_succeeded_batches_") || it.startsWith("upload_quarantined_batches_") ||
+                    it.startsWith("upload_quarantined_records_")
         }
         val editor = existingEditor ?: prefs.edit()
         keysToRemove.forEach { editor.remove(it) }

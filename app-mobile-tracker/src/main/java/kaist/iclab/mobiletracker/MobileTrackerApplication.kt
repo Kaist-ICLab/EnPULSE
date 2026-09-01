@@ -150,7 +150,8 @@ class MobileTrackerApplication : Application(), KoinComponent,
         // AutoSyncService.checkAndSyncIfNeeded() gates on, so this only restarts the service when
         // the user actually had logging running.
         try {
-            val syncTimestampService = getKoin().get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
+            val syncTimestampService =
+                getKoin().get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
             if (syncTimestampService.getDataCollectionStarted() != null) {
                 getKoin().get<kaist.iclab.mobiletracker.services.AutoSyncManager>().start()
             }
@@ -215,6 +216,7 @@ class MobileTrackerApplication : Application(), KoinComponent,
                             PhoneSensorDataService.start(this@MobileTrackerApplication)
                             surveyResponseCapture.start()
                         }
+
                         else -> {
                             PhoneSensorDataService.stop(this@MobileTrackerApplication)
                             surveyResponseCapture.stop()

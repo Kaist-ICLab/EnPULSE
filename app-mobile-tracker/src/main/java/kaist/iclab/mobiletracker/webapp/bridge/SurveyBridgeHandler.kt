@@ -42,15 +42,23 @@ class SurveyBridgeHandler(
         }
 
         if (surveyTitle.isNullOrBlank() && resolvedSurveyId.isNullOrBlank()) {
-            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey: No valid identifier provided (survey_title=$surveyTitle, survey_id=$surveyId, schedule_id=$scheduleId)")
+            return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Unknown survey: No valid identifier provided (survey_title=$surveyTitle, survey_id=$surveyId, schedule_id=$scheduleId)"
+            )
         }
 
         // deviceType == 0: phone surveys only, matching SurveySensorModule's config priming.
         val survey = surveyConfigStorage.get().configs.firstOrNull { config ->
             config.deviceType == 0 &&
-            (surveyTitle.isNullOrBlank() || config.title == surveyTitle) &&
-            (resolvedSurveyId.isNullOrBlank() || config.id.toString() == resolvedSurveyId)
-        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Unknown survey: Config not found matching criteria (survey_title=$surveyTitle, resolved_survey_id=$resolvedSurveyId, schedule_id=$scheduleId)")
+                    (surveyTitle.isNullOrBlank() || config.title == surveyTitle) &&
+                    (resolvedSurveyId.isNullOrBlank() || config.id.toString() == resolvedSurveyId)
+        } ?: return BridgeResponse(
+            request.requestId,
+            "error",
+            errorMessage = "Unknown survey: Config not found matching criteria (survey_title=$surveyTitle, resolved_survey_id=$resolvedSurveyId, schedule_id=$scheduleId)"
+        )
 
         if (!scheduleId.isNullOrBlank()) {
             scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
@@ -75,7 +83,11 @@ class SurveyBridgeHandler(
 
     fun submitSurveyResponse(request: BridgeRequest): BridgeResponse {
         val params = request.payload.jsonObject
-        val surveyId = params["survey_id"]?.jsonPrimitive?.content ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing survey_id")
+        val surveyId = params["survey_id"]?.jsonPrimitive?.content ?: return BridgeResponse(
+            request.requestId,
+            "error",
+            errorMessage = "Missing survey_id"
+        )
         val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = surveyId))
         val answers = params["response"]
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing response")

@@ -39,6 +39,7 @@ class WebAppRepositoryImpl(
                     }
                     webAppsData.size
                 }
+
                 is Result.Error -> throw result.exception
             }
         }
