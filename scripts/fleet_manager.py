@@ -195,13 +195,13 @@ def pull_device_data(device: dict) -> tuple:
     # Ensure connected
     run_adb(["connect", address], timeout=5)
     
-    local_path = os.path.join(os.path.dirname(__file__), "outputs", name)
+    local_path = os.path.expanduser(os.path.join("~", "Desktop", "EnPULSE-Data", name))
     os.makedirs(local_path, exist_ok=True)
     
-    # Pull the entire EnPULSE directory contents to outputs/<device_name>/ (For Phone)
+    # Pull the entire EnPULSE directory contents to ~/Desktop/EnPULSE-Data/<device_name>/ (For Phone)
     success_phone, out_p, err_p = run_adb(["-s", address, "pull", "/sdcard/Download/EnPULSE/.", local_path], timeout=300)
     
-    # Pull the Benchmarks directory contents to outputs/<device_name>/ (For Watch)
+    # Pull the Benchmarks directory contents to ~/Desktop/EnPULSE-Data/<device_name>/ (For Watch)
     success_watch, out_w, err_w = run_adb(["-s", address, "pull", "/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/.", local_path], timeout=300)
     
     if success_phone or success_watch:
@@ -324,7 +324,7 @@ def cmd_status():
 def cmd_pull():
     """
     Pulls benchmark data folders from all targeted devices in parallel.
-    Saves the data into the local 'outputs' directory.
+    Saves the data into ~/Desktop/EnPULSE-Data.
     """
     config = load_config()
     devices = config.get("devices", [])
