@@ -63,13 +63,14 @@ class VADSensor(
     override val id: String = "VAD"
     override val permissions: Array<String> get() = audioSensor.permissions
 
-    override val foregroundServiceTypes: Array<Int> get() = listOfNotNull(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-        } else {
-            null
-        }
-    ).toTypedArray()
+    override val foregroundServiceTypes: Array<Int>
+        get() = listOfNotNull(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            } else {
+                null
+            }
+        ).toTypedArray()
 
     private var interpreter: Interpreter? = null
     private var input: ByteBuffer? = null
@@ -84,14 +85,14 @@ class VADSensor(
 
     private val audioListener: (AudioSensor.Entity) -> Unit = listener@{ entity ->
         val config = configStateFlow.value
-        
+
         var srcPos = 0
         var remainingSrc = entity.samples.size
 
         while (remainingSrc > 0) {
             val spaceLeft = INPUT_SAMPLES - audioBufferIndex
             val toCopy = minOf(remainingSrc, spaceLeft)
-            
+
             System.arraycopy(entity.samples, srcPos, audioBuffer, audioBufferIndex, toCopy)
             audioBufferIndex += toCopy
             srcPos += toCopy
@@ -118,14 +119,14 @@ class VADSensor(
                 setUseXNNPACK(true)
             }
         )
-        
+
         input = ByteBuffer.allocateDirect(INPUT_SAMPLES * Float.SIZE_BYTES).order(ByteOrder.nativeOrder())
         output = ByteBuffer.allocateDirect(OUTPUT_CLASSES * Float.SIZE_BYTES).order(ByteOrder.nativeOrder())
         inputFloats = input?.asFloatBuffer()
         outputFloats = output?.asFloatBuffer()
-        
+
         validateContract()
-        
+
         audioBufferIndex = 0
         audioSensor.addListener(audioListener)
 
@@ -142,12 +143,12 @@ class VADSensor(
 
     override fun onStop() {
         audioSensor.removeListener(audioListener)
-        
+
         if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
             audioSensor.stop()
         }
         ownsAudioSensor = false
-        
+
         interpreter?.close()
         interpreter = null
         input = null
@@ -155,42 +156,39 @@ class VADSensor(
         inputFloats = null
         outputFloats = null
     }
-    
+
     @Synchronized
     private fun runInference(pcm16: ShortArray, timestamp: Long, speechThreshold: Float) {
         val startedNs = SystemClock.elapsedRealtimeNanos()
-        
+
         inputFloats?.rewind()
         for (sample in pcm16) {
             inputFloats?.put(sample / PCM_NORMALIZER)
         }
         input?.rewind()
         output?.rewind()
-        
+
         interpreter?.run(input, output)
-        
+
         outputFloats?.rewind()
         outputFloats?.get(scores)
-        
+
         val elapsedNs = SystemClock.elapsedRealtimeNanos() - startedNs
         val inferenceTimeMs = elapsedNs / 1_000_000f
-        
+
         val speechProb = scores[SPEECH_CLASS_INDEX]
         val isSpeech = speechProb > speechThreshold
-        
+
         if (isSpeech) {
-            android.util.Log.d("VADSensor", "Speech detected! probability=${speechProb}")
+            val entity = Entity(
+                received = System.currentTimeMillis(),
+                timestamp = timestamp,
+                isSpeech = isSpeech,
+                speechProbability = speechProb,
+                inferenceTimeMs = inferenceTimeMs
+            )
+            listeners.forEach { it.invoke(entity) }
         }
-        
-        val entity = Entity(
-            received = System.currentTimeMillis(),
-            timestamp = timestamp,
-            isSpeech = isSpeech,
-            speechProbability = speechProb,
-            inferenceTimeMs = inferenceTimeMs
-        )
-        
-        listeners.forEach { it.invoke(entity) }
     }
 
     private fun validateContract() {
