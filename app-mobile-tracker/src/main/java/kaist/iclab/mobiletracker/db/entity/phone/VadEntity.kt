@@ -48,7 +48,7 @@ class VADEntity : BaseEntity, CsvSerializable, RecordSerializable {
         fields = mapOf(
             "Is Speech" to isSpeech.toString(),
             "Probability" to String.format(Locale.getDefault(), "%.3f", speechProbability),
-            "Inference Time" to String.format(Locale.getDefault(), "%.2f ms", inferenceTimeMs)
+            "Inf Time" to String.format(Locale.getDefault(), "%.2f ms", inferenceTimeMs)
         )
     )
 }
