@@ -179,6 +179,21 @@ def check_device_status(device: dict) -> tuple:
 
     return name, address, "Online", battery, status, str(folder_count)
 
+def is_device_connected(device: dict) -> bool:
+    """
+    Checks if a device is reachable and online via ADB.
+    
+    Args:
+        device (dict): The device dictionary containing 'name' and 'address'.
+        
+    Returns:
+        bool: True if device state is 'device' (connected and responsive), False otherwise.
+    """
+    address = device["address"]
+    run_adb(["connect", address], timeout=4)
+    success, state, _ = run_adb(["-s", address, "get-state"], timeout=4)
+    return success and state.strip() == "device"
+
 def pull_device_data(device: dict) -> tuple:
     """
     Extracts all benchmark data folders from a single device (Phone or Watch paths) to the local machine.
@@ -301,7 +316,7 @@ def cmd_status():
         print("❌ No devices selected.")
         return
 
-    print(f"\n📡 Querying status for {len(target_devices)} devices...")
+    print(f"\n📡 Querying status for {len(target_devices)} selected device(s)...")
     
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(target_devices)) as executor:
@@ -323,7 +338,7 @@ def cmd_status():
 
 def cmd_pull():
     """
-    Pulls benchmark data folders from all targeted devices in parallel.
+    Pulls benchmark data folders from all targeted connected devices in parallel.
     Saves the data into ~/Desktop/EnPULSE-Data.
     """
     config = load_config()
@@ -337,11 +352,26 @@ def cmd_pull():
         print("❌ No devices selected.")
         return
 
-    print(f"\n📥 Pulling all benchmark data from {len(target_devices)} devices...")
+    print(f"\n🔍 Checking ADB connectivity for {len(target_devices)} selected device(s)...")
+    connected_devices = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(target_devices)) as executor:
+        futures = {executor.submit(is_device_connected, d): d for d in target_devices}
+        for future in concurrent.futures.as_completed(futures):
+            dev = futures[future]
+            if future.result():
+                connected_devices.append(dev)
+
+    connected_devices = [d for d in target_devices if d in connected_devices]
+
+    if not connected_devices:
+        print("❌ No connected devices found on ADB.")
+        return
+
+    print(f"\n📥 Pulling all benchmark data from {len(connected_devices)} connected device(s)...")
     
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(target_devices)) as executor:
-        futures = {executor.submit(pull_device_data, d): d for d in target_devices}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(connected_devices)) as executor:
+        futures = {executor.submit(pull_device_data, d): d for d in connected_devices}
         for future in concurrent.futures.as_completed(futures):
             results.append(future.result())
 
@@ -354,7 +384,7 @@ def cmd_pull():
 
 def cmd_install():
     """
-    Interactive wizard to build APKs via Gradle and deploy them in parallel to targeted devices.
+    Interactive wizard to build APKs via Gradle and deploy them in parallel to connected devices.
     Intelligently routes Watch APKs to Watches and Phone APKs to Phones.
     """
     config = load_config()
@@ -409,14 +439,40 @@ def cmd_install():
         print("❌ No devices selected.")
         return
 
+    # Check ADB connectivity and filter to connected devices only
+    print(f"\n🔍 Checking ADB connectivity for {len(target_devices)} selected device(s)...")
+    connected_devices = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(target_devices)) as executor:
+        futures = {executor.submit(is_device_connected, d): d for d in target_devices}
+        for future in concurrent.futures.as_completed(futures):
+            dev = futures[future]
+            if future.result():
+                connected_devices.append(dev)
+
+    # Maintain original selection order
+    connected_devices = [d for d in target_devices if d in connected_devices]
+
+    if not connected_devices:
+        print("❌ No connected devices found on ADB. Please check Wireless Debugging / network connection.")
+        return
+
+    print(f"✅ Found {len(connected_devices)} connected device(s) online.")
+
     gradle_tasks = [a["task"] for a in selected_apps]
     print(f"\n🔨 Building APKs via Gradle: {' '.join(gradle_tasks)}")
     gradle_cmd = ["./gradlew"] + gradle_tasks
     
-    try:
-        subprocess.run(gradle_cmd, cwd=proj_dir, check=True)
-    except subprocess.CalledProcessError:
+    res = subprocess.run(gradle_cmd, cwd=proj_dir, capture_output=True, text=True)
+    if res.returncode != 0:
         print("❌ Gradle build failed!")
+        print("\n" + "="*20 + " Gradle Error Log " + "="*20)
+        err_output = (res.stderr or res.stdout or "").strip()
+        lines = err_output.splitlines()
+        if len(lines) > 25:
+            print("...\n" + "\n".join(lines[-25:]))
+        else:
+            print("\n".join(lines))
+        print("="*58 + "\n")
         return
 
     # Check APK existence & fallback resolution
@@ -432,13 +488,11 @@ def cmd_install():
             print(f"❌ Built APK not found: {app['id']}")
             return
 
-    print(f"🚀 Deploying to {len(target_devices)} device(s) in parallel...")
+    print(f"\n🚀 Deploying to {len(connected_devices)} connected device(s) in parallel...")
 
     def install_to_device(device):
         name = device["name"]
         address = device["address"]
-        run_adb(["connect", address], timeout=5)
-        
         device_type = device.get("type", "Phone")
         
         # Filter apps that match this device type
@@ -455,27 +509,26 @@ def cmd_install():
             if success and "Success" in out:
                 results_msg.append(f"{app['id']} ✅")
             else:
-                err_clean = (err or out).replace('\n', ' ').strip()
-                results_msg.append(f"{app['id']} ❌")
+                raw_reason = (err or out or "Unknown ADB installation error").strip()
+                last_line = raw_reason.splitlines()[-1] if raw_reason.splitlines() else raw_reason
+                results_msg.append(f"{app['id']} ❌ [Reason: {last_line}]")
                 all_success = False
                 
         return name, all_success, " | ".join(results_msg)
 
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(target_devices)) as executor:
-        futures = {executor.submit(install_to_device, d): d for d in target_devices}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(connected_devices)) as executor:
+        futures = {executor.submit(install_to_device, d): d for d in connected_devices}
         for future in concurrent.futures.as_completed(futures):
             results.append(future.result())
 
     results.sort(key=lambda x: x[0])
-    print("\n📋 Deployment Results:")
+    print(f"\n📋 Deployment Results ({len(connected_devices)} connected device(s)):")
     for name, success, msg in results:
         if success:
             print(f"  ✅ {name}: {msg}")
         else:
             print(f"  ⚠️ {name}: {msg}")
-
-
 
 # --- CLI Entrypoint ---
 
