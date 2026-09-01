@@ -16,7 +16,8 @@ bottlenecks. It uses standard Android APIs with a Jetpack Compose UI tailored fo
 * **Crash Resilience**: Writes data incrementally to a CSV file.
 * **Detailed Metrics**: Captures high-resolution power and hardware statistics specific to the
   wearable device.
-* **Auto-Sync to Phone**: When the benchmark completes or is stopped, data is automatically zipped and sent wirelessly to the paired phone (`app-mobile-benchmark`).
+* **Auto & On-Demand Phone Sync**: When a benchmark completes or is stopped, data is automatically zipped and sent wirelessly to the paired phone (`app-mobile-benchmark`). You can also tap **"Send All to Phone"** in the UI to sync all stored historical benchmark runs to the phone at any time.
+* **On-Watch Data Management**: Tap **"Delete All Data"** in the UI to instantly wipe all locally cached benchmark files from watch storage to free up space.
 * **Auto-Summary**: Automatically calculates drain rates and total duration when stopped.
 
 ## What is Recorded
@@ -64,13 +65,17 @@ python3 scripts/fleet_manager.py install
 6. The app will begin background logging and show a persistent notification.
 7. To finish early or save the current session, tap the **Stop (■)** button.
 
-### 3. Data Extraction & Automatic Sync
+### 3. Data Extraction & Data Management
 
-#### 🔄 Automatic Sync to Phone
-When the benchmark test finishes (either upon reaching target duration or when tapping **Stop**), the watch automatically zips the session data folder and sends it wirelessly to the connected smartphone (`app-mobile-benchmark`) over Google Wearable `ChannelClient`. The phone receives and unzips the files into `/sdcard/Download/EnPULSE/`.
+#### 🔄 Automatic & On-Demand Sync to Phone
+- **Automatic Sync:** When a benchmark test finishes (auto-stop or manual **Stop**), the watch automatically zips the session data folder and sends it wirelessly to the connected phone (`app-mobile-benchmark`) over Google Wearable `ChannelClient`. The phone receives and extracts the files into `/sdcard/Download/EnPULSE/`.
+- **On-Demand Sync ("Send All to Phone"):** Scroll down to **Stored Data** on the Wear OS main screen and tap **Send All to Phone**. This zips and transfers all saved benchmark sessions on the watch to the paired phone in one batch.
 
-#### 💾 Local Watch Directory
-Local backup copies remain on the watch in the app's external files directory:
+#### 🗑️ Deleting Stored Data on Watch ("Delete All Data")
+After syncing data to your phone or PC, you can free up local watch storage by scrolling down to **Stored Data** in the UI and tapping **Delete All Data**. This permanently deletes all stored benchmark folders under `/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/`.
+
+#### 💾 Local Watch Directory Structure
+Local copies are stored on the watch in the app's external files directory:
 
 ```text
 /sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/watch-<DeviceModel>_<ScenarioName>_<Timestamp>/
