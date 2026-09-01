@@ -170,10 +170,10 @@ def check_device_status(device: dict) -> tuple:
 
     # 4. Count folders in EnPULSE (Phone) and Benchmarks (Watch)
     ls_success, ls_out, _ = run_adb(["-s", address, "shell", "ls", "-d", "/sdcard/Download/EnPULSE/*"], timeout=5)
-    folders = [f for f in ls_out.splitlines() if "No such file" not in f and f.strip() and ("phone-" in f or "watch-" in f)]
+    folders = [f for f in ls_out.splitlines() if "No such file" not in f and f.strip() and ("phone-" in f or "watch-" in f or "Benchmark" in f)]
     
-    ls_watch_success, ls_watch_out, _ = run_adb(["-s", address, "shell", "ls", "-d", "/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/*"], timeout=5)
-    watch_folders = [f for f in ls_watch_out.splitlines() if "No such file" not in f and f.strip() and "watch-" in f]
+    ls_watch_success, ls_watch_out, _ = run_adb(["-s", address, "shell", "ls", "-d", "/sdcard/Android/data/kaist.iclab.benchmark/files/Benchmarks/*", "/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/*"], timeout=5)
+    watch_folders = [f for f in ls_watch_out.splitlines() if "No such file" not in f and f.strip() and ("watch-" in f or "Benchmark" in f)]
     
     folder_count = (len(folders) if ls_success and folders else 0) + (len(watch_folders) if ls_watch_success and watch_folders else 0)
 
@@ -206,6 +206,7 @@ def pull_device_data(device: dict) -> tuple:
     """
     address = device["address"]
     name = device["name"]
+    device_type = device.get("type", "Phone")
     
     # Ensure connected
     run_adb(["connect", address], timeout=5)
@@ -213,19 +214,39 @@ def pull_device_data(device: dict) -> tuple:
     local_path = os.path.expanduser(os.path.join("~", "Desktop", "EnPULSE-Data", name))
     os.makedirs(local_path, exist_ok=True)
     
-    # Pull the entire EnPULSE directory contents to ~/Desktop/EnPULSE-Data/<device_name>/ (For Phone)
-    success_phone, out_p, err_p = run_adb(["-s", address, "pull", "/sdcard/Download/EnPULSE/.", local_path], timeout=300)
-    
-    # Pull the Benchmarks directory contents to ~/Desktop/EnPULSE-Data/<device_name>/ (For Watch)
-    success_watch, out_w, err_w = run_adb(["-s", address, "pull", "/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/.", local_path], timeout=300)
-    
-    if success_phone or success_watch:
-        return name, True, local_path
+    # Determine candidate remote paths based on device type
+    if device_type == "Watch":
+        candidate_paths = [
+            "/sdcard/Android/data/kaist.iclab.benchmark/files/Benchmarks/.",
+            "/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/.",
+            "/sdcard/Download/EnPULSE/.",
+        ]
     else:
-        err_msg = ""
-        if err_p: err_msg += f"Phone: {err_p.strip()} "
-        if err_w: err_msg += f"Watch: {err_w.strip()}"
-        return name, False, err_msg.strip() if err_msg else "No data pulled"
+        candidate_paths = [
+            "/sdcard/Download/EnPULSE/.",
+            "/sdcard/Android/data/kaist.iclab.benchmark/files/Benchmarks/.",
+        ]
+    
+    pulled_any = False
+    errors = []
+    
+    for rpath in candidate_paths:
+        dir_check = rpath.rstrip("/.")
+        chk_success, chk_out, _ = run_adb(["-s", address, "shell", "ls", "-d", f"{dir_check}/*"], timeout=5)
+        if chk_success and chk_out.strip() and "No such file" not in chk_out:
+            success, out, err = run_adb(["-s", address, "pull", rpath, local_path], timeout=300)
+            if success:
+                pulled_any = True
+            elif err:
+                errors.append(err.strip())
+                
+    if pulled_any:
+        return name, True, local_path
+    
+    if not errors:
+        return name, False, "No benchmark data found on device"
+    else:
+        return name, False, " | ".join(errors)
 
 
 
