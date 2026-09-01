@@ -24,6 +24,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
+import kaist.iclab.mobiletracker.db.entity.phone.VADEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
@@ -63,6 +64,7 @@ import kaist.iclab.tracker.sensor.phone.ScreenSensor
 import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
 import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
+import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kotlinx.serialization.KSerializer
 
@@ -495,6 +497,25 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     className = e.className,
                     eventType = e.eventType,
                     text = e.text
+                )
+            }
+        ),
+        SensorDescriptor(
+            sensorId = "VAD",
+            displayName = "VAD",
+            isWatchSensor = false,
+            store = s.vad,
+            supabaseTable = AppConfig.SupabaseTables.VAD_SENSOR,
+            serializer = VADEntity.serializer(),
+            fromSensorEntity = { e, uuid ->
+                e as VADSensor.Entity
+                VADEntity(
+                    uuid = uuid ?: "",
+                    received = e.received,
+                    timestamp = e.timestamp,
+                    isSpeech = e.isSpeech,
+                    speechProbability = e.speechProbability,
+                    inferenceTimeMs = e.inferenceTimeMs
                 )
             }
         ),

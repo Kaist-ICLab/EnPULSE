@@ -20,6 +20,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
+import kaist.iclab.mobiletracker.db.entity.phone.VADEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
@@ -55,6 +56,7 @@ class SensorStores(boxStore: BoxStore) {
     val sleep = SensorStore(boxStore, SleepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
     val step = SensorStore(boxStore, StepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
     val userInteraction = SensorStore(boxStore, UserInteractionEntity::class.java)
+    val vad = SensorStore(boxStore, VADEntity::class.java)
     val wifiScan = SensorStore(boxStore, WifiScanEntity::class.java)
 
     // Shared between phone-native GPS fixes and watch-forwarded rows. Both always carry a real,

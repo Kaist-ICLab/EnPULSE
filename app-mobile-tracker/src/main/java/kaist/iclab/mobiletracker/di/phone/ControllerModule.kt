@@ -6,8 +6,8 @@ import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
-import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
 import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
+import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
@@ -63,7 +63,7 @@ val controllerModule = module {
             get<WifiScanSensor>(),
             get<TimingSensor>(),
             get<MicroEmaSensor>(),
-            get<AudioSensor>(),
+            get<VADSensor>(),
         )
     }
 

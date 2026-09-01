@@ -60,6 +60,7 @@ object AppConfig {
         const val DEVICE_MODE_SENSOR = "device_mode_sensor"
         const val MEDIA_SENSOR = "media_sensor"
         const val NOTIFICATION_SENSOR = "notification_sensor"
+        const val VAD_SENSOR = "vad_sensor"
         const val STEP_SENSOR = "step_sensor"
         const val SCREEN_SENSOR = "screen_sensor"
         const val WIFI_SCAN_SENSOR = "wifi_scan_sensor"

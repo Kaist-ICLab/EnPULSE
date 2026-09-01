@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.StayCurrentPortrait
@@ -72,6 +73,7 @@ fun getSensorTitleResId(sensorId: String): Int {
         "Gesture" -> R.string.sensor_gesture
         "Stress" -> R.string.sensor_stress
         "WebAppLog" -> R.string.sensor_web_app_log
+        "VAD", "VadSensor" -> R.string.sensor_vad
         else -> R.string.sensor_desc_default
     }
 }
@@ -113,6 +115,7 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "Gesture" -> R.string.sensor_desc_gesture
         "Stress" -> R.string.sensor_desc_stress
         "WebAppLog" -> R.string.sensor_desc_web_app_log
+        "VAD", "VadSensor" -> R.string.sensor_desc_vad
         else -> R.string.sensor_desc_default
     }
 }
@@ -170,6 +173,7 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "IMU", "WatchIMU" -> Icons.Default.CompassCalibration
         "Gesture", "WatchGesture" -> Icons.Default.BackHand
         "Stress", "WatchStress" -> Icons.Default.Psychology
+        "VAD", "VadSensor" -> Icons.Default.RecordVoiceOver
         else -> Icons.Default.DataUsage
     }
 }

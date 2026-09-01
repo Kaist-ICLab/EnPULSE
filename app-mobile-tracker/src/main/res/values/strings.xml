@@ -183,6 +183,7 @@
 
     <string name="sensor_survey">Survey</string>
     <string name="sensor_desc_survey">User survey responses</string>
+    <string name="sensor_vad">VAD</string>
 
     <string name="menu_reload_config">Reload &amp; Sync Config</string>
     <string name="menu_reload_config_desc">Refresh config from server and sync between phone and watch</string>
@@ -224,6 +225,7 @@
     <string name="sensor_desc_default">Sensor data collection</string>
     <string name="sensor_desc_activity_recognition">Recognize user physical activity</string>
     <string name="sensor_desc_web_app_log">Event logs collected from webapp usage</string>
+    <string name="sensor_desc_vad">Voice Activity Detection via Microphone</string>
     <!-- Watch Sensor Descriptions -->
     <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
     <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>

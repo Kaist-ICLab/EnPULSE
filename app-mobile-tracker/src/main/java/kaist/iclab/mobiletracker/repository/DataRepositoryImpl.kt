@@ -43,7 +43,7 @@ class DataRepositoryImpl(
      * would look permanently invisible/unsendable.
      */
     private fun isSensorActive(sensorId: String): Boolean {
-        if (sensorId == SurveyResponseDataHandler.SENSOR_ID || sensorId == WebAppLogDataHandler.SENSOR_ID) {
+        if (sensorId == SurveyResponseDataHandler.SENSOR_ID || sensorId == WebAppLogDataHandler.SENSOR_ID || sensorId == "VAD") {
             return true
         }
         val activeSensorNames = campaignSensorRepository.getActiveSensors().map { it.name }

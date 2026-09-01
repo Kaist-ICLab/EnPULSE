@@ -14,6 +14,7 @@
     <string name="sensor_device_mode">Device Mode</string>
     <string name="sensor_location">Location</string>
     <string name="sensor_media">Media</string>
+    <string name="sensor_vad">VAD</string>
     <string name="sensor_message">Message</string>
     <string name="sensor_connectivity">Connectivity</string>
     <string name="sensor_notification">Notification</string>
@@ -46,6 +47,7 @@
     <string name="sensor_desc_device_mode">Device state changes</string>
     <string name="sensor_desc_location">GPS location tracking</string>
     <string name="sensor_desc_media">Media playback activity</string>
+    <string name="sensor_desc_vad">Voice Activity Detection via Microphone</string>
     <string name="sensor_desc_message">SMS and MMS messages</string>
     <string name="sensor_desc_connectivity">Network connectivity status</string>
     <string name="sensor_desc_notification">Notification events</string>

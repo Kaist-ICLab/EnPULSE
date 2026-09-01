@@ -81,7 +81,7 @@ class SettingsViewModel(
                 val activeNames = activeSensors.map { it.name }
                 allSensors.filter { sensor: Sensor<*, *> ->
                     val campaignSensorName = sensor.id.toCampaignSensorName()
-                    activeNames.contains(campaignSensorName) || sensor.id == "Audio"
+                    activeNames.contains(campaignSensorName) || sensor.id == "VAD"
                 }.associate { sensor: Sensor<*, *> -> sensor.name to sensor.sensorStateFlow }
             }
             .stateIn(
