@@ -34,10 +34,10 @@ def pull_latest_benchmark(serial=None):
         if serial and serial != "default":
             adb_base += ["-s", serial]
             
-        # List all folders matching Benchmark_* in the EnPULSE directory, sorted by time (latest first)
-        cmd = adb_base + ["shell", "ls", "-td", "/sdcard/Download/EnPULSE/Benchmark_*"]
+        # List all folders in the EnPULSE directory, sorted by time (latest first)
+        cmd = adb_base + ["shell", "ls", "-td", "/sdcard/Download/EnPULSE/*"]
         output = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL)
-        folders = [line.strip() for line in output.splitlines() if line.strip()]
+        folders = [line.strip() for line in output.splitlines() if line.strip() and ("phone-" in line or "watch-" in line)]
         
         if not folders:
             print("❌ No benchmark folders found on the device.")
@@ -85,6 +85,9 @@ def generate_graph(folder_path):
     df['elapsed_min'] = (df['timestamp'] - start_time).dt.total_seconds() / 60.0
     
     scenario_name = os.path.basename(folder_path).replace("Benchmark_", "")
+    # Remove phone- or watch- device prefixes if present
+    if scenario_name.startswith("phone-") or scenario_name.startswith("watch-"):
+        scenario_name = scenario_name.split("_", 1)[1] if "_" in scenario_name else scenario_name
     
     # Create the plot (3 subplots: Battery, CPU, Memory)
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 10), sharex=True)

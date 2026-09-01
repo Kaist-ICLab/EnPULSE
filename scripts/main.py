@@ -82,10 +82,14 @@ def interactive_menu():
     print("4. [All]    Run All Combined")
     print("   -> Downloads data, generates graphs, and runs the yield calculator.")
     print("")
-    print("5. Exit")
+    print("5. [Fleet]  Fleet Manager for Multiple Devices")
+    print("   -> Setup and pull data from 5+ phone-watch pairs simultaneously")
+    print("      using ADB-over-WiFi.")
+    print("")
+    print("6. Exit")
     print("=" * 75)
     
-    choice = input("Select an option (1-5): ").strip()
+    choice = input("Select an option (1-6): ").strip()
     
     if choice == "1":
         serial = select_adb_device()
@@ -122,7 +126,10 @@ def interactive_menu():
                 campaign = input("Campaign ID: ").strip()
                 duration = input("Duration (seconds, default 3600): ").strip() or "3600"
                 run_script("yield_calculator.py", ["--url", url, "--key", key, "--campaign", campaign, "--duration", duration])
-    elif choice == "5" or not choice:
+    elif choice == "5":
+        run_script("fleet_manager.py", ["--help"])
+        print("\n💡 Run 'python scripts/fleet_manager.py setup' to pair devices.")
+    elif choice == "6" or not choice:
         print("Goodbye!")
         sys.exit(0)
     else:
