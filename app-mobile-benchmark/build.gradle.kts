@@ -39,6 +39,14 @@ android {
     buildToolsVersion = libs.versions.buildTools.get()
 }
 
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            output.outputFileName.set("EnPULSE-Mobile-Benchmark.apk")
+        }
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

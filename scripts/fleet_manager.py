@@ -365,10 +365,10 @@ def cmd_install():
 
     proj_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ALL_APPS = [
-        {"id": "app-mobile-benchmark", "type": "Benchmark", "device": "Phone", "task": ":app-mobile-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-benchmark", "build", "outputs", "apk", "debug", "app-mobile-benchmark-debug.apk")},
-        {"id": "app-wearable-benchmark", "type": "Benchmark", "device": "Watch", "task": ":app-wearable-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-benchmark", "build", "outputs", "apk", "debug", "app-wearable-benchmark-debug.apk")},
-        {"id": "app-mobile-tracker", "type": "Tracker", "device": "Phone", "task": ":app-mobile-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-tracker", "build", "outputs", "apk", "debug", "app-mobile-tracker-debug.apk")},
-        {"id": "app-wearable-tracker", "type": "Tracker", "device": "Watch", "task": ":app-wearable-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-tracker", "build", "outputs", "apk", "debug", "app-wearable-tracker-debug.apk")}
+        {"id": "app-mobile-benchmark", "type": "Benchmark", "device": "Phone", "task": ":app-mobile-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Mobile-Benchmark.apk")},
+        {"id": "app-wearable-benchmark", "type": "Benchmark", "device": "Watch", "task": ":app-wearable-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Watch-Benchmark.apk")},
+        {"id": "app-mobile-tracker", "type": "Tracker", "device": "Phone", "task": ":app-mobile-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-tracker", "build", "outputs", "apk", "debug", "EnPULSE-Mobile.apk")},
+        {"id": "app-wearable-tracker", "type": "Tracker", "device": "Watch", "task": ":app-wearable-tracker:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-tracker", "build", "outputs", "apk", "debug", "EnPULSE-Watch.apk")}
     ]
 
     print("\n📦 Which apps do you want to install?")
@@ -419,8 +419,15 @@ def cmd_install():
         print("❌ Gradle build failed!")
         return
 
-    # Check APK existence
+    # Check APK existence & fallback resolution
     for app in selected_apps:
+        if not os.path.exists(app["path"]):
+            debug_apk_dir = os.path.join(proj_dir, app["id"], "build", "outputs", "apk", "debug")
+            if os.path.exists(debug_apk_dir):
+                apks = [os.path.join(debug_apk_dir, f) for f in os.listdir(debug_apk_dir) if f.endswith(".apk")]
+                if apks:
+                    app["path"] = apks[0]
+
         if not os.path.exists(app["path"]):
             print(f"❌ Built APK not found: {app['id']}")
             return
