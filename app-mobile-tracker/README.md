@@ -34,6 +34,23 @@ Google Sign-In and Firebase services:
 4. Place the `google-services.json` file inside the `app-mobile-tracker/` directory.
 5. Configure Google Sign-In in the Firebase Console (Authentication > Sign-in method > Google).
 
+## Installation
+
+### Option 1: Using Gradle (Single Device)
+Build and install via ADB to your smartphone:
+
+```bash
+./gradlew :app-mobile-tracker:installDebug
+```
+
+### Option 2: Using Fleet Manager (Multi-Device Automation)
+To automatically build and deploy the tracker app across multiple phones in parallel, use the Fleet Manager script:
+
+```bash
+python3 scripts/fleet_manager.py install
+```
+Select option `3` (Tracker Apps) or `4` (Phone Apps) when prompted.
+
 ## Related Modules
 
 - [`tracker-library`](../tracker-library/README.md) - Core sensor tracking library

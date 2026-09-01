@@ -1,13 +1,13 @@
-# EnPULSE Benchmark (`app-benchmark`)
+# EnPULSE Mobile Benchmark (`app-mobile-benchmark`)
 
 A standalone, lightweight Android module designed specifically for benchmarking device resource
-consumption (battery, CPU, and memory) during the EnPULSE system evaluation.
+consumption (battery, CPU, memory, thermal state) during the EnPULSE system evaluation.
 
 ## Why a standalone app?
 
 By decoupling the metrics collection from the core `tracker-library`, we ensure that the
-benchmarking tools themselves do not artificially inflate the power consumption or cause data
-bottlenecks. It uses only standard Android APIs with absolutely zero external dependencies.
+benchmarking tools themselves do not artificially inflate power consumption or cause data
+bottlenecks. It uses standard Android APIs with zero external third-party dependencies.
 
 ## Features
 
@@ -15,64 +15,68 @@ bottlenecks. It uses only standard Android APIs with absolutely zero external de
   partial `WakeLock`. You can lock the screen, disconnect ADB, and walk away.
 * **Crash Resilience**: Writes data incrementally to a CSV file. If the device's battery completely
   dies during an extreme stress test, the CSV up to the point of shutdown is perfectly preserved.
-* **Detailed Metrics**: Captures high-resolution power and hardware statistics.
-* **Auto-Summary**: Automatically calculates drain rates and total duration when stopped.
+* **Detailed Metrics**: Captures high-resolution power and hardware statistics (battery current, voltage, charge uAh, energy nWh, thermal status, CPU usage & temp, PSS RAM, native heap).
+* **Pause & Resume Support**: Pause and resume tests without splitting log files.
+* **Auto-Stop Timer**: Configurable duration auto-stop with sound notification alerts.
+* **Auto-Summary**: Automatically calculates drain rates, peak memory/temperature, and total duration when stopped.
 
 ## What is Recorded
 
 For every sampling interval, a new row is appended to `metrics.csv` containing:
 
-1. **Timestamp**: Both ISO-8601 string and epoch milliseconds.
-2. **Battery Level**: 0-100% capacity.
-3. **Battery Voltage**: Raw voltage in millivolts (mV).
-4. **Battery Temperature**: Internal temperature in °C.
-5. **Battery Current**: Instantaneous current in milliamperes (mA). Negative values indicate the
-   device is discharging.
-6. **Battery Status**: Operating status (e.g., `charging`, `discharging`, `full`).
-7. **CPU Usage**: System-wide CPU usage percentage (parsed directly from `/proc/stat`).
-8. **App Memory (PSS)**: Total RAM footprint of the benchmark process in MB.
-9. **Available System RAM**: Total free RAM left on the device in MB.
+1. **Timestamp (ISO-8601 & epoch ms)**: `timestamp_iso`, `timestamp_ms`.
+2. **Battery Metrics**: Level (`%`), Voltage (`mV`), Temperature (`°C`), Current (`mA`, negative = discharging), Operating Status (`charging`, `discharging`, etc.), Remaining Charge (`µAh`), Remaining Energy (`nWh`).
+3. **Thermal Status**: System-wide OS thermal throttling status (API 29+).
+4. **CPU Usage & Temp**: System-wide CPU usage percentage (from `/proc/stat`) and SoC/CPU temperature (`°C` from sysfs).
+5. **Memory Footprint**: Process memory PSS (`MB`), System Available RAM (`MB`), Native Heap allocated (`Bytes`).
 
 ## Usage Guide
 
 ### 1. Installation
 
-Build and install via ADB to your phone and/or watch:
+Build and install via ADB to your phone:
 
 ```bash
-./gradlew :app-benchmark:installDebug
+./gradlew :app-mobile-benchmark:installDebug
+```
+
+Or deploy across multiple phones automatically using Fleet Manager:
+
+```bash
+python3 scripts/fleet_manager.py install
 ```
 
 ### 2. Running a Test
 
 1. Open the **EnPULSE Benchmark** app.
-2. Enter the **Sampling Interval** in seconds (default is `60`).
-3. Enter the **Scenario Name** exactly as written in the experimental protocol (
-   see [BENCHMARKING_PROTOCOL.md](../BENCHMARKING_PROTOCOL.md), e.g., `A_Baseline`,
-   `C_BioTracking`).
-4. Press **▶ Start**.
-5. The app will show a persistent notification and begin background logging. The UI will show a live
-   view of the battery drain (e.g., `90% (Dropped: 5%)`).
-6. When the scenario is complete, press **■ Stop**.
+2. Grant unrestricted battery permissions by tapping **🔋 Request Unrestricted Battery** (recommended on first run).
+3. Enter the **Sampling Interval** in seconds (default is `60`).
+4. Enter the **Duration** in minutes (`0` for indefinite/manual stop).
+5. Enter the **Scenario Name** exactly as written in the experimental protocol (e.g., `A_Baseline`, `C_BioTracking`).
+6. Press **▶ Start**.
+7. The app will show a persistent notification and begin background logging.
+8. When the scenario is complete, press **■ Stop**.
 
 ### 3. Data Extraction
 
-The app uses the `MediaStore` API to bypass Android 10+ scoped storage restrictions, allowing it to
-save data to the public `Downloads` directory without requiring root access.
+The app uses the `MediaStore` API to save data to the public `Downloads` directory:
 
 Each test run creates a new timestamped folder:
 
 ```text
-/sdcard/Download/EnPULSE/Benchmark_<ScenarioName>_<Date>/
+/sdcard/Download/EnPULSE/phone-<DeviceModel>_<ScenarioName>_<Timestamp>/
 ├── metrics.csv
 └── summary.txt
 ```
 
-To extract this data, use the Python script located in the repository's `scripts/` directory:
+To extract data from all connected devices in parallel, use **Fleet Manager**:
 
 ```bash
-# On your host PC:
-python scripts/pull_benchmark.py --phone <serial> --watch <serial> --scenario "C_BioTracking"
+python3 scripts/fleet_manager.py pull
 ```
 
-The script will pull the CSVs, grab the `dumpsys batterystats`, and generate a consolidated report.
+Alternatively, pull data manually via ADB:
+
+```bash
+adb pull /sdcard/Download/EnPULSE/ ./
+```

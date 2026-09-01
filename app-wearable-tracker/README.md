@@ -28,6 +28,23 @@ over Bluetooth LE / Google Wearable Data Layer.
 2. **Companion Pairing**: Install and launch `app-mobile-tracker` on your smartphone to receive
    synced data from the watch.
 
+## Installation
+
+### Option 1: Using Gradle (Single Device)
+Build and install via ADB to your watch:
+
+```bash
+./gradlew :app-wearable-tracker:installDebug
+```
+
+### Option 2: Using Fleet Manager (Multi-Device Automation)
+To automatically build and deploy the wearable tracker app across multiple watches in parallel, use the Fleet Manager script:
+
+```bash
+python3 scripts/fleet_manager.py install
+```
+Select option `3` (Tracker Apps) or `5` (Watch Apps) when prompted.
+
 ## Related Modules
 
 - [`tracker-library`](../tracker-library/README.md) - Core sensor tracking engine and sensor

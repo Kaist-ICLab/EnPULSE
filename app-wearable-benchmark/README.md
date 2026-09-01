@@ -16,6 +16,7 @@ bottlenecks. It uses standard Android APIs with a Jetpack Compose UI tailored fo
 * **Crash Resilience**: Writes data incrementally to a CSV file.
 * **Detailed Metrics**: Captures high-resolution power and hardware statistics specific to the
   wearable device.
+* **Auto-Sync to Phone**: When the benchmark completes or is stopped, data is automatically zipped and sent wirelessly to the paired phone (`app-mobile-benchmark`).
 * **Auto-Summary**: Automatically calculates drain rates and total duration when stopped.
 
 ## What is Recorded
@@ -47,6 +48,12 @@ Build and install via ADB to your watch:
 ./gradlew :app-wearable-benchmark:installDebug
 ```
 
+Or deploy across multiple watches automatically using Fleet Manager:
+
+```bash
+python3 scripts/fleet_manager.py install
+```
+
 ### 2. Running a Test
 
 1. Open the **EnPULSE Benchmarker** app on your Wear OS device.
@@ -57,14 +64,27 @@ Build and install via ADB to your watch:
 6. The app will begin background logging and show a persistent notification.
 7. To finish early or save the current session, tap the **Stop (■)** button.
 
-### 3. Data Extraction
+### 3. Data Extraction & Automatic Sync
 
-On Wear OS, `MediaStore` is often restricted or unreliable. Thus, data is saved directly to the
-app's external files directory.
+#### 🔄 Automatic Sync to Phone
+When the benchmark test finishes (either upon reaching target duration or when tapping **Stop**), the watch automatically zips the session data folder and sends it wirelessly to the connected smartphone (`app-mobile-benchmark`) over Google Wearable `ChannelClient`. The phone receives and unzips the files into `/sdcard/Download/EnPULSE/`.
 
-Each test run creates a new timestamped folder containing `metrics.csv` and `summary.txt`.
+#### 💾 Local Watch Directory
+Local backup copies remain on the watch in the app's external files directory:
 
-To extract this data, use ADB to pull the folder to your host PC:
+```text
+/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/watch-<DeviceModel>_<ScenarioName>_<Timestamp>/
+├── metrics.csv
+└── summary.txt
+```
+
+To extract data from all connected devices in parallel, use **Fleet Manager**:
+
+```bash
+python3 scripts/fleet_manager.py pull
+```
+
+Alternatively, pull data manually via ADB:
 
 ```bash
 adb pull /sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/ ./
