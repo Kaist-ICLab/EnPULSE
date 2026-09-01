@@ -6,6 +6,7 @@ import kaist.iclab.mobiletracker.db.entity.BaseEntity
 import kaist.iclab.mobiletracker.db.entity.CsvSerializable
 import kaist.iclab.mobiletracker.db.entity.RecordSerializable
 import kaist.iclab.mobiletracker.repository.SensorRecord
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.Locale
 import java.util.UUID
@@ -13,8 +14,13 @@ import java.util.UUID
 @Entity
 @Serializable
 class VADEntity : BaseEntity, CsvSerializable, RecordSerializable {
+    @SerialName("is_speech")
     var isSpeech: Boolean = false
+
+    @SerialName("speech_probability")
     var speechProbability: Float = 0f
+
+    @SerialName("inference_time_ms")
     var inferenceTimeMs: Float = 0f
 
     constructor() : super()
