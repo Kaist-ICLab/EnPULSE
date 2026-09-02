@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.ui.components.popup
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -98,7 +99,14 @@ fun PopupDialog(
                     )
 
                     // Content
-                    content()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false)
+                            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+                    ) {
+                        content()
+                    }
 
                     // Buttons
                     Spacer(modifier = Modifier.height(Styles.ContentButtonSpacing))
