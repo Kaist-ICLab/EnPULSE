@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.StayCurrentPortrait
@@ -248,6 +249,12 @@ fun HomeScreen(
                     uiState.wifiScanCount,
                     Icons.Default.WifiTethering,
                     Styles.Colors.WIFI_SCAN
+                ),
+                SensorItem(
+                    "VAD",
+                    uiState.vadCount,
+                    Icons.Default.RecordVoiceOver,
+                    Styles.Colors.VAD
                 ),
                 SensorItem(
                     "WatchIMU",

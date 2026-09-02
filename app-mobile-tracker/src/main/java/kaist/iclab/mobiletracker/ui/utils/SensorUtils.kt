@@ -69,9 +69,9 @@ fun getSensorTitleResId(sensorId: String): Int {
         "PPG" -> R.string.sensor_ppg
         "SkinTemperature" -> R.string.sensor_skin_temperature
         "ECG" -> R.string.sensor_ecg
-        "IMU" -> R.string.sensor_imu
-        "Gesture" -> R.string.sensor_gesture
-        "Stress" -> R.string.sensor_stress
+        "IMU", "WatchIMU" -> R.string.sensor_imu
+        "Gesture", "WatchGesture" -> R.string.sensor_gesture
+        "Stress", "WatchStress" -> R.string.sensor_stress
         "WebAppLog" -> R.string.sensor_web_app_log
         "VAD", "VadSensor" -> R.string.sensor_vad
         else -> R.string.sensor_desc_default
@@ -111,9 +111,9 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "HeartRate" -> R.string.sensor_desc_heart_rate
         "PPG" -> R.string.sensor_desc_ppg
         "SkinTemperature" -> R.string.sensor_desc_skin_temperature
-        "IMU" -> R.string.sensor_desc_imu
-        "Gesture" -> R.string.sensor_desc_gesture
-        "Stress" -> R.string.sensor_desc_stress
+        "IMU", "WatchIMU" -> R.string.sensor_desc_imu
+        "Gesture", "WatchGesture" -> R.string.sensor_desc_gesture
+        "Stress", "WatchStress" -> R.string.sensor_desc_stress
         "WebAppLog" -> R.string.sensor_desc_web_app_log
         "VAD", "VadSensor" -> R.string.sensor_desc_vad
         else -> R.string.sensor_desc_default

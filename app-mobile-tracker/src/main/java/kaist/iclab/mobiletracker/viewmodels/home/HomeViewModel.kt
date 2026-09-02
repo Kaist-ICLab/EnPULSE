@@ -58,6 +58,7 @@ data class HomeUiState(
     val watchPPGCount: Int = 0,
     val watchSkinTemperatureCount: Int = 0,
     val watchIMUCount: Int = 0,
+    val vadCount: Int = 0,
     val watchGestureCount: Int = 0,
     val watchStressCount: Int = 0,
     val ecgCount: Int = 0,
@@ -156,6 +157,7 @@ class HomeViewModel(
                 watchGestureCount = counts.watchGestureCount,
                 watchStressCount = counts.watchStressCount,
                 ecgCount = counts.ecgCount,
+                vadCount = counts.vadCount,
                 userName = profile?.email?.split("@")?.firstOrNull()
                     ?.replaceFirstChar { it.uppercase() } ?: "User"
             )

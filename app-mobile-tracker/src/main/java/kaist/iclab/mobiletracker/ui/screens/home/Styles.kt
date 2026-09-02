@@ -74,6 +74,7 @@ object Styles {
         val WIFI_SCAN = Color(0xFF00BCD4)
         val EXERCISE = Color(0xFFFF7043)
         val SLEEP = Color(0xFF5C6BC0)
+        val VAD = Color(0xFFF06292)
 
         // Watch Sensor Colors
         val WATCH_HEART_RATE = Color(0xFFE91E63)
