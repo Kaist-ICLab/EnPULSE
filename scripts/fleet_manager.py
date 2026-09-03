@@ -55,7 +55,7 @@ def run_adb(args: list, timeout: int = 15) -> tuple:
     
     Args:
         args (list): The list of arguments to pass to ADB (e.g., ["connect", "192.168.0.1:5555"]).
-        timeout (int): The maximum time to wait for the command to complete, in seconds.
+        timeout (int, optional): The maximum time to wait for the command to complete, in seconds. Pass None for no timeout.
         
     Returns:
         tuple: (success (bool), stdout (str), stderr (str))
@@ -526,15 +526,15 @@ def cmd_install():
         all_success = True
         
         for app in apps_for_this_device:
-            success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=120)
+            success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=None)
             
             # If signature mismatch occurs, automatically uninstall old version and reinstall
             raw_reason = (err or out or "").strip()
             if not (success and "Success" in out) and "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in raw_reason:
                 pkg_name = app.get("pkg")
                 if pkg_name:
-                    run_adb(["-s", address, "uninstall", pkg_name], timeout=30)
-                    success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=120)
+                    run_adb(["-s", address, "uninstall", pkg_name], timeout=None)
+                    success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=None)
             
             if success and "Success" in out:
                 results_msg.append(f"{app['id']} ✅")

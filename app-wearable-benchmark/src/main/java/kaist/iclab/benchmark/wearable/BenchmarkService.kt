@@ -161,16 +161,6 @@ class BenchmarkService : Service() {
         }
     }
 
-    private val nodeClient by lazy { com.google.android.gms.wearable.Wearable.getNodeClient(this) }
-    private val nodeListener = object : com.google.android.gms.wearable.NodeClient.NodeListener {
-        override fun onPeerConnected(node: com.google.android.gms.wearable.Node) {}
-        override fun onPeerDisconnected(node: com.google.android.gms.wearable.Node) {
-            Log.w(TAG, "Peer disconnected: ${node.displayName}. Stopping benchmark.")
-            playAutoStopSound()
-            performStop()
-        }
-    }
-
     private fun playAutoStopSound() {
         try {
             val uri =
@@ -188,8 +178,6 @@ class BenchmarkService : Service() {
         csvWriter = CsvWriter(applicationContext)
         handler = Handler(Looper.getMainLooper())
         createNotificationChannel()
-
-        nodeClient.addListener(nodeListener)
 
         // Start foreground immediately in onCreate to prevent RemoteServiceException
         val notification = buildNotification("Starting...", 0)
@@ -356,7 +344,6 @@ class BenchmarkService : Service() {
     override fun onDestroy() {
         isRunning = false
         handler.removeCallbacks(tickRunnable)
-        nodeClient.removeListener(nodeListener)
         csvWriter.close()
 
         try {
