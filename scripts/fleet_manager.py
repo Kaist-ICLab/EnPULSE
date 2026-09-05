@@ -25,6 +25,11 @@ CONFIG_FILE = os.path.join(os.path.dirname(__file__), "fleet_config.json")
 PACKAGE_NAME = "kaist.iclab.mobiletracker"
 BENCHMARK_PACKAGE = "kaist.iclab.benchmark"
 
+# Port scan range for ADB wireless debugging fallback (Android uses 37000-44000 typically)
+ADB_PORT_SCAN_START = 37000
+ADB_PORT_SCAN_END   = 47000
+ADB_PORT_SCAN_WORKERS = 50   # concurrent scan threads
+
 # --- Configuration & Utilities ---
 
 def load_config() -> dict:
@@ -250,6 +255,181 @@ def pull_device_data(device: dict) -> tuple:
 
 
 
+# --- Auto-Discovery ---
+
+def _get_mdns_port_for_ip(ip: str) -> str | None:
+    """
+    Queries 'adb mdns services' and looks for a _adb-tls-connect._tcp entry
+    whose resolved address matches the given IP. Returns the port as a string,
+    or None if not found.
+
+    Android 11+ advertises its wireless debugging connection port via mDNS
+    as '_adb-tls-connect._tcp'. The port changes every time the device
+    reboots or wireless debugging is toggled, but the IP stays stable on
+    a fixed-IP / DHCP-reserved network.
+    """
+    try:
+        res = subprocess.run(
+            ["adb", "mdns", "services"],
+            capture_output=True, text=True, timeout=8
+        )
+        output = res.stdout + res.stderr
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        return None
+
+    # Each line looks like:
+    #   adb-<serial>  _adb-tls-connect._tcp.  <ip>:<port>
+    # or (older adb format):
+    #   <name>  _adb-tls-connect._tcp  <ip>  <port>
+    for line in output.splitlines():
+        if "_adb-tls-connect" not in line:
+            continue
+        # Try to find ip:port pattern
+        match = re.search(r'(\d+\.\d+\.\d+\.\d+):(\d+)', line)
+        if match and match.group(1) == ip:
+            return match.group(2)
+        # Fallback: ip and port are space-separated
+        match2 = re.search(r'(\d+\.\d+\.\d+\.\d+)\s+(\d+)', line)
+        if match2 and match2.group(1) == ip:
+            return match2.group(2)
+    return None
+
+
+def _scan_port_for_ip(ip: str) -> str | None:
+    """
+    Fallback: scans the ADB_PORT_SCAN_START..ADB_PORT_SCAN_END range for
+    the given IP and returns the first port on which 'adb connect' succeeds.
+    This is slow (~seconds) but works even when mDNS is unavailable.
+    """
+    import socket
+
+    def probe(port):
+        try:
+            with socket.create_connection((ip, port), timeout=0.3):
+                return port
+        except Exception:
+            return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=ADB_PORT_SCAN_WORKERS) as ex:
+        futs = {ex.submit(probe, p): p for p in range(ADB_PORT_SCAN_START, ADB_PORT_SCAN_END + 1)}
+        for fut in concurrent.futures.as_completed(futs):
+            result = fut.result()
+            if result is not None:
+                # Verify it's actually an ADB port
+                port_str = str(result)
+                ok, out, _ = run_adb(["connect", f"{ip}:{port_str}"], timeout=5)
+                if ok or "connected" in out.lower():
+                    # Cancel remaining
+                    for f in futs:
+                        f.cancel()
+                    return port_str
+    return None
+
+
+def rediscover_device(device: dict) -> tuple:
+    """
+    Tries to find the current ADB connection port for a known device.
+
+    Strategy:
+      1. Try mDNS (adb mdns services) — fast, zero config.
+      2. If mDNS fails, fall back to a TCP port scan of the known IP.
+
+    Args:
+        device (dict): Device entry from fleet_config.json. Must have 'address'
+                       (and optionally 'ip' for the bare IP).
+
+    Returns:
+        tuple: (name, old_address, new_address | None, method | error_msg)
+    """
+    name = device["name"]
+    old_address = device["address"]
+
+    # Extract bare IP — prefer explicit 'ip' field, fall back to parsing address
+    ip = device.get("ip") or old_address.split(":")[0]
+
+    # 1. Try mDNS first (fast)
+    port = _get_mdns_port_for_ip(ip)
+    if port:
+        new_address = f"{ip}:{port}"
+        return name, old_address, new_address, "mDNS"
+
+    # 2. Fall back to TCP port scan
+    port = _scan_port_for_ip(ip)
+    if port:
+        new_address = f"{ip}:{port}"
+        return name, old_address, new_address, "port scan"
+
+    return name, old_address, None, "Not found (device offline or mDNS unavailable)"
+
+
+def cmd_rediscover():
+    """
+    Auto-discovers the current ADB connection ports for all known devices.
+
+    When Android devices restart, their wireless debugging port changes.
+    This command uses mDNS (adb mdns services) to find the new port for
+    each known IP in fleet_config.json and updates it automatically.
+    Falls back to a TCP port scan if mDNS is not available.
+    """
+    config = load_config()
+    devices = config.get("devices", [])
+    if not devices:
+        print("❌ No devices in fleet. Run 'fleet_manager.py setup' first.")
+        return
+
+    print("=" * 60)
+    print(" 🔍 Auto-Rediscovery — Scanning for new ADB ports")
+    print("=" * 60)
+    print("This will try mDNS first, then fall back to port scanning.")
+    print("Ensure all devices have Wireless Debugging enabled.\n")
+
+    # Ask which devices to target
+    target_devices = select_target_devices(devices)
+    if not target_devices:
+        print("❌ No devices selected.")
+        return
+
+    print(f"\n⏳ Discovering ports for {len(target_devices)} device(s)...")
+
+    results = []
+    updated = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(len(target_devices), 8)) as executor:
+        futs = {executor.submit(rediscover_device, d): d for d in target_devices}
+        for fut in concurrent.futures.as_completed(futs):
+            results.append(fut.result())
+
+    results.sort(key=lambda x: x[0])
+
+    print()
+    for name, old_addr, new_addr, method in results:
+        if new_addr is None:
+            print(f"  ⚠️  {name}: {method}  (kept {old_addr})")
+        elif new_addr == old_addr:
+            print(f"  ✅ {name}: Port unchanged — {new_addr}  [{method}]")
+        else:
+            print(f"  ✅ {name}: {old_addr}  →  {new_addr}  [{method}]")
+            # Update in config
+            for d in config["devices"]:
+                if d["name"] == name:
+                    d["address"] = new_addr
+                    break
+            updated += 1
+
+    if updated > 0:
+        save_config(config)
+        print(f"\n💾 Updated {updated} device(s) in fleet_config.json.")
+    else:
+        print("\nℹ️  No changes made.")
+
+    # Optionally try connecting to updated devices
+    print("\n⚡ Connecting to all discovered devices via ADB...")
+    for name, old_addr, new_addr, method in results:
+        addr = new_addr or old_addr
+        ok, out, err = run_adb(["connect", addr], timeout=6)
+        status = "✅" if (ok or "connected" in out.lower()) else "❌"
+        print(f"  {status} {name} ({addr}): {out or err}")
+
+
 # --- CLI Commands ---
 
 def cmd_setup():
@@ -306,14 +486,17 @@ def cmd_setup():
             success, out, _ = run_adb(["-s", conn_addr, "shell", "getprop", "ro.build.characteristics"], timeout=5)
             device_type = "Watch" if (success and "watch" in out.lower()) else "Phone"
             
+            # Extract bare IP for future rediscovery
+            bare_ip = conn_addr.split(":")[0]
             devices.append({
                 "name": name,
+                "ip": bare_ip,
                 "address": conn_addr,
                 "type": device_type
             })
             config["devices"] = devices
             save_config(config)
-            print(f"💾 Saved {name} ({device_type}) to fleet configuration.")
+            print(f"💾 Saved {name} ({device_type}) @ {conn_addr} to fleet configuration.")
         else:
             print(f"❌ Connection failed: {c_out} {c_err}")
 
@@ -571,23 +754,26 @@ def interactive_menu():
         print("\n" + "=" * 60)
         print("              EnPULSE Fleet Manager Interactive Menu")
         print("=" * 60)
-        print("1. Setup (Pair and connect new wireless devices)")
-        print("2. Status (Check battery and benchmark status)")
-        print("3. Pull (Extract latest benchmark data)")
-        print("4. Install (Build & Deploy APKs to all devices)")
-        print("5. Exit")
+        print("1. Setup      (Pair and connect new wireless devices)")
+        print("2. Rediscover (Auto-update ports after device restart) ← NEW")
+        print("3. Status     (Check battery and benchmark status)")
+        print("4. Pull       (Extract latest benchmark data)")
+        print("5. Install    (Build & Deploy APKs to all devices)")
+        print("6. Exit")
         print("=" * 60)
         
-        choice = input("Select an option (1-5): ").strip()
+        choice = input("Select an option (1-6): ").strip()
         if choice == "1":
             cmd_setup()
         elif choice == "2":
-            cmd_status()
+            cmd_rediscover()
         elif choice == "3":
-            cmd_pull()
+            cmd_status()
         elif choice == "4":
+            cmd_pull()
+        elif choice == "5":
             cmd_install()
-        elif choice == "5" or choice.lower() == 'q':
+        elif choice == "6" or choice.lower() == 'q':
             print("Exiting Fleet Manager.")
             break
         else:
@@ -608,15 +794,18 @@ def main():
     parser = argparse.ArgumentParser(description="EnPULSE Fleet Manager")
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
     
-    subparsers.add_parser("setup", help="Pair and connect to new wireless devices")
-    subparsers.add_parser("status", help="Check battery and benchmark status of all devices")
-    subparsers.add_parser("pull", help="Pull all benchmark data from all devices")
-    subparsers.add_parser("install", help="Build and install benchmark APKs to all devices")
+    subparsers.add_parser("setup",      help="Pair and connect to new wireless devices")
+    subparsers.add_parser("rediscover", help="Auto-update ADB ports after device restart via mDNS / port scan")
+    subparsers.add_parser("status",     help="Check battery and benchmark status of all devices")
+    subparsers.add_parser("pull",       help="Pull all benchmark data from all devices")
+    subparsers.add_parser("install",    help="Build and install benchmark APKs to all devices")
     
     args = parser.parse_args()
     
     if args.command == "setup":
         cmd_setup()
+    elif args.command == "rediscover":
+        cmd_rediscover()
     elif args.command == "status":
         cmd_status()
     elif args.command == "pull":

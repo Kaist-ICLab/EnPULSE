@@ -2,62 +2,62 @@
   "devices": [
     {
       "name": "Dipta-PH",
-      "address": "192.168.0.13:37029",
+      "address": "192.168.0.13:41363",
       "type": "Phone"
     },
     {
       "name": "Dipta-WT",
-      "address": "192.168.0.14:40677",
+      "address": "192.168.0.14:46703",
       "type": "Watch"
     },
     {
       "name": "Phone-1",
-      "address": "192.168.0.19:46107",
+      "address": "192.168.0.19:35349",
+      "type": "Phone"
+    },
+    {
+      "name": "Phone-2",
+      "address": "192.168.0.16:39517",
+      "type": "Phone"
+    },
+    {
+      "name": "Phone-3",
+      "address": "192.168.0.6:41303",
+      "type": "Phone"
+    },
+    {
+      "name": "Phone-4",
+      "address": "192.168.0.4:45213",
+      "type": "Phone"
+    },
+    {
+      "name": "Phone-5",
+      "address": "192.168.0.5:35883",
       "type": "Phone"
     },
     {
       "name": "Watch-1",
-      "address": "192.168.0.18:42387",
+      "address": "192.168.0.21:41207",
       "type": "Watch"
-    },
-    {
-      "name": "Phone-2",
-      "address": "192.168.0.16:35277",
-      "type": "Phone"
     },
     {
       "name": "Watch-2",
-      "address": "192.168.0.11:35253",
+      "address": "192.168.0.22:46685",
       "type": "Watch"
-    },
-    {
-      "name": "Phone-3",
-      "address": "192.168.0.6:33413",
-      "type": "Phone"
     },
     {
       "name": "Watch-3",
-      "address": "192.168.0.7:45913",
+      "address": "192.168.0.25:34471",
       "type": "Watch"
-    },
-    {
-      "name": "Phone-4",
-      "address": "192.168.0.4:42629",
-      "type": "Phone"
     },
     {
       "name": "Watch-4",
-      "address": "192.168.0.8:38729",
+      "address": "192.168.0.23:42521",
       "type": "Watch"
     },
     {
-      "name": "Phone-5",
-      "address": "192.168.0.5:41301",
-      "type": "Phone"
-    },
-    {
       "name": "Watch-5",
-      "address": "192.168.0.9:36497",
+      "address": "192.168.0.25:34471",
       "type": "Watch"
     }
   ]
