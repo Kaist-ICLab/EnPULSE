@@ -8,6 +8,7 @@ data class BackgroundControllerDependencies(
     val sensors: List<Sensor<*, *>>,
     val serviceNotification: BackgroundController.ServiceNotification,
     val allowPartialSensing: Boolean,
+    val offBodyDetector: OffBodyDetector,
 )
 
 interface BackgroundControllerDependenciesProvider {

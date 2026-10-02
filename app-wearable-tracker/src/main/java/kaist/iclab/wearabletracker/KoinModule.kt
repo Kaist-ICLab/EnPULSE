@@ -6,6 +6,7 @@ import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.tracker.sensor.controller.OffBodyDetector
 import kaist.iclab.tracker.sensor.galaxywatch.AccelerometerSensor
 import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
 import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
@@ -268,6 +269,10 @@ val koinModule = module {
             serializer = ControllerState.serializer(),
             collectionName = BackgroundController::class.simpleName ?: ""
         )
+    }
+
+    single {
+        OffBodyDetector(context = androidContext())
     }
 
     single {

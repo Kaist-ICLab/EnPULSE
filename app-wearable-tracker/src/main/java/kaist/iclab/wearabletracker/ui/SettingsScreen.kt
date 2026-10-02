@@ -65,6 +65,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val sensorMap = settingsViewModel.sensorMap
     val controllerStateValue = settingsViewModel.controllerState.collectAsState().value
+    val isPaused = controllerStateValue.flag == ControllerState.FLAG.PAUSED
     val sensorState = settingsViewModel.sensorState
 
     val sensorStates = sensorState.mapValues { it.value.collectAsState() }
@@ -158,7 +159,9 @@ fun SettingsScreen(
         onDismissSdkPolicyError = { settingsViewModel.clearSdkPolicyError() },
         showConnectionError = showConnectionError,
         onRetryConnection = { showConnectionError = false },
-        isCollecting = controllerStateValue.flag == ControllerState.FLAG.RUNNING,
+        isCollecting = (controllerStateValue.flag == ControllerState.FLAG.RUNNING ||
+                controllerStateValue.flag == ControllerState.FLAG.PAUSED),
+        isPaused = isPaused,
         hasEnabledSensors = hasEnabledSensors,
         onUpload = { handleNotificationPermissionCheck { settingsViewModel.upload() } },
         onFlush = { handleNotificationPermissionCheck { showFlushDialog = true } },
@@ -227,6 +230,7 @@ fun SettingsScreenContent(
     showConnectionError: Boolean,
     onRetryConnection: () -> Unit,
     isCollecting: Boolean,
+    isPaused: Boolean,
     hasEnabledSensors: Boolean,
     onUpload: () -> Unit,
     onFlush: () -> Unit,
@@ -291,7 +295,8 @@ fun SettingsScreenContent(
                         lastSyncTimestamp = lastSyncTimestamp,
                         totalRecordCount = totalRecordCount,
                         batteryLevel = batteryLevel,
-                        isRecording = isCollecting,
+                        isRecording = isCollecting && !isPaused,
+                        isPaused = isPaused,
                         recordingStartTime = recordingStartTime,
                         syncProgress = syncProgress,
                         isPhoneConnected = isPhoneConnected,
@@ -404,6 +409,7 @@ private fun SettingsScreenContentIdlePreview() {
             showConnectionError = false,
             onRetryConnection = {},
             isCollecting = false,
+            isPaused = false,
             hasEnabledSensors = true,
             onUpload = {},
             onFlush = {},
@@ -447,6 +453,7 @@ private fun SettingsScreenContentRecordingPreview() {
             showConnectionError = false,
             onRetryConnection = {},
             isCollecting = true,
+            isPaused = false,
             hasEnabledSensors = true,
             onUpload = {},
             onFlush = {},
@@ -494,6 +501,7 @@ private fun SettingsScreenContentFlushDialogPreview() {
             showConnectionError = false,
             onRetryConnection = {},
             isCollecting = false,
+            isPaused = false,
             hasEnabledSensors = true,
             onUpload = {},
             onFlush = {},
@@ -537,6 +545,7 @@ private fun SettingsScreenContentSdkPolicyErrorPreview() {
             showConnectionError = false,
             onRetryConnection = {},
             isCollecting = false,
+            isPaused = false,
             hasEnabledSensors = false,
             onUpload = {},
             onFlush = {},
@@ -584,6 +593,7 @@ private fun SettingsScreenContentConnectionErrorPreview() {
             showConnectionError = true,
             onRetryConnection = {},
             isCollecting = false,
+            isPaused = false,
             hasEnabledSensors = true,
             onUpload = {},
             onFlush = {},
