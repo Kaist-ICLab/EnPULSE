@@ -24,8 +24,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
-import kotlin.math.abs
-import kotlin.math.sqrt
 
 class StressSensor(
     private val context: Context,
@@ -45,11 +43,6 @@ class StressSensor(
         private const val WINDOW_5M_MS = 300_000L
         private const val STRIDE_MS = 30_000L
 
-        // HR bounds 30–220 bpm → IBI bounds 60000/220–60000/30 ms.
-        private const val MIN_IBI_MS = 60 * 1000 / 220
-        private const val MAX_IBI_MS = 60 * 1000 / 30
-
-        private const val MAD_MULTIPLIER = 3.0
         private const val STRESS_PERCENTILE = 0.20
 
         // RMSSD needs at least one successive-difference pair.
@@ -270,11 +263,11 @@ class StressSensor(
         // 5-minute window is too small a sample for its own median/MAD to be a stable
         // outlier reference, and computing it separately per window made them disagree on
         // what counts as an outlier in what is otherwise overlapping underlying data.
-        val bounds = outlierBounds(values)
-        val raw1m = ibisSince(windowEnd - config.window1mMs, timestamps, values)
-        val raw5m = ibisSince(windowEnd - config.window5mMs, timestamps, values)
-        val filtered1m = filterIbis(raw1m, bounds)
-        val filtered5m = filterIbis(raw5m, bounds)
+        val bounds = StressMath.outlierBounds(values)
+        val raw1m = StressMath.ibisSince(windowEnd - config.window1mMs, timestamps, values)
+        val raw5m = StressMath.ibisSince(windowEnd - config.window5mMs, timestamps, values)
+        val filtered1m = StressMath.filterIbis(raw1m, bounds)
+        val filtered5m = StressMath.filterIbis(raw5m, bounds)
         Log.d(
             name,
             "runInference: bufferSize=${timestamps.size} ibiCount1m=${filtered1m.size} ibiCount5m=${filtered5m.size}"
@@ -289,11 +282,11 @@ class StressSensor(
             return
         }
 
-        val rmssd1m = rmssd(filtered1m)
-        val rmssd5m = rmssd(filtered5m)
+        val rmssd1m = StressMath.rmssd(filtered1m)
+        val rmssd5m = StressMath.rmssd(filtered5m)
         rmssdHistory.insert(windowEnd, rmssd5m)
         val history = rmssdHistory.all()
-        val threshold = percentile(history, STRESS_PERCENTILE)
+        val threshold = StressMath.percentile(history, STRESS_PERCENTILE)
 
         val emission = Entity(
             received = System.currentTimeMillis(),
@@ -306,64 +299,5 @@ class StressSensor(
             isStressed = rmssd5m < threshold,
         )
         listeners.forEach { it.invoke(emission) }
-    }
-
-    private fun ibisSince(windowStart: Long, timestamps: LongArray, values: IntArray): IntArray {
-        val result = ArrayList<Int>(values.size)
-        for (i in timestamps.indices) {
-            if (timestamps[i] >= windowStart) result.add(values[i])
-        }
-        return result.toIntArray()
-    }
-
-    /**
-     * Median +/- [MAD_MULTIPLIER] * MAD computed from [ibis], restricted to physiologically
-     * plausible values ([MIN_IBI_MS]..[MAX_IBI_MS]). Callers apply the returned bounds via
-     * [filterIbis] - typically to a different (e.g. smaller, overlapping) set of IBIs than
-     * the one the bounds were derived from, so the outlier reference stays stable across
-     * windows of different sizes drawn from the same underlying data.
-     *
-     * Returns an empty range (nothing passes) if there's no in-range data to anchor a
-     * median on, and an all-inclusive range if the data has no spread (MAD == 0) to derive
-     * a meaningful bound from.
-     */
-    private fun outlierBounds(ibis: IntArray): ClosedFloatingPointRange<Double> {
-        val inRange = ibis.filter { it in MIN_IBI_MS..MAX_IBI_MS }.map { it.toDouble() }
-        if (inRange.isEmpty()) return Double.POSITIVE_INFINITY..Double.NEGATIVE_INFINITY
-        val med = median(inRange)
-        val mad = median(inRange.map { abs(it - med) })
-        if (mad == 0.0) return Double.NEGATIVE_INFINITY..Double.POSITIVE_INFINITY
-        return (med - MAD_MULTIPLIER * mad)..(med + MAD_MULTIPLIER * mad)
-    }
-
-    private fun filterIbis(ibis: IntArray, bounds: ClosedFloatingPointRange<Double>): IntArray {
-        return ibis.filter { it in MIN_IBI_MS..MAX_IBI_MS && it.toDouble() in bounds }.toIntArray()
-    }
-
-    private fun rmssd(ibis: IntArray): Float {
-        var sumSq = 0.0
-        for (i in 1 until ibis.size) {
-            val d = (ibis[i] - ibis[i - 1]).toDouble()
-            sumSq += d * d
-        }
-        return sqrt(sumSq / (ibis.size - 1)).toFloat()
-    }
-
-    private fun median(values: List<Double>): Double {
-        val sorted = values.sorted()
-        val n = sorted.size
-        return if (n % 2 == 1) sorted[n / 2]
-        else (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0
-    }
-
-    private fun percentile(values: FloatArray, p: Double): Float {
-        if (values.isEmpty()) return Float.NaN
-        val sorted = values.copyOf().also { it.sort() }
-        if (sorted.size == 1) return sorted[0]
-        val rank = p * (sorted.size - 1)
-        val lo = rank.toInt()
-        val hi = (lo + 1).coerceAtMost(sorted.size - 1)
-        val frac = rank - lo
-        return (sorted[lo] * (1 - frac) + sorted[hi] * frac).toFloat()
     }
 }
