@@ -44,6 +44,16 @@ class MicroEmaViewModel(
          * loop never runs, so the survey closes as EXPIRED the instant it opens.
          */
         private const val FALLBACK_EXPIRE_MS = 30_000L
+
+        /**
+         * Longest the countdown stays paused for keyboard or voice input. The input screen may
+         * never return a result (side button, watch handed back), and an endlessly paused survey
+         * would never expire, so new triggers would keep being dropped.
+         */
+        private const val MAX_INPUT_PAUSE_MS = 60_000L
+
+        /** Slack added to how long a survey counts as on screen, beyond its own countdown. */
+        private const val ACTIVE_MARGIN_MS = 15_000L
     }
 
     // --- State ---
@@ -74,6 +84,7 @@ class MicroEmaViewModel(
     private var responseTime: Long? = null
 
     private var countdownJob: Job? = null
+    private var inputPauseWatchdog: Job? = null
     private var isCountdownPaused = false
 
     // --- Actions ---
@@ -97,6 +108,7 @@ class MicroEmaViewModel(
         }
 
         stopCountdown()
+        cancelInputPauseWatchdog()
         isCountdownPaused = false
         triggerTime = System.currentTimeMillis()
         answer = null
@@ -116,14 +128,14 @@ class MicroEmaViewModel(
 
         _question.value = selectedQuestion
         surveyStartTime = System.currentTimeMillis()
-        repository.isSurveyActive = true
 
         // Start countdown timer if configured. expireAfterMs == null means "no expiry" and
         // is left alone; a non-positive value is a misconfiguration, not "expire instantly".
-        config.expireAfterMs?.let { configuredMs ->
-            val expiryMs = if (configuredMs > 0) configuredMs else FALLBACK_EXPIRE_MS
-            _remainingTimeMs.value = expiryMs
-            startCountdown(expiryMs)
+        val expiryMs = config.expireAfterMs?.let { if (it > 0) it else FALLBACK_EXPIRE_MS }
+        repository.markSurveyActive((expiryMs ?: FALLBACK_EXPIRE_MS) + ACTIVE_MARGIN_MS)
+        expiryMs?.let {
+            _remainingTimeMs.value = it
+            startCountdown(it)
         }
 
         Log.d(TAG, "Survey started: ${config.title}, question: ${selectedQuestion.text}")
@@ -205,7 +217,8 @@ class MicroEmaViewModel(
      */
     private fun endSession() {
         _isComplete.value = true
-        repository.isSurveyActive = false
+        cancelInputPauseWatchdog()
+        repository.markSurveyInactive()
         repository.clearCache()
     }
 
@@ -237,19 +250,35 @@ class MicroEmaViewModel(
         if (_isComplete.value || countdownJob == null) return
         stopCountdown()
         isCountdownPaused = true
+        val remaining = _remainingTimeMs.value ?: 0L
+        repository.markSurveyActive(MAX_INPUT_PAUSE_MS + remaining + ACTIVE_MARGIN_MS)
+        // Resume on our own if the input screen never comes back.
+        inputPauseWatchdog = viewModelScope.launch {
+            delay(MAX_INPUT_PAUSE_MS.milliseconds)
+            Log.w(TAG, "Input screen did not return within ${MAX_INPUT_PAUSE_MS / 1000}s; resuming countdown")
+            resumeCountdown()
+        }
     }
 
     fun resumeCountdown() {
+        cancelInputPauseWatchdog()
         if (!isCountdownPaused) return
         isCountdownPaused = false
         if (_isComplete.value) return
         val remaining = _remainingTimeMs.value ?: return
+        repository.markSurveyActive(remaining + ACTIVE_MARGIN_MS)
         startCountdown(remaining)
+    }
+
+    private fun cancelInputPauseWatchdog() {
+        inputPauseWatchdog?.cancel()
+        inputPauseWatchdog = null
     }
 
     override fun onCleared() {
         super.onCleared()
         stopCountdown()
-        repository.isSurveyActive = false
+        cancelInputPauseWatchdog()
+        repository.markSurveyInactive()
     }
 }

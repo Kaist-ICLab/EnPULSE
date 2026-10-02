@@ -22,9 +22,25 @@ class MicroEmaRepository(
     // In-memory holder for the active session configuration
     private var activeConfig: WatchSurveyConfig? = null
 
-    /** True while a survey is on screen; new triggers are dropped instead of replacing it. */
     @Volatile
-    var isSurveyActive: Boolean = false
+    private var surveyActiveUntilMs = 0L
+
+    /**
+     * True while a survey is on screen; new triggers are dropped instead of replacing it.
+     * Time-bounded rather than a plain flag: if a session never ends cleanly (e.g. the wearer
+     * walks away from an open keyboard screen), it lapses instead of blocking every later trigger.
+     */
+    val isSurveyActive: Boolean
+        get() = System.currentTimeMillis() < surveyActiveUntilMs
+
+    /** Mark a survey as on screen for at most [forMs] from now; call again to extend. */
+    fun markSurveyActive(forMs: Long) {
+        surveyActiveUntilMs = System.currentTimeMillis() + forMs
+    }
+
+    fun markSurveyInactive() {
+        surveyActiveUntilMs = 0L
+    }
 
     /**
      * Get the active survey config received from the phone.
