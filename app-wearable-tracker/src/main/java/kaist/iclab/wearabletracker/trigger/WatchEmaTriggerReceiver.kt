@@ -146,7 +146,8 @@ class WatchEmaTriggerReceiver(
                 context = context,
                 pendingIntent = pendingIntent,
                 title = config.title,
-                text = config.description ?: ""
+                text = config.description ?: "",
+                timeoutMs = config.expireAfterMs?.takeIf { it > 0 }
             )
 
             // Also directly start the activity as a fallback — full-screen intents

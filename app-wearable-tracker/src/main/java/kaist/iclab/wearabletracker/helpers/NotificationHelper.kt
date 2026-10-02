@@ -310,7 +310,8 @@ object NotificationHelper {
         context: Context,
         pendingIntent: PendingIntent,
         title: String,
-        text: String
+        text: String,
+        timeoutMs: Long? = null
     ) {
         ensureNotificationChannel(context, NotificationChannelConfig.TRIGGER)
         val notificationManager =
@@ -327,6 +328,8 @@ object NotificationHelper {
                 .setContentIntent(pendingIntent)
                 .setFullScreenIntent(pendingIntent, true)
                 .setAutoCancel(true)
+                // A survey can't be answered after it expires, so neither can its notification.
+                .apply { if (timeoutMs != null) setTimeoutAfter(timeoutMs) }
                 .build()
 
         notificationManager.notify(Constants.NotificationId.TRIGGER, notification)

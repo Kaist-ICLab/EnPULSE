@@ -1,5 +1,6 @@
 package kaist.iclab.wearabletracker.ema
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -49,5 +50,17 @@ class WatchSurveyActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    // The activity is singleTop, so a trigger that arrives while it is still on screen (e.g.
+    // during the 3 s "Done" view) comes here instead of onCreate. Without this the new survey
+    // never showed and its notification stayed in the tray for the next wearer.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        NotificationManagerCompat.from(this).cancel(Constants.NotificationId.TRIGGER)
+        // Ignores a launch for the survey that is still open; restarts after a finished one,
+        // which also cancels the pending "Done" close.
+        microEmaViewModel.startSurvey()
     }
 }
