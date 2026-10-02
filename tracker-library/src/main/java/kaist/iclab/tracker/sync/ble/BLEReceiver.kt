@@ -3,6 +3,7 @@ package kaist.iclab.tracker.sync.ble
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.wearable.DataClient
+import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.Wearable
@@ -11,6 +12,7 @@ import kaist.iclab.tracker.sync.core.DataChannelReceiver
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * BLE data receiver for receiving data through Bluetooth Low Energy.
@@ -22,6 +24,18 @@ internal class BLEReceiver : DataChannelReceiver() {
     companion object {
         private val TAG = BLEReceiver::class.simpleName
         private var localNodeId: String? = null
+
+        /**
+         * Keys whose DataItems are deleted once their listeners have handled them. Every send uses
+         * a unique path, so items would otherwise pile up and could be delivered again later
+         * (e.g. a queued trigger reaching a watch on reconnect). Opt-in per key, so data that
+         * relies on its own acknowledgement protocol (sensor sync) is left alone.
+         */
+        private val deleteAfterDeliveryKeys: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+        fun deleteAfterDelivery(keys: Set<String>) {
+            deleteAfterDeliveryKeys.addAll(keys)
+        }
 
         // Synchronized callback list that's shared between activity and service
         @Volatile
@@ -128,6 +142,9 @@ internal class BLEReceiver : DataChannelReceiver() {
             val currentNodeId = localNodeId
 
             dataEvents.forEach { dataEvent ->
+                // Deleting a handled item (see deleteAfterDeliveryKeys) raises TYPE_DELETED events.
+                if (dataEvent.type != DataEvent.TYPE_CHANGED) return@forEach
+
                 // Skip if this is a message from the same device
                 if (currentNodeId != null && dataEvent.dataItem.uri.host == currentNodeId) {
                     return@forEach
@@ -147,10 +164,18 @@ internal class BLEReceiver : DataChannelReceiver() {
                 }
 
                 val asset = DataMapItem.fromDataItem(dataEvent.dataItem).dataMap.getAsset("data")
+                // Captured now: the event buffer is released before the async callback runs.
+                val itemUri = dataEvent.dataItem.uri
                 if (asset != null) {
                     Wearable.getDataClient(this).getFdForAsset(asset)
                         .addOnSuccessListener {
                             onAssetSuccessListener(callbacks, key, it)
+                            if (key in deleteAfterDeliveryKeys) {
+                                Wearable.getDataClient(this).deleteDataItems(itemUri)
+                                    .addOnFailureListener { e ->
+                                        Log.w(TAG, "Failed to delete handled item for '$key': ${e.message}")
+                                    }
+                            }
                         }
                         .addOnFailureListener { exception ->
                             Log.e(TAG, "Failed to get asset for key '$key': ${exception.message}")

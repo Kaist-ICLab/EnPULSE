@@ -173,6 +173,8 @@ class BLEHelper(
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.DETECTION_STATE_UPDATE)) { _, json ->
             handleDetectionStateUpdate(json)
         }
+        // Detections are momentary; once applied they must not be delivered again later.
+        bleChannel.deleteAfterDelivery(setOf(AppConfig.BLEKeys.DETECTION_STATE_UPDATE))
     }
 
     private fun handleOpenUrlTrigger(url: String) {

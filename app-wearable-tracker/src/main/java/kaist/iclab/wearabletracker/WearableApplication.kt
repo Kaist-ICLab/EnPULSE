@@ -6,6 +6,7 @@ import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesPro
 import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.storage.core.StateStorage
@@ -53,6 +54,15 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<WatchSurveyConfigReceiver>().startListening()
         get<WatchEmaTriggerReceiver>().startListening()
         get<WatchNotificationTriggerReceiver>().startListening()
+        // Triggers and detections are one-shot; delete them once handled so a queued one is never
+        // delivered again (e.g. to the next wearer after the watch reconnects).
+        get<PhoneCommunicationManager>().getBleChannel().deleteAfterDelivery(
+            setOf(
+                Constants.BLE.KEY_WATCH_EMA_TRIGGER,
+                Constants.BLE.KEY_WATCH_NOTIFICATION_TRIGGER,
+                Constants.BLE.KEY_DETECTION_STATE_UPDATE
+            )
+        )
 
         markCollectionStoppedAfterRestart()
         observeCollectionForDataWriter()
