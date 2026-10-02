@@ -8,7 +8,7 @@ Together, they support end-to-end sensor data collection.
 **Note: Other components will be opened to the public after paper publication.**
 
 ### Android Library (`tracker-library`)
-The core sensor tracking library capable of collecting various sensor data from mobile and Galaxy Watch devices. It includes 21 sensor types, with watch-specific sensors (`AccelerometerSensor`, `PPGSensor`, `HeartRateSensor`, `SkinTemperatureSensor`, `EDASensor`, `ECGSensor`) and phone-specific sensors (such as `StepSensor`).
+The core sensor tracking library capable of collecting various sensor data from mobile and Galaxy Watch devices. It includes 33 sensor types (see the [Tracker Library README](tracker-library/README.md) for the full list), with watch-specific sensors (`AccelerometerSensor`, `PPGSensor`, `HeartRateSensor`, `SkinTemperatureSensor`, `EDASensor`, `ECGSensor`) and phone-specific sensors (such as `StepSensor`).
 
 ### Mobile Tracker Application (`app-mobile-tracker`)
 A mobile app for easy smartphone sensor data collection from Samsung devices. See the [Mobile Tracker README](app-mobile-tracker/README.md) for details.
