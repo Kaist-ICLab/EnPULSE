@@ -3,7 +3,12 @@ package kaist.iclab.wearabletracker
 import android.app.Application
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
+import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.Sensor
+import kaist.iclab.tracker.storage.core.StateStorage
+import kaist.iclab.wearabletracker.storage.SensorDataReceiver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
 import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
@@ -45,6 +50,28 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<WatchSurveyConfigReceiver>().startListening()
         get<WatchEmaTriggerReceiver>().startListening()
         get<WatchNotificationTriggerReceiver>().startListening()
+
+        observeCollectionForDataWriter()
+    }
+
+    /**
+     * Keep the database writer in step with data collection for the whole process, not only while
+     * the settings screen is open; otherwise nothing is saved after a reboot or a restart until
+     * someone opens the app. PAUSED (watch not worn) keeps it alive, since no data arrives anyway
+     * and restarting it from the background on resume could be refused.
+     */
+    private fun observeCollectionForDataWriter() {
+        val controllerState = get<StateStorage<ControllerState>>(named("watchControllerStateStorage"))
+        val dataWriter = get<SensorDataReceiver>()
+        get<CoroutineScope>().launch {
+            controllerState.stateFlow.collect { state ->
+                when (state.flag) {
+                    ControllerState.FLAG.RUNNING -> dataWriter.startBackgroundCollection()
+                    ControllerState.FLAG.PAUSED -> Unit
+                    else -> dataWriter.stopBackgroundCollection()
+                }
+            }
+        }
     }
 
     override fun provideBackgroundControllerDependencies(): BackgroundControllerDependencies {

@@ -345,7 +345,6 @@ val koinModule = module {
     viewModel {
         SettingsViewModel(
             sensorController = get(),
-            sensorDataReceiver = get(),
             phoneCommunicationManager = get(),
             repository = get(),
             samsungHealthSensorInitializer = get(),

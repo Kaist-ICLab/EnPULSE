@@ -11,6 +11,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.wearabletracker.Constants
+import kaist.iclab.wearabletracker.MainActivity
 import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.helpers.NotificationHelper.showSurveyTriggerNotification
 
@@ -329,6 +330,40 @@ object NotificationHelper {
                 .build()
 
         notificationManager.notify(Constants.NotificationId.TRIGGER, notification)
+    }
+
+    /**
+     * Ask the wearer to reopen the app after a reboot. Collection that needs the microphone can't
+     * be restarted from the boot broadcast (Android refuses a microphone foreground service
+     * there), but it can from the app once it is in the foreground.
+     */
+    fun showResumeCollectionNotification(context: Context) {
+        ensureNotificationChannel(context, NotificationChannelConfig.ERROR)
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtra(MainActivity.EXTRA_RESUME_COLLECTION, true)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            Constants.NotificationId.RESUME_COLLECTION,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification =
+            NotificationCompat.Builder(context, NotificationChannelConfig.ERROR.channelId)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(context.getString(R.string.notification_resume_collection_title))
+                .setContentText(context.getString(R.string.notification_resume_collection_message))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+
+        notificationManager.notify(Constants.NotificationId.RESUME_COLLECTION, notification)
     }
 
     /**

@@ -28,6 +28,8 @@
     <!-- Background Service Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">백그라운드에서 데이터 수집 중입니다</string>
+    <string name="notification_resume_collection_title">데이터 수집이 중지되었습니다</string>
+    <string name="notification_resume_collection_message">워치가 다시 시작되었습니다. 탭하여 데이터 수집을 재개하세요.</string>
 
     <!-- Notification Messages -->
     <string name="notification_upload_success_title">데이터 전송!</string>

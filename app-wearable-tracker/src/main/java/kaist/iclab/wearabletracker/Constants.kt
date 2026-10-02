@@ -84,6 +84,7 @@ object Constants {
         const val FLUSH_DATA_FAILURE = 1004
         const val TRIGGER = 1005
         const val GENERIC_TRIGGER = 1006
+        const val RESUME_COLLECTION = 1007
         const val ERROR = 2000 // Base ID for errors, will be incremented for multiple errors
     }
 

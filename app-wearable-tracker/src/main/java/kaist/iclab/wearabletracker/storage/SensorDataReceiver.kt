@@ -34,7 +34,13 @@ class SensorDataReceiver(
 ) {
     private val serviceIntent = Intent(context, SensorDataReceiverService::class.java)
     fun startBackgroundCollection() {
-        context.startForegroundService(serviceIntent)
+        // May be refused when the process was started in the background (e.g. by a Bluetooth
+        // message or a sticky restart); the next foreground start retries.
+        try {
+            context.startForegroundService(serviceIntent)
+        } catch (e: Exception) {
+            Log.e("SensorDataReceiver", "Could not start the data writer service: ${e.message}", e)
+        }
     }
 
     fun stopBackgroundCollection() {
@@ -88,7 +94,25 @@ class SensorDataReceiver(
                 0
             }
 
-            this.startForeground(serviceNotification.notificationId, postNotification, serviceType)
+            try {
+                this.startForeground(serviceNotification.notificationId, postNotification, serviceType)
+            } catch (e: Exception) {
+                // The microphone type is refused when started from the background (e.g. after boot).
+                // This service only writes sensor data and never records audio itself, so fall back.
+                val healthOnly = serviceType and ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE.inv()
+                if (healthOnly == serviceType) {
+                    Log.e("SensorDataReceiver", "Could not start in the foreground: ${e.message}", e)
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                try {
+                    this.startForeground(serviceNotification.notificationId, postNotification, healthOnly)
+                } catch (e2: Exception) {
+                    Log.e("SensorDataReceiver", "Could not start in the foreground: ${e2.message}", e2)
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+            }
 
             startBatchProcessing()
 
