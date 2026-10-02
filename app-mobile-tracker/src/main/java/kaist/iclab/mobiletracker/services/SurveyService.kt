@@ -32,6 +32,8 @@ class SurveyService(
     private val supabaseClient = supabaseHelper.supabaseClient
 
     companion object {
+        /** Must match QUESTION_POSITION_KEY in the dashboard's campaignService.ts. */
+        private const val QUESTION_POSITION_KEY = "position"
         private const val TAG = "SurveyService"
     }
 
@@ -117,7 +119,12 @@ class SurveyService(
 
         // 4. Assemble the flat entities into a hierarchical configuration structure
         return surveys.map { survey ->
-            val surveyQuestions = questions.filter { it.surveyId == survey.id }
+            // survey_question has no order column: the dashboard stores each question's index
+            // among its siblings in config.position (older rows have none and fall back to id).
+            // Builders keep this list order, so it sets the order on both phone and watch.
+            val surveyQuestions = questions
+                .filter { it.surveyId == survey.id }
+                .sortedWith(compareBy({ it.config.int(QUESTION_POSITION_KEY) ?: Int.MAX_VALUE }, { it.id }))
             val surveyTriggerIds = surveyQuestions.mapNotNull { it.triggeredBy }
             val surveyTriggers = triggers.filter { it.id in surveyTriggerIds }
 

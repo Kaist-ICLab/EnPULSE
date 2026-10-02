@@ -53,23 +53,25 @@ class MicroEmaRepository(
     /**
      * Get the next question in the queue for a given configuration.
      * Logic:
-     * 1. Sort questions by ID (ascending).
-     * 2. Find the first question with an ID > last shown question ID.
-     * 3. If none (end of list), wrap around to the first question (smallest ID).
+     * 1. Keep the config's question order: the phone sorts questions by the dashboard's
+     *    position, so this follows the order the researcher set (sorting by id did not).
+     * 2. Take the question after the last shown one.
+     * 3. If none (end of list, first time, or the last one was removed), start from the first.
      * 4. Update the last shown question ID in persistent storage.
      */
     fun getNextQuestion(config: WatchSurveyConfig): WatchQuestion? {
         if (config.questions.isEmpty()) return null
 
-        // 1. Sort questions by ID
-        val sortedQuestions = config.questions.sortedBy { it.id }
+        // 1. Questions in the order the phone sent them
+        val orderedQuestions = config.questions
 
         // 2. Get the last shown question ID for this survey
         val lastId = prefsHelper.getLastQuestionId(config.surveyId)
 
         // 3. Find the next question in sequence
-        val nextQuestion = sortedQuestions.find { it.id > lastId }
-            ?: sortedQuestions.first() // Wrap around if we reached the end or it's the first time
+        val lastIndex = orderedQuestions.indexOfFirst { it.id == lastId }
+        val nextQuestion = orderedQuestions.getOrNull(lastIndex + 1)
+            ?: orderedQuestions.first() // Wrap around if we reached the end or it's the first time
 
         // 4. Update persistent storage with the new last shown ID
         prefsHelper.saveLastQuestionId(config.surveyId, nextQuestion.id)
