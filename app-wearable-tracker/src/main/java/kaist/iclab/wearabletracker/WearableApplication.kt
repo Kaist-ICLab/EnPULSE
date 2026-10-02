@@ -3,7 +3,10 @@ package kaist.iclab.wearabletracker
 import android.app.Application
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
+import androidx.core.app.NotificationManagerCompat
+import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
+import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.wearabletracker.storage.SensorDataReceiver
@@ -51,7 +54,24 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<WatchEmaTriggerReceiver>().startListening()
         get<WatchNotificationTriggerReceiver>().startListening()
 
+        markCollectionStoppedAfterRestart()
         observeCollectionForDataWriter()
+    }
+
+    /**
+     * A fresh process means nothing is collecting yet: Android does not restart the sensor
+     * service on its own (restartAfterProcessDeath = false), and a reboot doesn't resume it
+     * either. A saved RUNNING or PAUSED is left over from before the restart, so report it as
+     * stopped and ask the wearer to start collection again from the app.
+     */
+    private fun markCollectionStoppedAfterRestart() {
+        if (BackgroundController.ControllerService.isServiceRunning) return
+        val controllerState = get<StateStorage<ControllerState>>(named("watchControllerStateStorage"))
+        val flag = controllerState.get().flag
+        if (flag == ControllerState.FLAG.RUNNING || flag == ControllerState.FLAG.PAUSED) {
+            controllerState.set(ControllerState(ControllerState.FLAG.READY))
+            NotificationHelper.showCollectionStoppedNotification(this)
+        }
     }
 
     /**
@@ -66,7 +86,11 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<CoroutineScope>().launch {
             controllerState.stateFlow.collect { state ->
                 when (state.flag) {
-                    ControllerState.FLAG.RUNNING -> dataWriter.startBackgroundCollection()
+                    ControllerState.FLAG.RUNNING -> {
+                        dataWriter.startBackgroundCollection()
+                        NotificationManagerCompat.from(this@WearableApplication)
+                            .cancel(Constants.NotificationId.COLLECTION_STOPPED)
+                    }
                     ControllerState.FLAG.PAUSED -> Unit
                     else -> dataWriter.stopBackgroundCollection()
                 }
@@ -85,6 +109,7 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
             if (activeSensorIds == null) allSensors else allSensors.filter { it.id in activeSensorIds }
         return BackgroundControllerDependencies(
             controllerStateStorage = koin.get(named("watchControllerStateStorage")),
+            restartAfterProcessDeath = false,
             sensors = sensors,
             serviceNotification = koin.get(),
             allowPartialSensing = true,

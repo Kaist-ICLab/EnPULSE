@@ -333,22 +333,20 @@ object NotificationHelper {
     }
 
     /**
-     * Ask the wearer to reopen the app after a reboot. Collection that needs the microphone can't
-     * be restarted from the boot broadcast (Android refuses a microphone foreground service
-     * there), but it can from the app once it is in the foreground.
+     * Tell the wearer that collection stopped because the app was restarted (reboot, or the
+     * process was killed). It is not resumed automatically; tapping just opens the app.
      */
-    fun showResumeCollectionNotification(context: Context) {
+    fun showCollectionStoppedNotification(context: Context) {
         ensureNotificationChannel(context, NotificationChannelConfig.ERROR)
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val intent = Intent(context, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            putExtra(MainActivity.EXTRA_RESUME_COLLECTION, true)
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
-            Constants.NotificationId.RESUME_COLLECTION,
+            Constants.NotificationId.COLLECTION_STOPPED,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -356,14 +354,14 @@ object NotificationHelper {
         val notification =
             NotificationCompat.Builder(context, NotificationChannelConfig.ERROR.channelId)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(context.getString(R.string.notification_resume_collection_title))
-                .setContentText(context.getString(R.string.notification_resume_collection_message))
+                .setContentTitle(context.getString(R.string.notification_collection_stopped_title))
+                .setContentText(context.getString(R.string.notification_collection_stopped_message))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .build()
 
-        notificationManager.notify(Constants.NotificationId.RESUME_COLLECTION, notification)
+        notificationManager.notify(Constants.NotificationId.COLLECTION_STOPPED, notification)
     }
 
     /**

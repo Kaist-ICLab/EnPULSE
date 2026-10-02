@@ -27,8 +27,8 @@
     <!-- Background Service Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">Data collection is running in the background</string>
-    <string name="notification_resume_collection_title">Data collection stopped</string>
-    <string name="notification_resume_collection_message">The watch restarted. Tap to resume data collection.</string>
+    <string name="notification_collection_stopped_title">Data collection stopped</string>
+    <string name="notification_collection_stopped_message">EnPULSE was restarted. Open the app and start data collection again.</string>
 
     <!-- Notification Messages -->
     <string name="notification_upload_success_title">Data Sent!</string>

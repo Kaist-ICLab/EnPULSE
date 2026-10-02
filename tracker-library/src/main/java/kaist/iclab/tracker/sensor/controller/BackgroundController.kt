@@ -96,6 +96,7 @@ class BackgroundController(
         private lateinit var sensors: List<Sensor<*, *>>
         private lateinit var serviceNotification: ServiceNotification
         private var partialSensingAllowed: Boolean = false
+        private var restartAfterProcessDeath: Boolean = true
 
         private lateinit var offBodyDetector: OffBodyDetector
         private var serviceScope: CoroutineScope? = null
@@ -120,6 +121,7 @@ class BackgroundController(
                 sensors = dependencies.sensors
                 serviceNotification = dependencies.serviceNotification
                 partialSensingAllowed = dependencies.allowPartialSensing
+                restartAfterProcessDeath = dependencies.restartAfterProcessDeath
                 offBodyDetector = dependencies.offBodyDetector
                 return
             }
@@ -250,7 +252,7 @@ class BackgroundController(
                 postEmergencyNotification()
                 stop()
             }
-            return START_STICKY
+            return if (restartAfterProcessDeath) START_STICKY else START_NOT_STICKY
         }
 
         private data class NotificationProperties(
