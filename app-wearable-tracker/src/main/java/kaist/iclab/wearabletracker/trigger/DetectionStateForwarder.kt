@@ -44,7 +44,9 @@ class DetectionStateForwarder(
             detectionStateTracker.stateChanges.collect { (sensor, state) ->
                 try {
                     val payload = buildJsonObject { put(sensor, state.value) }.toString()
-                    bleChannel.send(Constants.BLE.KEY_DETECTION_STATE_UPDATE, payload)
+                    // Urgent: non-urgent DataItems may be batched for up to ~30 min, and the phone-side
+                    // trigger engine needs this detection while the wearer is still there.
+                    bleChannel.send(Constants.BLE.KEY_DETECTION_STATE_UPDATE, payload, isUrgent = true)
                 } catch (e: Exception) {
                     Log.e(
                         TAG,

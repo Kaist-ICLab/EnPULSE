@@ -328,7 +328,7 @@ class BLEHelper(
         appScope.io.launch {
             try {
                 val ackData = ids.joinToString(",")
-                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_ACK, ackData)
+                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_ACK, ackData, isUrgent = true)
                 Log.d(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Sent ACK for IDs: $ackData")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -351,7 +351,7 @@ class BLEHelper(
                     }
                 }.toString()
 
-                bleChannel.send(AppConfig.BLEKeys.DETECTION_STATE_UPDATE, payload)
+                bleChannel.send(AppConfig.BLEKeys.DETECTION_STATE_UPDATE, payload, isUrgent = true)
                 Log.d(
                     AppConfig.LogTags.PHONE_BLE,
                     "[TRIGGER] Sent state updates to watch: $payload"
