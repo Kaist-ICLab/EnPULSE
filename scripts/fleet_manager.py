@@ -19,10 +19,13 @@ import argparse
 import subprocess
 import concurrent.futures
 import re
+import threading
 from datetime import datetime
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "fleet_config.json")
-PACKAGE_NAME = "kaist.iclab.mobiletracker"
+# kaist.iclab.trackerSystem is the actual applicationId of both demo apps
+# (app-mobile-tracker and app-wearable-tracker share it, as the Data Layer requires).
+TRACKER_PACKAGE = "kaist.iclab.trackerSystem"
 BENCHMARK_PACKAGE = "kaist.iclab.benchmark"
 
 # Port scan range for ADB wireless debugging fallback (Android uses 37000-44000 typically)
@@ -121,20 +124,21 @@ def select_target_devices(devices: list) -> list:
 
 def check_device_status(device: dict) -> tuple:
     """
-    Probes a single device for its battery level, benchmark service status, and local data folder count.
-    
+    Probes a single device for its battery level, the installed EnPULSE build's versionName,
+    and whether data collection (BackgroundController's foreground service) is running.
+
     Args:
         device (dict): The device dictionary containing 'name' and 'address'.
-        
+
     Returns:
-        tuple: (name, address, state, battery, benchmark_status, folder_count)
+        tuple: (name, address, state, battery, version, collection_status)
     """
     address = device["address"]
     name = device["name"]
-    
+
     # 1. Connect if not connected
     run_adb(["connect", address], timeout=5)
-    
+
     # 2. Check battery
     bat_success, bat_out, _ = run_adb(["-s", address, "shell", "dumpsys", "battery"], timeout=5)
     if not bat_success:
@@ -146,43 +150,31 @@ def check_device_status(device: dict) -> tuple:
             battery = line.split(":")[1].strip() + "%"
             break
 
-    # 3. Check Benchmark Service status
-    srv_success, srv_out, _ = run_adb(["-s", address, "shell", "dumpsys", "activity", "services", BENCHMARK_PACKAGE], timeout=5)
-    
-    if "kaist.iclab.benchmark" in srv_out and "ServiceRecord{" in srv_out:
-        status = "● Running"
-        
-        # Try getting elapsed time from 'ps' (Supported on Android 11+ Toybox)
-        ps_success, ps_out, _ = run_adb(["-s", address, "shell", "ps", "-o", "NAME,ETIME"], timeout=5)
-        found_time = False
-        if ps_success:
-            for line in ps_out.splitlines():
-                if "kaist.iclab.benchmark" in line:
-                    parts = line.strip().split()
-                    if len(parts) >= 2 and ":" in parts[-1]:
-                        status = f"● Running ({parts[-1]})"
-                        found_time = True
-                        break
-                        
-        # Fallback to dumpsys createTime if ps didn't work
-        if not found_time:
-            import re
-            match = re.search(r"createTime=-?([0-9]+[a-zA-Z0-9]*)", srv_out)
-            if match:
-                status = f"● Running ({match.group(1)})"
+    # 3. Installed build's versionName (distinguishes which commit is on this device).
+    version = "-"
+    pkg_success, pkg_out, _ = run_adb(
+        ["-s", address, "shell", "dumpsys", "package", TRACKER_PACKAGE], timeout=5
+    )
+    if pkg_success:
+        for line in pkg_out.splitlines():
+            line = line.strip()
+            if line.startswith("versionName="):
+                version = line.split("=", 1)[1].strip()
+                break
     else:
-        status = "■ Stopped"
+        version = "not installed"
 
-    # 4. Count folders in EnPULSE (Phone) and Benchmarks (Watch)
-    ls_success, ls_out, _ = run_adb(["-s", address, "shell", "ls", "-d", "/sdcard/Download/EnPULSE/*"], timeout=5)
-    folders = [f for f in ls_out.splitlines() if "No such file" not in f and f.strip() and ("phone-" in f or "watch-" in f or "Benchmark" in f)]
-    
-    ls_watch_success, ls_watch_out, _ = run_adb(["-s", address, "shell", "ls", "-d", "/sdcard/Android/data/kaist.iclab.benchmark/files/Benchmarks/*", "/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/*"], timeout=5)
-    watch_folders = [f for f in ls_watch_out.splitlines() if "No such file" not in f and f.strip() and ("watch-" in f or "Benchmark" in f)]
-    
-    folder_count = (len(folders) if ls_success and folders else 0) + (len(watch_folders) if ls_watch_success and watch_folders else 0)
+    # 4. Is data collection running: BackgroundController's ControllerService is a foreground
+    # service, so an active ServiceRecord for it means the phone/watch is actually sensing.
+    status = "not installed" if version == "not installed" else "■ Stopped"
+    if version != "not installed":
+        srv_success, srv_out, _ = run_adb(
+            ["-s", address, "shell", "dumpsys", "activity", "services", TRACKER_PACKAGE], timeout=5
+        )
+        if srv_success and "ControllerService" in srv_out and "ServiceRecord{" in srv_out:
+            status = "● Collecting"
 
-    return name, address, "Online", battery, status, str(folder_count)
+    return name, address, "Online", battery, version, status
 
 def is_device_connected(device: dict) -> bool:
     """
@@ -531,19 +523,22 @@ def cmd_status():
     # Sort by name
     results.sort(key=lambda x: x[0])
 
-    print("\n╔" + "═"*12 + "╤" + "═"*22 + "╤" + "═"*9 + "╤" + "═"*11 + "╤" + "═"*19 + "╤" + "═"*11 + "╗")
-    print(f"║ {'Device':<10} │ {'Address':<20} │ {'State':<7} │ {'Battery':<9} │ {'Benchmark':<17} │ {'Folders':<9} ║")
-    print("╠" + "═"*12 + "╪" + "═"*22 + "╪" + "═"*9 + "╪" + "═"*11 + "╪" + "═"*19 + "╪" + "═"*11 + "╣")
-    
-    for name, addr, state, bat, bench, f_count in results:
-        print(f"║ {name:<10} │ {addr:<20} │ {state:<7} │ {bat:<9} │ {bench:<17} │ {f_count:<9} ║")
-        
-    print("╚" + "═"*12 + "╧" + "═"*22 + "╧" + "═"*9 + "╧" + "═"*11 + "╧" + "═"*19 + "╧" + "═"*11 + "╝")
+    print("\n╔" + "═"*12 + "╤" + "═"*22 + "╤" + "═"*9 + "╤" + "═"*11 + "╤" + "═"*17 + "╤" + "═"*14 + "╗")
+    print(f"║ {'Device':<10} │ {'Address':<20} │ {'State':<7} │ {'Battery':<9} │ {'Version':<15} │ {'Collection':<12} ║")
+    print("╠" + "═"*12 + "╪" + "═"*22 + "╪" + "═"*9 + "╪" + "═"*11 + "╪" + "═"*17 + "╪" + "═"*14 + "╣")
+
+    for name, addr, state, bat, version, status in results:
+        print(f"║ {name:<10} │ {addr:<20} │ {state:<7} │ {bat:<9} │ {version:<15} │ {status:<12} ║")
+
+    print("╚" + "═"*12 + "╧" + "═"*22 + "╧" + "═"*9 + "╧" + "═"*11 + "╧" + "═"*17 + "╧" + "═"*14 + "╝")
 
 def cmd_pull():
     """
     Pulls benchmark data folders from all targeted connected devices in parallel.
     Saves the data into ~/Desktop/EnPULSE-Data.
+
+    Not applicable to the demo tracker apps, which upload directly to Supabase and keep
+    no local export folder; this remains for app-mobile-benchmark / app-wearable-benchmark.
     """
     config = load_config()
     devices = config.get("devices", [])
@@ -606,21 +601,21 @@ def cmd_install():
     ]
 
     print("\n📦 Which apps do you want to install?")
-    print("1. All Apps (4 apps)")
-    print("2. Benchmark Apps (Phone & Watch Benchmark)")
-    print("3. Tracker Apps (Phone & Watch Tracker)")
+    print("1. Tracker Apps (Phone & Watch Tracker) — the demo apps")
+    print("2. All Apps (4 apps, incl. benchmark)")
+    print("3. Benchmark Apps (Phone & Watch Benchmark)")
     print("4. Phone Apps (Tracker & Benchmark)")
     print("5. Watch Apps (Tracker & Benchmark)")
     print("6. Select a specific single app")
     app_choice = input("Select an option (1-6) [1]: ").strip() or "1"
-    
+
     selected_apps = []
     if app_choice == "1":
-        selected_apps = ALL_APPS
-    elif app_choice == "2":
-        selected_apps = [a for a in ALL_APPS if a["type"] == "Benchmark"]
-    elif app_choice == "3":
         selected_apps = [a for a in ALL_APPS if a["type"] == "Tracker"]
+    elif app_choice == "2":
+        selected_apps = ALL_APPS
+    elif app_choice == "3":
+        selected_apps = [a for a in ALL_APPS if a["type"] == "Benchmark"]
     elif app_choice == "4":
         selected_apps = [a for a in ALL_APPS if a["device"] == "Phone"]
     elif app_choice == "5":
@@ -694,6 +689,10 @@ def cmd_install():
 
     print(f"\n🚀 Deploying to {len(connected_devices)} connected device(s) in parallel...")
 
+    # Installs run concurrently; without this, two devices hitting the confirmation prompt at
+    # once would interleave their input() calls into unreadable output.
+    confirm_lock = threading.Lock()
+
     def install_to_device(device):
         name = device["name"]
         address = device["address"]
@@ -710,15 +709,25 @@ def cmd_install():
         
         for app in apps_for_this_device:
             success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=None)
-            
-            # If signature mismatch occurs, automatically uninstall old version and reinstall
+
+            # A signature/version mismatch needs an uninstall before it can reinstall, which
+            # wipes that device's login and campaign state. Ask before doing that to one of the
+            # demo devices, rather than silently resetting it mid-install.
             raw_reason = (err or out or "").strip()
             if not (success and "Success" in out) and "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in raw_reason:
                 pkg_name = app.get("pkg")
                 if pkg_name:
-                    run_adb(["-s", address, "uninstall", pkg_name], timeout=None)
-                    success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=None)
-            
+                    with confirm_lock:
+                        print(f"\n⚠️  {name}: {app['id']} is installed with an incompatible signature/version.")
+                        confirm = input(
+                            f"   Uninstall it from {name} and lose its local login/campaign data? [y/N]: "
+                        ).strip().lower()
+                    if confirm == "y":
+                        run_adb(["-s", address, "uninstall", pkg_name], timeout=None)
+                        success, out, err = run_adb(["-s", address, "install", "-r", "-d", "-t", app["path"]], timeout=None)
+                    else:
+                        print(f"   Skipped reinstalling {app['id']} on {name}.")
+
             if success and "Success" in out:
                 results_msg.append(f"{app['id']} ✅")
             else:
