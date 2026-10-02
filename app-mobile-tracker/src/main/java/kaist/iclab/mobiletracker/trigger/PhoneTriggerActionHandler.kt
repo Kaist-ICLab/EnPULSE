@@ -150,6 +150,10 @@ class PhoneTriggerActionHandler(
                 put("title", action.title)
                 put("description", action.description)
                 if (action.url != null) put("url", action.url)
+                // Lets the watch drop this if it was queued while out of range and only
+                // delivered on reconnect, possibly to the next wearer (see WatchEmaTriggerReceiver,
+                // same pattern).
+                put("ts", System.currentTimeMillis())
             }.toString()
             bleChannel.send(AppConfig.BLEKeys.WATCH_NOTIFICATION_TRIGGER, payload, isUrgent = true)
         } catch (e: Exception) {

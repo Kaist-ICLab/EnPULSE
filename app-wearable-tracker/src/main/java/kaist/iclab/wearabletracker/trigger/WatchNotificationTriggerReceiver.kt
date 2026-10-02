@@ -14,6 +14,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /**
  * Listens for the phone's command to show a generic notification on the watch — a
@@ -31,6 +32,7 @@ class WatchNotificationTriggerReceiver(
 ) {
     companion object {
         private const val TAG = "WatchNotificationRcvr"
+        private const val MAX_TRIGGER_AGE_MS = 30_000L
     }
 
     private var isListening = false
@@ -60,6 +62,17 @@ class WatchNotificationTriggerReceiver(
             val title = obj["title"]?.jsonPrimitive?.content ?: ""
             val description = obj["description"]?.jsonPrimitive?.content ?: ""
             val url = obj["url"]?.jsonPrimitive?.content
+            val sentAt = obj["ts"]?.jsonPrimitive?.longOrNull
+
+            // Data Layer items queued while the watch was out of range all arrive on reconnect,
+            // by then possibly on the next wearer's wrist (same as WatchEmaTriggerReceiver).
+            if (sentAt != null) {
+                val ageMs = System.currentTimeMillis() - sentAt
+                if (ageMs > MAX_TRIGGER_AGE_MS) {
+                    Log.w(TAG, "Dropping stale watch notification trigger (${ageMs / 1000}s old): title=$title")
+                    return
+                }
+            }
 
             Log.d(TAG, "Triggering watch notification: title=$title, url=$url")
 
