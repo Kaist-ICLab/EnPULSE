@@ -53,9 +53,12 @@ class WatchSurveyConfigPusher(
                     watchConfig.surveyId to watchConfig
                 }
 
+            // Still send an empty payload rather than returning early: WatchSurveyConfigReceiver
+            // replaces its whole cache on receipt, so a campaign with no watch surveys (or
+            // switched away from one that had them) needs this push to clear the previous
+            // campaign's surveys — otherwise the watch keeps showing them indefinitely.
             if (watchSurveyConfigs.isEmpty()) {
-                Log.w(TAG, "No watch survey configs to push")
-                return
+                Log.w(TAG, "No watch survey configs for this campaign; pushing an empty list")
             }
 
             val payload = WatchSurveyConfigPayload(surveyConfigs = watchSurveyConfigs)
