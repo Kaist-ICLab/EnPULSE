@@ -17,6 +17,16 @@ kotlin {
     jvmToolchain(17)
 }
 
+
+// Version from git, so each of the demo devices shows which build it runs:
+// versionCode = commit count, versionName = "1.0.0-<short hash>" (Settings > About).
+// Falls back to 1 / "1.0.0" when git is unavailable (e.g. a source zip).
+fun gitOutput(vararg args: String): String? = runCatching {
+    providers.exec { commandLine("git", *args) }.standardOutput.asText.get().trim().ifEmpty { null }
+}.getOrNull()
+val gitCommitCount = gitOutput("rev-list", "--count", "HEAD")?.toIntOrNull() ?: 1
+val gitShortHash = gitOutput("rev-parse", "--short", "HEAD")
+
 android {
     namespace = "kaist.iclab.mobiletracker"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -30,8 +40,8 @@ android {
         applicationId = "kaist.iclab.trackerSystem"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = gitCommitCount
+        versionName = if (gitShortHash != null) "1.0.0-$gitShortHash" else "1.0.0"
 
         // Load local.properties for local development
         val localProperties = Properties()

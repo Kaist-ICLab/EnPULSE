@@ -223,7 +223,16 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     override fun onDestroy() {
         // Only remove if we registered
         if (listenersRegistered) {
-            sensors.forEach { it.removeListener(listener[it.id]!!) }
+            // ActivityRecognition is registered with activityRecognitionListener, not
+            // listener[id]; removing the wrong one left it attached, so every stop/start
+            // added another duplicate "physical_activity" send.
+            sensors.forEach { sensor ->
+                if (sensor is ActivityRecognitionSensor) {
+                    sensor.removeListener(activityRecognitionListener)
+                } else {
+                    sensor.removeListener(listener[sensor.id]!!)
+                }
+            }
             listenersRegistered = false
         }
 

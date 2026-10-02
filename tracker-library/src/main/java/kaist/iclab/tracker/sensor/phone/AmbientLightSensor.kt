@@ -21,7 +21,7 @@ class AmbientLightSensor(
     context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    stateStorage: StateStorage<SensorState>,
+    private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<AmbientLightSensor.Config, AmbientLightSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
     titleResId = R.string.sensor_ambient_light,
@@ -69,8 +69,10 @@ class AmbientLightSensor(
 
     override fun init() {
         super.init()
+        // The state used to be constructed and discarded, so phones without a light
+        // sensor still reported the sensor as available.
         if (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) == null) {
-            SensorState(SensorState.FLAG.UNAVAILABLE, "AmbientLight Sensor is not available")
+            stateStorage.set(SensorState(SensorState.FLAG.UNAVAILABLE, "AmbientLight Sensor is not available"))
         }
     }
 
