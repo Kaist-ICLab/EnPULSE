@@ -160,6 +160,16 @@ class DefaultTriggerEngine(
             }
 
             for (trigger in triggers) {
+                // Only re-check a trigger when one of its own sensors reports. A detection stays
+                // valid for 60 s, so re-checking on unrelated updates (activity every 10 s, stress
+                // every 30 s) refired the same detection's action on each of them whenever the
+                // cooldown was shorter than that.
+                if (triggeringSensor != null &&
+                    triggeringSensor !in trigger.condition.referencedSensors()
+                ) {
+                    continue
+                }
+
                 val now = System.currentTimeMillis()
                 val result = ConditionEvaluator.evaluate(trigger.condition, currentStates, now)
                 val executed = mutableListOf<String>()

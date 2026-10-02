@@ -121,6 +121,30 @@ class TriggerConfigParsingTest {
         assertThrows(SerializationException::class.java) { condition("""{"type":"detection","sensor":"gesture"}""") }
     }
 
+    // --- Which sensors a condition reads (the engine only re-checks a trigger for these) ---
+
+    @Test
+    fun `referenced sensors cover every branch of the tree`() {
+        val tree = condition(
+            """
+            {"type":"and","children":[
+              {"type":"detection","sensor":"gesture","value":"Clapping"},
+              {"type":"not","child":{"type":"or","children":[
+                {"type":"detection","sensor":"stress","value":"High"},
+                {"type":"detection","sensor":"gesture","value":"Knocking"}
+              ]}}
+            ]}
+            """
+        )
+        assertEquals(setOf("gesture", "stress"), tree.referencedSensors())
+    }
+
+    @Test
+    fun `a gesture-only trigger does not reference activity or stress`() {
+        val tree = condition("""{"type":"detection","sensor":"gesture","value":"Clapping"}""")
+        assertEquals(setOf("gesture"), tree.referencedSensors())
+    }
+
     // --- Whole trigger ---
 
     @Test
