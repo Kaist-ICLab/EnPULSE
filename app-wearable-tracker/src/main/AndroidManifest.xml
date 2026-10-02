@@ -68,12 +68,9 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault" />
 
-        <!-- DUMP is held by adb (shell) but not by normal apps, so the receiver stays
-             usable for debugging while other apps can no longer inject detection states. -->
         <receiver
             android:name=".trigger.TriggerDebugReceiver"
-            android:exported="true"
-            android:permission="android.permission.DUMP">
+            android:exported="true">
             <intent-filter>
                 <action android:name="kaist.iclab.wearabletracker.UPDATE_STATE" />
             </intent-filter>

@@ -238,11 +238,9 @@
             android:theme="@style/Theme.MobileTracker" />
 
         <!-- Developer test receiver to trigger WebApp notifications via ADB -->
-        <!-- DUMP is held by adb (shell) but not by normal apps, so other apps cannot launch webapps. -->
         <receiver
             android:name=".webapp.WebAppTestReceiver"
-            android:exported="true"
-            android:permission="android.permission.DUMP">
+            android:exported="true">
             <intent-filter>
                 <action android:name="kaist.iclab.mobiletracker.test.TRIGGER_WEBAPP" />
             </intent-filter>
