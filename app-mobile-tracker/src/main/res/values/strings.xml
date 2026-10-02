@@ -89,7 +89,7 @@
     <string name="web_app_add_to_home">Add to Home</string>
     <string name="permission_screen_description">Grant the permissions for the data you wish to track. Denying a permission will simply disable tracking for that specific sensor without affecting the rest of the app.</string>
     <string name="restricted_settings_title">Restricted Settings</string>
-    <string name="restricted_settings_desc">Since you installed this app manually, Android restricts this setting.\n\nTo enable it:\n1. Go to App Info (we\'ll open it for you)\n2. Tap the top-right menu (3 dots)\n3. Select \'Allow restricted settings\'\n4. Return here to enable the permission.</string>
+    <string name="restricted_settings_desc">Please enable EnPULSE on the next settings page that we\'ll open for you.\n\nIf Android blocks it and shows a message that the setting is restricted, tap that message, choose \'Allow restricted settings\', then come back here and try again.</string>
     <string name="restricted_settings_got_it">Got it</string>
     <string name="restricted_settings_cancel">Cancel</string>
 
