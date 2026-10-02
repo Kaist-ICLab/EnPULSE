@@ -350,35 +350,6 @@ class BLEHelper(
     }
 
     /**
-     * Send simulated detection state updates to the watch.
-     * This allows the phone to trigger generic evaluation rules on the watch.
-     */
-    fun sendDetectionStateUpdates(states: Map<String, String>) {
-        appScope.io.launch {
-            try {
-                // Serialize map to JSON
-                val payload = buildJsonObject {
-                    states.forEach { (key, value) ->
-                        put(key, value)
-                    }
-                }.toString()
-
-                bleChannel.send(AppConfig.BLEKeys.DETECTION_STATE_UPDATE, payload, isUrgent = true)
-                Log.d(
-                    AppConfig.LogTags.PHONE_BLE,
-                    "[TRIGGER] Sent state updates to watch: $payload"
-                )
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Log.e(
-                    AppConfig.LogTags.PHONE_BLE,
-                    "[TRIGGER] Failed to send state updates: ${e.message}"
-                )
-            }
-        }
-    }
-
-    /**
      * Push the campaign's active watch-sensor list to the watch, so it only collects/shows
      * sensors that are actually part of the wearer's campaign.
      */

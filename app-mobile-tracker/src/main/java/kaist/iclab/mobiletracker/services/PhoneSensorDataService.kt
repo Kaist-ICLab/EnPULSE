@@ -10,7 +10,6 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
@@ -21,6 +20,7 @@ import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -61,7 +61,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     private val phoneSensorRepository by inject<PhoneSensorRepository>()
     private val serviceNotification by inject<BackgroundController.ServiceNotification>()
     private val timestampService by inject<SyncTimestampService>()
-    private val bleHelper by inject<BLEHelper>()
+    private val detectionStateTracker by inject<DetectionStateTracker>()
 
     // Channel for batching
     private val eventChannel = Channel<Pair<String, SensorEntity>>(
@@ -102,8 +102,14 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         }
 
         if (label != "Unknown") {
-            Log.d(TAG, "Phone activity detected: $label. Syncing to watch...")
-            bleHelper.sendDetectionStateUpdates(mapOf("physical_activity" to label))
+            // Feed the phone's own trigger engine directly. This used to go to the watch, which
+            // only sent it back, so activity triggers needed a connected watch and two hops.
+            Log.d(TAG, "Phone activity detected: $label")
+            detectionStateTracker.updateState(
+                "physical_activity",
+                label,
+                activityEntity.timestamp.coerceAtMost(System.currentTimeMillis())
+            )
         }
     }
 
