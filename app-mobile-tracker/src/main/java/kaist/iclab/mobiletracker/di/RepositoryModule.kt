@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.di
 
+import org.koin.android.ext.koin.androidContext
 import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.CampaignRepository
@@ -59,6 +60,7 @@ val repositoryModule = module {
     // SurveyRepository for survey configuration management
     single<SurveyRepository> {
         SurveyRepositoryImpl(
+            context = androidContext(),
             surveyService = get(),
             persistentStorage = get(),
             phoneSensorConfigStorage = get(named("surveySensorConfigStorage")),

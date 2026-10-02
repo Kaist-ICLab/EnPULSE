@@ -13,6 +13,7 @@ import kaist.iclab.tracker.sensor.survey.activity.ui.theme.DefaultSurveyTheme
 class DefaultSurveyActivity : SurveyActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!isSurveyReady) return
 
         enableEdgeToEdge()
         setContent {

@@ -14,6 +14,7 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.utils.NotificationHelper.showSurveyTriggerNotification
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
+import kaist.iclab.tracker.sensor.survey.activity.SurveyActivity
 
 /**
  * Reusable utility for building and showing notifications.
@@ -129,6 +130,28 @@ object NotificationHelper {
     }
 
     /**
+     * Cancel survey notifications still in the tray, except those for [keepSurveyIds]. They are
+     * ongoing and never auto-cancelled, so after a campaign switch a leftover would open a survey
+     * that no longer exists for the next participant. Matched by channel ("<channel>_<surveyId>");
+     * web-app notifications share the trigger channel prefix and are left alone.
+     */
+    fun cancelSurveyNotifications(context: Context, keepSurveyIds: Set<String> = emptySet()) {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val prefixes = listOf(
+            "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_",
+            "${Constants.Notification.CHANNEL_ID_SURVEY}_"
+        )
+        notificationManager.activeNotifications.forEach { active ->
+            val channelId = active.notification.channelId ?: return@forEach
+            if ("_webapp_" in channelId) return@forEach
+            val surveyId = prefixes.firstOrNull { channelId.startsWith(it) }
+                ?.let { channelId.removePrefix(it) } ?: return@forEach
+            if (surveyId !in keepSurveyIds) notificationManager.cancel(active.tag, active.id)
+        }
+    }
+
+    /**
      * Show a notification for a scheduled survey.
      */
     fun showSurveyNotification(
@@ -150,6 +173,8 @@ object NotificationHelper {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra("id", surveyId)
             putExtra("scheduleId", scheduleId)
+            // Lets the survey screen cancel this (ongoing) notification once it opens.
+            putExtra(SurveyActivity.EXTRA_NOTIFICATION_ID, notificationId)
         }
 
         val pendingIntent = PendingIntent.getActivity(
@@ -197,6 +222,8 @@ object NotificationHelper {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra("id", surveyId)
             putExtra("scheduleId", scheduleId)
+            // Lets the survey screen cancel this (ongoing) notification once it opens.
+            putExtra(SurveyActivity.EXTRA_NOTIFICATION_ID, notificationId)
         }
 
         val pendingIntent = PendingIntent.getActivity(

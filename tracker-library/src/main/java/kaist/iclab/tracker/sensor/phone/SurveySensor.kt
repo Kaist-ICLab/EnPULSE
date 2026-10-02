@@ -115,8 +115,12 @@ class SurveySensor(
         }
 
 
-        SurveyActivity.initSurvey = { id: String, scheduleId: String? ->
-            val requestedSurvey = configStorage.get().survey[id]!!
+        SurveyActivity.initSurvey = initSurvey@{ id: String, scheduleId: String? ->
+            val requestedSurvey = configStorage.get().survey[id]
+            if (requestedSurvey == null) {
+                Log.w(TAG, "Survey $id is not in the current config")
+                return@initSurvey null
+            }
             if(scheduleId != null) scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
             requestedSurvey.initSurveyResponse()
             requestedSurvey
@@ -156,11 +160,15 @@ class SurveySensor(
             return
         }
 
-        // Fallback to internal notification logic if no handler is provided
+        // Fallback to internal notification logic if no handler is provided.
+        // Use a unique notification ID based on scheduleId to ensure every trigger alerts the user
+        // even if a previous one is still active.
+        val triggerNotificationId = NOTIFICATION_ID + scheduleId.hashCode()
         val surveyActivityIntent = Intent(context, DefaultSurveyActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("id", id)
             putExtra("scheduleId", scheduleId)
+            putExtra(SurveyActivity.EXTRA_NOTIFICATION_ID, triggerNotificationId)
         }
 
         val pendingIntent = PendingIntent.getActivity(
@@ -181,9 +189,6 @@ class SurveySensor(
             .setFullScreenIntent(pendingIntent, true) // Add full screen intent to wake device
 
         try {
-            // Use a unique notification ID based on scheduleId to ensure every trigger alerts the user
-            // even if a previous one is still active.
-            val triggerNotificationId = NOTIFICATION_ID + scheduleId.hashCode()
             NotificationManagerCompat.from(context).notify(triggerNotificationId, builder.build())
             Log.d(TAG, "Triggered phone survey notification (survey: $id, schedule: $scheduleId)")
         } catch (e: SecurityException) {
@@ -206,15 +211,20 @@ class SurveySensor(
         Log.d(TAG, "scheduleId: $scheduleId, result: $result, responseTime: $responseTime")
 
         scheduleStorage.setResponseSubmissionTime(scheduleId, responseTime)
-        val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)!!
+        // Schedules are wiped when collection stops (resetSchedule) or surveys are cleared, so a
+        // survey answered across a stop/start has none. Record the answer anyway, with its
+        // submission time standing in for the lost schedule times, instead of crashing.
+        val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)
+        if (schedule == null) Log.w(TAG, "No schedule for $scheduleId; using the submission time")
+        val fallbackTime = responseTime.takeIf { it > 0 } ?: System.currentTimeMillis()
         val resultJson = Json.decodeFromString<JsonElement>(result)
 
         listeners.forEach { it.invoke(
             Entity(
                 response = resultJson,
-                triggerTime = schedule.triggerTime,
-                actualTriggerTime = schedule.actualTriggerTime,
-                surveyStartTime = schedule.surveyStartTime,
+                triggerTime = if (schedule != null) schedule.triggerTime else fallbackTime,
+                actualTriggerTime = if (schedule != null) schedule.actualTriggerTime else fallbackTime,
+                surveyStartTime = if (schedule != null) schedule.surveyStartTime else fallbackTime,
                 responseSubmissionTime = responseTime,
                 deviceType = 0 // Phone
             )

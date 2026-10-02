@@ -1,5 +1,7 @@
 package kaist.iclab.mobiletracker.repository
 
+import kaist.iclab.mobiletracker.utils.NotificationHelper
+import android.content.Context
 import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.mobiletracker.utils.SurveyConfigConverter
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
  * survey (question content) configs to the watch, via [WatchSurveyConfigPusher].
  */
 class SurveyRepositoryImpl(
+    private val context: Context,
     private val surveyService: SurveyService,
     private val persistentStorage: CouchbaseSurveyConfigStorage,
     private val phoneSensorConfigStorage: StateStorage<SurveySensor.Config>,
@@ -69,6 +72,12 @@ class SurveyRepositoryImpl(
         val phoneConfigs = configs.filter { it.deviceType == 0 }
         val phoneSensorConfig = SurveyConfigConverter.toSurveySensorConfig(phoneConfigs)
         phoneSensorConfigStorage.set(phoneSensorConfig)
+        // Drop tray notifications for surveys that are no longer in the config (e.g. the previous
+        // campaign's), keeping ones that still point at a valid survey.
+        NotificationHelper.cancelSurveyNotifications(
+            context,
+            keepSurveyIds = phoneConfigs.map { it.id.toString() }.toSet()
+        )
 
         // 2. Filter and apply Watch (MicroEMA) Surveys
         // Build watch EMA configs for the MicroEmaSensor (response listening only)
@@ -109,5 +118,6 @@ class SurveyRepositoryImpl(
         microEmaConfigStorage.set(MicroEmaSensor.Config())
         // Clear pending survey schedules/notifications from old configuration
         scheduleStorage.resetSchedule()
+        NotificationHelper.cancelSurveyNotifications(context)
     }
 }
