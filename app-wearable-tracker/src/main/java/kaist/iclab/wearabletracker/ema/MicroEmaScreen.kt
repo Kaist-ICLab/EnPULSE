@@ -308,7 +308,8 @@ fun MicroEmaScreenContent(
     ) {
         // Bezel Timer (Circular Progress)
         if (!isComplete && remainingTimeMs != null) {
-            val totalTime = config?.expireAfterMs ?: 30000L
+            // Same fallback as MicroEmaViewModel, so a 0 expiry doesn't divide by zero.
+            val totalTime = config?.expireAfterMs?.takeIf { it > 0 } ?: 30_000L
             val progress = (remainingTimeMs.toFloat() / totalTime.toFloat()).coerceIn(0f, 1f)
             val color = when {
                 progress > 0.6f -> TimerSafe

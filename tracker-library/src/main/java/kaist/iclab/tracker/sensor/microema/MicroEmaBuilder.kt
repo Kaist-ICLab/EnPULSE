@@ -8,6 +8,12 @@ import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 object MicroEmaBuilder {
 
     /**
+     * Expiry used when a survey has none (`expire_after_ms` null) or a non-positive one (the
+     * database default is 0). Matches the dashboard's default for new watch surveys.
+     */
+    const val DEFAULT_EXPIRE_AFTER_MS = 30_000L
+
+    /**
      * Builds a [WatchSurveyConfig] from a unified [SurveyConfig].
      */
     fun build(config: SurveyConfig): WatchSurveyConfig {
@@ -15,7 +21,7 @@ object MicroEmaBuilder {
             surveyId = config.id,
             title = config.title,
             description = config.description,
-            expireAfterMs = config.expireAfterMs,
+            expireAfterMs = config.expireAfterMs?.takeIf { it > 0 } ?: DEFAULT_EXPIRE_AFTER_MS,
             questions = config.questions.map { q ->
                 WatchQuestion(
                     id = q.id,

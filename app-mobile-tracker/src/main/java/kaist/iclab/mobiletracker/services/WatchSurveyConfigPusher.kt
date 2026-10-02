@@ -41,13 +41,13 @@ class WatchSurveyConfigPusher(
     /**
      * Filter watch survey configs and send them to the watch via BLE.
      *
-     * @param surveyConfigs Survey configs fetched from Supabase (only deviceType=1 with a
-     *   non-null expireAfterMs are sent — the same filter `TriggerConfigPusher` used to apply).
+     * @param surveyConfigs Survey configs fetched from Supabase (only deviceType=1 are sent; a
+     *   missing expiry gets [MicroEmaBuilder.DEFAULT_EXPIRE_AFTER_MS]).
      */
     suspend fun pushToWatch(surveyConfigs: List<SurveyConfig>) {
         try {
             val watchSurveyConfigs = surveyConfigs
-                .filter { it.deviceType == 1 && it.expireAfterMs != null }
+                .filter { it.deviceType == 1 }
                 .associate { survey ->
                     val watchConfig = MicroEmaBuilder.build(survey)
                     watchConfig.surveyId to watchConfig
