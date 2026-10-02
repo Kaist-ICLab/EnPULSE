@@ -5,6 +5,8 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
+import androidx.core.app.NotificationManagerCompat
+import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -28,6 +30,11 @@ class WatchSurveyActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
+
+        // The trigger also posts a notification that opens this activity, but the receiver starts
+        // the activity directly, so that notification is never tapped. Left in the tray it would
+        // reopen the survey later for whoever is wearing the watch.
+        NotificationManagerCompat.from(this).cancel(Constants.NotificationId.TRIGGER)
 
         // Handle back press / swipe-to-dismiss as a DISMISSED event.
         onBackPressedDispatcher.addCallback(this) {

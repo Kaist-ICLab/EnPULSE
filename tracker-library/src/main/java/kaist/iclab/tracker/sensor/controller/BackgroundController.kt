@@ -140,8 +140,16 @@ class BackgroundController(
             }
 
             stateStorage.set(ControllerState(ControllerState.FLAG.RUNNING))
+            // One sensor failing to start must not take the others down with it (the caller's
+            // catch stops everything). A failed sensor stays ENABLED, so it shows as not running.
             sensors.filter { it.sensorStateFlow.value.flag == SensorState.FLAG.ENABLED }
-                .forEach { it.start() }
+                .forEach { sensor ->
+                    try {
+                        sensor.start()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to start sensor ${sensor.id}", e)
+                    }
+                }
             isServiceRunning = true
         }
 
@@ -150,7 +158,13 @@ class BackgroundController(
             stateStorage.set(ControllerState(ControllerState.FLAG.READY))
             sensors.filter {
                 it.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING
-            }.forEach { it.stop() }
+            }.forEach { sensor ->
+                try {
+                    sensor.stop()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to stop sensor ${sensor.id}", e)
+                }
+            }
             stopSelf()
             stopForeground(STOP_FOREGROUND_REMOVE)
         }

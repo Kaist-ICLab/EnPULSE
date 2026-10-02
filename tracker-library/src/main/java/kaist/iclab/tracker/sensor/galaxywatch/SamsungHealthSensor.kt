@@ -15,6 +15,8 @@ import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
@@ -53,19 +55,35 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
     permissionManager, configStorage, stateStorage, configClass, entityClass,
     titleResId, descriptionResId, icon
 ) {
-    protected val tracker: HealthTracker? by lazy {
-        try {
-            val ppgTypes = ppgTypes
-            if (ppgTypes != null) {
-                samsungHealthSensorInitializer.getTracker(trackerType, ppgTypes)
-            } else {
-                samsungHealthSensorInitializer.getTracker(trackerType)
+    @Volatile
+    private var cachedTracker: HealthTracker? = null
+
+    /**
+     * The SDK tracker, or null while the tracking service is not connected. Only a successfully
+     * obtained tracker is cached: the service connects asynchronously (and reconnects after
+     * drops), so a lookup made too early must be retried rather than remembered as null.
+     */
+    protected val tracker: HealthTracker?
+        get() {
+            cachedTracker?.let { return it }
+            if (!samsungHealthSensorInitializer.connectionStateFlow.value) return null
+            return try {
+                val ppgTypes = ppgTypes
+                val created = if (ppgTypes != null) {
+                    samsungHealthSensorInitializer.getTracker(trackerType, ppgTypes)
+                } else {
+                    samsungHealthSensorInitializer.getTracker(trackerType)
+                }
+                cachedTracker = created
+                created
+            } catch (e: Exception) {
+                Log.e(name, "Failed to get HealthTracker for $name: ${e.message}")
+                null
             }
-        } catch (e: Exception) {
-            Log.e(name, "Failed to get HealthTracker for $name: ${e.message}")
-            null
         }
-    }
+
+    private val connectionScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var connectionJob: Job? = null
 
     /** Maps a single raw SDK data point into this sensor's own data-point type. */
     protected abstract fun mapDataPoint(received: Long, dataPoint: DataPoint): D
@@ -98,6 +116,23 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
     }
 
     override fun onStart() {
+        // After a restart or reboot the sensor is started before the tracking service has
+        // connected, so register whenever the connection comes (back) up. A StateFlow replays
+        // its current value, so an already connected service registers immediately.
+        connectionJob?.cancel()
+        connectionJob = connectionScope.launch {
+            samsungHealthSensorInitializer.connectionStateFlow.collect { isConnected ->
+                if (isConnected) {
+                    registerListener()
+                } else {
+                    // A tracker from a dropped connection is stale; fetch a new one on reconnect.
+                    cachedTracker = null
+                }
+            }
+        }
+    }
+
+    private fun registerListener() {
         try {
             tracker?.setEventListener(listener)
         } catch (_: Exception) {
@@ -106,6 +141,8 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
     }
 
     override fun onStop() {
+        connectionJob?.cancel()
+        connectionJob = null
         try {
             // Push out whatever is still sitting in the tracker's buffer before we tear
             // down the listener, so the last bit of data isn't lost on stop.

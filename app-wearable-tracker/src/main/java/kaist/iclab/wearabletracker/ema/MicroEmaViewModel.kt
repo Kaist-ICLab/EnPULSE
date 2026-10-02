@@ -74,6 +74,7 @@ class MicroEmaViewModel(
     private var responseTime: Long? = null
 
     private var countdownJob: Job? = null
+    private var isCountdownPaused = false
 
     // --- Actions ---
 
@@ -85,7 +86,7 @@ class MicroEmaViewModel(
         val config = repository.loadSurveyConfig()
         if (config == null) {
             Log.e(TAG, "Failed to load survey config — finishing immediately")
-            _isComplete.value = true
+            endSession()
             return
         }
 
@@ -96,6 +97,7 @@ class MicroEmaViewModel(
         }
 
         stopCountdown()
+        isCountdownPaused = false
         triggerTime = System.currentTimeMillis()
         answer = null
         responseTime = null
@@ -108,12 +110,13 @@ class MicroEmaViewModel(
 
         if (selectedQuestion == null) {
             Log.e(TAG, "Survey has no questions — finishing immediately")
-            _isComplete.value = true
+            endSession()
             return
         }
 
         _question.value = selectedQuestion
         surveyStartTime = System.currentTimeMillis()
+        repository.isSurveyActive = true
 
         // Start countdown timer if configured. expireAfterMs == null means "no expiry" and
         // is left alone; a non-positive value is a misconfiguration, not "expire instantly".
@@ -193,7 +196,17 @@ class MicroEmaViewModel(
             }
         }
 
+        endSession()
+    }
+
+    /**
+     * Mark the session finished and release the repository's active survey, so new triggers are
+     * accepted again and a leftover launch intent cannot reopen this survey.
+     */
+    private fun endSession() {
         _isComplete.value = true
+        repository.isSurveyActive = false
+        repository.clearCache()
     }
 
     // --- Countdown ---
@@ -216,8 +229,27 @@ class MicroEmaViewModel(
         countdownJob = null
     }
 
+    /**
+     * Pause expiry while the wearer is in the system keyboard or voice input screen. Otherwise a
+     * slow typed or spoken answer comes back after expiry and is thrown away.
+     */
+    fun pauseCountdown() {
+        if (_isComplete.value || countdownJob == null) return
+        stopCountdown()
+        isCountdownPaused = true
+    }
+
+    fun resumeCountdown() {
+        if (!isCountdownPaused) return
+        isCountdownPaused = false
+        if (_isComplete.value) return
+        val remaining = _remainingTimeMs.value ?: return
+        startCountdown(remaining)
+    }
+
     override fun onCleared() {
         super.onCleared()
         stopCountdown()
+        repository.isSurveyActive = false
     }
 }

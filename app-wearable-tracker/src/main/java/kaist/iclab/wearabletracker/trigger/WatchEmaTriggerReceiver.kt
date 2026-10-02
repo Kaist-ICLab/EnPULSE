@@ -15,6 +15,10 @@ import kaist.iclab.wearabletracker.ema.WatchSurveyActivity
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /**
  * Listens for the phone's command to launch a MicroEMA survey on the watch.
@@ -33,6 +37,7 @@ class WatchEmaTriggerReceiver(
 ) {
     companion object {
         private const val TAG = "WatchEmaTriggerRcvr"
+        private const val MAX_TRIGGER_AGE_MS = 30_000L
     }
 
     private var isListening = false
@@ -52,13 +57,41 @@ class WatchEmaTriggerReceiver(
     }
 
     private fun handleWatchEmaTrigger(json: JsonElement) {
-        val surveyId = when (json) {
-            is JsonPrimitive -> json.content.toIntOrNull()
-            else -> json.toString().toIntOrNull()
+        // Current phones send {"surveyId": N, "ts": epochMs}; older ones send the bare id.
+        val surveyId: Int?
+        val sentAt: Long?
+        when (json) {
+            is JsonObject -> {
+                surveyId = json["surveyId"]?.jsonPrimitive?.intOrNull
+                sentAt = json["ts"]?.jsonPrimitive?.longOrNull
+            }
+            is JsonPrimitive -> {
+                surveyId = json.content.toIntOrNull()
+                sentAt = null
+            }
+            else -> {
+                surveyId = json.toString().toIntOrNull()
+                sentAt = null
+            }
         }
 
         if (surveyId == null) {
             Log.e(TAG, "Received WATCH_EMA_TRIGGER with invalid surveyId: $json")
+            return
+        }
+
+        // Data Layer items queued while the watch was out of range all arrive on reconnect, by
+        // then possibly on the next wearer's wrist.
+        if (sentAt != null) {
+            val ageMs = System.currentTimeMillis() - sentAt
+            if (ageMs > MAX_TRIGGER_AGE_MS) {
+                Log.w(TAG, "Dropping stale WATCH_EMA_TRIGGER for surveyId=$surveyId (${ageMs / 1000}s old)")
+                return
+            }
+        }
+
+        if (microEmaRepository.isSurveyActive) {
+            Log.w(TAG, "Dropping WATCH_EMA_TRIGGER for surveyId=$surveyId: a survey is already open")
             return
         }
 

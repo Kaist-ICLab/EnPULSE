@@ -17,6 +17,14 @@
 
     <uses-feature android:name="android.hardware.type.watch" />
 
+    <!-- Lets the microEMA text question check whether a speech recognizer exists before
+         offering voice input (package visibility hides it otherwise on Android 11+). -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
     <application
         android:name=".WearableApplication"
         android:allowBackup="true"

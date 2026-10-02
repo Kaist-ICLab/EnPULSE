@@ -22,6 +22,10 @@ class MicroEmaRepository(
     // In-memory holder for the active session configuration
     private var activeConfig: WatchSurveyConfig? = null
 
+    /** True while a survey is on screen; new triggers are dropped instead of replacing it. */
+    @Volatile
+    var isSurveyActive: Boolean = false
+
     /**
      * Get the active survey config received from the phone.
      */

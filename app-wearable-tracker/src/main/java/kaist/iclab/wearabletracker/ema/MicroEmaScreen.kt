@@ -3,9 +3,15 @@ package kaist.iclab.wearabletracker.ema
 
 import android.app.Activity
 import android.app.RemoteInput
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.util.Log
+import android.widget.Toast
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -272,7 +278,9 @@ fun MicroEmaScreen(
         finalStatus = finalStatus,
         remainingTimeMs = remainingTimeMs,
         onAnswer = { viewModel.answerQuestion(it) },
-        onDismiss = { viewModel.dismiss() }
+        onDismiss = { viewModel.dismiss() },
+        onInputOpen = { viewModel.pauseCountdown() },
+        onInputClosed = { viewModel.resumeCountdown() }
     )
 }
 
@@ -288,7 +296,9 @@ fun MicroEmaScreenContent(
     finalStatus: ResponseStatus?,
     remainingTimeMs: Long?,
     onAnswer: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onInputOpen: () -> Unit = {},
+    onInputClosed: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -331,7 +341,9 @@ fun MicroEmaScreenContent(
                     SingleQuestionView(
                         question = q,
                         onAnswer = onAnswer,
-                        onDismiss = onDismiss
+                        onDismiss = onDismiss,
+                        onInputOpen = onInputOpen,
+                        onInputClosed = onInputClosed
                     )
                 } ?: LoadingView()
             }
@@ -346,7 +358,9 @@ fun MicroEmaScreenContent(
 private fun SingleQuestionView(
     question: WatchQuestion,
     onAnswer: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onInputOpen: () -> Unit,
+    onInputClosed: () -> Unit
 ) {
     val numberOptions = remember(question) {
         question.options.map { it.display }.ifEmpty { (0..10).map { it.toString() } }
@@ -548,7 +562,9 @@ private fun SingleQuestionView(
                 AnswerType.TEXT -> {
                     TextInput(
                         currentText = enteredText,
-                        onResult = { enteredText = it }
+                        onResult = { enteredText = it },
+                        onInputOpen = onInputOpen,
+                        onInputClosed = onInputClosed
                     )
                 }
             }
@@ -834,12 +850,38 @@ private fun CheckboxInput(
 @Composable
 private fun TextInput(
     currentText: String,
-    onResult: (String) -> Unit
+    onResult: (String) -> Unit,
+    onInputOpen: () -> Unit,
+    onInputClosed: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    // Voice input needs a speech recognizer activity, which may be missing (or unusable, e.g.
+    // Google's in mainland China). Without one the mic button would crash the survey.
+    val canRecognizeSpeech = remember {
+        context.packageManager.queryIntentActivities(
+            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH),
+            PackageManager.MATCH_DEFAULT_ONLY
+        ).isNotEmpty()
+    }
+
+    // Pauses expiry while the system input screen is in front, and never crashes if it's missing.
+    fun launchInput(launcher: ActivityResultLauncher<Intent>, intent: Intent) {
+        onInputOpen()
+        try {
+            launcher.launch(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.w("MicroEmaScreen", "No activity for ${intent.action}", e)
+            onInputClosed()
+            Toast.makeText(context, "Input not available on this watch", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // 1. Launcher for Unified Input (Keyboard/Handwriting/Voice)
     val textLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        onInputClosed()
         val data = result.data
         if (result.resultCode == Activity.RESULT_OK && data != null) {
             val bundle = RemoteInput.getResultsFromIntent(data)
@@ -854,6 +896,7 @@ private fun TextInput(
     val voiceLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        onInputClosed()
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             val results = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             val firstResult = results?.firstOrNull()
@@ -880,7 +923,7 @@ private fun TextInput(
                         .build()
                 )
                 RemoteInputIntentHelper.putRemoteInputsExtra(intent, remoteInputs)
-                textLauncher.launch(intent)
+                launchInput(textLauncher, intent)
             },
             modifier = Modifier
                 .weight(1f)
@@ -911,7 +954,7 @@ private fun TextInput(
         }
 
         // --- Direct Mic Button ---
-        Button(
+        if (canRecognizeSpeech) Button(
             onClick = {
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                     putExtra(
@@ -920,7 +963,7 @@ private fun TextInput(
                     )
                     putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
                 }
-                voiceLauncher.launch(intent)
+                launchInput(voiceLauncher, intent)
             },
             modifier = Modifier.size(40.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = AccentBlue),

@@ -5,6 +5,7 @@ import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.storage.core.StateStorage
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.flow.StateFlow
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -62,6 +63,15 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
     override val sensorStateFlow: StateFlow<SensorState>
         get() = stateStorage.stateFlow
 
+    init {
+        // Sensors are process-wide singletons, so nothing can be running yet when one is created.
+        // A persisted RUNNING is left over from a killed process; since only ENABLED sensors are
+        // ever started, keeping it would leave the sensor reporting RUNNING while never recording.
+        if (stateStorage.get().flag == SensorState.FLAG.RUNNING) {
+            stateStorage.set(SensorState(SensorState.FLAG.ENABLED))
+        }
+    }
+
     override fun init() {
         val sensorState = when (stateStorage.get().flag) {
             SensorState.FLAG.ENABLED, SensorState.FLAG.RUNNING -> if (permissionManager.getPermissionFlow(
@@ -101,10 +111,20 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
     }
 
     override fun start() {
-        if (sensorStateFlow.value.flag == SensorState.FLAG.ENABLED) {
+        val wasEnabled = sensorStateFlow.value.flag == SensorState.FLAG.ENABLED
+        if (wasEnabled) {
             stateStorage.set(SensorState(SensorState.FLAG.RUNNING))
         }
-        onStart()
+        try {
+            onStart()
+        } catch (e: Exception) {
+            // Callers start a sensor only when it is not RUNNING, so a failed start left marked
+            // RUNNING would never be retried.
+            if (wasEnabled) {
+                stateStorage.set(SensorState(SensorState.FLAG.ENABLED))
+            }
+            throw e
+        }
     }
 
     abstract fun onStart()
@@ -119,7 +139,9 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
     abstract fun onStop()
 
     /* Data-related */
-    protected val listeners = mutableListOf<(E) -> Unit>()
+    // Iterated on sensor callback threads (IMU, audio, Samsung SDK) while listeners are added or
+    // removed from others, so a plain list would throw ConcurrentModificationException.
+    protected val listeners = CopyOnWriteArrayList<(E) -> Unit>()
     override fun addListener(listener: (E) -> Unit) {
         listeners.add(listener)
     }

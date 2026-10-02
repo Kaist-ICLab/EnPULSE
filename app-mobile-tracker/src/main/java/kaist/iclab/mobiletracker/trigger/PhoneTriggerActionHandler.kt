@@ -58,9 +58,15 @@ class PhoneTriggerActionHandler(
             "Sending WatchEma trigger to watch: surveyId=${action.surveyId}, trigger=${trigger.name}"
         )
         try {
+            // The timestamp lets the watch drop commands that sat in the Data Layer queue while it
+            // was out of range, instead of opening them later on the next wearer.
+            val payload = buildJsonObject {
+                put("surveyId", action.surveyId)
+                put("ts", System.currentTimeMillis())
+            }.toString()
             bleChannel.send(
                 AppConfig.BLEKeys.WATCH_EMA_TRIGGER,
-                action.surveyId.toString(),
+                payload,
                 isUrgent = true
             )
         } catch (e: Exception) {
