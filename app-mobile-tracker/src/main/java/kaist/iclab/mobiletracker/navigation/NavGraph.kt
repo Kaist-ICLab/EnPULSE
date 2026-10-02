@@ -185,7 +185,12 @@ fun NavGraph(
                 },
                 onNavigateToServerConnection = {
                     navController.navigate(Screen.ServerConnection.route)
-                }
+                },
+                showEmailLogin = authViewModel.supportsEmailLogin,
+                onSignInWithEmail = { email, password ->
+                    authViewModel.loginWithEmail(email, password)
+                },
+                errorMessage = userState.message
             )
         }
 

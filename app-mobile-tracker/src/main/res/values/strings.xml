@@ -32,6 +32,11 @@
     <string name="about_description">A mobile tracking application for research data collection</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_with_email">Sign in with email</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_email_submit">Sign in</string>
+    <string name="login_use_google_instead">Use Google instead</string>
     <string name="login_not_configured_error">Please configure the server connection first.</string>
 
     <!-- Enable Tracker -->

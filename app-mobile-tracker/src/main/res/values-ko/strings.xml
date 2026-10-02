@@ -31,6 +31,11 @@
     <string name="about_description">연구 데이터 수집을 위한 모바일 추적 애플리케이션</string>
     <string name="sign_out">로그아웃</string>
     <string name="sign_in_with_google">Google로 로그인</string>
+    <string name="sign_in_with_email">이메일로 로그인</string>
+    <string name="login_email_label">이메일</string>
+    <string name="login_password_label">비밀번호</string>
+    <string name="login_email_submit">로그인</string>
+    <string name="login_use_google_instead">Google로 로그인하기</string>
     <string name="login_not_configured_error">서버 연결을 먼저 구성해 주세요.</string>
 
     <!-- Enable Tracker -->
