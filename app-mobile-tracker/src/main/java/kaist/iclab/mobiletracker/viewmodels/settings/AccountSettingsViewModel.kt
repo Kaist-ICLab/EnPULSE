@@ -119,7 +119,10 @@ class AccountSettingsViewModel(
     }
 
     fun selectCampaign(campaignId: String) {
-        _selectedCampaignId.value = campaignId
+        // Doesn't set _selectedCampaignId here: it's driven by profileFlow (see init), which
+        // syncFullStudyConfig below only republishes on success. Setting it eagerly showed the
+        // newly picked campaign as selected even when the sync that was supposed to load its
+        // sensors/surveys failed, leaving a half-updated cache behind a UI that looked fine.
         viewModelScope.launch { saveCampaignToProfile(campaignId) }
     }
 

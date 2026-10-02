@@ -116,6 +116,12 @@ abstract class SamsungHealthSensor<C : SensorConfig, E : SensorEntity, D>(
     }
 
     override fun onStart() {
+        // onStop() unsets the listener on the cached tracker but doesn't clear it, and the
+        // service's connectionStateFlow can easily stay `true` across a pause/resume (it tracks
+        // the binder connection to Health service, not this specific tracker's liveness). Without
+        // this, the collect below could reuse that same stale tracker on resume and go silent.
+        cachedTracker = null
+
         // After a restart or reboot the sensor is started before the tracking service has
         // connected, so register whenever the connection comes (back) up. A StateFlow replays
         // its current value, so an already connected service registers immediately.

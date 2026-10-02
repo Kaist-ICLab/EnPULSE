@@ -152,6 +152,12 @@ class GestureSensor(
     private var ownsImuSensor = false
     private var ownsAudioSensor = false
 
+    // Guards ownsAudioSensor and the audio sensor's start/stop calls: handleImuEntity decides to
+    // start it (on the IMU callback thread) at the same time onStop (on the stopping thread) can
+    // decide whether to stop it. Without this, a gesture starting at the exact moment the sensor
+    // is stopped could leave the microphone running with nothing left to stop it.
+    private val audioOwnershipLock = Any()
+
     private val imuListener: (IMUSensor.Entity) -> Unit = { entity ->
         handleImuEntity(entity)
     }
@@ -208,11 +214,14 @@ class GestureSensor(
         if (ownsImuSensor && imuSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
             imuSensor.stop()
         }
-        if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
-            audioSensor.stop()
-        }
         ownsImuSensor = false
-        ownsAudioSensor = false
+
+        synchronized(audioOwnershipLock) {
+            if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
+                audioSensor.stop()
+            }
+            ownsAudioSensor = false
+        }
 
         synchronized(dataLock) {
             imuWindow.clear()
@@ -282,26 +291,30 @@ class GestureSensor(
                     audioBuffer.clear()
                     lastClassificationTimestamp = Long.MIN_VALUE
                 }
-                if (audioSensor.sensorStateFlow.value.flag != SensorState.FLAG.RUNNING) {
-                    // This runs on the IMU callback thread, where an uncaught exception kills the
-                    // app. If the microphone can't start (busy, revoked, background-restricted),
-                    // let this event finish without audio votes, which emits nothing, and retry
-                    // at the next event.
-                    ownsAudioSensor = try {
-                        audioSensor.start()
-                        true
-                    } catch (e: Exception) {
-                        Log.e(name, "Microphone failed to start; skipping audio for this gesture", e)
-                        false
+                synchronized(audioOwnershipLock) {
+                    if (audioSensor.sensorStateFlow.value.flag != SensorState.FLAG.RUNNING) {
+                        // This runs on the IMU callback thread, where an uncaught exception kills
+                        // the app. If the microphone can't start (busy, revoked,
+                        // background-restricted), let this event finish without audio votes,
+                        // which emits nothing, and retry at the next event.
+                        ownsAudioSensor = try {
+                            audioSensor.start()
+                            true
+                        } catch (e: Exception) {
+                            Log.e(name, "Microphone failed to start; skipping audio for this gesture", e)
+                            false
+                        }
+                    } else {
+                        ownsAudioSensor = false
                     }
-                } else {
-                    ownsAudioSensor = false
                 }
             } else {
-                if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
-                    audioSensor.stop()
+                synchronized(audioOwnershipLock) {
+                    if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
+                        audioSensor.stop()
+                    }
+                    ownsAudioSensor = false
                 }
-                ownsAudioSensor = false
                 synchronized(dataLock) {
                     audioBuffer.clear()
                     lastClassificationTimestamp = Long.MIN_VALUE

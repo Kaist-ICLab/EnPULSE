@@ -64,6 +64,12 @@ class AuthViewModel(
         }
     private var lastSavedToken: String? = null
 
+    // Firebase/Supabase refreshes the session token roughly hourly, which re-emits userState
+    // with a new, different token — not just a fresh login. Without this, every refresh re-ran
+    // the full campaign sync below, and if data collection was already running that surfaced a
+    // "Data collection is still running" toast to staff once an hour.
+    private var hasSyncedProfileThisLogin = false
+
     companion object {
         private const val KEY_PREVIOUS_LOGIN_STATE = "previous_login_state"
     }
@@ -72,6 +78,9 @@ class AuthViewModel(
         // Load profile if user is already logged in (e.g., app restart)
         viewModelScope.launch {
             if (userState.value.isLoggedIn) {
+                // Counts as this login's sync, so the collect block below doesn't also run it
+                // again for the same (already-persisted) token once it observes this state.
+                hasSyncedProfileThisLogin = true
                 loadUserProfile()
             }
         }
@@ -92,10 +101,15 @@ class AuthViewModel(
                     authRepository.saveToken(currentToken)
                     lastSavedToken = currentToken
 
-                    // Save profile to profiles table if not exists
-                    saveProfileIfNotExists(state)
-                    // Then load and cache it
-                    loadUserProfileSuspend()
+                    // The full sync only needs to run once per login, not on every later token
+                    // refresh (see hasSyncedProfileThisLogin).
+                    if (!hasSyncedProfileThisLogin) {
+                        hasSyncedProfileThisLogin = true
+                        // Save profile to profiles table if not exists
+                        saveProfileIfNotExists(state)
+                        // Then load and cache it
+                        loadUserProfileSuspend()
+                    }
                 }
             }
         }
