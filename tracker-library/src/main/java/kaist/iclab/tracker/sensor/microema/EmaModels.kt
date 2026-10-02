@@ -31,9 +31,6 @@ enum class AnswerType {
     @SerialName("NUMBERSCALE")
     NUMBERSCALE,
 
-    @SerialName("NUMBER")
-    NUMBER,
-
     @SerialName("TEXT")
     TEXT,
 

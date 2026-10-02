@@ -551,7 +551,7 @@ private fun SingleQuestionView(
                     )
                 }
 
-                AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
+                AnswerType.NUMBERSCALE -> {
                     NumberPickerInput(
                         numberOptions = numberOptions,
                         selectedIndex = selectedNumberIndex,
@@ -615,7 +615,7 @@ private fun SingleQuestionView(
                             }
                         }
 
-                        AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
+                        AnswerType.NUMBERSCALE -> {
                             onAnswer(numberOptions[selectedNumberIndex])
                         }
 

@@ -7,7 +7,6 @@ import kaist.iclab.tracker.sensor.survey.question.BinaryQuestion
 import kaist.iclab.tracker.sensor.survey.question.ComparablePredicate
 import kaist.iclab.tracker.sensor.survey.question.Expression
 import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
-import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberScaleQuestion
 import kaist.iclab.tracker.sensor.survey.question.Predicate
 import kaist.iclab.tracker.sensor.survey.question.Question
@@ -153,13 +152,6 @@ object SurveyBuilder {
                     )
                 }
 
-                "NUMBER" -> NumberQuestion(
-                    id = config.id,
-                    question = config.text,
-                    isMandatory = config.isMandatory,
-                    questionTrigger = childrenQuestions as? List<QuestionTrigger<Double?>>
-                )
-
                 "NUMBERSCALE" -> {
                     NumberScaleQuestion(
                         id = config.id,
@@ -204,7 +196,6 @@ object SurveyBuilder {
         // caught here (generics are erased) but fails at evaluation time.
         return when (parentType.uppercase()) {
             "TEXT" -> QuestionTrigger(expression as Expression<String>, listOf(question))
-            "NUMBER" -> QuestionTrigger(expression as Expression<Double?>, listOf(question))
             "NUMBERSCALE", "RADIO" -> QuestionTrigger(expression as Expression<Int?>, listOf(question))
             "BINARY" -> QuestionTrigger(expression as Expression<Boolean?>, listOf(question))
             "CHECKBOX" -> QuestionTrigger(expression as Expression<Set<Int>>, listOf(question))
@@ -219,7 +210,6 @@ object SurveyBuilder {
     ): Expression<*>? {
         return when (parentType.uppercase()) {
             "TEXT" -> parseTextExpression(op, value)
-            "NUMBER" -> parseNumberExpression(op, value)
             // NumberScaleQuestion answers are whole numbers (Question<Int?>); a Double rule value
             // threw ClassCastException on >, >=, <, <= and never matched on =.
             "NUMBERSCALE", "RADIO" -> parseRadioExpression(op, value)
@@ -261,20 +251,6 @@ object SurveyBuilder {
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun parseNumberExpression(op: String, value: JsonElement?): Expression<Double?>? {
-        val target = value?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0
-        return when (op) {
-            "Equal" -> Predicate.Equal(target as Double?)
-            "NotEqual" -> Predicate.NotEqual(target as Double?)
-            "GreaterThan" -> ComparablePredicate.GreaterThan(target)
-            "GreaterThanOrEqual" -> ComparablePredicate.GreaterThanOrEqual(target)
-            "LessThan" -> ComparablePredicate.LessThan(target)
-            "LessThanOrEqual" -> ComparablePredicate.LessThanOrEqual(target)
-            else -> null
-        } as Expression<Double?>?
-    }
-
-    @Suppress("UNCHECKED_CAST")
     private fun parseRadioExpression(op: String, value: JsonElement?): Expression<Int?>? {
         val target = try {
             value?.jsonPrimitive?.content?.toDoubleOrNull()?.toInt()
@@ -293,20 +269,19 @@ object SurveyBuilder {
     }
 
     private fun parseCheckboxExpression(op: String, value: JsonElement?): Expression<Set<Int>>? {
-        return when (op) {
-            "Equal" -> {
-                val array = try {
-                    if (value is JsonArray) {
-                        Json.decodeFromJsonElement<List<Int>>(value)
-                    } else if (value != null) {
-                        listOf(value.jsonPrimitive.content.toDoubleOrNull()?.toInt() ?: 0)
-                    } else emptyList()
-                } catch (_: Exception) {
-                    emptyList()
-                }
-                Predicate.Equal(array.toSet())
-            }
+        fun parseIndexSet(): Set<Int> = try {
+            if (value is JsonArray) {
+                Json.decodeFromJsonElement<List<Int>>(value)
+            } else if (value != null) {
+                listOf(value.jsonPrimitive.content.toDoubleOrNull()?.toInt() ?: 0)
+            } else emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }.toSet()
 
+        return when (op) {
+            "Equal" -> Predicate.Equal(parseIndexSet())
+            "NotEqual" -> Predicate.NotEqual(parseIndexSet())
             "Contains" -> {
                 val target = value?.jsonPrimitive?.content?.toDoubleOrNull()?.toInt() ?: return null
                 SetPredicate.Contains(target)
