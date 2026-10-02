@@ -10,6 +10,7 @@ import kaist.iclab.mobiletracker.data.survey.SurveyQuestionResponseInsert
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionTriggerEntity
 import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
+import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.runCatchingSuspend
@@ -215,7 +216,14 @@ class SurveyService(
 
     /**
      * Upload locally cached MicroEMA responses to Supabase.
-     * Handles timestamp formatting and batch insertion.
+     *
+     * Uploads all unsynced answers as one batch. If the server rejects the batch because of bad
+     * data (see [isBadRowError]), it retries them one by one, so one bad answer (e.g. to a question
+     * since deleted on the dashboard, which fails the foreign key) no longer blocks every answer
+     * after it. Answers the server rejects as bad data, and answers whose stored JSON can't be
+     * parsed, are set aside (marked synced, with an error log) instead of being retried forever.
+     * Network, auth and permission errors keep the answers queued for the next attempt.
+     *
      * @param microEmaResponseDao DAO to access local Room database for responses.
      * @return Result containing the count of successfully uploaded responses.
      */
@@ -226,9 +234,18 @@ class SurveyService(
             val unsynced = microEmaResponseDao.getUnsyncedResponses()
             if (unsynced.isEmpty()) return Result.Success(0)
 
-            val inserts = unsynced.map { entity ->
+            val inserts = mutableListOf<Pair<Long, SurveyQuestionResponseInsert>>()
+            val unparseable = mutableListOf<Long>()
+            unsynced.forEach { entity ->
+                val response = try {
+                    kotlinx.serialization.json.Json.parseToJsonElement(entity.responseJson).jsonObject
+                } catch (e: Exception) {
+                    Log.e(TAG, "Setting aside MicroEMA response ${entity.id}: unreadable JSON", e)
+                    unparseable += entity.id
+                    return@forEach
+                }
                 val fallbackTime = DateTimeFormatter.formatToIsoOffset(System.currentTimeMillis())
-                SurveyQuestionResponseInsert(
+                inserts += entity.id to SurveyQuestionResponseInsert(
                     questionId = entity.questionId,
                     uuid = entity.uuid,
                     triggerTime = DateTimeFormatter.formatToIsoOffset(entity.triggerTime)
@@ -240,26 +257,75 @@ class SurveyService(
                     responseSubmissionTime = DateTimeFormatter.formatToIsoOffset(entity.responseSubmissionTime)
                         ?: DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime)
                         ?: fallbackTime,
-                    response = kotlinx.serialization.json.Json.parseToJsonElement(entity.responseJson).jsonObject
+                    response = response
                 )
             }
+            if (unparseable.isNotEmpty()) microEmaResponseDao.markAsSynced(unparseable)
+            if (inserts.isEmpty()) return Result.Success(0)
 
-            when (val result = submitSurveyResponses(inserts)) {
+            when (val result = submitSurveyResponses(inserts.map { it.second })) {
                 is Result.Success -> {
-                    microEmaResponseDao.markAsSynced(unsynced.map { it.id })
-                    Log.d(TAG, "Successfully uploaded ${unsynced.size} MicroEMA responses")
-                    Result.Success(unsynced.size)
+                    microEmaResponseDao.markAsSynced(inserts.map { it.first })
+                    Log.d(TAG, "Successfully uploaded ${inserts.size} MicroEMA responses")
+                    Result.Success(inserts.size)
                 }
 
-                is Result.Error -> Result.Error(
-                    Exception(
-                        "Failed to upload: ${result.message}",
-                        result.exception
-                    )
-                )
+                is Result.Error -> {
+                    if (isBadRowError(result.exception)) {
+                        uploadOneByOne(inserts, microEmaResponseDao)
+                    } else {
+                        Result.Error(Exception("Failed to upload: ${result.message}", result.exception))
+                    }
+                }
             }
         } catch (e: Exception) {
             Result.Error(Exception("Error processing MicroEMA upload: ${e.message}", e))
         }
+    }
+
+    /** Retry answers individually after a bad-data batch rejection; see [uploadUnsyncedMicroEmaResponses]. */
+    private suspend fun uploadOneByOne(
+        inserts: List<Pair<Long, SurveyQuestionResponseInsert>>,
+        microEmaResponseDao: MicroEmaResponseStore
+    ): Result<Int> {
+        var uploaded = 0
+        for ((id, insert) in inserts) {
+            when (val single = submitSurveyResponses(listOf(insert))) {
+                is Result.Success -> {
+                    microEmaResponseDao.markAsSynced(listOf(id))
+                    uploaded++
+                }
+
+                is Result.Error -> {
+                    if (isBadRowError(single.exception)) {
+                        Log.e(
+                            TAG,
+                            "Setting aside MicroEMA response $id (question ${insert.questionId}): " +
+                                "server rejected it as bad data: ${single.message}"
+                        )
+                        microEmaResponseDao.markAsSynced(listOf(id))
+                    } else {
+                        // Not this answer's fault (network, auth, permissions): keep the rest
+                        // queued and try again next time.
+                        return Result.Error(
+                            Exception("Failed to upload after $uploaded responses: ${single.message}", single.exception)
+                        )
+                    }
+                }
+            }
+        }
+        Log.d(TAG, "Uploaded $uploaded of ${inserts.size} MicroEMA responses one by one")
+        return Result.Success(uploaded)
+    }
+
+    /**
+     * Whether the server rejected the data itself, so retrying the same row can never succeed:
+     * Postgres integrity (23xxx, e.g. a foreign key to a deleted question) and data (22xxx)
+     * errors. Deliberately narrow: a permission error (42501) is also a server rejection, but
+     * treating it as bad data would silently set aside every answer.
+     */
+    private fun isBadRowError(e: Throwable): Boolean {
+        val code = (e as? AppError.ServerRejected)?.postgresErrorCode ?: return false
+        return code.startsWith("23") || code.startsWith("22")
     }
 }
