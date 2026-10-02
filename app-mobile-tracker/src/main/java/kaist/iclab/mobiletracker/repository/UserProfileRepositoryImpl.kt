@@ -12,6 +12,7 @@ import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.phone.TimingSensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +32,7 @@ class UserProfileRepositoryImpl(
     private val webAppRepository: WebAppRepository,
     private val watchSurveyConfigPusher: WatchSurveyConfigPusher,
     private val triggerEngine: TriggerEngine,
+    private val detectionStateTracker: DetectionStateTracker,
     private val backgroundController: BackgroundController,
     private val bleHelper: BLEHelper
 ) : UserProfileRepository {
@@ -62,6 +64,16 @@ class UserProfileRepositoryImpl(
         triggerRepository.clearTriggers()
         timingSensorConfigStorage.set(TimingSensor.Config())
         webAppRepository.clearWebApps()
+        clearTriggerEngine()
+    }
+
+    /**
+     * Stop the phone-local trigger engine from firing anything. Clearing the trigger cache alone
+     * is not enough: the engine keeps the triggers it was last given until told otherwise.
+     */
+    private fun clearTriggerEngine() {
+        triggerEngine.loadTriggers(emptyList())
+        detectionStateTracker.clear()
     }
 
     override suspend fun refreshProfile(): Result<ProfileData?> {
@@ -104,10 +116,26 @@ class UserProfileRepositoryImpl(
 
         // 2. If we have a campaign, fetch sensors, surveys, and triggers; otherwise clear caches.
         if (campaignId != null) {
-            campaignSensorRepository.fetchActiveSensors(campaignId.toLong())
-            surveyRepository.fetchAndPersistSurveys(campaignId)
-            triggerRepository.fetchAndPersistTriggers(campaignId)
+            val failedDownload = listOf(
+                "sensors" to campaignSensorRepository.fetchActiveSensors(campaignId.toLong()),
+                "surveys" to surveyRepository.fetchAndPersistSurveys(campaignId),
+                "triggers" to triggerRepository.fetchAndPersistTriggers(campaignId)
+            ).firstOrNull { (_, result) -> result is Result.Error }
+            // Web apps are not part of the trigger/microEMA flow, so a failure there is not fatal.
             webAppRepository.fetchAndPersistWebApps(campaignId)
+
+            if (failedDownload != null) {
+                val (what, result) = failedDownload
+                val cause = (result as Result.Error).exception
+                // Switching campaigns: never keep firing the previous campaign's triggers. A failed
+                // re-sync of the same campaign keeps the working config instead of wiping it.
+                if (campaignId != _profile.value?.campaignId) {
+                    clearTriggerEngine()
+                }
+                return Result.Error(
+                    AppError.Network("Couldn't download the campaign's $what: ${cause.message}", cause)
+                )
+            }
 
             // 3. Apply TimingSensor's config from the campaign_table row we just fetched above
             //    (name = TimingSensor.CAMPAIGN_TABLE_NAME) — same generic per-sensor config
@@ -148,6 +176,7 @@ class UserProfileRepositoryImpl(
             triggerRepository.clearTriggers()
             timingSensorConfigStorage.set(TimingSensor.Config())
             webAppRepository.clearWebApps()
+            clearTriggerEngine()
         }
 
         // 3. Publish the profile last, so observers (e.g. navigation reacting to
@@ -159,6 +188,11 @@ class UserProfileRepositoryImpl(
     }
 
     override suspend fun leaveCampaign(): Result<Unit> {
+        // Leaving succeeds server-side, but the local re-sync that clears the old triggers is
+        // refused while collecting, which would leave the old campaign's triggers running.
+        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
+            return Result.Error(AppError.CollectionRunning("Cannot leave a campaign while data collection is running"))
+        }
         val uuid = getCurrentUuid()
             ?: return Result.Error(AppError.Unknown("User not logged in"))
         return profileService.leaveCampaign(uuid)

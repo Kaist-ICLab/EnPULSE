@@ -202,6 +202,8 @@
     <string name="leave_campaign_dialog_title">Leave Campaign</string>
     <string name="leave_campaign_dialog_message">Are you sure you want to leave? Your campaign configuration will be removed and data collection will stop. You can join a campaign again anytime.</string>
     <string name="toast_campaign_left">You have left the campaign</string>
+    <string name="toast_campaign_left_sync_failed">You left the campaign, but this phone couldn\'t update. Tap Reload &amp; Sync Config.</string>
+    <string name="toast_config_download_failed">Couldn\'t download the campaign. Check the connection and try again.</string>
 
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">Light sensor data</string>

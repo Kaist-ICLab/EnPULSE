@@ -130,6 +130,7 @@ val repositoryModule = module {
             webAppRepository = get(),
             watchSurveyConfigPusher = get(),
             triggerEngine = get(),
+            detectionStateTracker = get(),
             backgroundController = get(),
             bleHelper = get()
         )
