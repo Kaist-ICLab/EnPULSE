@@ -63,4 +63,17 @@ class WatchSurveyActivity : ComponentActivity() {
         // which also cancels the pending "Done" close.
         microEmaViewModel.startSurvey()
     }
+
+    // Catches any exit this activity didn't already record as a result (answer, expiry, or the
+    // back-press dismiss above) — e.g. the task being removed from Recents, or a swipe gesture
+    // some Wear OS versions handle without going through onBackPressedDispatcher. Called before
+    // super.onDestroy() so the ViewModel's own coroutine scope is still alive to persist the
+    // response. Without this the session (and its stale cached survey) was left dangling until
+    // the next trigger overwrote it.
+    override fun onDestroy() {
+        if (!microEmaViewModel.isComplete.value) {
+            microEmaViewModel.dismiss()
+        }
+        super.onDestroy()
+    }
 }
