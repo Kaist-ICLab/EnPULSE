@@ -36,6 +36,14 @@ class MicroEmaViewModel(
     companion object {
         private const val TAG = "MicroEmaVM"
         private const val COUNTDOWN_TICK_MS = 1000L
+
+        /**
+         * Fallback expiry used when [WatchSurveyConfig.expireAfterMs] is set but not
+         * positive (e.g. the database default of 0, or dashboard campaigns saved before
+         * it required a minimum). Without this, [startCountdown]'s `while (remaining > 0)`
+         * loop never runs, so the survey closes as EXPIRED the instant it opens.
+         */
+        private const val FALLBACK_EXPIRE_MS = 30_000L
     }
 
     // --- State ---
@@ -107,8 +115,10 @@ class MicroEmaViewModel(
         _question.value = selectedQuestion
         surveyStartTime = System.currentTimeMillis()
 
-        // Start countdown timer if configured
-        config.expireAfterMs?.let { expiryMs ->
+        // Start countdown timer if configured. expireAfterMs == null means "no expiry" and
+        // is left alone; a non-positive value is a misconfiguration, not "expire instantly".
+        config.expireAfterMs?.let { configuredMs ->
+            val expiryMs = if (configuredMs > 0) configuredMs else FALLBACK_EXPIRE_MS
             _remainingTimeMs.value = expiryMs
             startCountdown(expiryMs)
         }
