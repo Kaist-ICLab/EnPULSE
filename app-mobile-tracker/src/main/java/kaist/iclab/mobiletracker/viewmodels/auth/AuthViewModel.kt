@@ -136,6 +136,9 @@ class AuthViewModel(
      * Suspending function to load user profile.
      */
     private suspend fun loadUserProfileSuspend() {
+        // Checked before syncing: a failed sync can still publish a freshly fetched profile, which
+        // must not be mistaken for a cached one.
+        val hadCachedProfile = userProfileRepository.profileFlow.value != null
         when (val result = userProfileRepository.syncFullStudyConfig()) {
             is Result.Success -> {
                 // Success handled by state flows
@@ -145,11 +148,17 @@ class AuthViewModel(
                 // Handle collection running error specifically
                 if (result.exception is AppError.CollectionRunning) {
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.turn_off_data_collection_first))
-                } else if (userProfileRepository.profileFlow.value != null) {
+                } else if (hadCachedProfile) {
                     // If we already have a cached profile, show a subtle "using cache" message 
                     // instead of a scary "failed" error.
                     Log.d(TAG, "Network profile refresh failed, using cached profile.")
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_offline_using_cache))
+                } else if (result.exception is AppError.Network &&
+                    userProfileRepository.profileFlow.value != null
+                ) {
+                    // Signed in and on Home, but the campaign didn't fully download.
+                    Log.e(TAG, "Campaign download failed after login: ${result.message}", result.exception)
+                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_config_download_failed))
                 } else {
                     Log.e(TAG, "Error loading user profile: ${result.message}", result.exception)
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))

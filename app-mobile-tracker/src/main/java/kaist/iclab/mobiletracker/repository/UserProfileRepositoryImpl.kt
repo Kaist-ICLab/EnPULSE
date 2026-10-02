@@ -132,6 +132,13 @@ class UserProfileRepositoryImpl(
                 if (campaignId != _profile.value?.campaignId) {
                     clearTriggerEngine()
                 }
+                // No profile yet (first login on this phone, or logging back in after a logout):
+                // navigation waits for one, so without it the user would be stuck on Login. Publish
+                // it anyway; the trigger engine stays empty and "Reload & Sync Config" can retry.
+                if (_profile.value == null) {
+                    _profile.value = profile
+                    persistentStorage.set(profile)
+                }
                 return Result.Error(
                     AppError.Network("Couldn't download the campaign's $what: ${cause.message}", cause)
                 )
