@@ -1,5 +1,7 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
+import kotlinx.coroutines.CancellationException
+import android.util.Log
 import android.Manifest
 import android.content.Context
 import android.content.pm.ServiceInfo
@@ -109,17 +111,26 @@ class AudioSensor(
             val readBuffer = ShortArray(READ_CHUNK_SIZE)
 
             while (currentCoroutineContext().isActive) {
-                val readCount = audioRecord?.read(readBuffer, 0, READ_CHUNK_SIZE) ?: -1
-                if (readCount <= 0) continue
+                // Listeners (gesture classification) run inside this loop, which has no
+                // exception handler: an escaped exception would crash the app. Log it and keep
+                // reading. Cancellation (onStop) still ends the loop.
+                try {
+                    val readCount = audioRecord?.read(readBuffer, 0, READ_CHUNK_SIZE) ?: -1
+                    if (readCount <= 0) continue
 
-                val timestamp = System.currentTimeMillis()
-                val entity = Entity(
-                    received = timestamp,
-                    timestamp = timestamp,
-                    sampleRateHz = OUTPUT_SAMPLE_RATE,
-                    samples = readBuffer.copyOfRange(0, readCount)
-                )
-                listeners.forEach { it.invoke(entity) }
+                    val timestamp = System.currentTimeMillis()
+                    val entity = Entity(
+                        received = timestamp,
+                        timestamp = timestamp,
+                        sampleRateHz = OUTPUT_SAMPLE_RATE,
+                        samples = readBuffer.copyOfRange(0, readCount)
+                    )
+                    listeners.forEach { it.invoke(entity) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(name, "Audio read failed; continuing", e)
+                }
             }
         }
     }

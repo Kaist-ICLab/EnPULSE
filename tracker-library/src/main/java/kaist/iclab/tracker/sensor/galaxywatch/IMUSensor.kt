@@ -1,5 +1,6 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
+import android.util.Log
 import android.Manifest
 import android.content.Context
 import android.content.pm.ServiceInfo
@@ -77,7 +78,14 @@ class IMUSensor(
 
     private val tickRunnable = object : Runnable {
         override fun run() {
-            onTick()
+            // Listeners (the gesture model) run inside this tick. An exception escaping here
+            // would crash the app on this thread, and it would also skip the reschedule below,
+            // so log it and keep ticking.
+            try {
+                onTick()
+            } catch (e: Exception) {
+                Log.e(name, "IMU tick failed; continuing with the next one", e)
+            }
             nextTickMs += TICK_PERIOD_MS
             tickerHandler?.postAtTime(this, nextTickMs)
         }

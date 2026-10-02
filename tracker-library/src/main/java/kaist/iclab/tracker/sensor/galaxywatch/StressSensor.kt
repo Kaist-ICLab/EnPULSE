@@ -14,6 +14,7 @@ import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.RmssdHistory
 import kaist.iclab.tracker.storage.core.StateStorage
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -154,9 +155,18 @@ class StressSensor(
                 // roughly one stride instead of growing unboundedly between deliveries.
                 // It's a request, not a synchronous read, so the pushed data lands via the
                 // normal listener/handleHr path a moment later and is picked up next tick.
-                heartRateSensor.flush()
-
-                inferenceMutex.withLock { runInference() }
+                // One bad tick (e.g. a storage or SDK error) must not end the loop: this scope
+                // has no exception handler, so an escaped exception would crash the app and,
+                // since the watch no longer restarts collection on its own, stop stress for the
+                // rest of the session. Cancellation (onStop) still propagates.
+                try {
+                    heartRateSensor.flush()
+                    inferenceMutex.withLock { runInference() }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(name, "Stress tick failed; continuing with the next one", e)
+                }
 
                 // If we still fell behind by more than one stride (e.g. the process was
                 // briefly suspended despite the WakeLock), snap forward instead of firing
