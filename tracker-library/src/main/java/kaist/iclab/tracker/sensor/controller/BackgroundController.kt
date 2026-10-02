@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -90,6 +91,9 @@ class BackgroundController(
         companion object {
             private val TAG = ControllerService::class.simpleName
             var isServiceRunning = false
+
+            /** How long the watch must read as off-wrist before sensors are paused. */
+            private const val OFF_WRIST_PAUSE_DELAY_MS = 10_000L
         }
 
         private lateinit var stateStorage: StateStorage<ControllerState>
@@ -164,10 +168,15 @@ class BackgroundController(
             serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
             offBodyJob = serviceScope?.launch {
                 offBodyDetector.isOnWrist.collectLatest { isWorn ->
-                    val currentFlag = stateStorage.get().flag
-                    if (!isWorn && currentFlag == ControllerState.FLAG.RUNNING) {
-                        pauseSensors()
-                    } else if (isWorn && currentFlag == ControllerState.FLAG.PAUSED) {
+                    if (!isWorn) {
+                        // Pause only once the watch has stayed off the wrist for a while. A loose
+                        // strap or a quick adjustment flips the reading for a moment; collectLatest
+                        // cancels this wait as soon as the watch reads as worn again.
+                        delay(OFF_WRIST_PAUSE_DELAY_MS)
+                        if (stateStorage.get().flag == ControllerState.FLAG.RUNNING) {
+                            pauseSensors()
+                        }
+                    } else if (stateStorage.get().flag == ControllerState.FLAG.PAUSED) {
                         resumeSensors()
                     }
                 }
