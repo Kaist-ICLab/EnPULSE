@@ -35,9 +35,13 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+
+/** Payload key for the watch's detection time; must match the watch's DetectionStateForwarder. */
+private const val DETECTED_AT_KEY = "_ts"
 
 /**
  * Helper class for managing BLE communication with wearable devices.
@@ -224,10 +228,16 @@ class BLEHelper(
                 else -> Json.parseToJsonElement(json.toString()).jsonObject
             }
 
+            // Use the watch's detection time when present (capped at now, in case the watch clock
+            // runs ahead), so detections queued while the watch was out of range stay stale and
+            // the trigger engine's 60 s cutoff can ignore them.
             val now = System.currentTimeMillis()
+            val detectedAt = payload[DETECTED_AT_KEY]?.jsonPrimitive?.longOrNull
+                ?.coerceAtMost(now) ?: now
             payload.forEach { (sensor, valueElement) ->
+                if (sensor == DETECTED_AT_KEY) return@forEach
                 val value = valueElement.jsonPrimitive.content
-                detectionStateTracker.updateState(sensor, value, now)
+                detectionStateTracker.updateState(sensor, value, detectedAt)
             }
         } catch (e: Exception) {
             Log.e(
