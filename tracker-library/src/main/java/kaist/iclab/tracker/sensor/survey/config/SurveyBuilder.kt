@@ -167,8 +167,10 @@ object SurveyBuilder {
                         isMandatory = config.isMandatory,
                         min = config.min ?: 0,
                         max = config.max ?: 10,
-                        minLabel = config.minLabel!!,
-                        maxLabel = config.maxLabel!!,
+                        // The dashboard leaves labels empty by default, which arrive as null;
+                        // `!!` threw and silently dropped the question (and its follow-ups).
+                        minLabel = config.minLabel ?: "",
+                        maxLabel = config.maxLabel ?: "",
                         questionTrigger = childrenQuestions as? List<QuestionTrigger<Int?>>
                     )
                 }
@@ -198,25 +200,53 @@ object SurveyBuilder {
         val expression = parseExpression(op, value, parentType) ?: return null
         val question = buildQuestion(config, parentIdMap) ?: return null
 
+        // The expression's type must match the parent question's answer type: a mismatch is not
+        // caught here (generics are erased) but fails at evaluation time.
         return when (parentType.uppercase()) {
             "TEXT" -> QuestionTrigger(expression as Expression<String>, listOf(question))
-            "NUMBER", "NUMBERSCALE" -> QuestionTrigger(expression as Expression<Double?>, listOf(question))
-            "RADIO", "BINARY" -> QuestionTrigger(expression as Expression<Int?>, listOf(question))
+            "NUMBER" -> QuestionTrigger(expression as Expression<Double?>, listOf(question))
+            "NUMBERSCALE", "RADIO" -> QuestionTrigger(expression as Expression<Int?>, listOf(question))
+            "BINARY" -> QuestionTrigger(expression as Expression<Boolean?>, listOf(question))
             "CHECKBOX" -> QuestionTrigger(expression as Expression<Set<Int>>, listOf(question))
             else -> null
         }
     }
 
-    private fun parseExpression(
+    internal fun parseExpression(
         op: String,
         value: JsonElement?,
         parentType: String
     ): Expression<*>? {
         return when (parentType.uppercase()) {
             "TEXT" -> parseTextExpression(op, value)
-            "NUMBER", "NUMBERSCALE" -> parseNumberExpression(op, value)
-            "RADIO", "BINARY" -> parseRadioExpression(op, value)
+            "NUMBER" -> parseNumberExpression(op, value)
+            // NumberScaleQuestion answers are whole numbers (Question<Int?>); a Double rule value
+            // threw ClassCastException on >, >=, <, <= and never matched on =.
+            "NUMBERSCALE", "RADIO" -> parseRadioExpression(op, value)
+            "BINARY" -> parseBinaryExpression(op, value)
             "CHECKBOX" -> parseCheckboxExpression(op, value)
+            else -> null
+        }
+    }
+
+    /**
+     * Answers of a Yes/No question in the order the dashboard lists them (["Yes", "No"] in
+     * ExpressionBuilder.tsx), which is also the order the phone shows them (Yes = true).
+     */
+    private val YES_NO_ANSWERS = listOf(true, false)
+
+    /**
+     * Yes/No rules. The rule's value is not a boolean but the index of the option chosen in the
+     * dashboard's dropdown (0 = "Yes", 1 = "No"), so it is looked up in [YES_NO_ANSWERS].
+     */
+    private fun parseBinaryExpression(op: String, value: JsonElement?): Expression<Boolean?>? {
+        val content = value?.jsonPrimitive?.content ?: return null
+        val target: Boolean = content.toBooleanStrictOrNull()
+            ?: content.toDoubleOrNull()?.toInt()?.let { YES_NO_ANSWERS.getOrNull(it) }
+            ?: return null
+        return when (op) {
+            "Equal" -> Predicate.Equal<Boolean?>(target)
+            "NotEqual" -> Predicate.NotEqual<Boolean?>(target)
             else -> null
         }
     }
