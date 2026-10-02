@@ -1,5 +1,6 @@
 package kaist.iclab.tracker.trigger.eval
 
+import kaist.iclab.tracker.trigger.TriggerConstants
 import kaist.iclab.tracker.trigger.model.ConditionNode
 import kaist.iclab.tracker.trigger.model.DetectionState
 
@@ -29,18 +30,32 @@ object ConditionEvaluator {
      *
      * @param node The root of the condition tree to evaluate.
      * @param states Current detection states keyed by sensor name.
+     * @param now Current time in epoch milliseconds, used to discard stale states.
+     *   Defaults to [System.currentTimeMillis]; tests can pass a fixed value.
+     * @param maxAgeMillis A [ConditionNode.Detection] whose state is older than this is
+     *   treated as if the sensor had never reported anything. [DetectionStateTracker]
+     *   keeps the latest state forever, so without this a one-off event (e.g. a gesture)
+     *   would satisfy its condition indefinitely, including for the next device user.
      * @return `true` if the condition tree is satisfied, `false` otherwise.
      *
      * Note: If a [ConditionNode.Detection] references a sensor that has no entry
      * in [states] (i.e., the sensor hasn't produced any detection yet), the node
      * evaluates to `false`.
      */
-    fun evaluate(node: ConditionNode, states: Map<String, DetectionState>): Boolean {
+    fun evaluate(
+        node: ConditionNode,
+        states: Map<String, DetectionState>,
+        now: Long = System.currentTimeMillis(),
+        maxAgeMillis: Long = TriggerConstants.Evaluation.MAX_DETECTION_AGE_MILLIS
+    ): Boolean {
         return when (node) {
-            is ConditionNode.And -> node.children.all { evaluate(it, states) }
-            is ConditionNode.Or -> node.children.any { evaluate(it, states) }
-            is ConditionNode.Not -> !evaluate(node.child, states)
-            is ConditionNode.Detection -> states[node.sensor]?.value == node.value
+            is ConditionNode.And -> node.children.all { evaluate(it, states, now, maxAgeMillis) }
+            is ConditionNode.Or -> node.children.any { evaluate(it, states, now, maxAgeMillis) }
+            is ConditionNode.Not -> !evaluate(node.child, states, now, maxAgeMillis)
+            is ConditionNode.Detection -> {
+                val state = states[node.sensor] ?: return false
+                state.value == node.value && now - state.timestamp <= maxAgeMillis
+            }
         }
     }
 }

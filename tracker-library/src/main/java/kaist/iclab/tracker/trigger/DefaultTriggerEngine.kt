@@ -160,7 +160,8 @@ class DefaultTriggerEngine(
             }
 
             for (trigger in triggers) {
-                val result = ConditionEvaluator.evaluate(trigger.condition, currentStates)
+                val now = System.currentTimeMillis()
+                val result = ConditionEvaluator.evaluate(trigger.condition, currentStates, now)
                 val executed = mutableListOf<String>()
                 val throttled = mutableListOf<String>()
 
@@ -172,7 +173,6 @@ class DefaultTriggerEngine(
                 Log.d(TAG, "  Condition result: ${if (result) "TRUE ✓" else "FALSE ✗"}")
 
                 if (result) {
-                    val now = System.currentTimeMillis()
                     for ((index, action) in trigger.actions.withIndex()) {
                         val throttleKey = "${trigger.id}_$index"
                         val lastTime = lastActionTimes[throttleKey] ?: 0L
