@@ -46,6 +46,9 @@ class WatchSurveyConfigReceiver(
     /** Survey configurations keyed by survey ID, kept in sync with the phone. */
     private var surveyConfigs: Map<Int, WatchSurveyConfig> = emptyMap()
 
+    /** [WatchSurveyConfigPayload.pushedAt] of the config currently applied. */
+    private var appliedPushedAt = 0L
+
     fun getSurveyConfig(surveyId: Int): WatchSurveyConfig? = surveyConfigs[surveyId]
 
     /**
@@ -70,18 +73,23 @@ class WatchSurveyConfigReceiver(
         // Load persisted configuration on startup if it exists
         try {
             val cachedConfig = storage.loadConfig()
-            if (cachedConfig != null) {
-                Log.d(
-                    TAG,
-                    "Loading cached watch survey config from disk: ${cachedConfig.surveyConfigs.size} survey(s)"
-                )
-                applyConfig(cachedConfig.surveyConfigs)
+            synchronized(this) {
+                // The listener above is already registered, so a fresh push may have been applied by now.
+                if (cachedConfig != null && (appliedPushedAt == 0L || cachedConfig.pushedAt >= appliedPushedAt)) {
+                    Log.d(
+                        TAG,
+                        "Loading cached watch survey config from disk: ${cachedConfig.surveyConfigs.size} survey(s)"
+                    )
+                    applyConfig(cachedConfig.surveyConfigs)
+                    appliedPushedAt = cachedConfig.pushedAt
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load cached watch survey config: ${e.message}", e)
         }
     }
 
+    @Synchronized
     private fun handleConfig(jsonElement: JsonElement) {
         try {
             Log.d(TAG, "Received watch survey config payload")
@@ -96,7 +104,19 @@ class WatchSurveyConfigReceiver(
 
             Log.d(TAG, "Parsed ${configPayload.surveyConfigs.size} survey config(s)")
 
+            // Each push is its own Data Layer item, so pushes queued while the watch was away all
+            // arrive on reconnect in no fixed order. Keep the newest; 0 means the phone didn't say.
+            if (configPayload.pushedAt != 0L && configPayload.pushedAt < appliedPushedAt) {
+                Log.w(
+                    TAG,
+                    "Ignoring an older watch survey config (pushed at ${configPayload.pushedAt}, " +
+                        "already applied one from $appliedPushedAt)"
+                )
+                return
+            }
+
             applyConfig(configPayload.surveyConfigs)
+            appliedPushedAt = configPayload.pushedAt
             storage.saveConfig(configPayload)
 
             Log.d(TAG, "Watch survey config applied and persisted successfully")
@@ -122,5 +142,7 @@ class WatchSurveyConfigReceiver(
  */
 @Serializable
 data class WatchSurveyConfigPayload(
-    val surveyConfigs: Map<Int, WatchSurveyConfig>
+    val surveyConfigs: Map<Int, WatchSurveyConfig>,
+    /** When the phone sent this push; 0 if unknown. See [WatchSurveyConfigReceiver.handleConfig]. */
+    val pushedAt: Long = 0L
 )

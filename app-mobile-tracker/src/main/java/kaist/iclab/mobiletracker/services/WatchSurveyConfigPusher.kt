@@ -61,7 +61,10 @@ class WatchSurveyConfigPusher(
                 Log.w(TAG, "No watch survey configs for this campaign; pushing an empty list")
             }
 
-            val payload = WatchSurveyConfigPayload(surveyConfigs = watchSurveyConfigs)
+            val payload = WatchSurveyConfigPayload(
+                surveyConfigs = watchSurveyConfigs,
+                pushedAt = System.currentTimeMillis()
+            )
             val payloadJson = json.encodeToString(WatchSurveyConfigPayload.serializer(), payload)
 
             Log.d(TAG, "Pushing ${watchSurveyConfigs.size} watch survey config(s) to watch")
@@ -84,5 +87,11 @@ class WatchSurveyConfigPusher(
  */
 @Serializable
 data class WatchSurveyConfigPayload(
-    val surveyConfigs: Map<Int, WatchSurveyConfig>
+    val surveyConfigs: Map<Int, WatchSurveyConfig>,
+    /**
+     * When the phone sent this push. Each push is its own Data Layer item, so pushes queued while
+     * the watch was away arrive together on reconnect in no fixed order; the watch uses this to
+     * ignore one older than what it already applied.
+     */
+    val pushedAt: Long = 0L
 )
