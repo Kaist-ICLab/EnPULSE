@@ -139,6 +139,14 @@ class BackgroundController(
         }
 
         private fun run() {
+            // A second start command (e.g. Start tapped twice) reaches onStartCommand again. Running
+            // the rest again would replace offBodyJob without cancelling it, leaving an extra
+            // wrist-state collector running.
+            if (offBodyJob != null) {
+                Log.i(TAG, "Already running; ignoring the repeated start")
+                return
+            }
+
             // Now do the rest of the work after startForeground is called
             if (!(partialSensingAllowed) && sensors.any { it.sensorStateFlow.value.flag == SensorState.FLAG.DISABLED }) {
                 stateStorage.set(
