@@ -307,18 +307,21 @@ class BLEHelper(
                 }
 
                 if (responses.isNotEmpty()) {
-                    microEmaResponseStore.insertAll(responses)
+                    val newCount = microEmaResponseStore.insertNew(responses)
                     Log.d(
                         AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] Cached ${responses.size} responses locally on phone"
+                        "[MICRO_EMA] Cached $newCount new responses locally on phone " +
+                            "(${responses.size - newCount} already stored)"
                     )
-                    // Send ACK back to watch immediately so it can clean up its DB
+                    // ACK every id, duplicates included, so the watch stops re-sending them
                     sendMicroEmaAck(processedIds)
 
                     // Attempt to upload immediately for real-time responsiveness
                     // We launch this in the IO dispatcher so it doesn't block BLE reception
-                    appScope.io.launch {
-                        surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseStore)
+                    if (newCount > 0) {
+                        appScope.io.launch {
+                            surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseStore)
+                        }
                     }
                 }
             } catch (e: Exception) {

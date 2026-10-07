@@ -19,6 +19,8 @@ import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kaist.iclab.tracker.sensor.survey.config.QuestionConfig
 import kaist.iclab.tracker.sensor.survey.config.ScheduleType
 import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
@@ -31,6 +33,8 @@ class SurveyService(
     supabaseHelper: SupabaseHelper
 ) {
     private val supabaseClient = supabaseHelper.supabaseClient
+
+    private val microEmaUploadMutex = Mutex()
 
     companion object {
         /** Must match QUESTION_POSITION_KEY in the dashboard's campaignService.ts. */
@@ -229,8 +233,10 @@ class SurveyService(
      */
     suspend fun uploadUnsyncedMicroEmaResponses(
         microEmaResponseDao: MicroEmaResponseStore
-    ): Result<Int> {
-        return try {
+    ): Result<Int> = microEmaUploadMutex.withLock {
+        // Called both per incoming watch payload (BLEHelper) and periodically (DataUploadService).
+        // Two runs at once would read the same unsynced rows and upload each of them twice.
+        try {
             val unsynced = microEmaResponseDao.getUnsyncedResponses()
             if (unsynced.isEmpty()) return Result.Success(0)
 

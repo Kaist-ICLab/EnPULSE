@@ -15,6 +15,29 @@ class MicroEmaResponseStore(boxStore: BoxStore) {
         box.put(responses)
     }
 
+    /**
+     * Inserts only the responses not already stored, and returns how many were new. The watch
+     * re-sends answers until it gets the phone's ACK, so after a lost ACK or a reconnect the same
+     * answer arrives again. One answer is identified by its question and its trigger and start
+     * times (synced rows are kept, so this also catches one that was already uploaded).
+     */
+    fun insertNew(responses: List<MicroEmaResponseEntity>): Int = synchronized(this) {
+        val fresh = responses
+            .distinctBy { it.dedupeKey() }
+            .filter { response ->
+                box.query()
+                    .equal(MicroEmaResponseEntity_.questionId, response.questionId.toLong())
+                    .build()
+                    .use { query -> query.find() }
+                    .none { it.dedupeKey() == response.dedupeKey() }
+            }
+        if (fresh.isNotEmpty()) box.put(fresh)
+        fresh.size
+    }
+
+    private fun MicroEmaResponseEntity.dedupeKey() =
+        Triple(questionId, triggerTime, surveyStartTime)
+
     suspend fun getUnsyncedResponses(): List<MicroEmaResponseEntity> =
         box.query().equal(MicroEmaResponseEntity_.isSynced, false).build().use { it.find() }
 
