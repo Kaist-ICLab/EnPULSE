@@ -96,4 +96,31 @@ class ConditionEvaluatorTest {
         assertFalse(ConditionEvaluator.evaluate(gestureClapping, justStale, now))
         assertTrue(ConditionEvaluator.evaluate(gestureClapping, justFresh, now))
     }
+
+    @Test
+    fun `activity stays valid for 30 minutes since it is not re-reported while still`() {
+        val now = System.currentTimeMillis()
+        val still = ConditionNode.Detection("physical_activity", "Still")
+        val tenMinutesOld = mapOf("physical_activity" to DetectionState("Still", now - 10 * 60_000))
+        val justStale = mapOf("physical_activity" to DetectionState("Still", now - 30 * 60_000 - 1))
+
+        assertTrue(ConditionEvaluator.evaluate(still, tenMinutesOld, now))
+        assertFalse(ConditionEvaluator.evaluate(still, justStale, now))
+    }
+
+    @Test
+    fun `the longer activity limit does not apply to other sensors in the same condition`() {
+        val now = System.currentTimeMillis()
+        val condition = ConditionNode.And(
+            listOf(gestureClapping, ConditionNode.Detection("physical_activity", "Still"))
+        )
+        val states = mapOf(
+            "gesture" to DetectionState("Clapping", now - 5 * 60_000),
+            "physical_activity" to DetectionState("Still", now - 5 * 60_000)
+        )
+        val freshGesture = states + ("gesture" to DetectionState("Clapping", now - 1_000))
+
+        assertFalse(ConditionEvaluator.evaluate(condition, states, now))
+        assertTrue(ConditionEvaluator.evaluate(condition, freshGesture, now))
+    }
 }

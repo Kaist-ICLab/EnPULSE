@@ -36,6 +36,8 @@ object ConditionEvaluator {
      *   treated as if the sensor had never reported anything. [DetectionStateTracker]
      *   keeps the latest state forever, so without this a one-off event (e.g. a gesture)
      *   would satisfy its condition indefinitely, including for the next device user.
+     * @param sensorMaxAgeMillis Per-sensor limits that replace [maxAgeMillis] for the sensors
+     *   they name (see [TriggerConstants.Evaluation.SENSOR_MAX_AGE_MILLIS]).
      * @return `true` if the condition tree is satisfied, `false` otherwise.
      *
      * Note: If a [ConditionNode.Detection] references a sensor that has no entry
@@ -46,15 +48,17 @@ object ConditionEvaluator {
         node: ConditionNode,
         states: Map<String, DetectionState>,
         now: Long = System.currentTimeMillis(),
-        maxAgeMillis: Long = TriggerConstants.Evaluation.MAX_DETECTION_AGE_MILLIS
+        maxAgeMillis: Long = TriggerConstants.Evaluation.MAX_DETECTION_AGE_MILLIS,
+        sensorMaxAgeMillis: Map<String, Long> = TriggerConstants.Evaluation.SENSOR_MAX_AGE_MILLIS
     ): Boolean {
         return when (node) {
-            is ConditionNode.And -> node.children.all { evaluate(it, states, now, maxAgeMillis) }
-            is ConditionNode.Or -> node.children.any { evaluate(it, states, now, maxAgeMillis) }
-            is ConditionNode.Not -> !evaluate(node.child, states, now, maxAgeMillis)
+            is ConditionNode.And -> node.children.all { evaluate(it, states, now, maxAgeMillis, sensorMaxAgeMillis) }
+            is ConditionNode.Or -> node.children.any { evaluate(it, states, now, maxAgeMillis, sensorMaxAgeMillis) }
+            is ConditionNode.Not -> !evaluate(node.child, states, now, maxAgeMillis, sensorMaxAgeMillis)
             is ConditionNode.Detection -> {
                 val state = states[node.sensor] ?: return false
-                state.value == node.value && now - state.timestamp <= maxAgeMillis
+                val limit = sensorMaxAgeMillis[node.sensor] ?: maxAgeMillis
+                state.value == node.value && now - state.timestamp <= limit
             }
         }
     }
