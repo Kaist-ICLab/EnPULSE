@@ -162,7 +162,9 @@ fun LoginScreen(
                 )
             }
             Spacer(modifier = Modifier.height(Styles.CONTENT_SPACING))
-            Button(
+            // One sign-in method at a time: the Google button is hidden while the email form is
+            // open, and "Use Google instead" closes the form to bring it back.
+            if (!emailFormVisible) Button(
                 onClick = { ifConfigured { onSignInWithGoogle() } },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -196,9 +198,8 @@ fun LoginScreen(
             }
 
             if (showEmailLogin) {
-                Spacer(modifier = Modifier.height(Styles.FORM_SECTION_SPACING))
-
                 if (!emailFormVisible) {
+                    Spacer(modifier = Modifier.height(Styles.FORM_SECTION_SPACING))
                     TextButton(onClick = {
                         emailFormVisible = true
                         errorHidden = true
