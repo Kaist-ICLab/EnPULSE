@@ -93,9 +93,9 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
 
         val label = when (activityEntity.activityType) {
             com.google.android.gms.location.DetectedActivity.STILL -> "Still"
-            com.google.android.gms.location.DetectedActivity.WALKING -> "Walking"
+            com.google.android.gms.location.DetectedActivity.WALKING,
+            com.google.android.gms.location.DetectedActivity.ON_FOOT -> "Walking" // Maps both to "Walking"
             com.google.android.gms.location.DetectedActivity.RUNNING -> "Running"
-            com.google.android.gms.location.DetectedActivity.ON_FOOT -> "On Foot"
             com.google.android.gms.location.DetectedActivity.ON_BICYCLE -> "On Bicycle"
             com.google.android.gms.location.DetectedActivity.IN_VEHICLE -> "In Vehicle"
             else -> "Unknown"
