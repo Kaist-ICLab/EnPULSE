@@ -26,6 +26,7 @@ class HomeUiStateTest {
         assertEquals(0, state.locationCount)
         assertEquals(0, state.appUsageCount)
         assertEquals(0, state.activityCount)
+        assertEquals(0, state.stepCount)
         assertEquals(0, state.batteryCount)
         assertEquals(0, state.notificationCount)
         assertEquals(0, state.screenCount)

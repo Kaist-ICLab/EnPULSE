@@ -58,6 +58,7 @@ object Styles {
         val LOCATION = Color(0xFF4285F4)
         val APP_USAGE = Color(0xFF9C27B0)
         val ACTIVITY = Color(0xFF34A853)
+        val STEP = Color(0xFF009688)
         val DEVICE_STATUS = Color(0xFFFBBC04)
         val NOTIFICATIONS = Color(0xFFEA4335)
         val SCREEN = Color(0xFF607D8B)

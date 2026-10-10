@@ -10,6 +10,7 @@ data class DailySensorCounts(
     val locationCount: Int = 0,
     val appUsageCount: Int = 0,
     val activityCount: Int = 0,
+    val stepCount: Int = 0,
     val batteryCount: Int = 0,
     val notificationCount: Int = 0,
     val screenCount: Int = 0,

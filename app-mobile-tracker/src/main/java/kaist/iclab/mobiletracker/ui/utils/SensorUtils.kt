@@ -158,6 +158,7 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "MessageLog", "Message" -> Icons.AutoMirrored.Filled.Message
         "Notification" -> Icons.Default.Notifications
         "Screen" -> Icons.Default.StayCurrentPortrait
+        "ActivityRecognition" -> Icons.AutoMirrored.Filled.DirectionsWalk
         "Step" -> Icons.AutoMirrored.Filled.DirectionsWalk
         "UserInteraction" -> Icons.Default.TouchApp
         "WifiScan", "Wifi" -> Icons.Default.WifiTethering

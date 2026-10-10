@@ -120,13 +120,23 @@ class PhoneTriggerActionHandler(
         trigger: ParsedCampaignTrigger,
         action: TriggerActionConfig.Notification
     ) {
-        if (action.deviceType == 1) {
-            handleWatchNotification(trigger, action)
-            return
-        }
+        when (action.deviceType) {
+            1 -> {
+                // Watch only (deviceType == 1)
+                handleWatchNotification(trigger, action)
+            }
 
-        Log.d(TAG, "Showing notification: title=${action.title}, url=${action.url}")
-        webAppTriggerHandler.launchNotification(action.title, action.description, action.url)
+            2 -> {
+                // Both: Show on phone and send to watch
+                webAppTriggerHandler.launchNotification(action.title, action.description, action.url)
+                handleWatchNotification(trigger, action)
+            }
+
+            else -> {
+                // Phone only (deviceType == 0)
+                webAppTriggerHandler.launchNotification(action.title, action.description, action.url)
+            }
+        }
     }
 
     /**

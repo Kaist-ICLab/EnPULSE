@@ -53,6 +53,7 @@ object AppColors {
     val ColorLocation = Color(0xFF4285F4)
     val ColorAppUsage = Color(0xFF9C27B0)
     val ColorActivity = Color(0xFF34A853)
+    val ColorStep = Color(0xFF009688)
     val ColorBattery = Color(0xFFFBBC04)
     val ColorNotification = Color(0xFFEA4335)
     val ColorScreen = Color(0xFF607D8B)
@@ -95,7 +96,8 @@ object AppColors {
             "MessageLog", "Message" -> ColorMessage
             "Notification" -> ColorNotification
             "Screen" -> ColorScreen
-            "Step" -> ColorActivity
+            "ActivityRecognition" -> ColorActivity
+            "Step" -> ColorStep
             "UserInteraction" -> ColorUserInteraction
             "WifiScan", "Wifi", "WiFi" -> ColorWifi
             "Exercise" -> ColorExercise

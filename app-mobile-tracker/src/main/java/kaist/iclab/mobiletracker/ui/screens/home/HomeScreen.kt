@@ -215,10 +215,16 @@ fun HomeScreen(
                     Styles.Colors.NOTIFICATIONS
                 ),
                 SensorItem(
-                    "Step",
+                    "ActivityRecognition",
                     uiState.activityCount,
                     Icons.AutoMirrored.Filled.DirectionsWalk,
                     Styles.Colors.ACTIVITY
+                ),
+                SensorItem(
+                    "Step",
+                    uiState.stepCount,
+                    Icons.AutoMirrored.Filled.DirectionsWalk,
+                    Styles.Colors.STEP
                 ),
                 SensorItem(
                     "PPG",

@@ -319,6 +319,7 @@ object NotificationHelper {
             pendingIntent = pendingIntent
         ).apply {
             setCategory(NotificationCompat.CATEGORY_ALARM)
+            setLocalOnly(true)
         }.build()
 
         showNotification(context, notificationId, notification)
