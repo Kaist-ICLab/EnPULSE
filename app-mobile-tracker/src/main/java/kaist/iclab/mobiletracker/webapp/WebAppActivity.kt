@@ -9,6 +9,7 @@ import android.util.Log
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.core.net.toUri
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
@@ -194,6 +195,14 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         } else {
             loadedUrl = url
             webView.loadUrl(url)
+        }
+
+        onBackPressedDispatcher.addCallback(this) {
+            if (::webView.isInitialized && webView.canGoBack()) {
+                webView.goBack()
+            } else {
+                finish()
+            }
         }
     }
 
