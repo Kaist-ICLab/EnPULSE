@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.di
 import io.objectbox.BoxStore
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.db.entity.MyObjectBox
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
@@ -25,9 +24,6 @@ val databaseModule = module {
 
     // Registry of every sensor's generic store (replaces the per-sensor Room DAOs)
     single { SensorStores(get()) }
-
-    // Store for locally cached microEMA responses
-    single { MicroEmaResponseStore(get()) }
 
     // Store for webapp analytics logs — not a sensor, so it lives outside SensorStores
     single { WebAppLogStore(get()) }

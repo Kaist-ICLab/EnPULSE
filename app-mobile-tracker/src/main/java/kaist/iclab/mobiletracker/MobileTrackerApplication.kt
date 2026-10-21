@@ -107,16 +107,6 @@ class MobileTrackerApplication : Application(), KoinComponent,
         // cache up to date without blocking startup.
         refreshAnonKeyFromServer()
 
-        // Watch MicroEMA answers used to queue in their own box; move any an older build left
-        // behind into the "Survey" sensor store, which uploads them from now on.
-        try {
-            val moved = getKoin().get<kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore>()
-                .migrateInto(getKoin().get<kaist.iclab.mobiletracker.db.obx.SensorStores>().surveyResponse)
-            if (moved > 0) Log.i("MobileTrackerApplication", "Migrated $moved queued MicroEMA responses")
-        } catch (e: Exception) {
-            Log.e("MobileTrackerApplication", "Error migrating MicroEMA responses: ${e.message}", e)
-        }
-
         // Initialize BLEHelper for watch communication
         try {
             val bleHelper = getKoin().get<kaist.iclab.mobiletracker.helpers.BLEHelper>()
