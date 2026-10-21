@@ -62,6 +62,7 @@ abstract class SurveyActivity : ComponentActivity() {
             putExtra("result", stringResult)
             putExtra("responseTime", System.currentTimeMillis())
             putExtra("scheduleId", scheduleId)
+            setPackage(this@SurveyActivity.packageName)
         }
 
         Log.d(TAG, "Send broadcast: $intent")

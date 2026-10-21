@@ -100,6 +100,7 @@ class SurveyBridgeHandler(
             putExtra("result", Json.encodeToString(answers))
             putExtra("responseTime", System.currentTimeMillis())
             putExtra("scheduleId", scheduleId)
+            setPackage(context.packageName)
         }
         context.sendBroadcast(intent)
 
