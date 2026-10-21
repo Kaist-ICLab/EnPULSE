@@ -84,40 +84,6 @@ class DataSyncSettingsViewModel(
         _lastWatchData.value = timestampService.getLastWatchDataReceived()
         _lastSuccessfulUpload.value = timestampService.getLastSuccessfulUpload()
     }
-
-    /**
-     * Flush all local sensor data
-     */
-    fun flushAllData() {
-        viewModelScope.launch {
-            _isFlushing.value = true
-
-            val phoneResult = phoneSensorRepository.flushAllData()
-            val watchResult = watchSensorRepository.flushAllData()
-
-            // WebApp logs and survey responses live outside the sensor stores, so they need
-            // clearing explicitly — before the split they were covered by
-            // phoneSensorRepository.flushAllData().
-            webAppLogStore.removeAll()
-            surveyResponseStore.removeAll()
-
-            phoneResult.onFailure { e ->
-                Log.e(TAG, "Error flushing phone sensor data: ${e.message}", e)
-            }
-            watchResult.onFailure { e ->
-                Log.e(TAG, "Error flushing watch sensor data: ${e.message}", e)
-            }
-
-            // Clear timestamps regardless of partial failure
-            timestampService.clearAllSyncTimestamps()
-
-            if (phoneResult.isSuccess && watchResult.isSuccess) {
-                _uiEvent.emit(DataSyncSettingsUiEvent.ShowToast(R.string.toast_data_deleted))
-            }
-
-            _isFlushing.value = false
-        }
-    }
 }
 
 /**
