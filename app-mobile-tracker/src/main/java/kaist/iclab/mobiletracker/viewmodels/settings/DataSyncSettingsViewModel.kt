@@ -1,21 +1,15 @@
 package kaist.iclab.mobiletracker.viewmodels.settings
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.db.obx.SurveyResponseStore
 import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
-import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.services.upload.SensorUploadService
 import kaist.iclab.mobiletracker.utils.DateTimeFormatter
-import kaist.iclab.mobiletracker.utils.SensorTypeHelper
 import kaist.iclab.tracker.sensor.core.Sensor
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
