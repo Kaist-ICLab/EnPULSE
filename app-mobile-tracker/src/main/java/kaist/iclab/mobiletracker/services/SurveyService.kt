@@ -43,23 +43,6 @@ class SurveyService(
     }
 
     /**
-     * Fetch a single survey configuration by ID from Supabase.
-     * @param surveyId Unique ID of the survey.
-     * @return Result containing the assembled SurveyConfig.
-     */
-    suspend fun getSurveyConfig(surveyId: Int): Result<SurveyConfig> {
-        return SupabaseLoadingInterceptor.withLoading {
-            runCatchingSuspend {
-                val surveys = fetchFullSurveys {
-                    eq("id", surveyId)
-                }
-                surveys.firstOrNull()
-                    ?: throw NoSuchElementException("Survey with ID $surveyId not found")
-            }
-        }
-    }
-
-    /**
      * Fetch all surveys associated with a specific campaign.
      * @param campaignId Unique ID of the campaign.
      * @return Result containing a list of SurveyConfigs.
@@ -69,23 +52,6 @@ class SurveyService(
             ErrorClassifier.runClassified(TAG, "getCampaignSurveys($campaignId)") {
                 fetchFullSurveys {
                     eq("campaign_id", campaignId)
-                }
-            }
-        }
-    }
-
-    /**
-     * Fetch all surveys specifically configured for wearable devices (watch) within a campaign.
-     * Filters for surveys where device_type is 1.
-     * @param campaignId Unique ID of the campaign.
-     * @return Result containing a list of wearable-specific SurveyConfigs.
-     */
-    suspend fun getWatchSurveys(campaignId: Int): Result<List<SurveyConfig>> {
-        return SupabaseLoadingInterceptor.withLoading {
-            ErrorClassifier.runClassified(TAG, "getWatchSurveys($campaignId)") {
-                fetchFullSurveys {
-                    eq("campaign_id", campaignId)
-                    eq("device_type", 1) // Watch
                 }
             }
         }
