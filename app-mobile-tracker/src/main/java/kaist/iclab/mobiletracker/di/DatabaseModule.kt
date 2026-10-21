@@ -16,9 +16,7 @@ val databaseModule = module {
     single {
         CouchbaseDB(context = androidContext())
     }
-
-    // ObjectBox - for sensor data storage. maxSizeInKByte is raised well past ObjectBox's 1GB
-    // default — see Constants.DB.OBJECTBOX_MAX_SIZE_KB's doc comment for why.
+    
     single<BoxStore> {
         MyObjectBox.builder()
             .androidContext(androidContext())
