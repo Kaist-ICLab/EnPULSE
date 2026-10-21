@@ -117,7 +117,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.cacheMode = WebSettings.LOAD_NO_CACHE
-            settings.supportMultipleWindows() // Enable support for multiple windows / target="_blank"
+            settings.setSupportMultipleWindows(true)
             webViewClient = RestrictedWebViewClient(webApp.allowedOrigin) {
                 if (!canGoBack()) {
                     finish()
