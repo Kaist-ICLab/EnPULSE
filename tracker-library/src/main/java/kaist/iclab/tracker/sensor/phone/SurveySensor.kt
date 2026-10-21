@@ -1,17 +1,15 @@
 package kaist.iclab.tracker.sensor.phone
 
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Poll
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.listener.BroadcastListener
 import kaist.iclab.tracker.permission.PermissionManager
@@ -34,12 +32,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 /**
- * Hosts survey UI and collects responses. As of the trigger-system unification, this sensor no
- * longer decides *when* a survey fires — that's the trigger engine's job now (a `Detection`
- * condition, possibly gated by [kaist.iclab.tracker.sensor.phone.TimingSensor] for time-based
- * cases, combined with an `Ema`/`WatchEma` action). [triggerSurveyNotification] is invoked by the
- * app's `PhoneTriggerActionHandler` whenever an `Ema` action fires; [openSurvey] remains available
- * for manual/immediate opening (e.g. a "preview this survey" debug action in settings).
+ * SurveySensor is capable of generating notifications and opening surveys.
+ * It also captures result submission event.
  */
 class SurveySensor(
     private val context: Context,
@@ -62,9 +56,7 @@ class SurveySensor(
         const val RESULT_ACTION_NAME = "kaist.iclab.tracker.survey_sensor_result"
     }
 
-    override val permissions: Array<String> = listOfNotNull(
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.POST_NOTIFICATIONS else null,
-    ).toTypedArray()
+    override val permissions: Array<String> = arrayOf()
 
     override val foregroundServiceTypes = arrayOf<Int>()
 
@@ -127,16 +119,16 @@ class SurveySensor(
         }
     }
 
-    fun openSurvey(id: String) {
-        val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = id))
-        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            putExtra("id", id)
-            putExtra("scheduleId", scheduleId)
-        }
-
-        context.startActivity(intent)
-    }
+//    fun openSurvey(id: String) {
+//        val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = id))
+//        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
+//            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//            putExtra("id", id)
+//            putExtra("scheduleId", scheduleId)
+//        }
+//
+//        context.startActivity(intent)
+//    }
 
     /**
      * Trigger a survey by posting a High-Priority Notification.
@@ -204,11 +196,10 @@ class SurveySensor(
 
     private val surveyResultCallback = surveyResultCallback@{ intent: Intent? ->
         if(intent == null) return@surveyResultCallback
-        Log.d(TAG, "Received Survey intent")
+
         val scheduleId = intent.getStringExtra("scheduleId") ?: return@surveyResultCallback
         val result = intent.getStringExtra("result") ?: return@surveyResultCallback
         val responseTime = intent.getLongExtra("responseTime", -1)
-        Log.d(TAG, "scheduleId: $scheduleId, result: $result, responseTime: $responseTime")
 
         scheduleStorage.setResponseSubmissionTime(scheduleId, responseTime)
         // Schedules are wiped when collection stops (resetSchedule) or surveys are cleared, so a
