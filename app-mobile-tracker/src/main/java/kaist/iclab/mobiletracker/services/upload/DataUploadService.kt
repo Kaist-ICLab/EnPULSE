@@ -494,12 +494,10 @@ class DataUploadService : LifecycleService(), KoinComponent {
         // Supervisor rather than plain coroutineScope to keep the existing behaviour that one
         // sensor blowing up doesn't cancel the others.
         supervisorScope {
-            // Only sensors currently included in the joined campaign are uploaded — a sensor that
-            // was removed from (or never added to) the campaign has nothing to upload for the same
-            // reason an up-to-date one doesn't, but listing it as "already up to date" in the summary
-            // would wrongly imply it's still being tracked, so it's excluded outright instead.
+            // Only sensors currently included in the joined campaign are uploaded
             val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds)
                 .filter { sensorUploadService.isSensorActive(it) }
+                .toSet()
             val results = tally.results
             val upToDateSensors = tally.upToDate
             // + 1 unit each for MicroEMA and Survey, which flush in one go rather than in batches.

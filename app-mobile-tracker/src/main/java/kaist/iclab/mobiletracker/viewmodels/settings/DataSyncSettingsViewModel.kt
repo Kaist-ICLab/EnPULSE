@@ -133,7 +133,7 @@ class DataSyncSettingsViewModel(
 
                 val totalSensorsCount = sensors.size + SensorTypeHelper.watchSensorIds.size
 
-                val allSensorIds = sensors.map { it.id } + SensorTypeHelper.watchSensorIds
+                val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds).toSet()
                 val jobs = allSensorIds.map { sensorId ->
                     viewModelScope.async {
                         if (!sensorUploadService.hasDataToUpload(sensorId)) {
