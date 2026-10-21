@@ -16,6 +16,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Drains [SurveyResponseStore] into the `survey_question_response` Supabase table.
@@ -55,7 +56,7 @@ class SurveyResponseUploader(
         // SessionStatus is ever stuck at Initializing (normally prevented by SupabaseHelper's
         // enableLifecycleCallbacks = false).
         val initialized =
-            withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
+            withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS.milliseconds) {
                 supabaseHelper.supabaseClient.auth.awaitInitialization()
             } != null
         if (!initialized) {
