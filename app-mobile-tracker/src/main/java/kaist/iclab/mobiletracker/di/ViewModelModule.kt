@@ -3,21 +3,17 @@ package kaist.iclab.mobiletracker.di
 import kaist.iclab.mobiletracker.helpers.DataExportHelper
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.DataRepository
-import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
 import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
-import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.viewmodels.data.DataViewModel
 import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import kaist.iclab.mobiletracker.viewmodels.home.HomeViewModel
 import kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.AccountSettingsViewModel
-import kaist.iclab.mobiletracker.viewmodels.settings.DataSyncSettingsViewModel
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 /**
@@ -61,19 +57,6 @@ val viewModelModule = module {
             surveyRepository = get<SurveyRepository>(),
             campaignSensorRepository = get(),
             backgroundController = get(),
-        )
-    }
-
-    // ServerSyncSettingsViewModel
-    viewModel {
-        DataSyncSettingsViewModel(
-            phoneSensorRepository = get<PhoneSensorRepository>(),
-            watchSensorRepository = get<WatchSensorRepository>(),
-            timestampService = get(),
-            sensors = get(qualifier = named("phoneSensors")),
-            sensorUploadService = get(),
-            webAppLogStore = get(),
-            surveyResponseStore = get(),
         )
     }
 
