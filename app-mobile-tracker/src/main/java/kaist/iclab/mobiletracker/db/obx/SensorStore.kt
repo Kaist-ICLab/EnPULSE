@@ -28,6 +28,13 @@ enum class DedupStrategy {
 
     /** Upsert by (timestamp, deviceType) — for sensors that re-read a trailing margin on every poll. */
     TIMESTAMP,
+
+    /**
+     * Drop incoming rows whose eventId is already stored, instead of letting ObjectBox REPLACE them.
+     * REPLACE gives the row a new id, which lands it past the upload cursor and uploads it again —
+     * harmless for tables upserted by `event_id`, a duplicate row for insert-only ones.
+     */
+    KEEP_EXISTING_EVENT_ID,
 }
 
 /**
@@ -70,6 +77,9 @@ open class SensorStore<T : BaseEntity>(
     @Suppress("UNCHECKED_CAST")
     private val idProperty = metaClass.getField("id").get(null) as Property<T>
 
+    @Suppress("UNCHECKED_CAST")
+    private val eventIdProperty = metaClass.getField("eventId").get(null) as Property<T>
+
     private val cacheLock = Any()
     private var cacheInitialized = false
     private var cachedCount = 0
@@ -99,25 +109,39 @@ open class SensorStore<T : BaseEntity>(
         }
     }
 
-    fun insertBatch(entities: List<T>) {
+    /** @return how many net-new rows were stored. */
+    fun insertBatch(entities: List<T>): Int {
         val deduped = applyDedup(entities)
-        synchronized(cacheLock) {
+        return synchronized(cacheLock) {
             ensureCacheInitializedLocked()
             val before = box.count()
             box.put(deduped)
-            cachedCount += (box.count() - before).toInt()
+            val added = (box.count() - before).toInt()
+            cachedCount += added
             val maxTimestamp = deduped.maxOfOrNull { it.timestamp }
             if (maxTimestamp != null &&
                 (cachedLatestTimestamp == null || maxTimestamp > cachedLatestTimestamp!!)
             ) {
                 cachedLatestTimestamp = maxTimestamp
             }
+            added
         }
     }
 
     private fun applyDedup(entities: List<T>): List<T> = when (dedupStrategy) {
         DedupStrategy.NONE -> entities
         DedupStrategy.TIMESTAMP -> applyExistingIds(entities)
+        DedupStrategy.KEEP_EXISTING_EVENT_ID -> dropExistingEventIds(entities)
+    }
+
+    private fun dropExistingEventIds(entities: List<T>): List<T> {
+        if (entities.isEmpty()) return entities
+        val deduped = entities.distinctBy { it.eventId }
+        val existing = box.query(eventIdProperty.oneOf(deduped.map { it.eventId }.toTypedArray()))
+            .build()
+            .use { it.find() }
+            .mapTo(HashSet()) { it.eventId }
+        return deduped.filter { it.eventId !in existing }
     }
 
     /**

@@ -29,15 +29,23 @@ class SensorUploadHandlerImpl<T>(
     private val serializer: KSerializer<T>,
     private val tableName: String,
     private val sensorName: String,
-    private val supabase: SupabaseUploadService
+    private val supabase: SupabaseUploadService,
+    override val isCampaignGated: Boolean = true,
+    private val supabaseColumns: Set<String>? = null,
+    private val insertOnly: Boolean = false
 ) : SensorUploadHandler where T : BaseEntity, T : CsvSerializable {
 
     override val displayName: String get() = sensorName
 
     private fun toSupabaseRow(entity: T, userUuid: String): JsonObject {
         val obj = SupabaseJson.encodeToJsonElement(serializer, entity).jsonObject
-        return JsonObject(obj + ("uuid" to JsonPrimitive(userUuid)))
+        val row = obj + ("uuid" to JsonPrimitive(userUuid))
+        return JsonObject(supabaseColumns?.let { columns -> row.filterKeys { it in columns } } ?: row)
     }
+
+    private suspend fun sendBatch(rows: List<JsonObject>): Result<Unit> =
+        if (insertOnly) supabase.insertBatch(tableName, sensorName, rows)
+        else supabase.upsertBatch(tableName, sensorName, rows)
 
     // Cursor is the local ObjectBox row id (not the record's own `timestamp`) — see
     // SensorStore.hasDataWithIdAfter's doc comment for why: id is assigned in true insertion
@@ -70,7 +78,7 @@ class SensorUploadHandlerImpl<T>(
                 // batch every run (a row the server rejects, a batch big enough to time out) never
                 // made any forward progress at all.
                 val rows = entities.map { toSupabaseRow(it, userUuid) }
-                when (val result = supabase.upsertBatch(tableName, sensorName, rows)) {
+                when (val result = sendBatch(rows)) {
                     is Result.Success -> {
                         currentCursor = entities.maxOf { it.id }
                         uploadedRows += entities.size

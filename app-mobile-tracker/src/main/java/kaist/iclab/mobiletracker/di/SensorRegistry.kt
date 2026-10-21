@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.di
 
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
@@ -23,6 +24,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.VADEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
@@ -79,7 +81,15 @@ class SensorDescriptor<T>(
     val store: SensorStore<T>,
     val supabaseTable: String,
     val serializer: KSerializer<T>,
-    val fromSensorEntity: ((SensorEntity, String?) -> T)? = null
+    val fromSensorEntity: ((SensorEntity, String?) -> T)? = null,
+    /** False to upload regardless of the joined campaign's active sensor set. */
+    val isCampaignGated: Boolean = true,
+    /**
+     * For tables that don't mirror the entity: only these keys of the serialized entity are sent,
+     * and rows are inserted rather than upserted by `event_id` (which such a table doesn't have).
+     * Null sends the whole entity as an upsert.
+     */
+    val insertOnlyColumns: Set<String>? = null
 ) where T : BaseEntity, T : CsvSerializable, T : RecordSerializable {
     fun toDataHandler(): SensorDataHandler = GenericSensorDataHandler(
         sensorId = sensorId,
@@ -87,7 +97,8 @@ class SensorDescriptor<T>(
         isWatchSensor = isWatchSensor,
         supabaseTableName = supabaseTable,
         store = store,
-        serializer = serializer
+        serializer = serializer,
+        hasRemoteEventId = insertOnlyColumns == null
     )
 
     fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler =
@@ -97,7 +108,10 @@ class SensorDescriptor<T>(
             serializer = serializer,
             tableName = supabaseTable,
             sensorName = displayName,
-            supabase = supabase
+            supabase = supabase,
+            isCampaignGated = isCampaignGated,
+            supabaseColumns = insertOnlyColumns,
+            insertOnly = insertOnlyColumns != null
         )
 
     fun toPhoneSensorStore(): PhoneSensorStore<T>? =
@@ -538,6 +552,18 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     level = e.level
                 )
             }
+        ),
+        // Phone surveys (SurveyResponseCapture) and watch MicroEMA answers (BLEHelper) share one
+        // store. Captured regardless of the campaign, so never campaign-gated either.
+        SensorDescriptor(
+            sensorId = SurveyResponseEntity.SENSOR_ID,
+            displayName = "Survey",
+            isWatchSensor = false,
+            store = s.surveyResponse,
+            supabaseTable = Constants.DB.TABLE_RESPONSE,
+            serializer = SurveyResponseEntity.serializer(),
+            isCampaignGated = false,
+            insertOnlyColumns = SurveyResponseEntity.SUPABASE_COLUMNS
         ),
         // Watch sensors — written via WatchSensorRepository (BLE), no phone-side store needed
         SensorDescriptor(

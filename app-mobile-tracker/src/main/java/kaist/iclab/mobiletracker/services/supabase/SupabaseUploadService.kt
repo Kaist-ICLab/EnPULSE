@@ -34,4 +34,22 @@ class SupabaseUploadService(supabaseHelper: SupabaseHelper) {
             }
         }
     }
+
+    /** Plain insert, for tables with no key to upsert against (e.g. `survey_question_response`). */
+    suspend inline fun <reified T : @Serializable Any> insertBatch(
+        tableName: String,
+        sensorName: String,
+        dataList: List<T>
+    ): Result<Unit> {
+        if (dataList.isEmpty()) return Result.Success(Unit)
+        return SupabaseLoadingInterceptor.withLoading {
+            ErrorClassifier.runClassified(
+                sensorName,
+                "insert ${dataList.size} $sensorName entries"
+            ) {
+                supabaseClient.from(tableName).insert(dataList)
+                Unit
+            }
+        }
+    }
 }

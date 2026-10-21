@@ -3,12 +3,11 @@ package kaist.iclab.mobiletracker.repository
 import android.util.Log
 import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
-import kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.upload.SensorUploadService
-import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
+import kaist.iclab.mobiletracker.services.upload.SensorDataUploader
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
 import java.util.concurrent.ConcurrentHashMap
@@ -23,8 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 class DataRepositoryImpl(
     private val handlerRegistry: SensorDataHandlerRegistry,
     private val syncTimestampService: SyncTimestampService,
-    private val sensorUploadService: SensorUploadService,
-    private val surveyResponseUploader: SurveyResponseUploader,
+    private val sensorDataUploader: SensorDataUploader,
     private val webAppLogUploader: WebAppLogUploader,
     private val supabaseHelper: SupabaseHelper,
     private val campaignSensorRepository: CampaignSensorRepository
@@ -43,7 +41,7 @@ class DataRepositoryImpl(
      * would look permanently invisible/unsendable.
      */
     private fun isSensorActive(sensorId: String): Boolean {
-        if (sensorId == SurveyResponseDataHandler.SENSOR_ID || sensorId == WebAppLogDataHandler.SENSOR_ID || sensorId == "VAD") {
+        if (sensorId == SurveyResponseEntity.SENSOR_ID || sensorId == WebAppLogDataHandler.SENSOR_ID || sensorId == "VAD") {
             return true
         }
         val activeSensorNames = campaignSensorRepository.getActiveSensors().map { it.name }
@@ -61,12 +59,11 @@ class DataRepositoryImpl(
                     lastRecordedTime = handler.getLatestTimestamp(),
                     isWatchSensor = handler.isWatchSensor || handler.sensorId == "Location",
                     isPhoneSensor = handler.isPhoneSensor,
-                    // Survey/WebAppLog track "uploaded" per row (isSynced) rather than a cursor
-                    // (see their handlers' doc comments), so they count it directly — cheap, since
-                    // unlike the ~30 sensor stores this isn't queried per-sensor on every Data tab
-                    // load. Everything else derives it from the cursor, no query needed.
+                    // WebAppLog tracks "uploaded" per row (isSynced) rather than a cursor (see
+                    // its handler's doc comment), so it counts it directly — cheap, since unlike
+                    // the ~30 sensor stores this isn't queried per-sensor on every Data tab load.
+                    // Everything else derives it from the cursor, no query needed.
                     uploadedRecordCount = when (handler) {
-                        is SurveyResponseDataHandler -> handler.getUploadedRecordCount()
                         is WebAppLogDataHandler -> handler.getUploadedRecordCount()
                         else -> syncTimestampService.getUploadedRecordCountFromCursor(handler.sensorId)
                     }
@@ -134,29 +131,8 @@ class DataRepositoryImpl(
             )
         }
         try {
-            // Survey and webapp logs don't ride SensorUploadService (insert-only, not
-            // upsert-by-eventId; see their handlers' doc comments), so each gets its own uploader.
-            if (sensorId == SurveyResponseDataHandler.SENSOR_ID) {
-                return when (val result = surveyResponseUploader.flush()) {
-                    // These drain in a single flush rather than in cursor-tracked batches, so they
-                    // count as one batch towards the caller's progress bar, and result.data is the
-                    // real count uploaded — no quarantine concept here, so attempted == succeeded.
-                    is Result.Success ->
-                        if (result.data > 0) SensorUploadOutcome(
-                            result.data,
-                            result.data,
-                            isUpToDate = false
-                        )
-                        else SensorUploadOutcome.UP_TO_DATE
-
-                    is Result.Error -> SensorUploadOutcome(
-                        0,
-                        0,
-                        isUpToDate = false,
-                        error = result.exception
-                    )
-                }.also { onBatchUploaded() }
-            }
+            // Webapp logs don't ride SensorDataUploader (insert-only, tracked per row; see
+            // WebAppLogDataHandler's doc comment), so they get their own uploader.
             if (sensorId == WebAppLogDataHandler.SENSOR_ID) {
                 return when (val result = webAppLogUploader.flush()) {
                     is Result.Success ->
@@ -176,8 +152,8 @@ class DataRepositoryImpl(
                 }.also { onBatchUploaded() }
             }
 
-            if (!sensorUploadService.hasDataToUpload(sensorId)) return SensorUploadOutcome.UP_TO_DATE
-            return sensorUploadService.uploadSensorData(sensorId, onBatchUploaded)
+            if (!sensorDataUploader.hasDataToUpload(sensorId)) return SensorUploadOutcome.UP_TO_DATE
+            return sensorDataUploader.uploadSensorData(sensorId, onBatchUploaded)
         } finally {
             syncingSensors.remove(sensorId)
         }

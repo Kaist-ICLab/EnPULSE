@@ -111,11 +111,10 @@ class SyncTimestampService(context: Context) {
      * (a local row id) minus [UploadStats.quarantinedRecordCount] (batches given up on, not
      * uploaded) — no separate counter to keep in lockstep with every upload success site. This only
      * works because ids are assigned sequentially per box and this app never prunes data, so
-     * "highest id processed" and "records processed" stay equal. Doesn't apply to Survey/WebAppLog,
-     * which track "already uploaded" per row via an `isSynced` flag instead of a cursor — see
-     * [kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler.getUploadedRecordCount]/
+     * "highest id processed" and "records processed" stay equal. Doesn't apply to WebAppLog, which
+     * tracks "already uploaded" per row via an `isSynced` flag instead of a cursor — see
      * [kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler.getUploadedRecordCount],
-     * which count that directly instead.
+     * which counts that directly instead.
      */
     fun getUploadedRecordCountFromCursor(sensorId: String): Long =
         (getUploadCursor(sensorId) - getUploadStats(sensorId).quarantinedRecordCount).coerceAtLeast(

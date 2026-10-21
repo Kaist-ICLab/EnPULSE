@@ -6,8 +6,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity_
 
 /**
- * ObjectBox-backed store for webapp log events. Mirrors [MicroEmaResponseStore] rather than
- * [SensorStore]: webapp logs are not sensor data, so they need neither the `BaseEntity` columns
+ * ObjectBox-backed store for webapp log events. Not a [SensorStore]: webapp logs are not sensor data, so they need neither the `BaseEntity` columns
  * (`event_id`, `device_type`, `received`) nor the dedup strategies, and they are uploaded by
  * [kaist.iclab.mobiletracker.services.upload.WebAppLogUploader] on their own schedule.
  *

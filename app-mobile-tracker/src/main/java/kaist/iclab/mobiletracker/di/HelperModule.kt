@@ -1,6 +1,6 @@
 package kaist.iclab.mobiletracker.di
 
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
+import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.DataExportHelper
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
@@ -25,7 +25,7 @@ val helperModule = module {
             watchSensorRepository = get<WatchSensorRepository>(),
             timestampService = get(),
             microEmaConfigStorage = get(org.koin.core.qualifier.named("microEmaConfigStorage")),
-            microEmaResponseStore = get<MicroEmaResponseStore>(),
+            surveyResponseStore = get<SensorStores>().surveyResponse,
             detectionStateTracker = get<DetectionStateTracker>()
         )
     }

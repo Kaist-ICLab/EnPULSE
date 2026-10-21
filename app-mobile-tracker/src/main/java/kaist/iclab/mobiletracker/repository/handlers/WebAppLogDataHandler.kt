@@ -15,14 +15,14 @@ import kotlinx.serialization.json.put
  * only, no `properties` payload) — webapp logs are debug/analytics telemetry, not primary study
  * data, so a count is what the screen is really for.
  *
- * Hand-written for the same reason as [SurveyResponseDataHandler]: not a
+ * Hand-written rather than a [kaist.iclab.mobiletracker.di.SensorDescriptor] entry: not a
  * [kaist.iclab.mobiletracker.db.entity.BaseEntity], insert-only, uploaded by
  * [kaist.iclab.mobiletracker.services.upload.WebAppLogUploader] rather than the generic
  * upsert-by-eventId [kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerImpl].
- * [kaist.iclab.mobiletracker.repository.DataRepositoryImpl] special-cases [SENSOR_ID] the same way
- * it does [SurveyResponseDataHandler.SENSOR_ID]: never campaign-gated, and manual upload routes to
+ * [kaist.iclab.mobiletracker.repository.DataRepositoryImpl] special-cases [SENSOR_ID]: never
+ * campaign-gated, and manual upload routes to
  * [kaist.iclab.mobiletracker.services.upload.WebAppLogUploader] instead of
- * [kaist.iclab.mobiletracker.services.upload.SensorUploadService].
+ * [kaist.iclab.mobiletracker.services.upload.SensorDataUploader].
  */
 class WebAppLogDataHandler(
     private val store: WebAppLogStore

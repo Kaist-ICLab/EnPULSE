@@ -13,13 +13,10 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.DataRepository
-import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
-import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.ui.utils.getSensorTitleResId
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
@@ -203,11 +200,8 @@ class DataUploadService : LifecycleService(), KoinComponent {
     }
 
     private val dataRepository: DataRepository by inject()
-    private val sensorUploadService: SensorUploadService by inject()
+    private val sensorDataUploader: SensorDataUploader by inject()
     private val sensors by inject<List<Sensor<*, *>>>(qualifier = named("phoneSensors"))
-    private val surveyService: SurveyService by inject()
-    private val microEmaResponseDao by inject<MicroEmaResponseStore>()
-    private val surveyResponseUploader: SurveyResponseUploader by inject()
 
     /**
      * The most recent startId the system has delivered, including requests that only rode along
@@ -429,12 +423,12 @@ class DataUploadService : LifecycleService(), KoinComponent {
             // uploading rather than the one that just finished.
             updateProgress(displayName, progress)
 
-            // Survey/WebApp log aren't gated by campaign membership (see SensorUploadService),
-            // so only skip the campaign check for sensors that actually go through it. A sensor
+            // WebApp logs aren't gated by campaign membership and have no SensorDataUploader
+            // handler, so only skip the campaign check for sensors that actually go through it. A sensor
             // dropped from the campaign has nothing to upload for the same reason an up-to-date
             // one doesn't, but reporting it as "already up to date" would wrongly imply it's still
             // being tracked — so it's left out of the summary entirely instead.
-            if (isCampaignGatedSensor(sensorId) && !sensorUploadService.isSensorActive(sensorId)) {
+            if (isCampaignGatedSensor(sensorId) && !sensorDataUploader.isSensorActive(sensorId)) {
                 Log.d(TAG, "Skipping $sensorId: not part of the current campaign")
                 return@forEach
             }
@@ -464,19 +458,19 @@ class DataUploadService : LifecycleService(), KoinComponent {
         }
     }
 
-    /** True for sensors whose upload is gated on campaign membership (i.e. not Survey/WebAppLog). */
+    /** False for webapp logs, which upload outside [SensorDataUploader] (see [WebAppLogUploader]). */
     private fun isCampaignGatedSensor(sensorId: String): Boolean =
-        sensorId != SurveyResponseDataHandler.SENSOR_ID && sensorId != WebAppLogDataHandler.SENSOR_ID
+        sensorId != WebAppLogDataHandler.SENSOR_ID
 
     /**
-     * Batches [sensorId] is expected to need. Survey and webapp logs drain in a single flush
-     * instead of cursor-tracked batches, so they count as one unit each.
+     * Batches [sensorId] is expected to need. Webapp logs drain in a single flush instead of
+     * cursor-tracked batches, so they count as one unit.
      */
     private suspend fun estimatedBatchesFor(sensorId: String): Int =
-        if (isCampaignGatedSensor(sensorId)) sensorUploadService.pendingBatchCount(sensorId) else 1
+        if (isCampaignGatedSensor(sensorId)) sensorDataUploader.pendingBatchCount(sensorId) else 1
 
     /**
-     * Uploads every active sensor plus survey/MicroEMA responses in parallel — same shape as the
+     * Uploads every active sensor (survey responses included) in parallel — same shape as the
      * old AutoSyncService.uploadAllSensorData(), just relocated here so auto-sync and manual
      * upload share one implementation and one progress/notification surface.
      */
@@ -488,15 +482,16 @@ class DataUploadService : LifecycleService(), KoinComponent {
         // Supervisor rather than plain coroutineScope to keep the existing behaviour that one
         // sensor blowing up doesn't cancel the others.
         supervisorScope {
-            // Only sensors currently included in the joined campaign are uploaded
-            val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds)
-                .filter { sensorUploadService.isSensorActive(it) }
+            // Only sensors currently included in the joined campaign are uploaded, plus the ones
+            // that aren't campaign-gated (survey responses)
+            val allSensorIds = (sensors.map { it.id } + SensorTypeHelper.watchSensorIds +
+                    SurveyResponseEntity.SENSOR_ID)
+                .filter { sensorDataUploader.isSensorActive(it) }
                 .toSet()
             val results = tally.results
             val upToDateSensors = tally.upToDate
-            // + 1 unit each for MicroEMA and Survey, which flush in one go rather than in batches.
             val progress =
-                BatchProgress(allSensorIds.sumOf { sensorUploadService.pendingBatchCount(it) } + 2)
+                BatchProgress(allSensorIds.sumOf { sensorDataUploader.pendingBatchCount(it) })
 
             updateProgress("", progress)
 
@@ -505,9 +500,9 @@ class DataUploadService : LifecycleService(), KoinComponent {
             val sensorJobs = allSensorIds.map { sensorId ->
                 async(Dispatchers.IO) {
                     val displayName = localizedDisplayName(sensorId)
-                    if (sensorUploadService.hasDataToUpload(sensorId)) {
+                    if (sensorDataUploader.hasDataToUpload(sensorId)) {
                         updateProgress(displayName, progress)
-                        val outcome = sensorUploadService.uploadSensorData(sensorId) {
+                        val outcome = sensorDataUploader.uploadSensorData(sensorId) {
                             progress.advance()
                             updateProgress(displayName, progress)
                         }
@@ -532,66 +527,7 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 }
             }
 
-            val microEmaJob = async(Dispatchers.IO) {
-                // No quarantine concept for MicroEMA/Survey — they're insert-only flushes, so
-                // result.data (the count Supabase actually accepted) doubles as both succeeded and
-                // attempted.
-                when (val result =
-                    surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseDao)) {
-                    is Result.Success -> {
-                        if (result.data > 0) results.add(
-                            SensorUploadResult(
-                                "MicroEMA",
-                                result.data,
-                                result.data,
-                                isError = false
-                            )
-                        )
-                        else upToDateSensors.add("MicroEMA")
-                    }
-
-                    is Result.Error -> {
-                        Log.e(
-                            TAG,
-                            "Failed to upload MicroEMA responses: ${result.message}",
-                            result.exception
-                        )
-                        results.add(SensorUploadResult("MicroEMA", 0, 0, isError = true))
-                    }
-                }
-                progress.advance()
-                updateProgress("MicroEMA", progress)
-            }
-
-            val surveyJob = async(Dispatchers.IO) {
-                val displayName = localizedDisplayName(SurveyResponseDataHandler.SENSOR_ID)
-                when (val result = surveyResponseUploader.flush()) {
-                    is Result.Success -> {
-                        if (result.data > 0) results.add(
-                            SensorUploadResult(
-                                displayName,
-                                result.data,
-                                result.data,
-                                isError = false
-                            )
-                        )
-                        else upToDateSensors.add(displayName)
-                    }
-
-                    is Result.Error -> {
-                        Log.e(
-                            TAG,
-                            "Failed to upload survey responses: ${result.message}",
-                            result.exception
-                        )
-                        results.add(SensorUploadResult(displayName, 0, 0, isError = true))
-                    }
-                }
-                progress.advance()
-                updateProgress(displayName, progress)
-            }
-
-            (sensorJobs + microEmaJob + surveyJob).awaitAll()
+            sensorJobs.awaitAll()
         }
     }
 

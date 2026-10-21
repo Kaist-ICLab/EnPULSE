@@ -2,9 +2,8 @@ package kaist.iclab.mobiletracker.services
 
 import android.util.Log
 import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
-import kaist.iclab.mobiletracker.db.obx.SurveyResponseStore
+import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
-import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.CancellationException
@@ -31,16 +30,14 @@ import kotlinx.serialization.json.JsonObject
  * [PhoneSensorDataService] — so survey capture still respects Start/Stop Logging, just not the
  * per-sensor/campaign gate.
  *
- * Storage/upload shape mirrors sensor data and MicroEMA responses, not webapp logs: this class
- * only ever writes to [SurveyResponseStore] (durable, synchronous). Upload is entirely
- * [AutoSyncService]'s job, via [SurveyResponseUploader] on the same "Start Logging"/interval/
- * network-gated cycle as everything else in [kaist.iclab.mobiletracker.services.upload.DataUploadService]
- * — no immediate best-effort flush here, so a submission's upload timing matches every other
- * sensor's.
+ * Storage/upload is the regular sensor path: this class only ever writes to the "Survey" sensor
+ * store (shared with watch MicroEMA answers). Upload is entirely [AutoSyncService]'s job, on the
+ * same "Start Logging"/interval/network-gated cycle as every other sensor in
+ * [kaist.iclab.mobiletracker.services.upload.DataUploadService].
  */
 class SurveyResponseCapture(
     private val surveySensor: SurveySensor,
-    private val surveyResponseStore: SurveyResponseStore,
+    private val surveyResponseStore: SensorStore<SurveyResponseEntity>,
     private val appScope: AppCoroutineScope
 ) {
     private var isStarted = false
@@ -82,10 +79,10 @@ class SurveyResponseCapture(
                 return
             }
 
-            surveyResponseStore.insertAll(entities)
+            surveyResponseStore.insertBatch(entities)
             Log.d(TAG, "Queued ${entities.size} responses for upload")
             // No immediate flush — AutoSyncService's gated cycle uploads this, same as every
-            // other sensor and MicroEMA responses.
+            // other sensor.
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.e(TAG, "Error processing response", e)

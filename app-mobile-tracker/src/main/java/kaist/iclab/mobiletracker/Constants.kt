@@ -97,7 +97,7 @@ object Constants {
          * How many separate upload cycles must fail at the exact same spot with a decisive server
          * rejection (RLS/constraint/malformed payload — see [kaist.iclab.mobiletracker.repository.AppError.ServerRejected])
          * before that record is isolated and skipped, so it can't block everything captured after
-         * it forever. See [kaist.iclab.mobiletracker.services.upload.SensorUploadService].
+         * it forever. See [kaist.iclab.mobiletracker.services.upload.SensorDataUploader].
          */
         const val QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES = 1
     }

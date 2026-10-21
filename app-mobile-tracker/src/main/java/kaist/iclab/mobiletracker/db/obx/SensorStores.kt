@@ -19,6 +19,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.VADEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
@@ -77,4 +78,12 @@ class SensorStores(boxStore: BoxStore) {
     val watchGesture = SensorStore(boxStore, WatchGestureEntity::class.java)
     val watchStress = SensorStore(boxStore, WatchStressEntity::class.java)
     val ecg = SensorStore(boxStore, ECGEntity::class.java)
+
+    // Phone survey answers and watch MicroEMA answers. The watch re-sends until ACKed, and
+    // survey_question_response is insert-only, so a resend must not get a fresh row id.
+    val surveyResponse = SensorStore(
+        boxStore,
+        SurveyResponseEntity::class.java,
+        dedupStrategy = DedupStrategy.KEEP_EXISTING_EVENT_ID
+    )
 }

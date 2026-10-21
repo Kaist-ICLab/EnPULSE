@@ -9,6 +9,7 @@ import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.SensorUploadOutcome
 import kaist.iclab.mobiletracker.services.SyncTimestampService
+import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.mobiletracker.utils.toCampaignSensorName
@@ -16,7 +17,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 
-class SensorUploadService(
+class SensorDataUploader(
     private val handlerRegistry: SensorUploadHandlerRegistry,
     private val supabaseHelper: SupabaseHelper,
     private val syncTimestampService: SyncTimestampService,
@@ -29,16 +30,16 @@ class SensorUploadService(
         private const val PRUNE_BUFFER_MS = 7 * 24 * 60 * 60 * 1000L
     }
 
-    /** Whether [sensorId] is part of the currently joined campaign's active sensor set. */
+    /**
+     * Whether [sensorId] should upload: it's part of the currently joined campaign's active sensor
+     * set, or it isn't campaign-gated at all (see [SensorUploadHandler.isCampaignGated]).
+     */
     fun isSensorActive(sensorId: String): Boolean {
+        if (handlerRegistry.getHandler(sensorId)?.isCampaignGated == false) return true
         val activeSensors = campaignSensorRepository.getActiveSensors().map { it.name }
         val campaignSensorName = sensorId.toCampaignSensorName()
         return activeSensors.contains(campaignSensorName)
     }
-
-    /** Display name for [sensorId], falling back to the id when nothing is registered for it. */
-    fun displayNameOf(sensorId: String): String =
-        handlerRegistry.getHandler(sensorId)?.displayName ?: sensorId
 
     /**
      * Batches [uploadSensorData] would send for [sensorId] right now — used to size the upload
@@ -58,11 +59,6 @@ class SensorUploadService(
         sensorId: String,
         onBatchUploaded: suspend () -> Unit = {}
     ): SensorUploadOutcome {
-        if (!isSensorActive(sensorId)) {
-            Log.d(TAG, "uploadSensorData: $sensorId is NOT active")
-            return SensorUploadOutcome.UP_TO_DATE
-        }
-
         val handler = handlerRegistry.getHandler(sensorId)
         if (handler == null) {
             Log.w(TAG, "No upload handler found for sensor: $sensorId")

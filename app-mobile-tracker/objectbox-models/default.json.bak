@@ -2120,10 +2120,70 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "34:2114977106523735798",
+      "lastPropertyId": "9:5549443959708284925",
+      "name": "VADEntity",
+      "properties": [
+        {
+          "id": "1:7443067254284055225",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:798619774775241260",
+          "name": "eventId",
+          "indexId": "95:6241524635962522398",
+          "type": 9,
+          "flags": 34848
+        },
+        {
+          "id": "3:8426721286728269364",
+          "name": "uuid",
+          "type": 9
+        },
+        {
+          "id": "4:3457739089001811655",
+          "name": "received",
+          "type": 6
+        },
+        {
+          "id": "5:8234858762335301531",
+          "name": "timestamp",
+          "indexId": "96:4173556334520426334",
+          "type": 6,
+          "flags": 8
+        },
+        {
+          "id": "6:3536347041481300972",
+          "name": "deviceType",
+          "indexId": "97:5867929833101788352",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "7:2664729005079340387",
+          "name": "isSpeech",
+          "type": 1
+        },
+        {
+          "id": "8:2197108252079846090",
+          "name": "speechProbability",
+          "type": 7
+        },
+        {
+          "id": "9:5549443959708284925",
+          "name": "inferenceTimeMs",
+          "type": 7
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "33:8682142796350908026",
-  "lastIndexId": "94:2422217651806928826",
+  "lastEntityId": "34:2114977106523735798",
+  "lastIndexId": "97:5867929833101788352",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

@@ -6,11 +6,9 @@ import io.objectbox.annotation.Index
 import kaist.iclab.mobiletracker.data.DeviceType
 
 /**
- * ObjectBox entity for locally caching microEMA survey responses on the phone.
- * Allows the phone to immediately ACK the watch and upload to Supabase asynchronously.
- *
- * This is not a sensor and does not go through [SensorStore]; it is accessed via a small
- * dedicated store that queries on [isSynced].
+ * Legacy: how watch microEMA answers were cached before they became [SurveyResponseEntity] rows.
+ * Only read by [kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore.migrateInto]; kept so an
+ * upgrade doesn't drop answers that hadn't been uploaded yet.
  */
 @Entity
 data class MicroEmaResponseEntity(

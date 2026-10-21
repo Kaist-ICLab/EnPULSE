@@ -21,8 +21,7 @@ import kaist.iclab.mobiletracker.repository.WebAppRepository
 import kaist.iclab.mobiletracker.repository.WebAppRepositoryImpl
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.upload.SensorUploadService
-import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
+import kaist.iclab.mobiletracker.services.upload.SensorDataUploader
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import kaist.iclab.mobiletracker.storage.CouchbaseTriggerConfigStorage
@@ -49,8 +48,7 @@ val repositoryModule = module {
         DataRepositoryImpl(
             handlerRegistry = get<SensorDataHandlerRegistry>(),
             syncTimestampService = get<SyncTimestampService>(),
-            sensorUploadService = get<SensorUploadService>(),
-            surveyResponseUploader = get<SurveyResponseUploader>(),
+            sensorDataUploader = get<SensorDataUploader>(),
             webAppLogUploader = get<WebAppLogUploader>(),
             supabaseHelper = get<SupabaseHelper>(),
             campaignSensorRepository = get<CampaignSensorRepository>()

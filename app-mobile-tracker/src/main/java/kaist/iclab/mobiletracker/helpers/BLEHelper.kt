@@ -7,14 +7,13 @@ import android.util.Log
 import androidx.core.net.toUri
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
-import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
+import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
-import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
 import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
@@ -52,15 +51,13 @@ class BLEHelper(
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
     private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
-    private val microEmaResponseStore: MicroEmaResponseStore,
+    private val surveyResponseStore: SensorStore<SurveyResponseEntity>,
     private val detectionStateTracker: DetectionStateTracker,
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
     private val appScope by inject<AppCoroutineScope>()
-    private val surveyService by inject<SurveyService>()
     private val surveySensor by inject<SurveySensor>()
-    private val userProfileRepository by inject<UserProfileRepository>()
     private val webAppTriggerHandler by inject<WebAppTriggerHandler>()
     private val webAppRegistry by inject<kaist.iclab.mobiletracker.webapp.WebAppRegistry>()
 
@@ -257,16 +254,13 @@ class BLEHelper(
      * [{"questionId":"101","value":"3","status":"ANSWERED","triggerTime":"17...","surveyStartTime":"17...","responseTime":"17..."}]
      *
      * For EXPIRED/DISMISSED, "value" is null.
+     *
+     * Answers are stored as watch-side rows of the "Survey" sensor and upload with it. `uuid` is
+     * stamped at upload time, like every other sensor.
      */
     private fun handleMicroEmaResponse(jsonString: String) {
         appScope.io.launch {
             try {
-                val uuid = userProfileRepository.getCurrentUuid()
-                if (uuid == null) {
-                    Log.w(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] No user UUID available")
-                    return@launch
-                }
-
                 val jsonArray = Json.parseToJsonElement(jsonString).jsonArray
                 val processedIds = mutableListOf<Long>()
 
@@ -292,22 +286,24 @@ class BLEHelper(
 
                     if (watchId != null) processedIds.add(watchId)
 
-                    MicroEmaResponseEntity(
-                        watchId = watchId ?: 0L,
-                        uuid = uuid,
+                    val now = System.currentTimeMillis()
+                    val triggerMillis = triggerTime?.toLongOrNull() ?: now
+                    SurveyResponseEntity(
+                        // The watch re-sends until it gets the ACK, so one answer must always map
+                        // to the same eventId for the store to drop the resend.
+                        eventId = "microema-$questionId-$triggerTime-$surveyStartTime",
+                        deviceType = DeviceType.WATCH.value,
                         questionId = questionId,
-                        triggerTime = triggerTime,
-                        actualTriggerTime = triggerTime,
-                        surveyStartTime = surveyStartTime,
-                        responseSubmissionTime = responseTime,
-                        responseJson = responseJson.toString(),
-                        deviceType = 1,
-                        isSynced = false
+                        triggerTime = triggerMillis,
+                        actualTriggerTime = triggerMillis,
+                        surveyStartTime = surveyStartTime?.toLongOrNull() ?: now,
+                        responseSubmissionTime = responseTime?.toLongOrNull() ?: triggerMillis,
+                        responseJson = responseJson.toString()
                     )
                 }
 
                 if (responses.isNotEmpty()) {
-                    val newCount = microEmaResponseStore.insertNew(responses)
+                    val newCount = surveyResponseStore.insertBatch(responses)
                     Log.d(
                         AppConfig.LogTags.PHONE_BLE,
                         "[MICRO_EMA] Cached $newCount new responses locally on phone " +
@@ -315,14 +311,6 @@ class BLEHelper(
                     )
                     // ACK every id, duplicates included, so the watch stops re-sending them
                     sendMicroEmaAck(processedIds)
-
-                    // Attempt to upload immediately for real-time responsiveness
-                    // We launch this in the IO dispatcher so it doesn't block BLE reception
-                    if (newCount > 0) {
-                        appScope.io.launch {
-                            surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseStore)
-                        }
-                    }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e

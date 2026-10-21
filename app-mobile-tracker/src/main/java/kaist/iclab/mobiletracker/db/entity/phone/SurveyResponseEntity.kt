@@ -1,42 +1,108 @@
 package kaist.iclab.mobiletracker.db.entity.phone
 
 import io.objectbox.annotation.Entity
-import io.objectbox.annotation.Id
-import io.objectbox.annotation.Index
+import kaist.iclab.mobiletracker.data.DeviceType
+import kaist.iclab.mobiletracker.db.entity.BaseEntity
+import kaist.iclab.mobiletracker.db.entity.CsvSerializable
+import kaist.iclab.mobiletracker.db.entity.RecordSerializable
+import kaist.iclab.mobiletracker.db.obx.EpochMillisIsoSerializer
+import kaist.iclab.mobiletracker.db.obx.JsonStringElementSerializer
+import kaist.iclab.mobiletracker.repository.SensorRecord
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import java.util.UUID
 
 /**
- * ObjectBox-backed local cache for one phone survey question response
- * ([kaist.iclab.tracker.sensor.phone.SurveySensor.Entity] carries every question's answer for a
- * submission; one row here per question, matching the `survey_question_response` table's grain).
+ * One survey question response, from either device: phone surveys
+ * ([kaist.iclab.mobiletracker.services.SurveyResponseCapture], [deviceType] = PHONE) and watch
+ * MicroEMA answers ([kaist.iclab.mobiletracker.helpers.BLEHelper], [deviceType] = WATCH). One row
+ * per question, matching the `survey_question_response` table's grain.
  *
- * Exists so a submission survives even when the immediate Supabase insert can't happen (offline,
- * session not restored yet, transient failure) — before this,
- * [kaist.iclab.mobiletracker.services.PhoneSensorDataService] inserted straight into Supabase with
- * no local durability, so any such failure silently dropped the response.
+ * Stored and uploaded like any other sensor (the "Survey" entry in
+ * [kaist.iclab.mobiletracker.di.SensorRegistry]), with two differences declared on that entry:
+ * it is not campaign-gated, and the table has none of [BaseEntity]'s columns, so rows are
+ * inserted with only [SUPABASE_COLUMNS] instead of upserted by `event_id`.
  *
- * Deliberately **not** a sensor: it does not extend
- * [kaist.iclab.mobiletracker.db.entity.BaseEntity], is absent from
- * [kaist.iclab.mobiletracker.db.obx.SensorStores]/[kaist.iclab.mobiletracker.di.SensorRegistry],
- * and never rides the campaign-gated sensor upload path — mirrors [WebAppLogEntity].
- *
- * `uuid` is deliberately NOT stored here; it's stamped at upload time from the current session by
- * [kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader] (same as [WebAppLogEntity]),
- * so a response captured before login/session-restore still queues instead of being dropped.
+ * [timestamp] mirrors [responseSubmissionTime]. `uuid` is stamped at upload time, so a response
+ * captured before login/session-restore still queues.
  */
 @Entity
-data class SurveyResponseEntity(
-    @Id var id: Long = 0,
+@Serializable
+class SurveyResponseEntity : BaseEntity, CsvSerializable, RecordSerializable {
+    @SerialName("question_id")
+    var questionId: Int = 0
 
-    var questionId: Int = 0,
+    @SerialName("trigger_time")
+    @Serializable(with = EpochMillisIsoSerializer::class)
+    var triggerTime: Long = 0
 
-    /** Epoch millis; null moments on the source [SurveySensor.Entity] are stamped with "now". */
-    var triggerTime: Long = 0,
-    var actualTriggerTime: Long = 0,
-    var surveyStartTime: Long = 0,
-    var responseSubmissionTime: Long = 0,
+    @SerialName("actual_trigger_time")
+    @Serializable(with = EpochMillisIsoSerializer::class)
+    var actualTriggerTime: Long = 0
+
+    @SerialName("survey_start_time")
+    @Serializable(with = EpochMillisIsoSerializer::class)
+    var surveyStartTime: Long = 0
+
+    @SerialName("response_submission_time")
+    @Serializable(with = EpochMillisIsoSerializer::class)
+    var responseSubmissionTime: Long = 0
 
     /** JSON text of this question's `response` element (`{"id": ..., "value": ...}`). */
-    var responseJson: String = "",
+    @SerialName("response")
+    @Serializable(with = JsonStringElementSerializer::class)
+    var responseJson: String = ""
 
-    @Index var isSynced: Boolean = false
-)
+    constructor()
+
+    constructor(
+        id: Long = 0,
+        eventId: String = UUID.randomUUID().toString(),
+        uuid: String = "",
+        received: Long = System.currentTimeMillis(),
+        deviceType: Int = DeviceType.PHONE.value,
+        questionId: Int = 0,
+        triggerTime: Long = 0,
+        actualTriggerTime: Long = 0,
+        surveyStartTime: Long = 0,
+        responseSubmissionTime: Long = 0,
+        responseJson: String = "",
+    ) {
+        initBaseEntity(id, eventId, uuid, received, responseSubmissionTime, deviceType)
+
+        this.questionId = questionId
+        this.triggerTime = triggerTime
+        this.actualTriggerTime = actualTriggerTime
+        this.surveyStartTime = surveyStartTime
+        this.responseSubmissionTime = responseSubmissionTime
+        this.responseJson = responseJson
+    }
+
+    override fun csvHeader(): String = "eventId,uuid,received,deviceType,questionId,triggerTime,actualTriggerTime,surveyStartTime,responseSubmissionTime,responseJson"
+
+    override fun toCsvRow(): String = "$eventId,$uuid,$received,$deviceType,$questionId,$triggerTime,$actualTriggerTime,$surveyStartTime,$responseSubmissionTime,$responseJson"
+
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf(
+            "question_id" to questionId.toString(),
+            "response" to responseJson
+        )
+    )
+
+    companion object {
+        const val SENSOR_ID = "Survey"
+
+        /** The `survey_question_response` columns; everything else in the entity is local-only. */
+        val SUPABASE_COLUMNS = setOf(
+            "uuid",
+            "question_id",
+            "trigger_time",
+            "actual_trigger_time",
+            "survey_start_time",
+            "response_submission_time",
+            "response"
+        )
+    }
+}

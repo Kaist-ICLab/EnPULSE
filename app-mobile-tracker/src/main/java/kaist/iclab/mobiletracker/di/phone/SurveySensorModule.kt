@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.di.phone
 
 import android.util.Log
 import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.mobiletracker.storage.CouchbaseSensorStateStorage
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
@@ -95,7 +96,7 @@ val surveySensorModule = module {
     single {
         SurveyResponseCapture(
             surveySensor = get(),
-            surveyResponseStore = get(),
+            surveyResponseStore = get<SensorStores>().surveyResponse,
             appScope = get()
         )
     }
