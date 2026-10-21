@@ -37,7 +37,7 @@ import org.koin.core.qualifier.named
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Foreground service for receiving and storing phone sensor data locally in Room database.
+ * Foreground service for receiving and storing phone sensor data locally in ObjectBox database.
  * Replicates the wearable tracker's batching mechanism using Channels.
  *
  * Uses LifecycleService for automatic coroutine lifecycle management.
