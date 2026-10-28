@@ -11,6 +11,7 @@ import androidx.core.net.toUri
 import kaist.iclab.tracker.listener.AlarmListener
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import kaist.iclab.tracker.PhoneNumberHasher
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
@@ -57,6 +58,8 @@ class MessageLogSensor(
         ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
     ).toTypedArray()
 
+    private val numberHasher = PhoneNumberHasher(context)
+
     private val alarmListener = AlarmListener(
         context,
         "kaist.iclab.tracker.${name}_REQUEST",
@@ -85,6 +88,7 @@ class MessageLogSensor(
             while (it.moveToNext()) {
                 val timestamp = it.getLong(it.getColumnIndexOrThrow(Telephony.Sms.DATE))
                 val number = it.getString(it.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
+                val hashedNumber = if(number != null) numberHasher.hash(number) else "UNKNOWN"
                 val type = it.getInt(it.getColumnIndexOrThrow(Telephony.Sms.TYPE))
 
                 listeners.forEach { listener ->
@@ -92,7 +96,7 @@ class MessageLogSensor(
                         Entity(
                             System.currentTimeMillis(),
                             timestamp,
-                            number,
+                            hashedNumber,
                             "SMS",
                             type
                         )
@@ -120,13 +124,15 @@ class MessageLogSensor(
                 val number = it.getLong(it.getColumnIndexOrThrow(Telephony.Mms._ID))
                 val timestamp = it.getLong(it.getColumnIndexOrThrow(Telephony.Mms.DATE))
                 val type = it.getInt(it.getColumnIndexOrThrow(Telephony.Mms.MESSAGE_BOX))
+                val mmsAddress = getMmsAddress(context.contentResolver, number)
+                val hashedMmsAddress = if(mmsAddress != null) numberHasher.hash(mmsAddress) else "UNKNOWN"
 
                 listeners.forEach { listener ->
                     listener.invoke(
                         Entity(
                             System.currentTimeMillis(),
                             TimeUnit.SECONDS.toMillis(timestamp),
-                            getMmsAddress(context.contentResolver, number) ?: "UNKNOWN",
+                            hashedMmsAddress,
                             "MMS",
                             type
                         )

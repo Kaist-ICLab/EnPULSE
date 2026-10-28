@@ -6,9 +6,13 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.provider.CallLog
+import android.telephony.PhoneNumberUtils
+import android.telephony.TelephonyManager
 import kaist.iclab.tracker.listener.AlarmListener
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import kaist.iclab.tracker.MetaData
+import kaist.iclab.tracker.PhoneNumberHasher
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
@@ -17,7 +21,10 @@ import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.serialization.Serializable
+import java.util.Locale
 import java.util.concurrent.TimeUnit
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 class CallLogSensor(
     private val context: Context,
@@ -57,6 +64,8 @@ class CallLogSensor(
         } else null
     ).toTypedArray()
 
+    private val numberHasher = PhoneNumberHasher(context)
+
     private val alarmListener = AlarmListener(
         context,
         "kaist.iclab.tracker.${name}_REQUEST",
@@ -82,9 +91,10 @@ class CallLogSensor(
         cursor?.use {
             while (it.moveToNext()) {
                 val timestamp = it.getLong(it.getColumnIndexOrThrow(CallLog.Calls.DATE))
-                val number = it.getString(it.getColumnIndexOrThrow(CallLog.Calls.NUMBER))
+                val number = numberHasher.hash(it.getString(it.getColumnIndexOrThrow(CallLog.Calls.NUMBER)) ?: "")
                 val duration = it.getString(it.getColumnIndexOrThrow(CallLog.Calls.DURATION))
                 val type = it.getInt(it.getColumnIndexOrThrow(CallLog.Calls.TYPE))
+
                 listeners.forEach { listener ->
                     listener.invoke(
                         Entity(
