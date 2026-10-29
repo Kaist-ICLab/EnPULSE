@@ -51,7 +51,6 @@ class CallLogSensor(
     ) : SensorEntity()
 
     override val permissions: Array<String> = listOfNotNull(
-        Manifest.permission.READ_CONTACTS,
         Manifest.permission.READ_CALL_LOG,
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE

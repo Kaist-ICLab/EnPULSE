@@ -47,11 +47,10 @@ class MessageLogSensor(
         val contactType: Int
     ) : SensorEntity()
 
+    // Only reads the SMS/MMS providers, so READ_SMS is enough; RECEIVE_SMS/MMS would only be needed
+    // to listen for incoming messages, and malware scanners treat them as an SMS-interception signal.
     override val permissions: Array<String> = arrayOf(
-        Manifest.permission.READ_CONTACTS,
-        Manifest.permission.READ_SMS,
-        Manifest.permission.RECEIVE_MMS,
-        Manifest.permission.RECEIVE_SMS
+        Manifest.permission.READ_SMS
     )
     override val foregroundServiceTypes: Array<Int> = listOfNotNull(
         ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,

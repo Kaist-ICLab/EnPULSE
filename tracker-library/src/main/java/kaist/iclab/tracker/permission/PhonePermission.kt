@@ -38,14 +38,6 @@ data class Permission(
                 instructionResId = R.string.instruction_bg_location
             ),
             Permission(
-                name = "Read Contacts",
-                ids = arrayOf(Manifest.permission.READ_CONTACTS)
-            ),
-            Permission(
-                name = "Camera",
-                ids = arrayOf(Manifest.permission.CAMERA)
-            ),
-            Permission(
                 name = "Microphone",
                 ids = arrayOf(Manifest.permission.RECORD_AUDIO)
             ),
@@ -70,20 +62,8 @@ data class Permission(
                 ids = arrayOf(Manifest.permission.READ_MEDIA_AUDIO)
             ) else null,
             Permission(
-                name = "Read Calendar",
-                ids = arrayOf(Manifest.permission.READ_CALENDAR)
-            ),
-            Permission(
                 name = "Activity Recognition",
                 ids = arrayOf(Manifest.permission.ACTIVITY_RECOGNITION)
-            ),
-            Permission(
-                name = "Body Sensors",
-                ids = listOfNotNull(
-                    Manifest.permission.BODY_SENSORS,
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.BODY_SENSORS_BACKGROUND else null
-                ).toTypedArray(),
-                instructionResId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) R.string.instruction_bg_location else null
             ),
             Permission(
                 name = "Accessibility Service",

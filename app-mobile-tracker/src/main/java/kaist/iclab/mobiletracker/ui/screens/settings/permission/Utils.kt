@@ -7,9 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Bedtime
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Mic
@@ -63,18 +60,6 @@ private val permissionConfigs = buildList {
     )
     add(
         PermissionConfig(
-            permissionId = Manifest.permission.READ_CONTACTS,
-            icon = Icons.Filled.Contacts
-        )
-    )
-    add(
-        PermissionConfig(
-            permissionId = Manifest.permission.CAMERA,
-            icon = Icons.Filled.Camera
-        )
-    )
-    add(
-        PermissionConfig(
             permissionId = Manifest.permission.RECORD_AUDIO,
             icon = Icons.Filled.Mic
         )
@@ -107,18 +92,6 @@ private val permissionConfigs = buildList {
             )
         )
     }
-    add(
-        PermissionConfig(
-            permissionId = Manifest.permission.READ_CALENDAR,
-            icon = Icons.Filled.CalendarMonth
-        )
-    )
-    add(
-        PermissionConfig(
-            permissionId = Manifest.permission.BODY_SENSORS,
-            icon = Icons.Filled.FitnessCenter
-        )
-    )
     add(
         PermissionConfig(
             permissionId = Manifest.permission.BIND_ACCESSIBILITY_SERVICE,
@@ -187,16 +160,12 @@ fun getPermissionDescription(context: Context, permissionId: String): String {
         Manifest.permission.POST_NOTIFICATIONS -> R.string.permission_desc_notifications
         Manifest.permission.ACCESS_FINE_LOCATION -> R.string.permission_desc_location
         Manifest.permission.ACCESS_BACKGROUND_LOCATION -> R.string.permission_desc_background_location
-        Manifest.permission.READ_CONTACTS -> R.string.permission_desc_contacts
-        Manifest.permission.CAMERA -> R.string.permission_desc_camera
         Manifest.permission.RECORD_AUDIO -> R.string.permission_desc_microphone
         Manifest.permission.READ_EXTERNAL_STORAGE -> R.string.permission_desc_storage
         Manifest.permission.READ_MEDIA_IMAGES -> R.string.permission_desc_media_images
         Manifest.permission.READ_MEDIA_VIDEO -> R.string.permission_desc_media_video
         Manifest.permission.READ_MEDIA_AUDIO -> R.string.permission_desc_media_audio
-        Manifest.permission.READ_CALENDAR -> R.string.permission_desc_calendar
         Manifest.permission.ACTIVITY_RECOGNITION -> R.string.permission_desc_activity_recognition
-        Manifest.permission.BODY_SENSORS -> R.string.permission_desc_body_sensors
         Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> R.string.permission_desc_accessibility
         Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_desc_notification_listener
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_desc_usage_stats
@@ -218,16 +187,12 @@ fun getPermissionName(context: Context, permissionId: String): String {
         Manifest.permission.POST_NOTIFICATIONS -> R.string.permission_name_notifications
         Manifest.permission.ACCESS_FINE_LOCATION -> R.string.permission_name_location
         Manifest.permission.ACCESS_BACKGROUND_LOCATION -> R.string.permission_name_background_location
-        Manifest.permission.READ_CONTACTS -> R.string.permission_name_contacts
-        Manifest.permission.CAMERA -> R.string.permission_name_camera
         Manifest.permission.RECORD_AUDIO -> R.string.permission_name_microphone
         Manifest.permission.READ_EXTERNAL_STORAGE -> R.string.permission_name_storage
         Manifest.permission.READ_MEDIA_IMAGES -> R.string.permission_name_media_images
         Manifest.permission.READ_MEDIA_VIDEO -> R.string.permission_name_media_video
         Manifest.permission.READ_MEDIA_AUDIO -> R.string.permission_name_media_audio
-        Manifest.permission.READ_CALENDAR -> R.string.permission_name_calendar
         Manifest.permission.ACTIVITY_RECOGNITION -> R.string.permission_name_activity_recognition
-        Manifest.permission.BODY_SENSORS -> R.string.permission_name_body_sensors
         Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> R.string.permission_name_accessibility
         Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_name_notification_listener
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_name_usage_stats

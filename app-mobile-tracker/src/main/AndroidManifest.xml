@@ -55,11 +55,8 @@
     <uses-permission
         android:name="android.permission.READ_SMS"
         tools:ignore="SmsAndCallLogPolicy,SmsCallLogPolicy" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.READ_CALENDAR" />
 
-    <!-- Camera and Audio -->
-    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Audio -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- Usage stats -->
@@ -106,26 +103,14 @@
     <!-- Activity Recognition -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
-    <!-- Body Sensors -->
-    <uses-permission android:name="android.permission.BODY_SENSORS" />
-
-    <!-- Accessibility and Notification Listener Services -->
-    <!-- 
-        Accessibility Service permission:
-        - This permission allows the app to monitor user interactions for research data collection
-        - Users must manually enable the accessibility service in Settings > Accessibility
-        - This is a special permission that cannot be granted via runtime permission requests
-        - Use case: Collecting user interaction data (touches, gestures, UI events) as part of
-        comprehensive sensor data collection for research purposes
-        Note: While the warning says "only granted to system apps", regular apps can use this
-        permission, but users must explicitly enable it in Accessibility settings.
-    -->
+    <!-- Body Sensors: only the watch app reads them (watch data reaches the phone over BLE), so
+         drop the library's declarations from the phone APK. -->
     <uses-permission
-        android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"
-        tools:ignore="ProtectedPermissions" />
+        android:name="android.permission.BODY_SENSORS"
+        tools:node="remove" />
     <uses-permission
-        android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-        tools:ignore="ProtectedPermissions" />
+        android:name="android.permission.BODY_SENSORS_BACKGROUND"
+        tools:node="remove" />
 
     <!-- Hardware features -->
     <!-- Telephony hardware feature (optional) - required for phone-related permissions -->
