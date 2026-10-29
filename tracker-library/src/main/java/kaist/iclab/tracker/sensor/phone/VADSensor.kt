@@ -149,16 +149,22 @@ class VADSensor(
         }
         ownsAudioSensor = false
 
-        interpreter?.close()
-        interpreter = null
-        input = null
-        output = null
-        inputFloats = null
-        outputFloats = null
+        // Same lock as runInference: closing the interpreter mid-run crashes in native code.
+        synchronized(this) {
+            interpreter?.close()
+            interpreter = null
+            input = null
+            output = null
+            inputFloats = null
+            outputFloats = null
+        }
     }
 
     @Synchronized
     private fun runInference(pcm16: ShortArray, timestamp: Long, speechThreshold: Float) {
+        // Stopped while this chunk was waiting on the lock.
+        if (interpreter == null) return
+
         val startedNs = SystemClock.elapsedRealtimeNanos()
 
         inputFloats?.rewind()
