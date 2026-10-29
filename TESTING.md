@@ -42,40 +42,7 @@ adb -s <WATCH_SERIAL> shell pm grant kaist.iclab.trackerSystem android.permissio
 
 ---
 
-## 3. Testing WebApp Trigger (Watch-to-Phone Simulation)
-
-This test simulates the watch identifying a `High` stress state from sensor data, evaluating the trigger rule, and sending the action to the phone to open a web app.
-
-### Step 1: Ensure Setup is Synced
-1. Open the phone app, log in, and join your campaign.
-2. Open the watch app.
-3. Tap **Reload & Sync Config** in the phone settings to sync the campaign configurations and triggers to the watch.
-4. Turn on the **Accelerometer** and **Stress** toggles on the watch app, and tap **Start Data Collection**.
-
-### Step 2: Trigger High Stress via ADB
-Run this command to send a simulated `High` stress state update to the watch:
-
-```bash
-adb -s <WATCH_SERIAL> shell am broadcast \
-  -a kaist.iclab.wearabletracker.UPDATE_STATE \
-  -n kaist.iclab.trackerSystem/kaist.iclab.wearabletracker.trigger.TriggerDebugReceiver \
-  --es sensor stress \
-  --es value High
-```
-
-### Step 3: Observe results
-1. **Watch Logs**: You should see a logcat entry indicating the watch received the ADB command:
-   ```text
-   TriggerDebugReceiver: Received debug state update via ADB: stress -> High
-   TriggerEngine: Evaluating trigger "High Stress Triggering" (id=...)
-   TriggerEngine:   Condition result: TRUE ✓
-   TriggerEngine:   Action[...] notification(url=http://...): EXECUTING
-   ```
-2. **Phone Action**: The phone will receive the command via BLE and display a notification. Tapping this notification will open the campaign's registered web application URL (e.g., `http://143.248.56.146:1111/`) in the mobile browser.
-
----
-
-## 4. Testing WebApp Notification Directly (Phone-Side Simulation)
+## 3. Testing WebApp Notification Directly (Phone-Side Simulation)
 
 If you want to test the phone's web app launch and notification system directly without involving the watch, you can simulate a web app action broadcast directly on the phone.
 
@@ -94,13 +61,13 @@ The phone will instantly show a notification. Tapping it launches the WebApp vie
 
 ---
 
-## 5. Useful Logcat Filters for Debugging
+## 4. Useful Logcat Filters for Debugging
 
 Run these commands in separate terminal tabs to monitor the real-time activity of the apps.
 
 ### Monitor Watch Sensor & Trigger Engine Activity:
 ```bash
-adb -s <WATCH_SERIAL> logcat -v time -s TriggerDebugReceiver:D TriggerEngine:D WatchTriggerAction:D SamsungHealthSensorInitializer:E
+adb -s <WATCH_SERIAL> logcat -v time -s TriggerEngine:D WatchTriggerAction:D SamsungHealthSensorInitializer:E
 ```
 
 ### Monitor Phone WebApp Trigger & BLE Communication Activity:

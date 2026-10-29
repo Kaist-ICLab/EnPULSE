@@ -68,14 +68,6 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault" />
 
-        <receiver
-            android:name=".trigger.TriggerDebugReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="kaist.iclab.wearabletracker.UPDATE_STATE" />
-            </intent-filter>
-        </receiver>
-
         <!-- Fired only via an explicit PendingIntent from WatchNotificationTriggerReceiver
              (a tapped watch notification relaying its url back to the phone) — no intent-filter,
              not meant to be reachable from outside the app. -->

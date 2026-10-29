@@ -20,8 +20,8 @@ import kotlinx.serialization.json.put
  * - Outbound: subscribes to [DetectionStateTracker.stateChanges] (fed locally by
  *   `StressDetectionAdapter`/`GestureDetectionAdapter`, unchanged) and BLE-sends each update on
  *   `KEY_DETECTION_STATE_UPDATE` to the phone.
- * - Inbound: still listens on the same key for ADB/dashboard-driven debug simulation
- *   (`TriggerDebugReceiver`'s use case) — a simulated state gets applied to the local tracker,
+ * - Inbound: still listens on the same key for dashboard-driven debug simulation — a simulated
+ *   state gets applied to the local tracker,
  *   which immediately re-forwards it outbound too, exercising the full pipeline end-to-end
  *   without real sensor hardware.
  */

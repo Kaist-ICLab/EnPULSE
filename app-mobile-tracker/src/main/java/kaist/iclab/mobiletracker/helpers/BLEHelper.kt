@@ -164,8 +164,8 @@ class BLEHelper(
         // Listen for sensor detection state updates forwarded live from the watch's
         // StressDetectionAdapter/GestureDetectionAdapter (via the watch's DetectionStateForwarder)
         // — the trigger engine now runs on the phone, so these feed its DetectionStateTracker
-        // directly. The same key is also used by TriggerDebugReceiver-style ADB/dashboard test
-        // tooling to simulate states in the opposite direction; a real incoming payload here is
+        // directly. The same key is also used by dashboard test tooling to simulate states in the
+        // opposite direction; a real incoming payload here is
         // just another producer of the same {sensor: value} shape.
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.DETECTION_STATE_UPDATE)) { _, json ->
             handleDetectionStateUpdate(json)
