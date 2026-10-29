@@ -115,7 +115,10 @@ class CouchbaseTimingScheduleStorage(
     }
 
     override fun setFiredAt(scheduleId: String, timestamp: Long) {
-        val doc = collection.getDocument(scheduleId)?.toMutable()!!
+        val doc = collection.getDocument(scheduleId)?.toMutable() ?: run {
+            Log.w(TAG, "Cannot setFiredAt: Schedule $scheduleId not found")
+            return
+        }
         doc.setLong("firedAt", timestamp)
         collection.save(doc)
     }
