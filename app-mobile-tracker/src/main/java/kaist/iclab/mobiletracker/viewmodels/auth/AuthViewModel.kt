@@ -90,6 +90,15 @@ class AuthViewModel(
             userState.collect { state ->
                 val currentToken = state.token
 
+                // Reset per-login state on any logout (explicit or session loss), so the next
+                // login in this same ViewModel runs the token fetch and profile sync again.
+                if (!state.isLoggedIn) {
+                    previousLoginState = false
+                    lastSavedToken = null
+                    hasSyncedProfileThisLogin = false
+                    return@collect
+                }
+
                 // When user successfully logs in, automatically get token
                 if (state.isLoggedIn && !previousLoginState && currentToken == null) {
                     previousLoginState = true
