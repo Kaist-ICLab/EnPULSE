@@ -67,25 +67,39 @@ class MessageLogSensor(
         configStateFlow.value.interval
     )
 
+    private val smsRowCursor = ProviderRowCursor(context, "${name}_sms_id")
+    private val mmsRowCursor = ProviderRowCursor(context, "${name}_mms_id")
+
     private val mainCallback = { _: Intent? ->
         val current = System.currentTimeMillis()
         val from = current - configStateFlow.value.interval - TimeUnit.DAYS.toMillis(1)
 
-        // READ SMS
+        // READ SMS. First poll only: start from the lookback window; after that, only rows not
+        // yet emitted (see ProviderRowCursor).
+        val lastSmsId = smsRowCursor.lastId()
+        val (smsSelection, smsArgs) = if (lastSmsId != null) {
+            "${Telephony.Sms._ID} > ?" to arrayOf(lastSmsId.toString())
+        } else {
+            "${Telephony.Sms.DATE} > ? AND ${Telephony.Sms.DATE} <= ?" to
+                    arrayOf(from.toString(), current.toString())
+        }
         var cursor = context.contentResolver.query(
             Telephony.Sms.CONTENT_URI,
             arrayOf(
+                Telephony.Sms._ID,
                 Telephony.Sms.ADDRESS,   // Sender/receiver number
                 Telephony.Sms.DATE,      // Timestamp
                 Telephony.Sms.TYPE,      // Type (Incoming/Outgoing)
             ),
-            "${Telephony.Sms.DATE} > ? AND ${Telephony.Sms.DATE} <= ?",
-            arrayOf(from.toString(), current.toString()),
-            Telephony.Sms.DATE + " DESC"
+            smsSelection,
+            smsArgs,
+            Telephony.Sms._ID + " ASC"
         )
 
+        var maxSmsId: Long? = null
         cursor?.use {
             while (it.moveToNext()) {
+                maxSmsId = it.getLong(it.getColumnIndexOrThrow(Telephony.Sms._ID))
                 val timestamp = it.getLong(it.getColumnIndexOrThrow(Telephony.Sms.DATE))
                 val number = it.getString(it.getColumnIndexOrThrow(Telephony.Sms.ADDRESS))
                 val hashedNumber = if(number != null) numberHasher.hash(number) else "UNKNOWN"
@@ -105,8 +119,17 @@ class MessageLogSensor(
             }
         }
         cursor?.close()
+        // Advanced only after emitting, so a crash mid-poll re-emits rows rather than losing them.
+        maxSmsId?.let { smsRowCursor.advanceTo(it) }
 
-        // READ MMS
+        // READ MMS (DATE is in seconds here)
+        val lastMmsId = mmsRowCursor.lastId()
+        val (mmsSelection, mmsArgs) = if (lastMmsId != null) {
+            "${Telephony.Mms._ID} > ?" to arrayOf(lastMmsId.toString())
+        } else {
+            "${Telephony.Mms.DATE} > ? AND ${Telephony.Mms.DATE} <= ?" to
+                    arrayOf((from / 1000).toString(), (current / 1000).toString())
+        }
         cursor = context.contentResolver.query(
             Telephony.Mms.CONTENT_URI,
             arrayOf(
@@ -114,14 +137,16 @@ class MessageLogSensor(
                 Telephony.Mms.DATE,      // Timestamp
                 Telephony.Mms.MESSAGE_BOX // Type (Incoming/Outgoing)
             ),
-            "${Telephony.Mms.DATE} > ? AND ${Telephony.Mms.DATE} <= ?",
-            arrayOf((from / 1000).toString(), (current / 1000).toString()),
-            Telephony.Mms.DATE + " DESC"
+            mmsSelection,
+            mmsArgs,
+            Telephony.Mms._ID + " ASC"
         )
 
+        var maxMmsId: Long? = null
         cursor?.use {
             while (it.moveToNext()) {
                 val number = it.getLong(it.getColumnIndexOrThrow(Telephony.Mms._ID))
+                maxMmsId = number
                 val timestamp = it.getLong(it.getColumnIndexOrThrow(Telephony.Mms.DATE))
                 val type = it.getInt(it.getColumnIndexOrThrow(Telephony.Mms.MESSAGE_BOX))
                 val mmsAddress = getMmsAddress(context.contentResolver, number)
@@ -141,6 +166,7 @@ class MessageLogSensor(
             }
         }
         cursor?.close()
+        maxMmsId?.let { mmsRowCursor.advanceTo(it) }
         Unit
     }
 

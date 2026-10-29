@@ -73,23 +73,35 @@ class CallLogSensor(
         configStateFlow.value.interval
     )
 
+    private val rowCursor = ProviderRowCursor(context, "${name}_call_id")
+
     private val mainCallback = { _: Intent? ->
         val current = System.currentTimeMillis()
-        val from = current - configStateFlow.value.interval - TimeUnit.DAYS.toMillis(5)
+        // First poll only: start from the lookback window. After that, only rows not yet emitted.
+        val lastId = rowCursor.lastId()
+        val (selection, selectionArgs) = if (lastId != null) {
+            "${CallLog.Calls._ID} > ?" to arrayOf(lastId.toString())
+        } else {
+            val from = current - configStateFlow.value.interval - TimeUnit.DAYS.toMillis(5)
+            "${CallLog.Calls.DATE} BETWEEN ? AND ?" to arrayOf(from.toString(), current.toString())
+        }
         val cursor = context.contentResolver.query(
             CallLog.Calls.CONTENT_URI,
             arrayOf(
+                CallLog.Calls._ID,
                 CallLog.Calls.DATE,
                 CallLog.Calls.NUMBER,
                 CallLog.Calls.DURATION,
                 CallLog.Calls.TYPE
             ),
-            "${CallLog.Calls.DATE} BETWEEN ? AND ?",
-            arrayOf(from.toString(), current.toString()),
-            CallLog.Calls.DATE + " DESC"
+            selection,
+            selectionArgs,
+            CallLog.Calls._ID + " ASC"
         )
+        var maxId: Long? = null
         cursor?.use {
             while (it.moveToNext()) {
+                maxId = it.getLong(it.getColumnIndexOrThrow(CallLog.Calls._ID))
                 val timestamp = it.getLong(it.getColumnIndexOrThrow(CallLog.Calls.DATE))
                 val number = numberHasher.hash(it.getString(it.getColumnIndexOrThrow(CallLog.Calls.NUMBER)) ?: "")
                 val duration = it.getString(it.getColumnIndexOrThrow(CallLog.Calls.DURATION))
@@ -109,6 +121,8 @@ class CallLogSensor(
             }
         }
         cursor?.close()
+        // Advanced only after emitting, so a crash mid-poll re-emits rows rather than losing them.
+        maxId?.let { rowCursor.advanceTo(it) }
         Unit
     }
 
