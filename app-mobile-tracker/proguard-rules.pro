@@ -35,3 +35,8 @@
     public static int d(...);
     public static int v(...);
 }
+
+
+# ObjectBox meta classes (Entity_) are looked up by name in SensorStore/WatchSensorStore
+# via Class.forName("${entity}_") and getField("timestamp"), so keep their names and fields.
+-keep class kaist.iclab.**_ { public static <fields>; }
