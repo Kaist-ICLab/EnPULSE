@@ -171,7 +171,16 @@ class BLEHelper(
             handleDetectionStateUpdate(json)
         }
         // Detections are momentary; once applied they must not be delivered again later.
-        bleChannel.deleteAfterDelivery(setOf(AppConfig.BLEKeys.DETECTION_STATE_UPDATE))
+        // Sensor chunks and microEMA responses each get a unique DataItem path, so without
+        // deleting them they pile up on both devices forever. Safe to drop on delivery: the
+        // watch keeps its copy until our ACK, and resends if storing here fails.
+        bleChannel.deleteAfterDelivery(
+            setOf(
+                AppConfig.BLEKeys.DETECTION_STATE_UPDATE,
+                AppConfig.BLEKeys.SENSOR_DATA_CSV,
+                AppConfig.BLEKeys.MICRO_EMA_RESPONSE
+            )
+        )
     }
 
     private fun handleOpenUrlTrigger(url: String) {

@@ -55,12 +55,15 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         get<WatchEmaTriggerReceiver>().startListening()
         get<WatchNotificationTriggerReceiver>().startListening()
         // Triggers and detections are one-shot; delete them once handled so a queued one is never
-        // delivered again (e.g. to the next wearer after the watch reconnects).
+        // delivered again (e.g. to the next wearer after the watch reconnects). ACKs get a unique
+        // DataItem path each and are cumulative, so they are dropped once handled too.
         get<PhoneCommunicationManager>().getBleChannel().deleteAfterDelivery(
             setOf(
                 Constants.BLE.KEY_WATCH_EMA_TRIGGER,
                 Constants.BLE.KEY_WATCH_NOTIFICATION_TRIGGER,
-                Constants.BLE.KEY_DETECTION_STATE_UPDATE
+                Constants.BLE.KEY_DETECTION_STATE_UPDATE,
+                Constants.BLE.KEY_SYNC_ACK,
+                Constants.BLE.KEY_MICRO_EMA_ACK
             )
         )
 
