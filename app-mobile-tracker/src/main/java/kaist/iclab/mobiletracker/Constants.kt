@@ -99,7 +99,7 @@ object Constants {
          * before that record is isolated and skipped, so it can't block everything captured after
          * it forever. See [kaist.iclab.mobiletracker.services.upload.SensorDataUploader].
          */
-        const val QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES = 1
+        const val QUARANTINE_AFTER_FAILED_UPLOAD_CYCLES = 3
     }
 
     /**

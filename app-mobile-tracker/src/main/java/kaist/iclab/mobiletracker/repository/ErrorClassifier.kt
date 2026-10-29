@@ -19,6 +19,9 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 object ErrorClassifier {
 
+    /** HTTP statuses PostgREST uses for a bad payload: 400 (malformed/check), 409 (conflict/FK), 422. */
+    private val DATA_REJECTION_STATUS_CODES = setOf(400, 409, 422)
+
     /**
      * Classify a raw [Throwable] into the most appropriate [AppError] subtype.
      *
@@ -52,13 +55,17 @@ object ErrorClassifier {
             is UnauthorizedRestException ->
                 AppError.Auth(msg, e)
 
-            // The server received the request and rejected it (RLS policy, unique/check constraint,
-            // malformed payload, etc.) — a decisive answer, unlike a network/timeout/auth failure
-            // where the same data might well succeed on the next attempt. Upload code uses this
-            // distinction to tell "this exact data is the problem" apart from "try again later"
-            // (see SensorUploadHandlerImpl's quarantine logic).
-            is RestException ->
-                AppError.ServerRejected(msg, e.statusCode, (e as? PostgrestRestException)?.code, e)
+            // Only a rejection of the payload itself (constraint violation, malformed row) says
+            // "this exact data is the problem". Upload code quarantines on ServerRejected (see
+            // SensorUploadHandlerImpl), so anything that could clear up on its own — 5xx outages,
+            // RLS/permission (403), missing table (404), rate limits — must stay retryable.
+            is RestException -> when (e.statusCode) {
+                in DATA_REJECTION_STATUS_CODES ->
+                    AppError.ServerRejected(msg, e.statusCode, (e as? PostgrestRestException)?.code, e)
+
+                401, 403 -> AppError.Auth(msg, e)
+                else -> AppError.Network(msg, e)
+            }
 
             // Invalid arguments / validation
             is IllegalArgumentException ->

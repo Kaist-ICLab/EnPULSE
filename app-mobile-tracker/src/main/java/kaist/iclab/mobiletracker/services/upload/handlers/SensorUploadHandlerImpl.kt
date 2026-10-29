@@ -65,6 +65,7 @@ class SensorUploadHandlerImpl<T>(
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var currentCursor = lastUploadCursor
             var uploadedRows = 0
+            var quarantinedThisRun = false
 
             while (true) {
                 val entities = store.recordsWithIdAfter(afterId = currentCursor, limit = batchSize)
@@ -86,7 +87,12 @@ class SensorUploadHandlerImpl<T>(
                     }
 
                     is Result.Error -> {
-                        if (allowQuarantine && result.exception is AppError.ServerRejected) {
+                        // At most one batch per run: if the next one is rejected too, the problem is
+                        // likely not this data, and skipping on would drop the whole backlog.
+                        if (allowQuarantine && !quarantinedThisRun &&
+                            result.exception is AppError.ServerRejected
+                        ) {
+                            quarantinedThisRun = true
                             // The caller has already seen this exact spot fail this way repeatedly
                             // across separate upload cycles (see SensorUploadService's streak
                             // tracking) — give up on this whole batch rather than the entire sensor,
