@@ -15,6 +15,8 @@
     <string name="sensor_media">미디어</string>
     <string name="sensor_connectivity">연결성</string>
     <string name="sensor_screen">화면</string>
+    <string name="sensor_vad">VAD</string>
+    <string name="sensor_timing">타이밍</string>
     <string name="sensor_step">걸음 수</string>
     <string name="sensor_wifi_scan">와이파이 스캔</string>
     <string name="sensor_imu">IMU</string>
@@ -42,6 +44,8 @@
     <string name="sensor_desc_media">미디어 재생 활동</string>
     <string name="sensor_desc_connectivity">네트워크 연결 상태</string>
     <string name="sensor_desc_screen">화면 켜짐/꺼짐 상태</string>
+    <string name="sensor_desc_vad">마이크를 이용한 음성 활동 감지</string>
+    <string name="sensor_desc_timing">트리거 조건으로 사용되는 이름 있는 일정 실행 기록</string>
     <string name="sensor_desc_step">걸음 수 데이터</string>
     <string name="sensor_desc_wifi">와이파이 연결 상태</string>
     <string name="sensor_desc_imu">워치 IMU 센서 데이터</string>
