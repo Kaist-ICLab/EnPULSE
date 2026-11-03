@@ -19,6 +19,7 @@ import androidx.compose.ui.res.integerResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import kaist.iclab.mobiletracker.ui.components.ServerUnreachableDialog
 import kaist.iclab.mobiletracker.ui.screens.data.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.home.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.login.LoginScreen
@@ -52,6 +53,7 @@ fun NavGraph(
 ) {
     val userState by authViewModel.userState.collectAsState()
     val userProfile by authViewModel.userProfile.collectAsState()
+    val serverUnreachable by authViewModel.serverUnreachable.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -80,6 +82,15 @@ fun NavGraph(
                 }
             }
         }
+    }
+
+    serverUnreachable?.let { state ->
+        ServerUnreachableDialog(
+            hasCachedConfig = state.hasCachedConfig,
+            onRetry = authViewModel::retryConnection,
+            onExit = { activity?.finishAffinity() },
+            onContinueOffline = authViewModel::continueOffline
+        )
     }
 
     // Get system animation duration (respects user's animation speed settings)

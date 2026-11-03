@@ -17,9 +17,11 @@ import kaist.iclab.tracker.auth.Authentication
 import kaist.iclab.tracker.auth.EmailPasswordAuthentication
 import kaist.iclab.tracker.auth.UserState
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -52,6 +54,11 @@ class AuthViewModel(
     // SharedFlow for UI events (like error toasts)
     private val _uiEvent = MutableSharedFlow<AuthUiEvent>()
     val uiEvent: SharedFlow<AuthUiEvent> = _uiEvent.asSharedFlow()
+
+    // Set when the server can't be reached while loading the study config; drives the
+    // retry/exit dialog. Null means no dialog.
+    private val _serverUnreachable = MutableStateFlow<ServerUnreachable?>(null)
+    val serverUnreachable: StateFlow<ServerUnreachable?> = _serverUnreachable.asStateFlow()
 
     // Expose cached profile from repository
     val userProfile: StateFlow<ProfileData?> =
@@ -135,6 +142,8 @@ class AuthViewModel(
 
         userProfileRepository.createProfileIfNotExists(user.email, null)
             .onFailure { e ->
+                // The config load right after this hits the same outage and shows the dialog.
+                if (e is AppError.Network || e is AppError.Timeout) return@onFailure
                 // If we already have a cached profile, just show the subtle offline warning
                 if (userProfileRepository.profileFlow.value != null) {
                     Log.d(TAG, "Network profile creation/check failed, using cached profile.")
@@ -171,26 +180,36 @@ class AuthViewModel(
                 // Handle collection running error specifically
                 if (result.exception is AppError.CollectionRunning) {
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.turn_off_data_collection_first))
+                } else if (result.exception is AppError.Network || result.exception is AppError.Timeout) {
+                    Log.e(TAG, "Server unreachable while loading study config: ${result.message}", result.exception)
+                    _serverUnreachable.value = ServerUnreachable(
+                        hasCachedConfig = userProfileRepository.profileFlow.value != null
+                    )
                 } else if (hadCachedProfile) {
                     // If we already have a cached profile, show a subtle "using cache" message 
                     // instead of a scary "failed" error.
                     Log.d(TAG, "Network profile refresh failed, using cached profile.")
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_offline_using_cache))
-                } else if (result.exception is AppError.Network &&
-                    userProfileRepository.profileFlow.value != null
-                ) {
-                    // Signed in and on Home, but the campaign didn't fully download.
-                    Log.e(TAG, "Campaign download failed after login: ${result.message}", result.exception)
-                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_config_download_failed))
-                } else if (result.exception is AppError.Network || result.exception is AppError.Timeout) {
-                    Log.e(TAG, "Server unreachable while loading user profile: ${result.message}", result.exception)
-                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.error_server_unreachable))
                 } else {
                     Log.e(TAG, "Error loading user profile: ${result.message}", result.exception)
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))
                 }
             }
         }
+    }
+
+    /** Retry from the server-unreachable dialog: re-runs the same profile setup and config sync. */
+    fun retryConnection() {
+        _serverUnreachable.value = null
+        viewModelScope.launch {
+            saveProfileIfNotExists(userState.value)
+            loadUserProfileSuspend()
+        }
+    }
+
+    /** Close the server-unreachable dialog and keep using the cached config. */
+    fun continueOffline() {
+        _serverUnreachable.value = null
     }
 
     fun login(activity: Activity) {
@@ -258,6 +277,9 @@ class AuthViewModel(
 /**
  * UI events for authentication and profile operations
  */
+/** The server couldn't be reached while loading the study config. */
+data class ServerUnreachable(val hasCachedConfig: Boolean)
+
 sealed class AuthUiEvent {
     data class ShowError(val messageResId: Int) : AuthUiEvent()
 }
