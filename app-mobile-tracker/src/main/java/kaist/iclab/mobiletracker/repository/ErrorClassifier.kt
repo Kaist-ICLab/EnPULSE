@@ -134,8 +134,6 @@ object ErrorClassifier {
 
     /**
      * Helper to extract human-readable error messages from Supabase API errors.
-     * TODO: When HTTP error responses are standardized across the backend, 
-     * update this parsing logic to use a structured data class instead of manual string matching.
      */
     fun extractErrorMessage(e: Throwable): String? {
         val targetException = if (e is AppError) e.cause ?: e else e

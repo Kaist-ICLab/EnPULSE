@@ -160,7 +160,6 @@ class BluetoothScanSensor(
     override fun init() {
         super.init()
 
-        // TODO: Bluetooth status can change any time?
         if (!bluetoothManager.adapter.isEnabled) {
             SensorState(SensorState.FLAG.UNAVAILABLE, "Bluetooth is disabled")
         }
