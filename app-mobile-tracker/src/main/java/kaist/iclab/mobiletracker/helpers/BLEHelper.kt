@@ -86,13 +86,11 @@ class BLEHelper(
 
     fun initialize() {
         if (isInitialized) {
-            Log.d(AppConfig.LogTags.PHONE_BLE, "BLEHelper already initialized, skipping...")
             return
         }
         bleChannel = BLEDataChannel(context)
         setupListeners()
         isInitialized = true
-        Log.d(AppConfig.LogTags.PHONE_BLE, "BLEHelper initialized successfully")
     }
 
     /**

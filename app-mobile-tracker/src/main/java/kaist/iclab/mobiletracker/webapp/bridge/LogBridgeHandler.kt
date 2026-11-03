@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.webapp.bridge
 
-import android.util.Log
 import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity
 import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
@@ -43,7 +42,6 @@ class LogBridgeHandler(
                 errorMessage = "Unknown caller webapp: $callerWebAppId"
             )
         }
-        Log.d(TAG, "log: $request")
 
         val params = request.payload.jsonObject
         val eventType = (params["event_type"] as? JsonPrimitive)?.contentOrNullSafe()
@@ -91,8 +89,4 @@ class LogBridgeHandler(
     }
 
     private fun JsonPrimitive.contentOrNullSafe(): String? = if (this is JsonNull) null else content
-
-    companion object {
-        private const val TAG = "LogBridgeHandler"
-    }
 }

@@ -2,7 +2,6 @@ package kaist.iclab.mobiletracker.webapp.bridge
 
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.storage.CouchbaseSurveyConfigStorage
 import kaist.iclab.tracker.sensor.phone.SurveySensor
@@ -92,7 +91,6 @@ class SurveyBridgeHandler(
         val answers = params["response"]
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing response")
 
-        Log.d("SurveyBridgeHandler", "setSurveyResponse: $surveyId, $answers")
 
         // Same broadcast SurveyActivity.pushSurveyResult() sends — the existing
         // SurveySensor.surveyResultCallback absorbs it with no new storage logic.

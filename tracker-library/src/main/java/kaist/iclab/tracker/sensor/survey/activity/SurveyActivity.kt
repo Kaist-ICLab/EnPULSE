@@ -57,7 +57,6 @@ abstract class SurveyActivity : ComponentActivity() {
     fun pushSurveyResult(result: JsonElement) {
         val scheduleId = intent.getStringExtra("scheduleId")
         val stringResult = Json.encodeToString(result)
-        Log.d(TAG, "survey result: $stringResult")
         val intent = Intent(SurveySensor.RESULT_ACTION_NAME).apply {
             putExtra("result", stringResult)
             putExtra("responseTime", System.currentTimeMillis())
@@ -65,7 +64,6 @@ abstract class SurveyActivity : ComponentActivity() {
             setPackage(this@SurveyActivity.packageName)
         }
 
-        Log.d(TAG, "Send broadcast: $intent")
         sendBroadcast(intent)
     }
 }

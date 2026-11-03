@@ -67,7 +67,6 @@ class SensorDataReceiver(
         private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate {
             it.id to { e: SensorEntity ->
                 eventChannel.trySend(it.id to e)
-//                Log.v(it.id, e.toString())
             }
         }
 

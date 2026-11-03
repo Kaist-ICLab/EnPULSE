@@ -104,7 +104,6 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         if (label != "Unknown") {
             // Feed the phone's own trigger engine directly. This used to go to the watch, which
             // only sent it back, so activity triggers needed a connected watch and two hops.
-            Log.d(TAG, "Phone activity detected: $label")
             detectionStateTracker.updateState(
                 "physical_activity",
                 label,
@@ -209,12 +208,6 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                     phoneSensorRepository.insertSensorDataBatch(sensorId, batchToInsert)) {
                     is Result.Success -> {
                         timestampService.updateLastPhoneSensorData()
-                        if (sensorId == "VAD") {
-                            Log.d(
-                                TAG,
-                                "Successfully stored batch of ${batchToInsert.size} VAD records in ObjectBox!"
-                            )
-                        }
                     }
 
                     is Result.Error -> Log.e(

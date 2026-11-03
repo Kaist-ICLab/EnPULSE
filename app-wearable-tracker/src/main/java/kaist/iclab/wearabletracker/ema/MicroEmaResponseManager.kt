@@ -55,7 +55,6 @@ class MicroEmaResponseManager(
 
         bleChannel.addOnReceivedListener(setOf(Constants.BLE.KEY_MICRO_EMA_TRIGGER)) { _, jsonElement ->
             try {
-                Log.d(TAG, "Received JIT trigger payload: $jsonElement")
 
                 val triggerObj = when (jsonElement) {
                     is JsonObject -> jsonElement

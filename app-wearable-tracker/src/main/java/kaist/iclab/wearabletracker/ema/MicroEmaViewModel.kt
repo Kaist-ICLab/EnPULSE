@@ -202,7 +202,6 @@ class MicroEmaViewModel(
         viewModelScope.launch {
             try {
                 responseManager.saveAndSync(listOf(response))
-                Log.d(TAG, "Response persisted: status=$status, answer=$answer")
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to persist response", e)
             }

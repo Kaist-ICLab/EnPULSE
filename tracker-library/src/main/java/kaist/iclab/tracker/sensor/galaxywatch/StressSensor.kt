@@ -215,7 +215,6 @@ class StressSensor(
                 val statuses = point.ibiStatus
                 val n = minOf(ibis.size, statuses.size)
                 if (n == 0) {
-                    Log.d(name, "handleHr: DataPoint@${point.timestamp} carried no IBI values")
                     continue
                 }
 
@@ -243,7 +242,6 @@ class StressSensor(
                     accepted++
                 }
                 if (accepted == 0) {
-                    Log.d(name, "handleHr: DataPoint@${point.timestamp} had $n IBI entries, none valid")
                 }
             }
         }
