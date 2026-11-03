@@ -196,7 +196,7 @@
             android:name=".webapp.WebAppActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:documentLaunchMode="intoExisting"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.MobileTracker" />
 
         <activity
