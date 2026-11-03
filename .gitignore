@@ -33,3 +33,6 @@ google-services.json
 # Sub-repositories
 WatchHAR-in-Android/
 enpulse-bridge/
+
+# IDE build output
+build-logic/convention/bin/
