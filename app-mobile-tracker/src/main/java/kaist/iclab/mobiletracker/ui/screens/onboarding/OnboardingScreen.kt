@@ -63,6 +63,8 @@ fun OnboardingScreen(
 
     val surveyErrorString = stringResource(R.string.onboarding_survey_fetch_error)
     val dataCollectionRunningString = stringResource(R.string.turn_off_data_collection_first)
+    val serverUnreachableString = stringResource(R.string.error_server_unreachable)
+    val genericErrorString = stringResource(R.string.error_generic)
 
     // Navigate to home when onboarding is complete
     LaunchedEffect(uiState.isComplete) {
@@ -82,6 +84,8 @@ fun OnboardingScreen(
             val message = when (error) {
                 "onboarding_survey_fetch_error" -> surveyErrorString
                 "turn_off_data_collection_first" -> dataCollectionRunningString
+                "error_server_unreachable" -> serverUnreachableString
+                "error_generic" -> genericErrorString
                 else -> error
             }
             AppToast.show(context, message)

@@ -88,6 +88,8 @@ fun CampaignDialog(
                     error != null -> {
                         val displayError = when (error) {
                             "turn_off_data_collection_first" -> stringResource(R.string.turn_off_data_collection_first)
+                            "error_server_unreachable" -> stringResource(R.string.error_server_unreachable)
+                            "error_generic" -> stringResource(R.string.error_generic)
                             else -> error
                         }
                         Text(

@@ -182,6 +182,9 @@ class AuthViewModel(
                     // Signed in and on Home, but the campaign didn't fully download.
                     Log.e(TAG, "Campaign download failed after login: ${result.message}", result.exception)
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_config_download_failed))
+                } else if (result.exception is AppError.Network || result.exception is AppError.Timeout) {
+                    Log.e(TAG, "Server unreachable while loading user profile: ${result.message}", result.exception)
+                    _uiEvent.emit(AuthUiEvent.ShowError(R.string.error_server_unreachable))
                 } else {
                     Log.e(TAG, "Error loading user profile: ${result.message}", result.exception)
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_profile_setup_failed))

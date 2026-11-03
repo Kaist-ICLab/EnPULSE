@@ -50,10 +50,12 @@ class OnboardingViewModel(
                     _uiState.update { it.copy(campaigns = campaigns, isLoading = false) }
                 }
                 .onFailure { error ->
-                    val errorKey = if (error is AppError.CollectionRunning) {
-                        "turn_off_data_collection_first"
-                    } else {
-                        error.message ?: "Unknown error"
+                    // Keys, not raw messages: a Supabase exception message carries the request URL
+                    // and headers, which is unreadable and should not be shown to users.
+                    val errorKey = when (error) {
+                        is AppError.CollectionRunning -> "turn_off_data_collection_first"
+                        is AppError.Network, is AppError.Timeout -> "error_server_unreachable"
+                        else -> "error_generic"
                     }
                     _uiState.update { it.copy(isLoading = false, error = errorKey) }
                 }

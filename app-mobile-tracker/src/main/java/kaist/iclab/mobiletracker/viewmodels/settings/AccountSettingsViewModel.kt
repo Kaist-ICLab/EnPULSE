@@ -107,10 +107,12 @@ class AccountSettingsViewModel(
             campaignRepository.fetchCampaigns()
                 .onSuccess { _isLoadingCampaigns.value = false }
                 .onFailure {
-                    val errorKey = if (it is AppError.CollectionRunning) {
-                        "turn_off_data_collection_first"
-                    } else {
-                        it.message ?: "Unknown error"
+                    // Keys, not raw messages: a Supabase exception message carries the request URL
+                    // and headers, which is unreadable and should not be shown to users.
+                    val errorKey = when (it) {
+                        is AppError.CollectionRunning -> "turn_off_data_collection_first"
+                        is AppError.Network, is AppError.Timeout -> "error_server_unreachable"
+                        else -> "error_generic"
                     }
                     _campaignError.value = errorKey
                     _isLoadingCampaigns.value = false

@@ -177,6 +177,7 @@
     <string name="reload_config_dialog_title">설정 새로고침 및 동기화</string>
     <string name="reload_config_dialog_message">설정을 새로고침하시겠습니까? 현재 캠페인의 최신 설정을 가져옵니다.\n\n워치가 연결되어 있고 가까이 있는지 확인해 주세요. 또한 워치의 데이터 수집을 중지해야 설정이 워치에도 올바르게 적용될 수 있습니다.</string>
     <string name="error_generic">문제가 발생했습니다. 다시 시도해 주세요.</string>
+    <string name="error_server_unreachable">EnPULSE 서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 나중에 다시 시도해 주세요.</string>
     <string name="toast_success_saved">설정을 성공적으로 불러왔습니다.</string>
 
     <string name="menu_leave_campaign">캠페인 나가기</string>
