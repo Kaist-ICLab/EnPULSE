@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Build
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
-import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
@@ -94,18 +93,6 @@ private val permissionConfigs = buildList {
     }
     add(
         PermissionConfig(
-            permissionId = Manifest.permission.BIND_ACCESSIBILITY_SERVICE,
-            icon = Icons.Filled.Accessibility
-        )
-    )
-    add(
-        PermissionConfig(
-            permissionId = Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
-            icon = Icons.Filled.Notifications
-        )
-    )
-    add(
-        PermissionConfig(
             permissionId = Manifest.permission.PACKAGE_USAGE_STATS,
             icon = Icons.Filled.GridView
         )
@@ -166,8 +153,6 @@ fun getPermissionDescription(context: Context, permissionId: String): String {
         Manifest.permission.READ_MEDIA_VIDEO -> R.string.permission_desc_media_video
         Manifest.permission.READ_MEDIA_AUDIO -> R.string.permission_desc_media_audio
         Manifest.permission.ACTIVITY_RECOGNITION -> R.string.permission_desc_activity_recognition
-        Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> R.string.permission_desc_accessibility
-        Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_desc_notification_listener
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_desc_usage_stats
         Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> R.string.permission_desc_ignore_battery_optimization
         DataTypes.STEPS.name -> R.string.permission_desc_steps
@@ -193,8 +178,6 @@ fun getPermissionName(context: Context, permissionId: String): String {
         Manifest.permission.READ_MEDIA_VIDEO -> R.string.permission_name_media_video
         Manifest.permission.READ_MEDIA_AUDIO -> R.string.permission_name_media_audio
         Manifest.permission.ACTIVITY_RECOGNITION -> R.string.permission_name_activity_recognition
-        Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> R.string.permission_name_accessibility
-        Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> R.string.permission_name_notification_listener
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_name_usage_stats
         Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> R.string.permission_name_ignore_battery_optimization
         DataTypes.STEPS.name -> R.string.permission_name_steps

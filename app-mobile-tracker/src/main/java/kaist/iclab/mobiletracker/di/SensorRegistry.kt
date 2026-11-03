@@ -13,19 +13,15 @@ import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppUsageLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BatteryEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BluetoothScanEntity
-import kaist.iclab.mobiletracker.db.entity.phone.CallLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ConnectivityEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ExerciseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
-import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
-import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
-import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
 import kaist.iclab.mobiletracker.db.entity.phone.VADEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
@@ -54,18 +50,14 @@ import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
 import kaist.iclab.tracker.sensor.phone.BluetoothScanSensor
-import kaist.iclab.tracker.sensor.phone.CallLogSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DataTrafficSensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
 import kaist.iclab.tracker.sensor.phone.ExerciseSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
-import kaist.iclab.tracker.sensor.phone.MessageLogSensor
-import kaist.iclab.tracker.sensor.phone.NotificationSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
 import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
-import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kotlinx.serialization.KSerializer
@@ -240,25 +232,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             }
         ),
         SensorDescriptor(
-            sensorId = "CallLog",
-            displayName = "Call Log",
-            isWatchSensor = false,
-            store = s.callLog,
-            supabaseTable = AppConfig.SupabaseTables.CALL_LOG_SENSOR,
-            serializer = CallLogEntity.serializer(),
-            fromSensorEntity = { e, uuid ->
-                e as CallLogSensor.Entity
-                CallLogEntity(
-                    uuid = uuid ?: "",
-                    received = e.received,
-                    timestamp = e.timestamp,
-                    duration = e.duration,
-                    number = e.number,
-                    type = e.type
-                )
-            }
-        ),
-        SensorDescriptor(
             sensorId = "Connectivity",
             displayName = "Connectivity",
             isWatchSensor = false,
@@ -399,47 +372,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             }
         ),
         SensorDescriptor(
-            sensorId = "MessageLog",
-            displayName = "Message Log",
-            isWatchSensor = false,
-            store = s.messageLog,
-            supabaseTable = AppConfig.SupabaseTables.MESSAGE_LOG_SENSOR,
-            serializer = MessageLogEntity.serializer(),
-            fromSensorEntity = { e, uuid ->
-                e as MessageLogSensor.Entity
-                MessageLogEntity(
-                    uuid = uuid ?: "",
-                    received = e.received,
-                    timestamp = e.timestamp,
-                    number = e.number,
-                    messageType = e.messageType,
-                    contactType = e.contactType
-                )
-            }
-        ),
-        SensorDescriptor(
-            sensorId = "Notification",
-            displayName = "Notification",
-            isWatchSensor = false,
-            store = s.notification,
-            supabaseTable = AppConfig.SupabaseTables.NOTIFICATION_SENSOR,
-            serializer = NotificationEntity.serializer(),
-            fromSensorEntity = { e, uuid ->
-                e as NotificationSensor.Entity
-                NotificationEntity(
-                    uuid = uuid ?: "",
-                    received = e.received,
-                    timestamp = e.timestamp,
-                    packageName = e.packageName,
-                    eventType = e.eventType,
-                    title = e.title,
-                    text = e.text,
-                    visibility = e.visibility,
-                    category = e.category
-                )
-            }
-        ),
-        SensorDescriptor(
             sensorId = "Screen",
             displayName = "Screen",
             isWatchSensor = false,
@@ -490,27 +422,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     timestamp = e.timestamp,
                     duration = e.duration,
                     steps = e.steps
-                )
-            }
-        ),
-        SensorDescriptor(
-            sensorId = "UserInteraction",
-            displayName = "User Interaction",
-            isWatchSensor = false,
-            store = s.userInteraction,
-            supabaseTable = AppConfig.SupabaseTables.USER_INTERACTION_SENSOR,
-            serializer = UserInteractionEntity.serializer(),
-            fromSensorEntity = { e, uuid ->
-                e as UserInteractionSensor.Entity
-                UserInteractionEntity(
-                    uuid = uuid ?: "",
-                    eventId = e.eventId,
-                    received = e.received,
-                    timestamp = e.timestamp,
-                    packageName = e.packageName,
-                    className = e.className,
-                    eventType = e.eventType,
-                    text = e.text
                 )
             }
         ),

@@ -66,16 +66,6 @@ data class Permission(
                 ids = arrayOf(Manifest.permission.ACTIVITY_RECOGNITION)
             ),
             Permission(
-                name = "Accessibility Service",
-                ids = arrayOf(Manifest.permission.BIND_ACCESSIBILITY_SERVICE),
-                instructionResId = R.string.instruction_accessibility
-            ),
-            Permission(
-                name = "Notification Listener",
-                ids = arrayOf(Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE),
-                instructionResId = R.string.instruction_notification
-            ),
-            Permission(
                 name = "Usage Stats",
                 ids = arrayOf(Manifest.permission.PACKAGE_USAGE_STATS),
                 instructionResId = R.string.instruction_usage_stats

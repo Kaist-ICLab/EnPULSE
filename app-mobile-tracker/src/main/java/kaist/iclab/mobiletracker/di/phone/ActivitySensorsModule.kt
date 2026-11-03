@@ -12,7 +12,6 @@ import kaist.iclab.tracker.sensor.phone.ExerciseSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
 import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
-import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
@@ -143,18 +142,6 @@ val activitySensorsModule = module {
                 collectionName = SleepSensor::class.simpleName ?: ""
             ),
             samsungHealthDataInitializer = get()
-        )
-    }
-
-    // User Interaction Sensor
-    single {
-        UserInteractionSensor(
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = SimpleStateStorage(UserInteractionSensor.Config()),
-            stateStorage = CouchbaseSensorStateStorage(
-                couchbase = get(),
-                collectionName = UserInteractionSensor::class.simpleName ?: ""
-            )
         )
     }
 

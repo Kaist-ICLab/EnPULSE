@@ -61,12 +61,9 @@ object AppColors {
     val ColorBluetooth = Color(0xFF3F51B5)
     val ColorAmbientLight = Color(0xFFFF9800)
     val ColorAppListChange = Color(0xFFE91E63)
-    val ColorCallLog = Color(0xFF8BC34A)
     val ColorDataTraffic = Color(0xFF009688)
     val ColorDeviceMode = Color(0xFF795548)
     val ColorMedia = Color(0xFFFF5722)
-    val ColorMessage = Color(0xFFCDDC39)
-    val ColorUserInteraction = Color(0xFF673AB7)
     val ColorWifi = Color(0xFF00BCD4)
     val ColorIMU = Color(0xFF6366F1) // Indigo
     val ColorGesture = Color(0xFF14B8A6) // Teal
@@ -87,18 +84,14 @@ object AppColors {
             "AppUsage", "AppUsageLog" -> ColorAppUsage
             "Battery" -> ColorBattery
             "BluetoothScan", "Bluetooth" -> ColorBluetooth
-            "CallLog" -> ColorCallLog
             "Connectivity" -> ColorConnectivity
             "DataTraffic" -> ColorDataTraffic
             "DeviceMode" -> ColorDeviceMode
             "Location" -> ColorLocation
             "Media" -> ColorMedia
-            "MessageLog", "Message" -> ColorMessage
-            "Notification" -> ColorNotification
             "Screen" -> ColorScreen
             "ActivityRecognition" -> ColorActivity
             "Step" -> ColorStep
-            "UserInteraction" -> ColorUserInteraction
             "WifiScan", "Wifi", "WiFi" -> ColorWifi
             "Exercise" -> ColorExercise
             "Sleep" -> ColorSleep
@@ -119,15 +112,13 @@ object AppColors {
 
     fun getPermissionColor(permissionName: String): Color {
         return when (permissionName) {
-            "Post Notifications", "Notification Listener" -> ColorNotification
+            "Post Notifications" -> ColorNotification
             "Access Location", "Background Location", "Location" -> ColorLocation
-            "Read Contacts", "Contacts" -> ColorCallLog
             "Camera", "Media Images", "Media Video", "Media Audio", "Storage", "Microphone" -> ColorMedia
             "Read Calendar", "Calendar" -> ColorAppUsage
             "Activity Recognition", "Read Steps (Samsung Health)", "Body Sensors" -> ColorActivity
             "Read Exercise (Samsung Health)" -> ColorExercise
             "Read Sleep (Samsung Health)" -> ColorSleep
-            "Accessibility Service" -> ColorUserInteraction
             "Usage Stats" -> ColorAppUsage
             else -> ColorDefault
         }

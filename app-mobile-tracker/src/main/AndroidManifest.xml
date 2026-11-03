@@ -38,23 +38,6 @@
 
     <!-- Phone sensors -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <!-- 
-        SMS and Call Log access restrictions:
-        - Only default handlers (default SMS/Phone apps) can use these permissions
-        - Must be used for core functionality only, not for ads or non-core features
-        - Use case: This app collects call log and SMS data as part of comprehensive
-        sensor data collection for research purposes. This is core functionality for
-        the app's research data collection mission.
-        Note: If this app is not the default SMS/Phone handler, these permissions
-        may be restricted by Google Play. Consider using alternative data collection
-        methods if the app cannot be set as default handler.
-    -->
-    <uses-permission
-        android:name="android.permission.READ_CALL_LOG"
-        tools:ignore="SmsAndCallLogPolicy,SmsCallLogPolicy" />
-    <uses-permission
-        android:name="android.permission.READ_SMS"
-        tools:ignore="SmsAndCallLogPolicy,SmsCallLogPolicy" />
 
     <!-- Audio -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -232,6 +215,14 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <!-- UserInteraction and Notification sensors are not used: Play Protect blocks any
+             downloaded APK that declares an accessibility or notification listener service. -->
+        <service
+            android:name="kaist.iclab.tracker.listener.AccessibilityListener$AccessibilityServiceAdaptor"
+            tools:node="remove" />
+        <service
+            android:name="kaist.iclab.tracker.listener.NotificationListener$NotificationListenerServiceAdaptor"
+            tools:node="remove" />
     </application>
 
 </manifest>
