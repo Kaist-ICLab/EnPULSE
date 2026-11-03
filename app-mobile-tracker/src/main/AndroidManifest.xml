@@ -215,14 +215,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-        <!-- UserInteraction and Notification sensors are not used: Play Protect blocks any
-             downloaded APK that declares an accessibility or notification listener service. -->
-        <service
-            android:name="kaist.iclab.tracker.listener.AccessibilityListener$AccessibilityServiceAdaptor"
-            tools:node="remove" />
-        <service
-            android:name="kaist.iclab.tracker.listener.NotificationListener$NotificationListenerServiceAdaptor"
-            tools:node="remove" />
     </application>
 
 </manifest>

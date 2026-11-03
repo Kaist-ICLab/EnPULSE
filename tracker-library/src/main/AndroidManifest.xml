@@ -97,28 +97,6 @@
                 android:value="Data collection for research purposes." />
         </service>
 
-        <service
-            android:name=".listener.AccessibilityListener$AccessibilityServiceAdaptor"
-            android:exported="false"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            tools:ignore="AccessibilityPolicy">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
-        </service>
-
-        <service
-            android:name=".listener.NotificationListener$NotificationListenerServiceAdaptor"
-            android:exported="false"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
-
         <activity 
             android:name=".sensor.survey.activity.DefaultSurveyActivity"
             android:launchMode="singleTop" />
