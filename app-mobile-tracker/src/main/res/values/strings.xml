@@ -52,8 +52,6 @@
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE Logo</string>
-    <string name="language_english">English</string>
-    <string name="language_korean">한국어</string>
 
     <!-- Settings Menu -->
     <string name="menu_account">Account</string>
@@ -149,8 +147,6 @@
     <string name="sensor_detail_total_records">Total Records</string>
     <string name="sensor_detail_today">Today</string>
     <string name="sensor_detail_last_recorded">Last Recorded</string>
-    <string name="sensor_detail_upload_success_rate">Upload Success Rate</string>
-    <string name="sensor_detail_upload_success_rate_value">%1$d / %2$d (%3$d%%)</string>
     <string name="sensor_detail_raw_data">All Recorded Data</string>
     <string name="sensor_detail_no_records">No records found</string>
     <string name="data_screen_last_recorded_none">No data</string>
@@ -223,7 +219,6 @@
     <string name="sensor_desc_heart_rate">Heart rate measurement</string>
     <string name="sensor_desc_skin_temperature">Skin temperature measurement</string>
     <string name="sensor_desc_eda">Galvanic skin response based on sweat</string>
-    <string name="sensor_desc_audio">Audio signal</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -310,7 +305,6 @@
     <string name="toast_sensor_data_uploaded">Data uploaded successfully</string>
     <string name="toast_sensor_data_upload_error">Failed to upload sensor data</string>
     <string name="toast_no_data_to_upload">No new data to upload. All data has already been uploaded.</string>
-    <string name="toast_upload_all_summary">Successfully uploaded %1$d sensor(s)</string>
     <string name="sensor_upload_data_confirm">Upload Sensor Data</string>
     <string name="sensor_upload_data_message">Are you sure you want to upload all stored data for this sensor to the server?</string>
 
@@ -322,7 +316,6 @@
 
     <string name="toast_no_data_to_export">No data to export</string>
     <string name="toast_export_failed">Failed to export data</string>
-    <string name="toast_request_timeout">Request timed out. Please check your connection and try again.</string>
     <string name="sensor_export_csv">Export CSV</string>
 
     <!-- Onboarding Screen -->
@@ -353,8 +346,6 @@
     <string name="server_config_title">Server Configuration</string>
     <string name="server_config_description">Set a custom Supabase backend URL and Anonymous Key.</string>
     <string name="server_config_url_label">Supabase URL</string>
-    <string name="server_config_key_label">Supabase Anon Key</string>
-    <string name="server_config_save">Save and Connect</string>
     <string name="server_config_save_restart">Save and Restart App</string>
     <string name="server_config_current_title">Current Active Connection:</string>
     <string name="server_config_current_url">URL: %1$s</string>
@@ -374,7 +365,6 @@
 
     <!-- Data Upload Dialog -->
     <string name="upload_dialog_title">Uploading Data</string>
-    <string name="upload_dialog_status">Uploading %1$s…</string>
     <string name="upload_dialog_progress">%1$d / %2$d</string>
     <string name="upload_dialog_progress_sensor">%1$s · %2$d of %3$d</string>
     <string name="upload_complete_title">Upload Complete</string>
@@ -385,7 +375,6 @@
     <string name="ok">OK</string>
 
     <string name="permission_instruction_title">Action Required</string>
-    <string name="grant_permissions_in_menu_first">Please grant permissions in the Permissions menu first.</string>
 
     <!-- WebView Error Strings -->
     <string name="webview_failed_to_load">Failed to load</string>

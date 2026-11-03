@@ -7,8 +7,6 @@
     <string name="danger_zone_label">Danger Zone</string>
     <string name="start_collection">Start</string>
     <string name="stop_collection">Stop</string>
-    <string name="start_stop_collection">Start/Stop Collection</string>
-    <string name="reset_icon">Reset icon</string>
     <string name="last_sync_placeholder">Last Sync: -</string>
     <string name="last_sync_format">Last Sync: %1$s</string>
     <string name="switch_on">On</string>
@@ -37,9 +35,7 @@
     <string name="notification_flush_success_title">Data Flushed!</string>
     <string name="notification_flush_success_message">All sensor data has been deleted</string>
     <string name="notification_flush_failure_title">Flush Failed</string>
-    <string name="notification_phone_not_available">Phone is not available or not connected</string>
     <string name="notification_no_data">No data to send</string>
-    <string name="notification_send_failed">Failed to send data</string>
 
     <!-- Sensor Names -->
     <string name="sensor_accelerometer">Accelerometer</string>
@@ -89,7 +85,6 @@
     <!-- MicroEMA -->
     <string name="ema_low">Low</string>
     <string name="ema_high">High</string>
-    <string name="ema_dismiss">Dismiss</string>
     <string name="ema_loading">Loading…</string>
     <string name="ema_done">Response recorded</string>
     <string name="ema_time_up">Time’s up</string>
@@ -98,7 +93,6 @@
 
     <string name="perm_fullscreen_intent_title">Permission Needed</string>
     <string name="perm_fullscreen_intent_message">Please allow the app to show surveys even when your screen is locked.</string>
-    <string name="perm_fullscreen_intent_action">Allow</string>
     <string name="turn_off_data_collection_first">Data collection is still running</string>
     <string name="notification_low_storage_title">Storage Critically Low</string>
     <string name="notification_low_storage_message">Data collection stopped to protect device stability. Please free up space.</string>
