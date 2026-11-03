@@ -42,26 +42,7 @@ adb -s <WATCH_SERIAL> shell pm grant kaist.iclab.trackerSystem android.permissio
 
 ---
 
-## 3. Testing WebApp Notification Directly (Phone-Side Simulation)
-
-If you want to test the phone's web app launch and notification system directly without involving the watch, you can simulate a web app action broadcast directly on the phone.
-
-Run the following command:
-
-```bash
-adb -d shell am broadcast \
-  -a kaist.iclab.mobiletracker.test.TRIGGER_WEBAPP \
-  -n kaist.iclab.trackerSystem/kaist.iclab.mobiletracker.webapp.WebAppTestReceiver \
-  --es webapp_id demo-webapp \
-  --es survey_id test_survey
-```
-
-**Expected Result:**
-The phone will instantly show a notification. Tapping it launches the WebApp viewer inside the EnPULSE phone app for `demo-webapp`.
-
----
-
-## 4. Useful Logcat Filters for Debugging
+## 3. Useful Logcat Filters for Debugging
 
 Run these commands in separate terminal tabs to monitor the real-time activity of the apps.
 
@@ -72,5 +53,5 @@ adb -s <WATCH_SERIAL> logcat -v time -s TriggerEngine:D WatchTriggerAction:D Sam
 
 ### Monitor Phone WebApp Trigger & BLE Communication Activity:
 ```bash
-adb -d logcat -v time -s WebAppTriggerHandler:D WebAppTestReceiver:D BLEDataChannel:D
+adb -d logcat -v time -s WebAppTriggerHandler:D BLEDataChannel:D
 ```
