@@ -48,6 +48,8 @@ dependencies {
 
     // Samsung Dependencies
     api(project(":samsung-health-data-api"))
+    // The Samsung Health data SDK uses Gson at runtime but does not declare it.
+    implementation(libs.gson)
     api(project(":samsung-health-sensor-api"))
 
     // Testing
