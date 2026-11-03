@@ -49,12 +49,6 @@ Build and install via ADB to your watch:
 ./gradlew :app-wearable-benchmark:installDebug
 ```
 
-Or deploy across multiple watches automatically using Fleet Manager:
-
-```bash
-python3 scripts/fleet_manager.py install
-```
-
 ### 2. Running a Test
 
 1. Open the **EnPULSE Benchmarker** app on your Wear OS device.
@@ -83,13 +77,7 @@ Local copies are stored on the watch in the app's external files directory:
 └── summary.txt
 ```
 
-To extract data from all connected devices in parallel, use **Fleet Manager**:
-
-```bash
-python3 scripts/fleet_manager.py pull
-```
-
-Alternatively, pull data manually via ADB:
+Pull the data via ADB:
 
 ```bash
 adb pull /sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/ ./

@@ -30,10 +30,6 @@ google-services.json
 /.claude/
 /.vscode/
 
-# Benchmark outputs
-scripts/outputs/
-scripts/results/
-
 # Sub-repositories
 WatchHAR-in-Android/
 enpulse-bridge/

@@ -40,12 +40,6 @@ Build and install via ADB to your phone:
 ./gradlew :app-mobile-benchmark:installDebug
 ```
 
-Or deploy across multiple phones automatically using Fleet Manager:
-
-```bash
-python3 scripts/fleet_manager.py install
-```
-
 ### 2. Running a Test
 
 1. Open the **EnPULSE Benchmark** app.
@@ -69,13 +63,7 @@ Each test run creates a new timestamped folder:
 └── summary.txt
 ```
 
-To extract data from all connected devices in parallel, use **Fleet Manager**:
-
-```bash
-python3 scripts/fleet_manager.py pull
-```
-
-Alternatively, pull data manually via ADB:
+Pull the data via ADB:
 
 ```bash
 adb pull /sdcard/Download/EnPULSE/ ./

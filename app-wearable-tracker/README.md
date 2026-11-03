@@ -30,20 +30,12 @@ over Bluetooth LE / Google Wearable Data Layer.
 
 ## Installation
 
-### Option 1: Using Gradle (Single Device)
+### Using Gradle
 Build and install via ADB to your watch:
 
 ```bash
 ./gradlew :app-wearable-tracker:installDebug
 ```
-
-### Option 2: Using Fleet Manager (Multi-Device Automation)
-To automatically build and deploy the wearable tracker app across multiple watches in parallel, use the Fleet Manager script:
-
-```bash
-python3 scripts/fleet_manager.py install
-```
-Select option `3` (Tracker Apps) or `5` (Watch Apps) when prompted.
 
 ## Related Modules
 
