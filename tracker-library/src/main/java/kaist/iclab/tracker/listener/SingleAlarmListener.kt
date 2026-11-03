@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import kaist.iclab.tracker.listener.core.Listener
 
@@ -20,17 +21,13 @@ class SingleAlarmListener(
     private val actionName: String,
     private val actionCode: Int,
 ) : Listener<Intent?> {
-    companion object {
-        private val TAG = SingleAlarmListener::class.simpleName
-    }
-
     private val receivers = mutableMapOf<Int, BroadcastReceiver>()
 
     private val pendingIntent by lazy {
         PendingIntent.getBroadcast(
             context,
             actionCode,
-            Intent(actionName),
+            Intent(actionName).setPackage(context.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
@@ -52,16 +49,10 @@ class SingleAlarmListener(
         }
         receivers[hash] = receiver
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            /*
-            * From Tiramisu, we need to specify the receiver exported or not
-            * One of RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED should be specified when a receiver isn't being registered exclusively for system broadcasts
-            * */
-            context.registerReceiver(receiver, IntentFilter(actionName), Context.RECEIVER_EXPORTED)
-
-        } else {
-            context.registerReceiver(receiver, IntentFilter(actionName))
-        }
+        // Not exported: only this app's own alarm PendingIntent should be able to trigger it.
+        ContextCompat.registerReceiver(
+            context, receiver, IntentFilter(actionName), ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     override fun removeListener(listener: (Intent?) -> Unit): Boolean {
@@ -80,7 +71,7 @@ class SingleAlarmListener(
         isExact: Boolean = false,
         bundle: Bundle = Bundle()
     ) {
-        val intent = Intent(actionName).putExtras(bundle)
+        val intent = Intent(actionName).setPackage(context.packageName).putExtras(bundle)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             actionCode,

@@ -6,8 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
-import android.util.Log
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import kaist.iclab.tracker.listener.core.Listener
 
@@ -18,10 +17,6 @@ class AlarmListener(
     private val actionCode: Int,
     private val actionIntervalInMilliseconds: Long,
 ) : Listener<Intent?> {
-    companion object {
-        private val TAG = AlarmListener::class.simpleName
-    }
-
     // Stores receiver objects to Map, so they can be managed with listeners instead of receivers
     private val receivers = mutableMapOf<Int, BroadcastReceiver>()
 
@@ -31,7 +26,7 @@ class AlarmListener(
         PendingIntent.getBroadcast(
             context,
             actionCode,
-            Intent(actionName),
+            Intent(actionName).setPackage(context.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
@@ -46,21 +41,14 @@ class AlarmListener(
 
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                Log.d(TAG, "receiver:onReceive")
                 listener(intent)
             }
         }
         receivers[hash] = receiver
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            /*
-            * From Tiramisu, we need to specify the receiver exported or not
-            * One of RECEIVER_EXPORTED or RECEIVER_NOT_EXPORTED should be specified when a receiver isn't being registered exclusively for system broadcasts
-            * */
-            context.registerReceiver(receiver, IntentFilter(actionName), Context.RECEIVER_EXPORTED)
-
-        } else {
-            context.registerReceiver(receiver, IntentFilter(actionName))
-        }
+        // Not exported: only this app's own alarm PendingIntent should be able to trigger it.
+        ContextCompat.registerReceiver(
+            context, receiver, IntentFilter(actionName), ContextCompat.RECEIVER_NOT_EXPORTED
+        )
 
         alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
@@ -69,7 +57,6 @@ class AlarmListener(
             pendingIntent
         )
 
-        Log.d(TAG, "register ALARM: $actionIntervalInMilliseconds")
     }
 
     override fun removeListener(listener: (Intent?) -> Unit): Boolean {
