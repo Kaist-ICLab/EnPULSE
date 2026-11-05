@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.ui.components.popup
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,7 @@ data class DialogButtonConfig(
  * @param primaryButton Configuration for the primary button (usually on the right)
  * @param secondaryButton Configuration for the secondary button (usually on the left, optional)
  * @param onDismiss Callback when dialog is dismissed
+ * @param dismissible Whether back press and outside taps dismiss the dialog
  * @param containerColor Background color of the dialog
  * @param titleColor Color of the title text
  * @param titleFontSize Font size of the title
@@ -61,6 +63,7 @@ fun PopupDialog(
     primaryButton: DialogButtonConfig,
     secondaryButton: DialogButtonConfig? = null,
     onDismiss: () -> Unit,
+    dismissible: Boolean = true,
     containerColor: Color = Styles.ContainerColor,
     titleColor: Color = Styles.TitleColor,
     titleFontSize: androidx.compose.ui.unit.TextUnit = Styles.TitleFontSize,
@@ -70,8 +73,8 @@ fun PopupDialog(
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
+            dismissOnBackPress = dismissible,
+            dismissOnClickOutside = dismissible
         )
     ) {
         Box(
@@ -98,7 +101,14 @@ fun PopupDialog(
                     )
 
                     // Content
-                    content()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false)
+                            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+                    ) {
+                        content()
+                    }
 
                     // Buttons
                     Spacer(modifier = Modifier.height(Styles.ContentButtonSpacing))

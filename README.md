@@ -1,75 +1,98 @@
 # EnPULSE
-**EnPULSE (Enabling Platform for User Logging and Sensing Environment)** is a sensor data collection platform for mobile and wrist-worn wearable devices. Developed by KAIST Interactive Computing Laboratory.
 
-## Overview
-EnPULSE consists of several core components, which can also be used individually.
-Together, they support end-to-end sensor data collection.
+**EnPULSE (Enabling Platform for User Logging and Sensing Environment)** is a sensor data collection platform for smartphones and Galaxy Watch devices, developed by the KAIST Interactive Computing Laboratory.
 
-**Note: Other components will be opened to the public after paper publication.**
+## Components
 
-### Android Library (`tracker-library`)
-The core sensor tracking library capable of collecting various sensor data from mobile and Galaxy Watch devices. It includes 21 sensor types, with watch-specific sensors (`AccelerometerSensor`, `PPGSensor`, `HeartRateSensor`, `SkinTemperatureSensor`, `EDASensor`, `ECGSensor`) and phone-specific sensors (such as `StepSensor`).
+| Component | Description |
+| --- | --- |
+| [`tracker-library`](tracker-library/README.md) | Android library with the sensors, background controller, trigger engine, and phone-watch sync. |
+| [`app-mobile-tracker`](app-mobile-tracker/README.md) | Phone app. Collects phone sensors, receives watch data, and uploads everything to the backend. |
+| [`app-wearable-tracker`](app-wearable-tracker/README.md) | Galaxy Watch app. Collects biosignals and sends them to the phone. |
+| [EnPULSE-backend](https://github.com/Kaist-ICLab/EnPULSE-backend) | Self-hosted, Supabase-based server for sensor data and campaign configuration. |
+| [EnPULSE-dashboard](https://github.com/Kaist-ICLab/EnPULSE-dashboard) | Web dashboard for managing campaigns and monitoring data. |
 
-### Mobile Tracker Application (`app-mobile-tracker`)
-A mobile app for easy smartphone sensor data collection from Samsung devices. See the [Mobile Tracker README](app-mobile-tracker/README.md) for details.
+Data flows from the watch to the phone over the Wearable Data Layer, then from the phone to the backend. Both apps store data locally in ObjectBox. The watch deletes data once the phone confirms it, and the phone keeps uploaded data for at least 7 more days.
 
-### Wearable Tracker Application (`app-wearable-tracker`)
-A smartwatch app for continuous biosignal sensing on Galaxy Watch devices. See the [Wearable Tracker README](app-wearable-tracker/README.md) for details.
+Campaigns decide which sensors run. A participant joins a campaign, and the app collects only the sensors that campaign includes.
 
-### [Backend](https://github.com/Kaist-ICLab/EnPULSE-backend)
-Locally-hosted Supabase-based backend component for storing sensor data and campaign configuration.
+## Requirements
 
-### [Dashboard](https://github.com/Kaist-ICLab/EnPULSE-dashboard)
-Web-based dashboard for campaign configuration, management, and data monitoring.
+- Android SDK with platform 37, and a JDK 17 or newer to run Gradle. Gradle downloads the JDK 17 toolchain used for compilation automatically.
+- A phone running Android 11 (API 30) or newer. Step, sleep, and exercise data also need a Samsung phone with Samsung Health.
+- A Galaxy Watch running Wear OS, if you want watch data. Available sensors depend on the watch model.
+- A running [EnPULSE-backend](https://github.com/Kaist-ICLab/EnPULSE-backend) server.
 
-### WebApp Platform (EnPULSE WebApps)
-EnPULSE supports dynamic, remote-configured web applications (WebApps) that can be triggered dynamically from sensor state evaluations:
-- **Dynamic Campaign Fetching**: WebApps are fetched dynamically from the `campaign_webapp` database table on campaign selection and synced locally to Couchbase storage on the mobile phone.
-- **BLE Trigger Forwarding**: Trigger conditions are evaluated continuously on the Wearable Watch. When conditions are met, actions are forwarded to the Mobile Phone via BLE:
-  - **Notification Action**: Displays a phone notification that launches the target WebApp on tap (e.g. for user intervention).
-  - **Broadcast Action**: Dispatches local Android broadcasts (`sendBroadcast`) on the phone with customizable extras payload to interact with 3rd-party local phone applications.
+## Build from source
 
----
+### 1. Clone the repository
 
-## Installation & Setup
+```bash
+git clone https://github.com/Kaist-ICLab/EnPULSE.git
+cd EnPULSE
+```
 
-## For Developers: Building from Source
-
-### Required Configuration
-
-#### 1. Copy `local.properties.example`
-Copy `local.properties.example` to `local.properties` in the project root and configure your local Android SDK directory and Supabase credentials:
+### 2. Create `local.properties`
 
 ```bash
 cp local.properties.example local.properties
 ```
 
-#### 2. Download Samsung Health Sensor/Data SDK
-The Samsung Health SDKs are required for collecting real-time biosignals from Galaxy Watch devices.
+Set `sdk.dir` to your Android SDK location. Android Studio can also set this for you.
 
-1. Download the Samsung Health [Sensor SDK](https://developer.samsung.com/health/data/overview.html#SDK-download) and [Data SDK](https://developer.samsung.com/health/data/overview.html#SDK-download) (requires a Samsung account).
-2. Rename the downloaded `.aar` files to `samsung-health-sensor-api.aar` and `samsung-health-data-api.aar`.
-3. Place the `.aar` files into the `samsung-health-sensor-api/` and `samsung-health-data-api/` directories respectively.
+For the backend, choose one option:
+
+- **Build it in:** set `SUPABASE_URL` and `SUPABASE_ANON_KEY` to your server's values.
+- **Enter it in the app:** delete both lines. The login screen then sends you to **Server Connection**, where you enter the URL. The app fetches the anon key from the server's `anon_key` edge function.
+
+Do not leave the example placeholder values in place. The app treats them as a real server.
+
+### 3. Add the Samsung Health SDKs
+
+The build needs both SDKs, and they are not included in this repository.
+
+1. Download the [Sensor SDK](https://developer.samsung.com/health/sensor/overview.html) and the [Data SDK](https://developer.samsung.com/health/data/overview.html). This requires a Samsung account.
+2. Rename the `.aar` files and place them here:
+   - `samsung-health-sensor-api/samsung-health-sensor-api.aar`
+   - `samsung-health-data-api/samsung-health-data-api.aar`
 
 > [!IMPORTANT]
-> **Samsung Health Developer Mode Requirement:**
-> To build and test Samsung Health data access locally without an approved Partner license, you **MUST** enable Developer Mode on your testing device:
-> 1. Open the **Samsung Health** app on your phone.
-> 2. Go to **Settings** -> **About Samsung Health** (Settings page -> Scroll to the bottom).
-> 3. Tap the **Version** line 10 times consecutively.
-> 4. You will see a toast confirming developer mode has been enabled.
-> 5. Without this, you will encounter `AuthorizationException (Error 2003: Could not get policy)` during permission requests.
+> Without an approved Samsung partner license, enable Developer Mode on your test phone. In Samsung Health, open **Settings**, then **About Samsung Health**, and tap the version line 10 times. Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
 
-#### 3. Add `google-services.json` (Firebase Configuration)
-Because `google-services.json` is untracked by Git for security, you must provide your own Firebase project configuration when building from source:
+### 4. Add `google-services.json`
 
-1. Create or open a project in the [Firebase Console](https://console.firebase.google.com/).
-2. Add an Android App registered with package name `kaist.iclab.trackerSystem` (refer to [google-services.json.example](app-mobile-tracker/google-services.json.example) for template structure).
-3. Download `google-services.json` and place it inside the `app-mobile-tracker/` directory.
-4. (Optional) Enable Google Sign-In under Firebase Authentication settings.
+The phone app does not build without `app-mobile-tracker/google-services.json`. Use one of these:
 
----
+- Copy the template. This is enough to build the app:
 
-## Testing & Verification
+  ```bash
+  cp app-mobile-tracker/google-services.json.example app-mobile-tracker/google-services.json
+  ```
 
-For detailed instructions on how to test sensor triggers, simulate states, grant Wear OS background permissions, and verify BLE communications, refer to the [Testing Guide](TESTING.md).
+- Or download the real file from a [Firebase](https://console.firebase.google.com/) project, with an Android app registered as `kaist.iclab.trackerSystem`.
+
+See [Sign-in](app-mobile-tracker/README.md#sign-in) to set up Google sign-in for your own project. Email and password sign-in works without it.
+
+### 5. Build and install
+
+With the phone connected:
+
+```bash
+./gradlew :app-mobile-tracker:installDebug
+```
+
+With the watch connected through wireless debugging:
+
+```bash
+adb connect <watch-ip>:<port>
+./gradlew :app-wearable-tracker:installDebug
+```
+
+If both devices are connected, `installDebug` installs to all of them. Disconnect the one you are not targeting.
+
+To build APK files instead, use `assembleDebug` or `assembleRelease`. The files are written to:
+
+- `app-mobile-tracker/build/outputs/apk/<buildType>/EnPULSE-Mobile.apk`
+- `app-wearable-tracker/build/outputs/apk/<buildType>/EnPULSE-Watch.apk`
+
+The phone and watch apps share one application ID and must be signed with the same key, or they cannot exchange data.

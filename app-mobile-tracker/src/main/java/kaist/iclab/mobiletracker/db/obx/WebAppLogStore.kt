@@ -6,8 +6,7 @@ import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity_
 
 /**
- * ObjectBox-backed store for webapp log events. Mirrors [MicroEmaResponseStore] rather than
- * [SensorStore]: webapp logs are not sensor data, so they need neither the `BaseEntity` columns
+ * ObjectBox-backed store for webapp log events. Not a [SensorStore]: webapp logs are not sensor data, so they need neither the `BaseEntity` columns
  * (`event_id`, `device_type`, `received`) nor the dedup strategies, and they are uploaded by
  * [kaist.iclab.mobiletracker.services.upload.WebAppLogUploader] on their own schedule.
  *
@@ -34,7 +33,7 @@ class WebAppLogStore(boxStore: BoxStore) {
         if (cacheInitialized) return
         cachedCount = box.count().toInt()
         cachedLatestTimestamp = if (box.isEmpty) null
-            else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
+        else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
         cacheInitialized = true
     }
 
@@ -85,7 +84,12 @@ class WebAppLogStore(boxStore: BoxStore) {
         cachedLatestTimestamp
     }
 
-    fun recordsAfter(afterTimestamp: Long, isAscending: Boolean, limit: Int, offset: Int): List<WebAppLogEntity> {
+    fun recordsAfter(
+        afterTimestamp: Long,
+        isAscending: Boolean,
+        limit: Int,
+        offset: Int
+    ): List<WebAppLogEntity> {
         val builder = box.query().greaterOrEqual(WebAppLogEntity_.timestamp, afterTimestamp)
         builder.order(WebAppLogEntity_.timestamp, if (isAscending) 0 else QueryBuilder.DESCENDING)
         return builder.build().use { it.find(offset.toLong(), limit.toLong()) }
@@ -98,7 +102,7 @@ class WebAppLogStore(boxStore: BoxStore) {
                 ensureCacheInitializedLocked()
                 cachedCount = (cachedCount - 1).coerceAtLeast(0)
                 cachedLatestTimestamp = if (box.isEmpty) null
-                    else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
+                else box.query().build().use { it.property(WebAppLogEntity_.timestamp).max() }
             }
         }
         return removed

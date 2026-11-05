@@ -33,12 +33,4 @@ abstract class DataChannelReceiver : DataReceiver {
         }
     }
 
-    /**
-     * Notify all registered callbacks for a specific key
-     */
-    protected fun notifyCallbacks(key: String, value: JsonElement) {
-        callbackList[key]?.forEach { callback ->
-            callback(key, value)
-        }
-    }
 }

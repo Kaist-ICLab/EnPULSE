@@ -169,21 +169,4 @@ class CouchbaseSurveyScheduleStorage(
         }
     }
 
-    fun getAllScheduledTimes(): List<Long> {
-        val query = QueryBuilder.select(SelectResult.property("triggerTime"))
-            .from(DataSource.collection(collection))
-            .orderBy(Ordering.property("triggerTime").ascending())
-
-        return try {
-            query.execute().use { resultSet ->
-                resultSet.mapNotNull { result ->
-                    val triggerTime = result.getValue("triggerTime")
-                    triggerTime as? Long
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error retrieving all scheduled times", e)
-            emptyList()
-        }
-    }
 }

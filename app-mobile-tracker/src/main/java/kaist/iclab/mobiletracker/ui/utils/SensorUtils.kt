@@ -3,13 +3,11 @@ package kaist.iclab.mobiletracker.ui.utils
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
-import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CompassCalibration
 import androidx.compose.material.icons.filled.DataUsage
 import androidx.compose.material.icons.filled.Favorite
@@ -18,15 +16,14 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MonitorHeart
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.StayCurrentPortrait
 import androidx.compose.material.icons.filled.Thermostat
-import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiTethering
@@ -47,17 +44,13 @@ fun getSensorTitleResId(sensorId: String): Int {
         "AppUsage", "AppUsageLog" -> R.string.sensor_app_usage
         "Battery" -> R.string.sensor_battery
         "BluetoothScan", "Bluetooth" -> R.string.sensor_bluetooth_scan
-        "CallLog" -> R.string.sensor_call_log
         "Connectivity" -> R.string.sensor_connectivity
         "DataTraffic" -> R.string.sensor_data_traffic
         "DeviceMode" -> R.string.sensor_device_mode
         "Location" -> R.string.sensor_location
         "Media" -> R.string.sensor_media
-        "MessageLog", "Message" -> R.string.sensor_message
-        "Notification" -> R.string.sensor_notification
         "Screen" -> R.string.sensor_screen
         "Step" -> R.string.sensor_step
-        "UserInteraction" -> R.string.sensor_user_interaction
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_wifi_scan
         "Exercise" -> R.string.sensor_exercise
         "Sleep" -> R.string.sensor_sleep
@@ -68,10 +61,11 @@ fun getSensorTitleResId(sensorId: String): Int {
         "PPG" -> R.string.sensor_ppg
         "SkinTemperature" -> R.string.sensor_skin_temperature
         "ECG" -> R.string.sensor_ecg
-        "IMU" -> R.string.sensor_imu
-        "Gesture" -> R.string.sensor_gesture
-        "Stress" -> R.string.sensor_stress
+        "IMU", "WatchIMU" -> R.string.sensor_imu
+        "Gesture", "WatchGesture" -> R.string.sensor_gesture
+        "Stress", "WatchStress" -> R.string.sensor_stress
         "WebAppLog" -> R.string.sensor_web_app_log
+        "VAD", "VadSensor" -> R.string.sensor_vad
         else -> R.string.sensor_desc_default
     }
 }
@@ -88,17 +82,13 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "AppUsage", "AppUsageLog" -> R.string.sensor_desc_app_usage
         "Battery" -> R.string.sensor_desc_battery
         "BluetoothScan", "Bluetooth" -> R.string.sensor_desc_bluetooth
-        "CallLog" -> R.string.sensor_desc_call_log
         "Connectivity" -> R.string.sensor_desc_connectivity
         "DataTraffic" -> R.string.sensor_desc_data_traffic
         "DeviceMode" -> R.string.sensor_desc_device_mode
         "Location" -> R.string.sensor_desc_location
         "Media" -> R.string.sensor_desc_media
-        "MessageLog", "Message" -> R.string.sensor_desc_message
-        "Notification" -> R.string.sensor_desc_notification
         "Screen" -> R.string.sensor_desc_screen
         "Step" -> R.string.sensor_desc_step
-        "UserInteraction" -> R.string.sensor_desc_user_interaction
         "WifiScan", "Wifi", "WiFi" -> R.string.sensor_desc_wifi
         "Exercise" -> R.string.sensor_desc_exercise
         "Sleep" -> R.string.sensor_desc_sleep
@@ -109,10 +99,11 @@ fun getSensorDescriptionResId(sensorId: String): Int {
         "HeartRate" -> R.string.sensor_desc_heart_rate
         "PPG" -> R.string.sensor_desc_ppg
         "SkinTemperature" -> R.string.sensor_desc_skin_temperature
-        "IMU" -> R.string.sensor_desc_imu
-        "Gesture" -> R.string.sensor_desc_gesture
-        "Stress" -> R.string.sensor_desc_stress
+        "IMU", "WatchIMU" -> R.string.sensor_desc_imu
+        "Gesture", "WatchGesture" -> R.string.sensor_desc_gesture
+        "Stress", "WatchStress" -> R.string.sensor_desc_stress
         "WebAppLog" -> R.string.sensor_desc_web_app_log
+        "VAD", "VadSensor" -> R.string.sensor_desc_vad
         else -> R.string.sensor_desc_default
     }
 }
@@ -123,14 +114,6 @@ fun getSensorDescriptionResId(sensorId: String): Int {
 @Composable
 fun getSensorDisplayName(sensorId: String): String {
     return stringResource(getSensorTitleResId(sensorId))
-}
-
-/**
- * Get the localized description for a sensor.
- */
-@Composable
-fun getLocalizedSensorDescription(sensorId: String): String {
-    return stringResource(getSensorDescriptionResId(sensorId))
 }
 
 /**
@@ -146,17 +129,14 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "AppUsage", "AppUsageLog" -> Icons.Default.GridView
         "Battery" -> Icons.Default.BatteryChargingFull
         "BluetoothScan", "Bluetooth" -> Icons.Default.Bluetooth
-        "CallLog" -> Icons.Default.Call
         "Connectivity" -> Icons.Default.Wifi
         "DataTraffic" -> Icons.Default.DataUsage
         "DeviceMode" -> Icons.Default.SettingsSuggest
         "Location" -> Icons.Default.Place
         "Media" -> Icons.Default.PlayCircleOutline
-        "MessageLog", "Message" -> Icons.AutoMirrored.Filled.Message
-        "Notification" -> Icons.Default.Notifications
         "Screen" -> Icons.Default.StayCurrentPortrait
+        "ActivityRecognition" -> Icons.AutoMirrored.Filled.DirectionsWalk
         "Step" -> Icons.AutoMirrored.Filled.DirectionsWalk
-        "UserInteraction" -> Icons.Default.TouchApp
         "WifiScan", "Wifi" -> Icons.Default.WifiTethering
         "Exercise" -> Icons.Default.FitnessCenter
         "Sleep" -> Icons.Default.Bedtime
@@ -170,6 +150,7 @@ fun getSensorIcon(sensorId: String): ImageVector {
         "IMU", "WatchIMU" -> Icons.Default.CompassCalibration
         "Gesture", "WatchGesture" -> Icons.Default.BackHand
         "Stress", "WatchStress" -> Icons.Default.Psychology
+        "VAD", "VadSensor" -> Icons.Default.RecordVoiceOver
         else -> Icons.Default.DataUsage
     }
 }

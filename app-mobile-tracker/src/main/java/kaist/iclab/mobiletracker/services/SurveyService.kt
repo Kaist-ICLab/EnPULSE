@@ -1,19 +1,14 @@
 package kaist.iclab.mobiletracker.services
 
 
-import android.util.Log
 import io.github.jan.supabase.postgrest.from
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.data.survey.SurveyEntity
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionEntity
-import kaist.iclab.mobiletracker.data.survey.SurveyQuestionResponseInsert
 import kaist.iclab.mobiletracker.data.survey.SurveyQuestionTriggerEntity
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.runCatchingSuspend
-import kaist.iclab.mobiletracker.utils.DateTimeFormatter
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kaist.iclab.tracker.sensor.survey.config.QuestionConfig
 import kaist.iclab.tracker.sensor.survey.config.ScheduleType
@@ -21,7 +16,6 @@ import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
 
 /**
  * Service for fetching survey configuration from Supabase
@@ -32,24 +26,9 @@ class SurveyService(
     private val supabaseClient = supabaseHelper.supabaseClient
 
     companion object {
+        /** Must match QUESTION_POSITION_KEY in the dashboard's campaignService.ts. */
+        private const val QUESTION_POSITION_KEY = "position"
         private const val TAG = "SurveyService"
-    }
-
-    /**
-     * Fetch a single survey configuration by ID from Supabase.
-     * @param surveyId Unique ID of the survey.
-     * @return Result containing the assembled SurveyConfig.
-     */
-    suspend fun getSurveyConfig(surveyId: Int): Result<SurveyConfig> {
-        return SupabaseLoadingInterceptor.withLoading {
-            runCatchingSuspend {
-                val surveys = fetchFullSurveys {
-                    eq("id", surveyId)
-                }
-                surveys.firstOrNull()
-                    ?: throw NoSuchElementException("Survey with ID $surveyId not found")
-            }
-        }
     }
 
     /**
@@ -62,23 +41,6 @@ class SurveyService(
             ErrorClassifier.runClassified(TAG, "getCampaignSurveys($campaignId)") {
                 fetchFullSurveys {
                     eq("campaign_id", campaignId)
-                }
-            }
-        }
-    }
-
-    /**
-     * Fetch all surveys specifically configured for wearable devices (watch) within a campaign.
-     * Filters for surveys where device_type is 1.
-     * @param campaignId Unique ID of the campaign.
-     * @return Result containing a list of wearable-specific SurveyConfigs.
-     */
-    suspend fun getWatchSurveys(campaignId: Int): Result<List<SurveyConfig>> {
-        return SupabaseLoadingInterceptor.withLoading {
-            ErrorClassifier.runClassified(TAG, "getWatchSurveys($campaignId)") {
-                fetchFullSurveys {
-                    eq("campaign_id", campaignId)
-                    eq("device_type", 1) // Watch
                 }
             }
         }
@@ -117,7 +79,12 @@ class SurveyService(
 
         // 4. Assemble the flat entities into a hierarchical configuration structure
         return surveys.map { survey ->
-            val surveyQuestions = questions.filter { it.surveyId == survey.id }
+            // survey_question has no order column: the dashboard stores each question's index
+            // among its siblings in config.position (older rows have none and fall back to id).
+            // Builders keep this list order, so it sets the order on both phone and watch.
+            val surveyQuestions = questions
+                .filter { it.surveyId == survey.id }
+                .sortedWith(compareBy({ it.config.int(QUESTION_POSITION_KEY) ?: Int.MAX_VALUE }, { it.id }))
             val surveyTriggerIds = surveyQuestions.mapNotNull { it.triggeredBy }
             val surveyTriggers = triggers.filter { it.id in surveyTriggerIds }
 
@@ -194,65 +161,6 @@ class SurveyService(
             scheduleMethod.containsKey("timeOfDay") -> ScheduleType.TIME_OF_DAY
             scheduleMethod.containsKey("numSurvey") -> ScheduleType.ESM
             else -> ScheduleType.MANUAL
-        }
-    }
-
-    /**
-     * Directly inserts a list of survey responses into the Supabase 'survey_question_response' table.
-     */
-    suspend fun submitSurveyResponses(responses: List<SurveyQuestionResponseInsert>): Result<Unit> {
-        return ErrorClassifier.runClassified(TAG, "submitSurveyResponses") {
-            supabaseClient.from(Constants.DB.TABLE_RESPONSE).insert(responses)
-        }
-    }
-
-    /**
-     * Upload locally cached MicroEMA responses to Supabase.
-     * Handles timestamp formatting and batch insertion.
-     * @param microEmaResponseDao DAO to access local Room database for responses.
-     * @return Result containing the count of successfully uploaded responses.
-     */
-    suspend fun uploadUnsyncedMicroEmaResponses(
-        microEmaResponseDao: MicroEmaResponseStore
-    ): Result<Int> {
-        return try {
-            val unsynced = microEmaResponseDao.getUnsyncedResponses()
-            if (unsynced.isEmpty()) return Result.Success(0)
-
-            val inserts = unsynced.map { entity ->
-                val fallbackTime = DateTimeFormatter.formatToIsoOffset(System.currentTimeMillis())
-                SurveyQuestionResponseInsert(
-                    questionId = entity.questionId,
-                    uuid = entity.uuid,
-                    triggerTime = DateTimeFormatter.formatToIsoOffset(entity.triggerTime)
-                        ?: fallbackTime,
-                    actualTriggerTime = DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime)
-                        ?: fallbackTime,
-                    surveyStartTime = DateTimeFormatter.formatToIsoOffset(entity.surveyStartTime)
-                        ?: fallbackTime,
-                    responseSubmissionTime = DateTimeFormatter.formatToIsoOffset(entity.responseSubmissionTime)
-                        ?: DateTimeFormatter.formatToIsoOffset(entity.actualTriggerTime)
-                        ?: fallbackTime,
-                    response = kotlinx.serialization.json.Json.parseToJsonElement(entity.responseJson).jsonObject
-                )
-            }
-
-            when (val result = submitSurveyResponses(inserts)) {
-                is Result.Success -> {
-                    microEmaResponseDao.markAsSynced(unsynced.map { it.id })
-                    Log.d(TAG, "Successfully uploaded ${unsynced.size} MicroEMA responses")
-                    Result.Success(unsynced.size)
-                }
-
-                is Result.Error -> Result.Error(
-                    Exception(
-                        "Failed to upload: ${result.message}",
-                        result.exception
-                    )
-                )
-            }
-        } catch (e: Exception) {
-            Result.Error(Exception("Error processing MicroEMA upload: ${e.message}", e))
         }
     }
 }

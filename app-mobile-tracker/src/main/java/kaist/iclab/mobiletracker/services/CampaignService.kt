@@ -9,7 +9,6 @@ import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.flatMap
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -35,27 +34,6 @@ class CampaignService(
         return SupabaseLoadingInterceptor.withLoading {
             ErrorClassifier.runClassified(TAG, "getAllCampaigns") {
                 supabaseClient.from(tableName).select().decodeList<CampaignData>()
-            }
-        }
-    }
-
-    /**
-     * Fetch a single campaign by ID
-     * @param campaignId The ID of the campaign to fetch (as String)
-     * @return Result containing the campaign or error
-     */
-    suspend fun getCampaignById(campaignId: String): Result<CampaignData> {
-        val campaignIdInt = campaignId.toIntOrNull()
-            ?: return Result.Error(
-                AppError.Validation("Invalid campaign ID format: $campaignId")
-            )
-
-        return getAllCampaigns().flatMap { campaigns ->
-            val campaign = campaigns.find { it.id == campaignIdInt }
-            if (campaign != null) {
-                Result.Success(campaign)
-            } else {
-                Result.Error(AppError.NotFound("Campaign with ID $campaignId not found"))
             }
         }
     }

@@ -3,9 +3,15 @@ package kaist.iclab.wearabletracker.ema
 
 import android.app.Activity
 import android.app.RemoteInput
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.util.Log
+import android.widget.Toast
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -14,8 +20,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,8 +59,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.rotary.onPreRotaryScrollEvent
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -87,10 +89,6 @@ import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import kotlinx.coroutines.delay
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.hypot
 import kotlin.time.Duration.Companion.milliseconds
 
 // --- Color Palette ---
@@ -108,69 +106,6 @@ private val TimerCritical = Color(0xFFF28B82)
  */
 private fun isLikertScale(options: List<WatchOption>): Boolean =
     options.all { it.display.toDoubleOrNull() != null }
-
-private fun Modifier.edgeSwipeInput(
-    enabled: Boolean,
-    onCounterClockwise: () -> Unit,
-    onClockwise: () -> Unit
-): Modifier {
-    if (!enabled) return this
-
-    return pointerInput(onCounterClockwise, onClockwise) {
-        val edgeWidthPx = 34.dp.toPx()
-        val triggerAngle = (PI / 6.0).toFloat()
-
-        awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false)
-            val centerX = size.width / 2f
-            val centerY = size.height / 2f
-            val outerRadius = minOf(size.width, size.height) / 2f
-            val downRadius = hypot(down.position.x - centerX, down.position.y - centerY)
-            if (downRadius < outerRadius - edgeWidthPx) return@awaitEachGesture
-
-            var previousAngle = atan2(down.position.y - centerY, down.position.x - centerX)
-            var accumulatedAngle = 0f
-            var triggered = false
-
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if (!change.pressed) break
-
-                val position = change.position
-                val currentRadius = hypot(position.x - centerX, position.y - centerY)
-                if (currentRadius < outerRadius - edgeWidthPx * 1.6f) break
-
-                val currentAngle = atan2(position.y - centerY, position.x - centerX)
-                var delta = currentAngle - previousAngle
-                if (delta > PI) delta -= (2 * PI).toFloat()
-                if (delta < -PI) delta += (2 * PI).toFloat()
-                previousAngle = currentAngle
-                accumulatedAngle += delta
-
-                when {
-                    accumulatedAngle >= triggerAngle -> {
-                        onClockwise()
-                        accumulatedAngle = 0f
-                        triggered = true
-                        change.consume()
-                    }
-
-                    accumulatedAngle <= -triggerAngle -> {
-                        onCounterClockwise()
-                        accumulatedAngle = 0f
-                        triggered = true
-                        change.consume()
-                    }
-
-                    triggered || abs(delta) > 0.01f -> {
-                        change.consume()
-                    }
-                }
-            }
-        }
-    }
-}
 
 private fun Modifier.rotarySelectionInput(
     enabled: Boolean,
@@ -272,7 +207,9 @@ fun MicroEmaScreen(
         finalStatus = finalStatus,
         remainingTimeMs = remainingTimeMs,
         onAnswer = { viewModel.answerQuestion(it) },
-        onDismiss = { viewModel.dismiss() }
+        onDismiss = { viewModel.dismiss() },
+        onInputOpen = { viewModel.pauseCountdown() },
+        onInputClosed = { viewModel.resumeCountdown() }
     )
 }
 
@@ -288,7 +225,9 @@ fun MicroEmaScreenContent(
     finalStatus: ResponseStatus?,
     remainingTimeMs: Long?,
     onAnswer: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onInputOpen: () -> Unit = {},
+    onInputClosed: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -298,7 +237,8 @@ fun MicroEmaScreenContent(
     ) {
         // Bezel Timer (Circular Progress)
         if (!isComplete && remainingTimeMs != null) {
-            val totalTime = config?.expireAfterMs ?: 30000L
+            // Same fallback as MicroEmaViewModel, so a 0 expiry doesn't divide by zero.
+            val totalTime = config?.expireAfterMs?.takeIf { it > 0 } ?: 30_000L
             val progress = (remainingTimeMs.toFloat() / totalTime.toFloat()).coerceIn(0f, 1f)
             val color = when {
                 progress > 0.6f -> TimerSafe
@@ -331,7 +271,9 @@ fun MicroEmaScreenContent(
                     SingleQuestionView(
                         question = q,
                         onAnswer = onAnswer,
-                        onDismiss = onDismiss
+                        onDismiss = onDismiss,
+                        onInputOpen = onInputOpen,
+                        onInputClosed = onInputClosed
                     )
                 } ?: LoadingView()
             }
@@ -346,7 +288,9 @@ fun MicroEmaScreenContent(
 private fun SingleQuestionView(
     question: WatchQuestion,
     onAnswer: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onInputOpen: () -> Unit,
+    onInputClosed: () -> Unit
 ) {
     val numberOptions = remember(question) {
         question.options.map { it.display }.ifEmpty { (0..10).map { it.toString() } }
@@ -536,7 +480,7 @@ private fun SingleQuestionView(
                     )
                 }
 
-                AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
+                AnswerType.NUMBERSCALE -> {
                     NumberPickerInput(
                         numberOptions = numberOptions,
                         selectedIndex = selectedNumberIndex,
@@ -548,7 +492,9 @@ private fun SingleQuestionView(
                 AnswerType.TEXT -> {
                     TextInput(
                         currentText = enteredText,
-                        onResult = { enteredText = it }
+                        onResult = { enteredText = it },
+                        onInputOpen = onInputOpen,
+                        onInputClosed = onInputClosed
                     )
                 }
             }
@@ -598,7 +544,7 @@ private fun SingleQuestionView(
                             }
                         }
 
-                        AnswerType.NUMBERSCALE, AnswerType.NUMBER -> {
+                        AnswerType.NUMBERSCALE -> {
                             onAnswer(numberOptions[selectedNumberIndex])
                         }
 
@@ -834,12 +780,38 @@ private fun CheckboxInput(
 @Composable
 private fun TextInput(
     currentText: String,
-    onResult: (String) -> Unit
+    onResult: (String) -> Unit,
+    onInputOpen: () -> Unit,
+    onInputClosed: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    // Voice input needs a speech recognizer activity, which may be missing (or unusable, e.g.
+    // Google's in mainland China). Without one the mic button would crash the survey.
+    val canRecognizeSpeech = remember {
+        context.packageManager.queryIntentActivities(
+            Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH),
+            PackageManager.MATCH_DEFAULT_ONLY
+        ).isNotEmpty()
+    }
+
+    // Pauses expiry while the system input screen is in front, and never crashes if it's missing.
+    fun launchInput(launcher: ActivityResultLauncher<Intent>, intent: Intent) {
+        onInputOpen()
+        try {
+            launcher.launch(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.w("MicroEmaScreen", "No activity for ${intent.action}", e)
+            onInputClosed()
+            Toast.makeText(context, "Input not available on this watch", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // 1. Launcher for Unified Input (Keyboard/Handwriting/Voice)
     val textLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        onInputClosed()
         val data = result.data
         if (result.resultCode == Activity.RESULT_OK && data != null) {
             val bundle = RemoteInput.getResultsFromIntent(data)
@@ -854,6 +826,7 @@ private fun TextInput(
     val voiceLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        onInputClosed()
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             val results = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
             val firstResult = results?.firstOrNull()
@@ -880,7 +853,7 @@ private fun TextInput(
                         .build()
                 )
                 RemoteInputIntentHelper.putRemoteInputsExtra(intent, remoteInputs)
-                textLauncher.launch(intent)
+                launchInput(textLauncher, intent)
             },
             modifier = Modifier
                 .weight(1f)
@@ -911,7 +884,7 @@ private fun TextInput(
         }
 
         // --- Direct Mic Button ---
-        Button(
+        if (canRecognizeSpeech) Button(
             onClick = {
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                     putExtra(
@@ -920,7 +893,7 @@ private fun TextInput(
                     )
                     putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak now...")
                 }
-                voiceLauncher.launch(intent)
+                launchInput(voiceLauncher, intent)
             },
             modifier = Modifier.size(40.dp),
             colors = ButtonDefaults.buttonColors(backgroundColor = AccentBlue),

@@ -15,7 +15,6 @@ build/
 .externalNativeBuild
 .cxx
 local.properties
-tracker-library/libs/*
 .kotlin/
 
 # Samsung Health AAR files. Please comment out this line if you want to include the AAR files in the repository.
@@ -26,6 +25,8 @@ samsung-health-sensor-api/*.aar
 google-services.json
 
 # Development stuffs
-.artifacts
 /.claude/
 /.vscode/
+
+# IDE build output
+build-logic/convention/bin/

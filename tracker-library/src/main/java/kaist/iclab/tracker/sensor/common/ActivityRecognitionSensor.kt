@@ -93,9 +93,7 @@ class ActivityRecognitionSensor(
 
     private val mainCallback: (Intent?) -> Unit = callback@{ intent ->
         if (intent == null) return@callback
-        Log.d(TAG, "activity recognition extras: ${intent.extras?.keySet()?.joinToString()}")
         val result = ActivityRecognitionResult.extractResult(intent)
-        Log.d(TAG, "activity recognition callback: $intent, $result")
         if (result == null) return@callback
 
         val timestamp = System.currentTimeMillis()

@@ -11,8 +11,10 @@ import androidx.core.app.NotificationCompat
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.MainActivity
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.utils.NotificationHelper.showSurveyTriggerNotification
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
+import kaist.iclab.tracker.sensor.survey.activity.SurveyActivity
 
 /**
  * Reusable utility for building and showing notifications.
@@ -128,48 +130,25 @@ object NotificationHelper {
     }
 
     /**
-     * Show a notification for a scheduled survey.
+     * Cancel survey notifications still in the tray, except those for [keepSurveyIds]. They are
+     * ongoing and never auto-cancelled, so after a campaign switch a leftover would open a survey
+     * that no longer exists for the next participant. Matched by channel ("<channel>_<surveyId>");
+     * web-app notifications share the trigger channel prefix and are left alone.
      */
-    fun showSurveyNotification(
-        context: Context,
-        surveyId: String,
-        scheduleId: String,
-        config: SurveyNotificationConfig,
-        notificationId: Int
-    ) {
-        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY}_$surveyId"
-        ensureNotificationChannel(
-            context,
-            channelId,
-            Constants.Notification.CHANNEL_NAME_SURVEY,
-            NotificationManager.IMPORTANCE_HIGH
+    fun cancelSurveyNotifications(context: Context, keepSurveyIds: Set<String> = emptySet()) {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val prefixes = listOf(
+            "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_",
+            "${Constants.Notification.CHANNEL_ID_SURVEY}_"
         )
-
-        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            putExtra("id", surveyId)
-            putExtra("scheduleId", scheduleId)
+        notificationManager.activeNotifications.forEach { active ->
+            val channelId = active.notification.channelId ?: return@forEach
+            if ("_webapp_" in channelId) return@forEach
+            val surveyId = prefixes.firstOrNull { channelId.startsWith(it) }
+                ?.let { channelId.removePrefix(it) } ?: return@forEach
+            if (surveyId !in keepSurveyIds) notificationManager.cancel(active.tag, active.id)
         }
-
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            scheduleId.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = buildNotification(
-            context = context,
-            channelId = channelId,
-            title = config.title,
-            text = config.description,
-            smallIcon = config.icon,
-            priority = NotificationCompat.PRIORITY_HIGH,
-            ongoing = true,
-            pendingIntent = pendingIntent
-        ).build()
-
-        showNotification(context, notificationId, notification)
     }
 
     /**
@@ -196,6 +175,8 @@ object NotificationHelper {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra("id", surveyId)
             putExtra("scheduleId", scheduleId)
+            // Lets the survey screen cancel this (ongoing) notification once it opens.
+            putExtra(SurveyActivity.EXTRA_NOTIFICATION_ID, notificationId)
         }
 
         val pendingIntent = PendingIntent.getActivity(
@@ -272,7 +253,8 @@ object NotificationHelper {
         pendingIntent: PendingIntent,
         notificationId: Int
     ) {
-        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_generic_${notificationId}"
+        val channelId =
+            "${Constants.Notification.CHANNEL_ID_SURVEY_TRIGGER}_generic_${notificationId}"
         ensureNotificationChannel(
             context,
             channelId,
@@ -290,6 +272,7 @@ object NotificationHelper {
             pendingIntent = pendingIntent
         ).apply {
             setCategory(NotificationCompat.CATEGORY_ALARM)
+            setLocalOnly(true)
         }.build()
 
         showNotification(context, notificationId, notification)

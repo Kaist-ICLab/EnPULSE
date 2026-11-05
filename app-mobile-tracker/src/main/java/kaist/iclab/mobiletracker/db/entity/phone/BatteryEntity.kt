@@ -40,8 +40,15 @@ class BatteryEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.temperature = temperature
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,connectedType,status,level,temperature"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$connectedType,$status,$level,$temperature"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,connectedType,status,level,temperature"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Level" to "$level%", "Status" to status.toString()))
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$connectedType,$status,$level,$temperature"
+
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Level" to "$level%", "Status" to status.toString())
+    )
 }

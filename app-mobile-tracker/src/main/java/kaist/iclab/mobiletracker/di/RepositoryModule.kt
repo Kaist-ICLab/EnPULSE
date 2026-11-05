@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.di
 
+import org.koin.android.ext.koin.androidContext
 import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.CampaignRepository
@@ -20,8 +21,7 @@ import kaist.iclab.mobiletracker.repository.WebAppRepository
 import kaist.iclab.mobiletracker.repository.WebAppRepositoryImpl
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.services.SyncTimestampService
-import kaist.iclab.mobiletracker.services.upload.SensorUploadService
-import kaist.iclab.mobiletracker.services.upload.SurveyResponseUploader
+import kaist.iclab.mobiletracker.services.upload.SensorDataUploader
 import kaist.iclab.mobiletracker.services.upload.WebAppLogUploader
 import kaist.iclab.mobiletracker.storage.CampaignSensorConfigStorage
 import kaist.iclab.mobiletracker.storage.CouchbaseTriggerConfigStorage
@@ -48,8 +48,7 @@ val repositoryModule = module {
         DataRepositoryImpl(
             handlerRegistry = get<SensorDataHandlerRegistry>(),
             syncTimestampService = get<SyncTimestampService>(),
-            sensorUploadService = get<SensorUploadService>(),
-            surveyResponseUploader = get<SurveyResponseUploader>(),
+            sensorDataUploader = get<SensorDataUploader>(),
             webAppLogUploader = get<WebAppLogUploader>(),
             supabaseHelper = get<SupabaseHelper>(),
             campaignSensorRepository = get<CampaignSensorRepository>()
@@ -59,6 +58,7 @@ val repositoryModule = module {
     // SurveyRepository for survey configuration management
     single<SurveyRepository> {
         SurveyRepositoryImpl(
+            context = androidContext(),
             surveyService = get(),
             persistentStorage = get(),
             phoneSensorConfigStorage = get(named("surveySensorConfigStorage")),
@@ -130,6 +130,7 @@ val repositoryModule = module {
             webAppRepository = get(),
             watchSurveyConfigPusher = get(),
             triggerEngine = get(),
+            detectionStateTracker = get(),
             backgroundController = get(),
             bleHelper = get()
         )

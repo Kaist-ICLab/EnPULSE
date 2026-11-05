@@ -13,11 +13,13 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 
 /**
@@ -133,6 +135,15 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
         jsonEncoder.encodeJsonElement(serializeAction(value))
     }
 
+    /**
+     * Missing means no cooldown. Accepts a decimal (e.g. `60000.0`, which a JavaScript client can
+     * produce): `long` alone would throw and the whole trigger would be skipped.
+     */
+    private fun parseMinInterval(obj: JsonObject): Long {
+        val primitive = obj["minIntervalMillis"]?.jsonPrimitive ?: return 0L
+        return primitive.longOrNull ?: primitive.doubleOrNull?.toLong() ?: 0L
+    }
+
     private fun parseAction(obj: JsonObject): TriggerActionConfig {
         return when (val kind = obj["kind"]?.jsonPrimitive?.content
             ?: throw SerializationException("Missing 'kind' field in action config")) {
@@ -140,13 +151,13 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
             "watch_ema" -> TriggerActionConfig.WatchEma(
                 surveyId = (obj["surveyId"] ?: obj["survey_id"])?.jsonPrimitive?.int
                     ?: throw SerializationException("'watch_ema' requires 'surveyId'"),
-                minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
+                minIntervalMillis = parseMinInterval(obj)
             )
 
             "ema" -> TriggerActionConfig.Ema(
                 surveyId = (obj["surveyId"] ?: obj["survey_id"])?.jsonPrimitive?.int
                     ?: throw SerializationException("'ema' requires 'surveyId'"),
-                minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
+                minIntervalMillis = parseMinInterval(obj)
             )
 
             "broadcast" -> TriggerActionConfig.Broadcast(
@@ -160,7 +171,7 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
                         valueType = extraObj["valueType"]?.jsonPrimitive?.content ?: "String"
                     )
                 } ?: emptyList(),
-                minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
+                minIntervalMillis = parseMinInterval(obj)
             )
 
             "notification" -> TriggerActionConfig.Notification(
@@ -168,9 +179,10 @@ object TriggerActionConfigSerializer : KSerializer<TriggerActionConfig> {
                     ?: throw SerializationException("'notification' requires 'title'"),
                 description = obj["description"]?.jsonPrimitive?.content
                     ?: throw SerializationException("'notification' requires 'description'"),
-                url = obj["url"]?.jsonPrimitive?.content,
+                // contentOrNull: a JSON null would otherwise become the string "null".
+                url = obj["url"]?.jsonPrimitive?.contentOrNull,
                 deviceType = (obj["deviceType"] ?: obj["device_type"])?.jsonPrimitive?.int ?: 0,
-                minIntervalMillis = obj["minIntervalMillis"]?.jsonPrimitive?.long ?: 0L
+                minIntervalMillis = parseMinInterval(obj)
             )
 
             else -> throw SerializationException("Unknown action kind: '$kind'")

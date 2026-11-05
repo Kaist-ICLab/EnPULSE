@@ -36,5 +36,9 @@ class AmbientLightEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun csvHeader() = "eventId,uuid,received,timestamp,accuracy,value"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$accuracy,$value"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Value" to String.format(Locale.getDefault(), "%.1f lux", value)))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Value" to String.format(Locale.getDefault(), "%.1f lux", value))
+    )
 }

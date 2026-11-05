@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.di
 
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
@@ -12,18 +13,16 @@ import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppUsageLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BatteryEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BluetoothScanEntity
-import kaist.iclab.mobiletracker.db.entity.phone.CallLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ConnectivityEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ExerciseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
-import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
-import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
-import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
+import kaist.iclab.mobiletracker.db.entity.phone.VADEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
@@ -51,18 +50,15 @@ import kaist.iclab.tracker.sensor.phone.AmbientLightSensor
 import kaist.iclab.tracker.sensor.phone.AppListChangeSensor
 import kaist.iclab.tracker.sensor.phone.AppUsageLogSensor
 import kaist.iclab.tracker.sensor.phone.BluetoothScanSensor
-import kaist.iclab.tracker.sensor.phone.CallLogSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DataTrafficSensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
 import kaist.iclab.tracker.sensor.phone.ExerciseSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
-import kaist.iclab.tracker.sensor.phone.MessageLogSensor
-import kaist.iclab.tracker.sensor.phone.NotificationSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
 import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
-import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
+import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import kotlinx.serialization.KSerializer
 
@@ -77,7 +73,15 @@ class SensorDescriptor<T>(
     val store: SensorStore<T>,
     val supabaseTable: String,
     val serializer: KSerializer<T>,
-    val fromSensorEntity: ((SensorEntity, String?) -> T)? = null
+    val fromSensorEntity: ((SensorEntity, String?) -> T)? = null,
+    /** False to upload regardless of the joined campaign's active sensor set. */
+    val isCampaignGated: Boolean = true,
+    /**
+     * For tables that don't mirror the entity: only these keys of the serialized entity are sent,
+     * and rows are inserted rather than upserted by `event_id` (which such a table doesn't have).
+     * Null sends the whole entity as an upsert.
+     */
+    val insertOnlyColumns: Set<String>? = null
 ) where T : BaseEntity, T : CsvSerializable, T : RecordSerializable {
     fun toDataHandler(): SensorDataHandler = GenericSensorDataHandler(
         sensorId = sensorId,
@@ -85,7 +89,8 @@ class SensorDescriptor<T>(
         isWatchSensor = isWatchSensor,
         supabaseTableName = supabaseTable,
         store = store,
-        serializer = serializer
+        serializer = serializer,
+        hasRemoteEventId = insertOnlyColumns == null
     )
 
     fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler =
@@ -95,7 +100,10 @@ class SensorDescriptor<T>(
             serializer = serializer,
             tableName = supabaseTable,
             sensorName = displayName,
-            supabase = supabase
+            supabase = supabase,
+            isCampaignGated = isCampaignGated,
+            supabaseColumns = insertOnlyColumns,
+            insertOnly = insertOnlyColumns != null
         )
 
     fun toPhoneSensorStore(): PhoneSensorStore<T>? =
@@ -220,25 +228,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     classType = e.classType,
                     rssi = e.rssi,
                     isLE = e.isLE
-                )
-            }
-        ),
-        SensorDescriptor(
-            sensorId = "CallLog",
-            displayName = "Call Log",
-            isWatchSensor = false,
-            store = s.callLog,
-            supabaseTable = AppConfig.SupabaseTables.CALL_LOG_SENSOR,
-            serializer = CallLogEntity.serializer(),
-            fromSensorEntity = { e, uuid ->
-                e as CallLogSensor.Entity
-                CallLogEntity(
-                    uuid = uuid ?: "",
-                    received = e.received,
-                    timestamp = e.timestamp,
-                    duration = e.duration,
-                    number = e.number,
-                    type = e.type
                 )
             }
         ),
@@ -383,47 +372,6 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             }
         ),
         SensorDescriptor(
-            sensorId = "MessageLog",
-            displayName = "Message Log",
-            isWatchSensor = false,
-            store = s.messageLog,
-            supabaseTable = AppConfig.SupabaseTables.MESSAGE_LOG_SENSOR,
-            serializer = MessageLogEntity.serializer(),
-            fromSensorEntity = { e, uuid ->
-                e as MessageLogSensor.Entity
-                MessageLogEntity(
-                    uuid = uuid ?: "",
-                    received = e.received,
-                    timestamp = e.timestamp,
-                    number = e.number,
-                    messageType = e.messageType,
-                    contactType = e.contactType
-                )
-            }
-        ),
-        SensorDescriptor(
-            sensorId = "Notification",
-            displayName = "Notification",
-            isWatchSensor = false,
-            store = s.notification,
-            supabaseTable = AppConfig.SupabaseTables.NOTIFICATION_SENSOR,
-            serializer = NotificationEntity.serializer(),
-            fromSensorEntity = { e, uuid ->
-                e as NotificationSensor.Entity
-                NotificationEntity(
-                    uuid = uuid ?: "",
-                    received = e.received,
-                    timestamp = e.timestamp,
-                    packageName = e.packageName,
-                    eventType = e.eventType,
-                    title = e.title,
-                    text = e.text,
-                    visibility = e.visibility,
-                    category = e.category
-                )
-            }
-        ),
-        SensorDescriptor(
             sensorId = "Screen",
             displayName = "Screen",
             isWatchSensor = false,
@@ -478,23 +426,21 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
             }
         ),
         SensorDescriptor(
-            sensorId = "UserInteraction",
-            displayName = "User Interaction",
+            sensorId = "VAD",
+            displayName = "VAD",
             isWatchSensor = false,
-            store = s.userInteraction,
-            supabaseTable = AppConfig.SupabaseTables.USER_INTERACTION_SENSOR,
-            serializer = UserInteractionEntity.serializer(),
+            store = s.vad,
+            supabaseTable = AppConfig.SupabaseTables.VAD_SENSOR,
+            serializer = VADEntity.serializer(),
             fromSensorEntity = { e, uuid ->
-                e as UserInteractionSensor.Entity
-                UserInteractionEntity(
+                e as VADSensor.Entity
+                VADEntity(
                     uuid = uuid ?: "",
-                    eventId = e.eventId,
                     received = e.received,
                     timestamp = e.timestamp,
-                    packageName = e.packageName,
-                    className = e.className,
-                    eventType = e.eventType,
-                    text = e.text
+                    isSpeech = e.isSpeech,
+                    speechProbability = e.speechProbability,
+                    inferenceTimeMs = e.inferenceTimeMs
                 )
             }
         ),
@@ -517,6 +463,18 @@ fun buildAllSensorDescriptors(s: SensorStores): List<SensorDescriptor<*>> {
                     level = e.level
                 )
             }
+        ),
+        // Phone surveys (SurveyResponseCapture) and watch MicroEMA answers (BLEHelper) share one
+        // store. Captured regardless of the campaign, so never campaign-gated either.
+        SensorDescriptor(
+            sensorId = SurveyResponseEntity.SENSOR_ID,
+            displayName = "Survey",
+            isWatchSensor = false,
+            store = s.surveyResponse,
+            supabaseTable = Constants.DB.TABLE_RESPONSE,
+            serializer = SurveyResponseEntity.serializer(),
+            isCampaignGated = false,
+            insertOnlyColumns = SurveyResponseEntity.SUPABASE_COLUMNS
         ),
         // Watch sensors — written via WatchSensorRepository (BLE), no phone-side store needed
         SensorDescriptor(

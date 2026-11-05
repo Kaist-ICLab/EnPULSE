@@ -14,11 +14,14 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.tracker.auth.Authentication
+import kaist.iclab.tracker.auth.EmailPasswordAuthentication
 import kaist.iclab.tracker.auth.UserState
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -52,6 +55,11 @@ class AuthViewModel(
     private val _uiEvent = MutableSharedFlow<AuthUiEvent>()
     val uiEvent: SharedFlow<AuthUiEvent> = _uiEvent.asSharedFlow()
 
+    // Set when the server can't be reached while loading the study config; drives the
+    // retry/exit dialog. Null means no dialog.
+    private val _serverUnreachable = MutableStateFlow<ServerUnreachable?>(null)
+    val serverUnreachable: StateFlow<ServerUnreachable?> = _serverUnreachable.asStateFlow()
+
     // Expose cached profile from repository
     val userProfile: StateFlow<ProfileData?> =
         userProfileRepository.profileFlow
@@ -63,6 +71,12 @@ class AuthViewModel(
         }
     private var lastSavedToken: String? = null
 
+    // Firebase/Supabase refreshes the session token roughly hourly, which re-emits userState
+    // with a new, different token — not just a fresh login. Without this, every refresh re-ran
+    // the full campaign sync below, and if data collection was already running that surfaced a
+    // "Data collection is still running" toast to staff once an hour.
+    private var hasSyncedProfileThisLogin = false
+
     companion object {
         private const val KEY_PREVIOUS_LOGIN_STATE = "previous_login_state"
     }
@@ -71,6 +85,9 @@ class AuthViewModel(
         // Load profile if user is already logged in (e.g., app restart)
         viewModelScope.launch {
             if (userState.value.isLoggedIn) {
+                // Counts as this login's sync, so the collect block below doesn't also run it
+                // again for the same (already-persisted) token once it observes this state.
+                hasSyncedProfileThisLogin = true
                 loadUserProfile()
             }
         }
@@ -79,6 +96,15 @@ class AuthViewModel(
         viewModelScope.launch {
             userState.collect { state ->
                 val currentToken = state.token
+
+                // Reset per-login state on any logout (explicit or session loss), so the next
+                // login in this same ViewModel runs the token fetch and profile sync again.
+                if (!state.isLoggedIn) {
+                    previousLoginState = false
+                    lastSavedToken = null
+                    hasSyncedProfileThisLogin = false
+                    return@collect
+                }
 
                 // When user successfully logs in, automatically get token
                 if (state.isLoggedIn && !previousLoginState && currentToken == null) {
@@ -91,10 +117,15 @@ class AuthViewModel(
                     authRepository.saveToken(currentToken)
                     lastSavedToken = currentToken
 
-                    // Save profile to profiles table if not exists
-                    saveProfileIfNotExists(state)
-                    // Then load and cache it
-                    loadUserProfileSuspend()
+                    // The full sync only needs to run once per login, not on every later token
+                    // refresh (see hasSyncedProfileThisLogin).
+                    if (!hasSyncedProfileThisLogin) {
+                        hasSyncedProfileThisLogin = true
+                        // Save profile to profiles table if not exists
+                        saveProfileIfNotExists(state)
+                        // Then load and cache it
+                        loadUserProfileSuspend()
+                    }
                 }
             }
         }
@@ -111,6 +142,8 @@ class AuthViewModel(
 
         userProfileRepository.createProfileIfNotExists(user.email, null)
             .onFailure { e ->
+                // The config load right after this hits the same outage and shows the dialog.
+                if (e is AppError.Network || e is AppError.Timeout) return@onFailure
                 // If we already have a cached profile, just show the subtle offline warning
                 if (userProfileRepository.profileFlow.value != null) {
                     Log.d(TAG, "Network profile creation/check failed, using cached profile.")
@@ -135,6 +168,9 @@ class AuthViewModel(
      * Suspending function to load user profile.
      */
     private suspend fun loadUserProfileSuspend() {
+        // Checked before syncing: a failed sync can still publish a freshly fetched profile, which
+        // must not be mistaken for a cached one.
+        val hadCachedProfile = userProfileRepository.profileFlow.value != null
         when (val result = userProfileRepository.syncFullStudyConfig()) {
             is Result.Success -> {
                 // Success handled by state flows
@@ -144,7 +180,12 @@ class AuthViewModel(
                 // Handle collection running error specifically
                 if (result.exception is AppError.CollectionRunning) {
                     _uiEvent.emit(AuthUiEvent.ShowError(R.string.turn_off_data_collection_first))
-                } else if (userProfileRepository.profileFlow.value != null) {
+                } else if (result.exception is AppError.Network || result.exception is AppError.Timeout) {
+                    Log.e(TAG, "Server unreachable while loading study config: ${result.message}", result.exception)
+                    _serverUnreachable.value = ServerUnreachable(
+                        hasCachedConfig = userProfileRepository.profileFlow.value != null
+                    )
+                } else if (hadCachedProfile) {
                     // If we already have a cached profile, show a subtle "using cache" message 
                     // instead of a scary "failed" error.
                     Log.d(TAG, "Network profile refresh failed, using cached profile.")
@@ -157,12 +198,54 @@ class AuthViewModel(
         }
     }
 
+    /** Retry from the server-unreachable dialog: re-runs the same profile setup and config sync. */
+    fun retryConnection() {
+        _serverUnreachable.value = null
+        viewModelScope.launch {
+            saveProfileIfNotExists(userState.value)
+            loadUserProfileSuspend()
+        }
+    }
+
+    /** Close the server-unreachable dialog and keep using the cached config. */
+    fun continueOffline() {
+        _serverUnreachable.value = null
+    }
+
     fun login(activity: Activity) {
         viewModelScope.launch {
             try {
                 authentication.login(activity)
             } catch (e: Exception) {
                 Log.e(TAG, "Login error: ${e.message}", e)
+                _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_login_failed))
+            }
+        }
+    }
+
+    /**
+     * Whether the active [Authentication] can sign in with an email and password, which
+     * decides if the login screen offers that fallback at all.
+     */
+    val supportsEmailLogin: Boolean = authentication is EmailPasswordAuthentication
+
+    /**
+     * Sign in with email and password instead of Google. Useful where Google's identity
+     * endpoints are unreachable but the configured backend is not.
+     */
+    fun loginWithEmail(email: String, password: String) {
+        val emailAuth = authentication as? EmailPasswordAuthentication
+        if (emailAuth == null) {
+            Log.e(TAG, "Email login requested but ${authentication::class.simpleName} does not support it")
+            viewModelScope.launch { _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_login_failed)) }
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                emailAuth.loginWithEmail(email, password)
+            } catch (e: Exception) {
+                Log.e(TAG, "Email login error: ${e.message}", e)
                 _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_login_failed))
             }
         }
@@ -177,13 +260,6 @@ class AuthViewModel(
         }
     }
 
-    /**
-     * Refresh user profile from Supabase
-     */
-    fun refreshUserProfile() {
-        loadUserProfile()
-    }
-
     fun getToken() {
         viewModelScope.launch {
             authentication.getToken()
@@ -194,6 +270,9 @@ class AuthViewModel(
 /**
  * UI events for authentication and profile operations
  */
+/** The server couldn't be reached while loading the study config. */
+data class ServerUnreachable(val hasCachedConfig: Boolean)
+
 sealed class AuthUiEvent {
     data class ShowError(val messageResId: Int) : AuthUiEvent()
 }

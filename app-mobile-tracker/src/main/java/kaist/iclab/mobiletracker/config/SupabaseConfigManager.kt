@@ -49,11 +49,6 @@ class SupabaseConfigManager(context: Context) {
     fun getCustomUrlRaw(): String = prefs.getString(KEY_CUSTOM_URL, "") ?: ""
 
     /**
-     * Gets the raw fetched Anon Key (can be empty if never successfully fetched).
-     */
-    fun getFetchedAnonKeyRaw(): String = prefs.getString(KEY_FETCHED_ANON_KEY, "") ?: ""
-
-    /**
      * Fetches the Anonymous Key from the server-side edge function at
      * `"$url/functions/v1/anon_key"`. The endpoint requires no authentication
      * (it's the bootstrap source of the key itself) and returns the key as a
@@ -71,7 +66,11 @@ class SupabaseConfigManager(context: Context) {
             val code = conn.responseCode
             if (code == 200) {
                 val key = conn.inputStream.bufferedReader().use { it.readText() }.trim()
-                if (key.isNotBlank()) Result.success(key) else Result.failure(IllegalStateException("Empty anon key response"))
+                if (key.isNotBlank()) Result.success(key) else Result.failure(
+                    IllegalStateException(
+                        "Empty anon key response"
+                    )
+                )
             } else {
                 Result.failure(IllegalStateException("HTTP $code"))
             }
@@ -126,10 +125,4 @@ class SupabaseConfigManager(context: Context) {
         }
     }
 
-    /**
-     * Clears any custom configuration, reverting back to the defaults.
-     */
-    fun clearCustomCredentials() {
-        prefs.edit(commit = true) { clear() }
-    }
 }

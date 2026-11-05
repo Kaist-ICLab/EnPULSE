@@ -9,6 +9,7 @@ import android.util.Log
 import android.webkit.WebSettings
 import android.webkit.WebView
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.core.net.toUri
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
@@ -69,7 +70,8 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
 
     private val permissionHelper = WebAppPermissionHelper(this) { b64 ->
         if (::webView.isInitialized) {
-            val js = "window.dispatchEvent(new MessageEvent('message', { data: decodeURIComponent(escape(window.atob('$b64'))) }));"
+            val js =
+                "window.dispatchEvent(new MessageEvent('message', { data: decodeURIComponent(escape(window.atob('$b64'))) }));"
             webView.evaluateJavascript(js, null)
         }
     }
@@ -93,14 +95,21 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         // Validate URL host against allowedOrigin to prevent phishing/spoofing attacks from malicious intents
         val intentHost = try {
             url.toUri().host
-        } catch (_: Exception) { null }
+        } catch (_: Exception) {
+            null
+        }
 
         val allowedHost = try {
             webApp.allowedOrigin.toUri().host
-        } catch (_: Exception) { null }
-        
+        } catch (_: Exception) {
+            null
+        }
+
         if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
-            Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
+            Log.e(
+                TAG,
+                "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL."
+            )
             url = webApp.url
         }
 
@@ -108,7 +117,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.cacheMode = WebSettings.LOAD_NO_CACHE
-            settings.supportMultipleWindows() // Enable support for multiple windows / target="_blank"
+            settings.setSupportMultipleWindows(true)
             webViewClient = RestrictedWebViewClient(webApp.allowedOrigin) {
                 if (!canGoBack()) {
                     finish()
@@ -125,12 +134,13 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
             webChromeClient = ExternalLinkWebChromeClient()
         }
         setContentView(webView)
-        
+
         val appBridgeHandler = AppBridgeHandler(this) { finish() }
-        
-        val permissionBridgeHandler = PermissionBridgeHandler(this, permissionManager) { permissions, request ->
-            permissionHelper.requestPermissions(permissions, request)
-        }
+
+        val permissionBridgeHandler =
+            PermissionBridgeHandler(this, permissionManager) { permissions, request ->
+                permissionHelper.requestPermissions(permissions, request)
+            }
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             val sanitizedOrigin = try {
@@ -165,7 +175,11 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
                     )
                 )
             } catch (e: IllegalArgumentException) {
-                Log.e(TAG, "Failed to add web message listener for origin '$sanitizedOrigin': ${e.message}", e)
+                Log.e(
+                    TAG,
+                    "Failed to add web message listener for origin '$sanitizedOrigin': ${e.message}",
+                    e
+                )
             }
         } else {
             Log.e(TAG, "WEB_MESSAGE_LISTENER unsupported on this WebView; native bridge disabled")
@@ -181,6 +195,14 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         } else {
             loadedUrl = url
             webView.loadUrl(url)
+        }
+
+        onBackPressedDispatcher.addCallback(this) {
+            if (::webView.isInitialized && webView.canGoBack()) {
+                webView.goBack()
+            } else {
+                finish()
+            }
         }
     }
 
@@ -202,17 +224,31 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
 
         var url = originalUrl
         if (url != null && webApp != null) {
-            val intentHost = try { url.toUri().host } catch (_: Exception) { null }
-            val allowedHost = try { webApp.allowedOrigin.toUri().host } catch (_: Exception) { null }
+            val intentHost = try {
+                url.toUri().host
+            } catch (_: Exception) {
+                null
+            }
+            val allowedHost = try {
+                webApp.allowedOrigin.toUri().host
+            } catch (_: Exception) {
+                null
+            }
             if (intentHost == null || allowedHost == null || intentHost != allowedHost) {
-                Log.e(TAG, "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL.")
+                Log.e(
+                    TAG,
+                    "Security Warning: Requested URL host ($intentHost) does not match allowed origin ($allowedHost). Falling back to registered URL."
+                )
                 url = webApp.url
             }
         }
 
         if (url != null && ::webView.isInitialized) {
             if (url == loadedUrl) {
-                Log.d(TAG, "Received new intent for the same URL as before; keeping existing WebView state")
+                Log.d(
+                    TAG,
+                    "Received new intent for the same URL as before; keeping existing WebView state"
+                )
             } else {
                 Log.d(TAG, "Received new intent, reloading WebView with new URL: $url")
                 loadedUrl = url

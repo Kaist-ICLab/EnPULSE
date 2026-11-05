@@ -15,6 +15,12 @@ interface SensorUploadHandler {
     val displayName: String
 
     /**
+     * Whether this sensor only uploads while it's in the joined campaign's active sensor set.
+     * False for data the app captures regardless of the campaign, like survey responses.
+     */
+    val isCampaignGated: Boolean get() = true
+
+    /**
      * Check if there is data available to upload.
      * @param lastUploadCursor Opaque upload-progress cursor from the last successful upload (its
      * meaning is defined by the implementation — e.g. [SensorUploadHandlerImpl] uses the local

@@ -32,6 +32,11 @@
     <string name="about_description">A mobile tracking application for research data collection</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_with_email">Sign in with email</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_email_submit">Sign in</string>
+    <string name="login_use_google_instead">Use Google instead</string>
     <string name="login_not_configured_error">Please configure the server connection first.</string>
 
     <!-- Enable Tracker -->
@@ -47,8 +52,6 @@
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE Logo</string>
-    <string name="language_english">English</string>
-    <string name="language_korean">한국어</string>
 
     <!-- Settings Menu -->
     <string name="menu_account">Account</string>
@@ -83,26 +86,16 @@
     <string name="web_apps_empty_config">No webapps have been registered yet.</string>
     <string name="web_app_add_to_home">Add to Home</string>
     <string name="permission_screen_description">Grant the permissions for the data you wish to track. Denying a permission will simply disable tracking for that specific sensor without affecting the rest of the app.</string>
-    <string name="restricted_settings_title">Restricted Settings</string>
-    <string name="restricted_settings_desc">Since you installed this app manually, Android restricts this setting.\n\nTo enable it:\n1. Go to App Info (we\'ll open it for you)\n2. Tap the top-right menu (3 dots)\n3. Select \'Allow restricted settings\'\n4. Return here to enable the permission.</string>
-    <string name="restricted_settings_got_it">Got it</string>
-    <string name="restricted_settings_cancel">Cancel</string>
 
     <!-- Permission Names -->
     <string name="permission_name_notifications">Notifications</string>
     <string name="permission_name_location">Location</string>
     <string name="permission_name_background_location">Background Location</string>
-    <string name="permission_name_contacts">Contacts</string>
-    <string name="permission_name_camera">Camera</string>
     <string name="permission_name_microphone">Microphone</string>
     <string name="permission_name_storage">Storage</string>
     <string name="permission_name_media_images">Media Images</string>
     <string name="permission_name_media_video">Media Video</string>
     <string name="permission_name_media_audio">Media Audio</string>
-    <string name="permission_name_calendar">Calendar</string>
-    <string name="permission_name_body_sensors">Body Sensors</string>
-    <string name="permission_name_accessibility">Accessibility</string>
-    <string name="permission_name_notification_listener">Notification Listener</string>
     <string name="permission_name_usage_stats">Usage Stats</string>
     <string name="permission_name_activity_recognition">Activity Recognition</string>
     <string name="permission_name_steps">Physical Activity (Steps)</string>
@@ -114,18 +107,12 @@
     <string name="permission_desc_notifications">Allow app to send notifications</string>
     <string name="permission_desc_location">Access device location data</string>
     <string name="permission_desc_background_location">Access location data in background</string>
-    <string name="permission_desc_contacts">Read contact information data</string>
-    <string name="permission_desc_camera">Take photos and record videos</string>
     <string name="permission_desc_microphone">Record audio from microphone</string>
     <string name="permission_desc_storage">Access device storage files</string>
     <string name="permission_desc_media_images">Access images stored on device</string>
     <string name="permission_desc_media_video">Access videos stored on device</string>
     <string name="permission_desc_media_audio">Access audio files stored on device</string>
-    <string name="permission_desc_calendar">Read calendar events and data</string>
     <string name="permission_desc_activity_recognition">Recognize user physical activity</string>
-    <string name="permission_desc_body_sensors">Access body sensor data</string>
-    <string name="permission_desc_accessibility">Monitor user interaction events</string>
-    <string name="permission_desc_notification_listener">Read notification content</string>
     <string name="permission_desc_usage_stats">Collect app usage statistics</string>
     <string name="permission_desc_steps">Read step count data</string>
     <string name="permission_desc_sleep">Read sleep session data from Samsung Health</string>
@@ -156,8 +143,6 @@
     <string name="sensor_detail_total_records">Total Records</string>
     <string name="sensor_detail_today">Today</string>
     <string name="sensor_detail_last_recorded">Last Recorded</string>
-    <string name="sensor_detail_upload_success_rate">Upload Success Rate</string>
-    <string name="sensor_detail_upload_success_rate_value">%1$d / %2$d (%3$d%%)</string>
     <string name="sensor_detail_raw_data">All Recorded Data</string>
     <string name="sensor_detail_no_records">No records found</string>
     <string name="data_screen_last_recorded_none">No data</string>
@@ -183,12 +168,19 @@
 
     <string name="sensor_survey">Survey</string>
     <string name="sensor_desc_survey">User survey responses</string>
+    <string name="sensor_vad">VAD</string>
 
     <string name="menu_reload_config">Reload &amp; Sync Config</string>
     <string name="menu_reload_config_desc">Refresh config from server and sync between phone and watch</string>
     <string name="reload_config_dialog_title">Reload &amp; Sync Configuration</string>
     <string name="reload_config_dialog_message">Are you sure you want to reload? This will fetch the latest settings for your current campaign.\n\nPlease make sure to connect the watch, keep it nearby, and disable data collection on the watch so the configuration can be applied to the watch as well.</string>
     <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_server_unreachable">Can\'t reach the EnPULSE server. Check your internet connection or try again later.</string>
+    <string name="server_unreachable_title">Can\'t reach the server</string>
+    <string name="server_unreachable_message">EnPULSE couldn\'t download your study configuration. Check your internet connection and try again.</string>
+    <string name="server_unreachable_message_cached">EnPULSE couldn\'t update your study configuration. Check your internet connection and try again, or tap outside this message to keep using the saved configuration.</string>
+    <string name="server_unreachable_retry">Retry</string>
+    <string name="server_unreachable_exit">Exit</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
     <string name="menu_leave_campaign">Leave Campaign</string>
@@ -196,6 +188,8 @@
     <string name="leave_campaign_dialog_title">Leave Campaign</string>
     <string name="leave_campaign_dialog_message">Are you sure you want to leave? Your campaign configuration will be removed and data collection will stop. You can join a campaign again anytime.</string>
     <string name="toast_campaign_left">You have left the campaign</string>
+    <string name="toast_campaign_left_sync_failed">You left the campaign, but this phone couldn\'t update. Tap Reload &amp; Sync Config.</string>
+    <string name="toast_config_download_failed">Couldn\'t download the campaign. Check the connection and try again.</string>
 
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">Light sensor data</string>
@@ -203,17 +197,13 @@
     <string name="sensor_desc_app_usage">App activity tracking</string>
     <string name="sensor_desc_battery">Battery status information</string>
     <string name="sensor_desc_bluetooth">Bluetooth device state</string>
-    <string name="sensor_desc_call_log">Call history records</string>
     <string name="sensor_desc_data_traffic">Network data usage</string>
     <string name="sensor_desc_device_mode">Device state changes</string>
     <string name="sensor_desc_location">GPS location tracking</string>
     <string name="sensor_desc_media">Media playback activity</string>
-    <string name="sensor_desc_message">SMS and MMS messages</string>
     <string name="sensor_desc_connectivity">Network connectivity status</string>
-    <string name="sensor_desc_notification">Notification events</string>
     <string name="sensor_desc_screen">Screen on/off state</string>
     <string name="sensor_desc_step">Step count data</string>
-    <string name="sensor_desc_user_interaction">User touch events</string>
     <string name="sensor_desc_wifi">WiFi connection status</string>
     <string name="sensor_desc_imu">Watch IMU sensor data</string>
     <string name="sensor_desc_gesture">Watch gesture recognition data</string>
@@ -224,13 +214,13 @@
     <string name="sensor_desc_default">Sensor data collection</string>
     <string name="sensor_desc_activity_recognition">Recognize user physical activity</string>
     <string name="sensor_desc_web_app_log">Event logs collected from webapp usage</string>
+    <string name="sensor_desc_vad">Voice Activity Detection via Microphone</string>
     <!-- Watch Sensor Descriptions -->
     <string name="sensor_desc_accelerometer">3-axis accelerometer data</string>
     <string name="sensor_desc_ppg">Blood pulse data measured with green, red, and infrared light</string>
     <string name="sensor_desc_heart_rate">Heart rate measurement</string>
     <string name="sensor_desc_skin_temperature">Skin temperature measurement</string>
     <string name="sensor_desc_eda">Galvanic skin response based on sweat</string>
-    <string name="sensor_desc_audio">Audio signal</string>
 
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
@@ -292,17 +282,13 @@
     <string name="sensor_app_usage">App Usage Log</string>
     <string name="sensor_battery">Battery</string>
     <string name="sensor_bluetooth_scan">Bluetooth Scan</string>
-    <string name="sensor_call_log">Call Log</string>
     <string name="sensor_data_traffic">Data Traffic</string>
     <string name="sensor_device_mode">Device Mode</string>
     <string name="sensor_location">Location</string>
     <string name="sensor_media">Media</string>
-    <string name="sensor_message">Message</string>
     <string name="sensor_connectivity">Connectivity</string>
-    <string name="sensor_notification">Notification</string>
     <string name="sensor_screen">Screen</string>
     <string name="sensor_step">Step</string>
-    <string name="sensor_user_interaction">User Interaction</string>
     <string name="sensor_wifi_scan">Wifi Scan</string>
     <string name="sensor_imu">IMU</string>
     <string name="sensor_gesture">Gesture</string>
@@ -321,7 +307,6 @@
     <string name="toast_sensor_data_uploaded">Data uploaded successfully</string>
     <string name="toast_sensor_data_upload_error">Failed to upload sensor data</string>
     <string name="toast_no_data_to_upload">No new data to upload. All data has already been uploaded.</string>
-    <string name="toast_upload_all_summary">Successfully uploaded %1$d sensor(s)</string>
     <string name="sensor_upload_data_confirm">Upload Sensor Data</string>
     <string name="sensor_upload_data_message">Are you sure you want to upload all stored data for this sensor to the server?</string>
 
@@ -333,7 +318,6 @@
 
     <string name="toast_no_data_to_export">No data to export</string>
     <string name="toast_export_failed">Failed to export data</string>
-    <string name="toast_request_timeout">Request timed out. Please check your connection and try again.</string>
     <string name="sensor_export_csv">Export CSV</string>
 
     <!-- Onboarding Screen -->
@@ -364,8 +348,6 @@
     <string name="server_config_title">Server Configuration</string>
     <string name="server_config_description">Set a custom Supabase backend URL and Anonymous Key.</string>
     <string name="server_config_url_label">Supabase URL</string>
-    <string name="server_config_key_label">Supabase Anon Key</string>
-    <string name="server_config_save">Save and Connect</string>
     <string name="server_config_save_restart">Save and Restart App</string>
     <string name="server_config_current_title">Current Active Connection:</string>
     <string name="server_config_current_url">URL: %1$s</string>
@@ -385,7 +367,6 @@
 
     <!-- Data Upload Dialog -->
     <string name="upload_dialog_title">Uploading Data</string>
-    <string name="upload_dialog_status">Uploading %1$s…</string>
     <string name="upload_dialog_progress">%1$d / %2$d</string>
     <string name="upload_dialog_progress_sensor">%1$s · %2$d of %3$d</string>
     <string name="upload_complete_title">Upload Complete</string>
@@ -396,7 +377,6 @@
     <string name="ok">OK</string>
 
     <string name="permission_instruction_title">Action Required</string>
-    <string name="grant_permissions_in_menu_first">Please grant permissions in the Permissions menu first.</string>
 
     <!-- WebView Error Strings -->
     <string name="webview_failed_to_load">Failed to load</string>

@@ -10,19 +10,16 @@ data class DailySensorCounts(
     val locationCount: Int = 0,
     val appUsageCount: Int = 0,
     val activityCount: Int = 0,
+    val stepCount: Int = 0,
     val batteryCount: Int = 0,
-    val notificationCount: Int = 0,
     val screenCount: Int = 0,
     val connectivityCount: Int = 0,
     val bluetoothCount: Int = 0,
     val ambientLightCount: Int = 0,
     val appListChangeCount: Int = 0,
-    val callLogCount: Int = 0,
     val dataTrafficCount: Int = 0,
     val deviceModeCount: Int = 0,
     val mediaCount: Int = 0,
-    val messageLogCount: Int = 0,
-    val userInteractionCount: Int = 0,
     val wifiScanCount: Int = 0,
     val exerciseCount: Int = 0,
     val sleepCount: Int = 0,
@@ -35,7 +32,8 @@ data class DailySensorCounts(
     val watchIMUCount: Int = 0,
     val watchGestureCount: Int = 0,
     val watchStressCount: Int = 0,
-    val ecgCount: Int = 0
+    val ecgCount: Int = 0,
+    val vadCount: Int = 0
 )
 
 /**

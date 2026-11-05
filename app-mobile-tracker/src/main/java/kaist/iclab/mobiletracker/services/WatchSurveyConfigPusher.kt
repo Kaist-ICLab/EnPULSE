@@ -41,24 +41,30 @@ class WatchSurveyConfigPusher(
     /**
      * Filter watch survey configs and send them to the watch via BLE.
      *
-     * @param surveyConfigs Survey configs fetched from Supabase (only deviceType=1 with a
-     *   non-null expireAfterMs are sent — the same filter `TriggerConfigPusher` used to apply).
+     * @param surveyConfigs Survey configs fetched from Supabase (only deviceType=1 are sent; a
+     *   missing expiry gets [MicroEmaBuilder.DEFAULT_EXPIRE_AFTER_MS]).
      */
     suspend fun pushToWatch(surveyConfigs: List<SurveyConfig>) {
         try {
             val watchSurveyConfigs = surveyConfigs
-                .filter { it.deviceType == 1 && it.expireAfterMs != null }
+                .filter { it.deviceType == 1 }
                 .associate { survey ->
                     val watchConfig = MicroEmaBuilder.build(survey)
                     watchConfig.surveyId to watchConfig
                 }
 
+            // Still send an empty payload rather than returning early: WatchSurveyConfigReceiver
+            // replaces its whole cache on receipt, so a campaign with no watch surveys (or
+            // switched away from one that had them) needs this push to clear the previous
+            // campaign's surveys — otherwise the watch keeps showing them indefinitely.
             if (watchSurveyConfigs.isEmpty()) {
-                Log.w(TAG, "No watch survey configs to push")
-                return
+                Log.w(TAG, "No watch survey configs for this campaign; pushing an empty list")
             }
 
-            val payload = WatchSurveyConfigPayload(surveyConfigs = watchSurveyConfigs)
+            val payload = WatchSurveyConfigPayload(
+                surveyConfigs = watchSurveyConfigs,
+                pushedAt = System.currentTimeMillis()
+            )
             val payloadJson = json.encodeToString(WatchSurveyConfigPayload.serializer(), payload)
 
             Log.d(TAG, "Pushing ${watchSurveyConfigs.size} watch survey config(s) to watch")
@@ -81,5 +87,11 @@ class WatchSurveyConfigPusher(
  */
 @Serializable
 data class WatchSurveyConfigPayload(
-    val surveyConfigs: Map<Int, WatchSurveyConfig>
+    val surveyConfigs: Map<Int, WatchSurveyConfig>,
+    /**
+     * When the phone sent this push. Each push is its own Data Layer item, so pushes queued while
+     * the watch was away arrive together on reconnect in no fixed order; the watch uses this to
+     * ignore one older than what it already applied.
+     */
+    val pushedAt: Long = 0L
 )

@@ -111,14 +111,15 @@ class SyncTimestampService(context: Context) {
      * (a local row id) minus [UploadStats.quarantinedRecordCount] (batches given up on, not
      * uploaded) — no separate counter to keep in lockstep with every upload success site. This only
      * works because ids are assigned sequentially per box and this app never prunes data, so
-     * "highest id processed" and "records processed" stay equal. Doesn't apply to Survey/WebAppLog,
-     * which track "already uploaded" per row via an `isSynced` flag instead of a cursor — see
-     * [kaist.iclab.mobiletracker.repository.handlers.SurveyResponseDataHandler.getUploadedRecordCount]/
+     * "highest id processed" and "records processed" stay equal. Doesn't apply to WebAppLog, which
+     * tracks "already uploaded" per row via an `isSynced` flag instead of a cursor — see
      * [kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler.getUploadedRecordCount],
-     * which count that directly instead.
+     * which counts that directly instead.
      */
     fun getUploadedRecordCountFromCursor(sensorId: String): Long =
-        (getUploadCursor(sensorId) - getUploadStats(sensorId).quarantinedRecordCount).coerceAtLeast(0L)
+        (getUploadCursor(sensorId) - getUploadStats(sensorId).quarantinedRecordCount).coerceAtLeast(
+            0L
+        )
 
     /**
      * How many consecutive upload cycles have ended in a [kaist.iclab.mobiletracker.repository.AppError.ServerRejected]
@@ -128,9 +129,11 @@ class SyncTimestampService(context: Context) {
      * quarantine logic. Reset to 0 whenever a cycle succeeds or the cursor moves past where it was
      * last recorded (both mean this exact spot is no longer stuck).
      */
-    fun getUploadFailureStreak(sensorId: String): Int = prefs.getInt("upload_failure_streak_$sensorId", 0)
+    fun getUploadFailureStreak(sensorId: String): Int =
+        prefs.getInt("upload_failure_streak_$sensorId", 0)
 
-    private fun getUploadFailureCursor(sensorId: String): Long = prefs.getLong("upload_failure_cursor_$sensorId", -1L)
+    private fun getUploadFailureCursor(sensorId: String): Long =
+        prefs.getLong("upload_failure_cursor_$sensorId", -1L)
 
     /**
      * Records that [sensorId]'s upload failed with a server rejection while stuck at [cursor].
@@ -138,7 +141,8 @@ class SyncTimestampService(context: Context) {
      * only if the *same* [cursor] fails again — a cursor that has moved on gets a fresh streak).
      */
     fun recordUploadFailureAtCursor(sensorId: String, cursor: Long): Int {
-        val streak = if (getUploadFailureCursor(sensorId) == cursor) getUploadFailureStreak(sensorId) + 1 else 1
+        val streak =
+            if (getUploadFailureCursor(sensorId) == cursor) getUploadFailureStreak(sensorId) + 1 else 1
         prefs.edit {
             putLong("upload_failure_cursor_$sensorId", cursor)
             putInt("upload_failure_streak_$sensorId", streak)
@@ -185,12 +189,19 @@ class SyncTimestampService(context: Context) {
      * @param quarantinedRecordCount How many records were in the quarantined batch (0 when
      * [succeededBatches] is being recorded instead).
      */
-    fun addUploadStats(sensorId: String, succeededBatches: Int = 0, quarantinedRecordCount: Int = 0) {
+    fun addUploadStats(
+        sensorId: String,
+        succeededBatches: Int = 0,
+        quarantinedRecordCount: Int = 0
+    ) {
         if (succeededBatches == 0 && quarantinedRecordCount == 0) return
         val current = getUploadStats(sensorId)
         prefs.edit {
             if (succeededBatches != 0) {
-                putLong("upload_succeeded_batches_$sensorId", current.succeededBatches + succeededBatches)
+                putLong(
+                    "upload_succeeded_batches_$sensorId",
+                    current.succeededBatches + succeededBatches
+                )
             }
             if (quarantinedRecordCount != 0) {
                 putLong("upload_quarantined_batches_$sensorId", current.quarantinedBatches + 1)
@@ -275,18 +286,6 @@ class SyncTimestampService(context: Context) {
     }
 
     /**
-     * Get formatted last phone sensor data timestamp
-     */
-    fun getLastPhoneSensorData(): String? {
-        val timestamp = prefs.getLong(Constants.Prefs.KEY_LAST_PHONE_SENSOR, 0L)
-        return if (timestamp > 0) {
-            DateTimeFormatter.formatTimestampShort(timestamp)
-        } else {
-            null
-        }
-    }
-
-    /**
      * Get formatted last successful upload timestamp
      */
     fun getLastSuccessfulUpload(): String? {
@@ -309,7 +308,6 @@ class SyncTimestampService(context: Context) {
             null
         }
     }
-
 
     /**
      * Clear the last successful upload timestamp AND upload cursor for a specific sensor (e.g.
@@ -337,43 +335,15 @@ class SyncTimestampService(context: Context) {
         val allKeys = prefs.all.keys
         val keysToRemove = allKeys.filter {
             it.startsWith("last_upload_") || it.startsWith("upload_cursor_id_") ||
-                it.startsWith("upload_failure_cursor_") || it.startsWith("upload_failure_streak_") ||
-                it.startsWith("uploaded_record_count_") ||
-                it.startsWith("upload_succeeded_batches_") || it.startsWith("upload_quarantined_batches_") ||
-                it.startsWith("upload_quarantined_records_")
+                    it.startsWith("upload_failure_cursor_") || it.startsWith("upload_failure_streak_") ||
+                    it.startsWith("uploaded_record_count_") ||
+                    it.startsWith("upload_succeeded_batches_") || it.startsWith("upload_quarantined_batches_") ||
+                    it.startsWith("upload_quarantined_records_")
         }
         val editor = existingEditor ?: prefs.edit()
         keysToRemove.forEach { editor.remove(it) }
         if (existingEditor == null) {
             editor.apply()
-        }
-    }
-
-    /**
-     * Clear all sync-related timestamps.
-     * This includes:
-     * - All per-sensor upload timestamps
-     * - Global last successful upload
-     * - Last watch data received
-     * - Last phone sensor data
-     * - Data collection started
-     */
-    fun clearAllSyncTimestamps() {
-        prefs.edit {
-
-            // Clear all per-sensor upload timestamps using the same editor
-            clearAllSensorUploadTimestamps(this)
-
-            // Clear global upload timestamp
-            remove(Constants.Prefs.KEY_LAST_SUCCESSFUL_UPLOAD)
-
-            // Clear last received timestamps
-            remove(Constants.Prefs.KEY_LAST_WATCH_DATA)
-            remove(Constants.Prefs.KEY_LAST_PHONE_SENSOR)
-
-            // Clear data collection started
-            remove(Constants.Prefs.KEY_DATA_COLLECTION_STARTED)
-
         }
     }
 

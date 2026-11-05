@@ -21,7 +21,8 @@ data class SensorInfo(
 ) {
     /** `null` until the first upload attempt for this sensor. */
     val uploadedPercent: Int?
-        get() = if (recordCount == 0) null else ((uploadedRecordCount * 100) / recordCount).toInt().coerceAtMost(100)
+        get() = if (recordCount == 0) null else ((uploadedRecordCount * 100) / recordCount).toInt()
+            .coerceAtMost(100)
 }
 
 /**
@@ -181,7 +182,10 @@ interface DataRepository {
      * progress bar. Survey and webapp logs flush in one go and report a single batch.
      * @return How many records this call actually got uploaded, out of how many it attempted.
      */
-    suspend fun uploadSensorData(sensorId: String, onBatchUploaded: suspend () -> Unit = {}): SensorUploadOutcome
+    suspend fun uploadSensorData(
+        sensorId: String,
+        onBatchUploaded: suspend () -> Unit = {}
+    ): SensorUploadOutcome
 
     /**
      * Get the last sync timestamp for a sensor.

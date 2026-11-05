@@ -1,5 +1,7 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
+import kotlinx.coroutines.CancellationException
+import android.util.Log
 import android.Manifest
 import android.content.Context
 import android.content.pm.ServiceInfo
@@ -45,8 +47,7 @@ class AudioSensor(
     companion object {
         private const val AUDIO_SAMPLE_RATE = 16000
         private const val READ_CHUNK_SIZE = 320
-        private const val DOWNSAMPLE_STEP = 16
-        private const val OUTPUT_SAMPLE_RATE = AUDIO_SAMPLE_RATE / DOWNSAMPLE_STEP
+        private const val OUTPUT_SAMPLE_RATE = AUDIO_SAMPLE_RATE
     }
 
     @Serializable
@@ -59,7 +60,7 @@ class AudioSensor(
         val received: Long,
         val timestamp: Long,
         val sampleRateHz: Int,
-        val samples: List<Short>,
+        val samples: ShortArray,
     ) : SensorEntity()
 
     override val id: String = "Audio"
@@ -108,24 +109,28 @@ class AudioSensor(
         repositoryScope = scope
         recordingJob = scope.launch {
             val readBuffer = ShortArray(READ_CHUNK_SIZE)
-            val downsampledBuffer = ShortArray(READ_CHUNK_SIZE / DOWNSAMPLE_STEP)
 
             while (currentCoroutineContext().isActive) {
-                val readCount = audioRecord?.read(readBuffer, 0, READ_CHUNK_SIZE) ?: -1
-                if (readCount <= 0) continue
+                // Listeners (gesture classification) run inside this loop, which has no
+                // exception handler: an escaped exception would crash the app. Log it and keep
+                // reading. Cancellation (onStop) still ends the loop.
+                try {
+                    val readCount = audioRecord?.read(readBuffer, 0, READ_CHUNK_SIZE) ?: -1
+                    if (readCount <= 0) continue
 
-                for (index in readBuffer.indices step DOWNSAMPLE_STEP) {
-                    downsampledBuffer[index / DOWNSAMPLE_STEP] = readBuffer[index]
+                    val timestamp = System.currentTimeMillis()
+                    val entity = Entity(
+                        received = timestamp,
+                        timestamp = timestamp,
+                        sampleRateHz = OUTPUT_SAMPLE_RATE,
+                        samples = readBuffer.copyOfRange(0, readCount)
+                    )
+                    listeners.forEach { it.invoke(entity) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(name, "Audio read failed; continuing", e)
                 }
-
-                val timestamp = System.currentTimeMillis()
-                val entity = Entity(
-                    received = timestamp,
-                    timestamp = timestamp,
-                    sampleRateHz = OUTPUT_SAMPLE_RATE,
-                    samples = downsampledBuffer.toList()
-                )
-                listeners.forEach { it.invoke(entity) }
             }
         }
     }

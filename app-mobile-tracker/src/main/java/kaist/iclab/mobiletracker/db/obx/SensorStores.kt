@@ -8,18 +8,16 @@ import kaist.iclab.mobiletracker.db.entity.phone.AppListChangeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.AppUsageLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BatteryEntity
 import kaist.iclab.mobiletracker.db.entity.phone.BluetoothScanEntity
-import kaist.iclab.mobiletracker.db.entity.phone.CallLogEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ConnectivityEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DataTrafficEntity
 import kaist.iclab.mobiletracker.db.entity.phone.DeviceModeEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ExerciseEntity
 import kaist.iclab.mobiletracker.db.entity.phone.MediaEntity
-import kaist.iclab.mobiletracker.db.entity.phone.MessageLogEntity
-import kaist.iclab.mobiletracker.db.entity.phone.NotificationEntity
 import kaist.iclab.mobiletracker.db.entity.phone.ScreenEntity
 import kaist.iclab.mobiletracker.db.entity.phone.SleepEntity
 import kaist.iclab.mobiletracker.db.entity.phone.StepEntity
-import kaist.iclab.mobiletracker.db.entity.phone.UserInteractionEntity
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
+import kaist.iclab.mobiletracker.db.entity.phone.VADEntity
 import kaist.iclab.mobiletracker.db.entity.phone.WifiScanEntity
 import kaist.iclab.mobiletracker.db.entity.watch.AccelerometerEntity
 import kaist.iclab.mobiletracker.db.entity.watch.ECGEntity
@@ -27,8 +25,8 @@ import kaist.iclab.mobiletracker.db.entity.watch.EDAEntity
 import kaist.iclab.mobiletracker.db.entity.watch.HeartRateEntity
 import kaist.iclab.mobiletracker.db.entity.watch.PPGEntity
 import kaist.iclab.mobiletracker.db.entity.watch.SkinTemperatureEntity
-import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchGestureEntity
+import kaist.iclab.mobiletracker.db.entity.watch.WatchIMUEntity
 import kaist.iclab.mobiletracker.db.entity.watch.WatchStressEntity
 
 /**
@@ -43,18 +41,18 @@ class SensorStores(boxStore: BoxStore) {
     val appUsageLog = SensorStore(boxStore, AppUsageLogEntity::class.java)
     val battery = SensorStore(boxStore, BatteryEntity::class.java)
     val bluetoothScan = SensorStore(boxStore, BluetoothScanEntity::class.java)
-    val callLog = SensorStore(boxStore, CallLogEntity::class.java)
     val connectivity = SensorStore(boxStore, ConnectivityEntity::class.java)
     val dataTraffic = SensorStore(boxStore, DataTrafficEntity::class.java)
     val deviceMode = SensorStore(boxStore, DeviceModeEntity::class.java)
-    val exercise = SensorStore(boxStore, ExerciseEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
+    val exercise =
+        SensorStore(boxStore, ExerciseEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
     val media = SensorStore(boxStore, MediaEntity::class.java)
-    val messageLog = SensorStore(boxStore, MessageLogEntity::class.java)
-    val notification = SensorStore(boxStore, NotificationEntity::class.java)
     val screen = SensorStore(boxStore, ScreenEntity::class.java)
-    val sleep = SensorStore(boxStore, SleepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
-    val step = SensorStore(boxStore, StepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
-    val userInteraction = SensorStore(boxStore, UserInteractionEntity::class.java)
+    val sleep =
+        SensorStore(boxStore, SleepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
+    val step =
+        SensorStore(boxStore, StepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
+    val vad = SensorStore(boxStore, VADEntity::class.java)
     val wifiScan = SensorStore(boxStore, WifiScanEntity::class.java)
 
     // Shared between phone-native GPS fixes and watch-forwarded rows. Both always carry a real,
@@ -72,4 +70,12 @@ class SensorStores(boxStore: BoxStore) {
     val watchGesture = SensorStore(boxStore, WatchGestureEntity::class.java)
     val watchStress = SensorStore(boxStore, WatchStressEntity::class.java)
     val ecg = SensorStore(boxStore, ECGEntity::class.java)
+
+    // Phone survey answers and watch MicroEMA answers. The watch re-sends until ACKed, and
+    // survey_question_response is insert-only, so a resend must not get a fresh row id.
+    val surveyResponse = SensorStore(
+        boxStore,
+        SurveyResponseEntity::class.java,
+        dedupStrategy = DedupStrategy.KEEP_EXISTING_EVENT_ID
+    )
 }

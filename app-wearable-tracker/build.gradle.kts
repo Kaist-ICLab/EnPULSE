@@ -12,6 +12,7 @@ kotlin {
     jvmToolchain(17)
 }
 
+
 android {
     namespace = "kaist.iclab.wearabletracker"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -22,6 +23,11 @@ android {
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0.0"
+        // Galaxy Watches and supported phones are ARM; bundling x86/x86_64 libraries only
+        // inflated the APKs. armeabi-v7a stays for watches running a 32-bit userspace.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     signingConfigs {

@@ -54,8 +54,11 @@ class ECGEntity : BaseEntity, CsvSerializable, RecordSerializable {
         this.minThresholdMv = minThresholdMv
     }
 
-    override fun csvHeader() = "eventId,uuid,received,timestamp,ecgMv,leadOff,sequence,ppgGreen,maxThresholdMv,minThresholdMv"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$ecgMv,$leadOff,$sequence,$ppgGreen,$maxThresholdMv,$minThresholdMv"
+    override fun csvHeader() =
+        "eventId,uuid,received,timestamp,ecgMv,leadOff,sequence,ppgGreen,maxThresholdMv,minThresholdMv"
+
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$ecgMv,$leadOff,$sequence,$ppgGreen,$maxThresholdMv,$minThresholdMv"
 
     override fun toRecord() = SensorRecord(
         id = id,

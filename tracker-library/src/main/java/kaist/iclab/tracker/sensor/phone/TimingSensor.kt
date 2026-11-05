@@ -23,6 +23,13 @@ import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.core.TimingScheduleStorage
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.math.roundToLong
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonArray
 import java.time.Instant
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
@@ -122,9 +129,30 @@ class TimingSensor(
         val schedules: List<TimingScheduleEntry> = emptyList()
     ) : SensorConfig {
         companion object {
+            private val json = Json { ignoreUnknownKeys = true }
+
             fun fromJson(jsonString: String): Config {
-                val schedules = Json.decodeFromString<List<TimingScheduleEntry>>(jsonString)
+                // A failure here makes callers fall back to an empty config, silently disabling
+                // every timing trigger in the campaign, so tolerate what the dashboard can send.
+                val element = roundDecimals(Json.parseToJsonElement(jsonString))
+                val schedules = json.decodeFromJsonElement<List<TimingScheduleEntry>>(element)
                 return Config(schedules)
+            }
+
+            /**
+             * Every number in a schedule is a whole number (milliseconds or counts), but campaigns
+             * saved before the dashboard rounded its minutes-to-milliseconds conversion can hold
+             * e.g. 66000.00000000001 for 1.1 minutes, which a Long field rejects. Round such values.
+             */
+            private fun roundDecimals(element: JsonElement): JsonElement = when (element) {
+                is JsonArray -> JsonArray(element.map { roundDecimals(it) })
+                is JsonObject -> JsonObject(element.mapValues { roundDecimals(it.value) })
+                is JsonPrimitive ->
+                    if (!element.isString && element.content.any { it == '.' || it == 'e' || it == 'E' }) {
+                        element.doubleOrNull?.let { JsonPrimitive(it.roundToLong()) } ?: element
+                    } else {
+                        element
+                    }
             }
         }
     }

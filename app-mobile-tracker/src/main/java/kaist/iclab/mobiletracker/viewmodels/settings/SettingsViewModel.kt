@@ -5,7 +5,6 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.services.AutoSyncManager
 import kaist.iclab.mobiletracker.services.SyncTimestampService
@@ -55,11 +54,6 @@ class SettingsViewModel(
     private val permissionManager: AndroidPermissionManager,
     private val syncTimestampService: SyncTimestampService,
     private val campaignSensorRepository: CampaignSensorRepository,
-//    private val bleHelper: BLEHelper,
-//    private val surveyService: SurveyService,
-//    private val campaignRepository: CampaignRepository,
-//    private val userProfileRepository: UserProfileRepository,
-//    private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
     private val autoSyncManager: AutoSyncManager
 ) : ViewModel() {
     companion object {
@@ -131,7 +125,7 @@ class SettingsViewModel(
         if (!allGranted) {
             // Automatically request the missing permissions
             permissionManager.request(sensor.permissions)
-            
+
             // Wait for permissions to be granted, then enable the sensor
             observePermissionFlow(
                 permissions = sensor.permissions,
@@ -146,7 +140,7 @@ class SettingsViewModel(
             )
             return
         }
-        
+
         try {
             sensor.enable()
         } catch (e: Exception) {

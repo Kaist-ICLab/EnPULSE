@@ -16,6 +16,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.core.content.ContextCompat
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.sensor.core.BaseSensor
@@ -100,21 +101,12 @@ class MediaSensor(
 
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     private val periodicScanIntent by lazy {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         PendingIntent.getBroadcast(
             context,
             REQUEST_CODE_MEDIA_SCAN_REQUEST,
-            Intent(ACTION_MEDIA_SCAN_REQUEST),
+            Intent(ACTION_MEDIA_SCAN_REQUEST).setPackage(context.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-//        } else {
-//            PendingIntent.getBroadcast(
-//                context,
-//                REQUEST_CODE_MEDIA_SCAN_REQUEST,
-//                Intent(ACTION_MEDIA_SCAN_REQUEST),
-//                PendingIntent.FLAG_UPDATE_CURRENT
-//            )
-//        }
     }
 
     private val receiver = object : BroadcastReceiver() {
@@ -130,11 +122,6 @@ class MediaSensor(
             "kaist.iclab.tracker.MediaSensor.ACTION_MEDIA_SCAN_REQUEST"
         private const val REQUEST_CODE_MEDIA_SCAN_REQUEST = 0x12
 
-        // Method to manually trigger periodic scan for testing
-        fun triggerPeriodicScan(context: Context) {
-            val intent = Intent(ACTION_MEDIA_SCAN_REQUEST)
-            context.sendBroadcast(intent)
-        }
     }
 
     init {
@@ -603,12 +590,7 @@ class MediaSensor(
                 addAction(ACTION_MEDIA_SCAN_REQUEST)
             }
 
-            // Handle Android 14+ (API 34+) receiver registration requirements
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
-            } else {
-                context.registerReceiver(receiver, filter)
-            }
+            ContextCompat.registerReceiver(context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
             val startTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(20)
             val interval = TimeUnit.MINUTES.toMillis(config.periodicScanIntervalMinutes)
@@ -631,11 +613,6 @@ class MediaSensor(
                 )
             )
         }
-    }
-
-    // Method to manually trigger periodic scan for testing
-    fun triggerPeriodicScanNow() {
-        handlePeriodicMediaScan()
     }
 
     override fun onStop() {

@@ -49,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,7 +71,6 @@ import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.ui.platform.LocalLocale
 
 /**
  * Sensor Detail screen - displays raw data for a specific sensor.
@@ -925,7 +925,10 @@ private fun DateRangePickerDialog(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = SimpleDateFormat("MMM d, yyyy", LocalLocale.current.platformLocale).format(
+                            text = SimpleDateFormat(
+                                "MMM d, yyyy",
+                                LocalLocale.current.platformLocale
+                            ).format(
                                 Date(
                                     startDate
                                 )
@@ -967,7 +970,10 @@ private fun DateRangePickerDialog(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = SimpleDateFormat("MMM d, yyyy", LocalLocale.current.platformLocale).format(
+                            text = SimpleDateFormat(
+                                "MMM d, yyyy",
+                                LocalLocale.current.platformLocale
+                            ).format(
                                 Date(
                                     endDate
                                 )

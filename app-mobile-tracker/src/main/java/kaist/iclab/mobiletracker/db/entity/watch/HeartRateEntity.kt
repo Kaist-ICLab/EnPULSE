@@ -57,16 +57,20 @@ class HeartRateEntity : BaseEntity, CsvSerializable, RecordSerializable {
         return "$eventId,$uuid,$received,$timestamp,$hr,$hrStatus,\"[$escapedIbi]\",\"[$escapedIbiStatus]\""
     }
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Heart Rate" to "$hr BPM", "Status" to hrStatus.toString()))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Heart Rate" to "$hr BPM", "Status" to hrStatus.toString())
+    )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is HeartRateEntity) return false
         return id == other.id && eventId == other.eventId && uuid == other.uuid &&
-            timestamp == other.timestamp && received == other.received &&
-            hr == other.hr && hrStatus == other.hrStatus &&
-            ibi.contentEquals(other.ibi) && ibiStatus.contentEquals(other.ibiStatus) &&
-            deviceType == other.deviceType
+                timestamp == other.timestamp && received == other.received &&
+                hr == other.hr && hrStatus == other.hrStatus &&
+                ibi.contentEquals(other.ibi) && ibiStatus.contentEquals(other.ibiStatus) &&
+                deviceType == other.deviceType
     }
 
     override fun hashCode(): Int {

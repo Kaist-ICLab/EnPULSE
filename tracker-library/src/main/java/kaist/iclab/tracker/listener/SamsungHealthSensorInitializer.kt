@@ -122,7 +122,6 @@ class SamsungHealthSensorInitializer(context: Context) {
         }
 
         override fun onError(trackerError: HealthTracker.TrackerError) {
-            Log.d(javaClass.simpleName, "onError")
             when (trackerError) {
                 HealthTracker.TrackerError.PERMISSION_ERROR ->
                     Log.e(javaClass.simpleName, "ERROR: Permission Failed")
@@ -135,7 +134,6 @@ class SamsungHealthSensorInitializer(context: Context) {
         }
 
         override fun onFlushCompleted() {
-            Log.d(javaClass.simpleName, "onFlushCompleted")
         }
     }
 }

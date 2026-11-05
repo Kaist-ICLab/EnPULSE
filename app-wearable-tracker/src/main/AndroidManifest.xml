@@ -17,6 +17,14 @@
 
     <uses-feature android:name="android.hardware.type.watch" />
 
+    <!-- Lets the microEMA text question check whether a speech recognizer exists before
+         offering voice input (package visibility hides it otherwise on Android 11+). -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
     <application
         android:name=".WearableApplication"
         android:allowBackup="true"
@@ -60,29 +68,12 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault" />
 
-        <receiver
-            android:name=".trigger.TriggerDebugReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="kaist.iclab.wearabletracker.UPDATE_STATE" />
-            </intent-filter>
-        </receiver>
-
         <!-- Fired only via an explicit PendingIntent from WatchNotificationTriggerReceiver
              (a tapped watch notification relaying its url back to the phone) — no intent-filter,
              not meant to be reachable from outside the app. -->
         <receiver
             android:name=".trigger.WatchNotificationTapReceiver"
             android:exported="false" />
-
-        <receiver
-            android:name=".helpers.BootCompletedReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </receiver>
 
         <activity
             android:name=".ecg.EcgMeasurementActivity"

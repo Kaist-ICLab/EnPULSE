@@ -31,7 +31,7 @@ class BluetoothScanSensor(
     context: Context,
     permissionManager: PermissionManager,
     configStorage: StateStorage<Config>,
-    stateStorage: StateStorage<SensorState>,
+    private val stateStorage: StateStorage<SensorState>,
 ) : BaseSensor<BluetoothScanSensor.Config, BluetoothScanSensor.Entity>(
     permissionManager, configStorage, stateStorage, Config::class, Entity::class,
     titleResId = R.string.sensor_bluetooth_scan,
@@ -160,9 +160,8 @@ class BluetoothScanSensor(
     override fun init() {
         super.init()
 
-        // TODO: Bluetooth status can change any time?
         if (!bluetoothManager.adapter.isEnabled) {
-            SensorState(SensorState.FLAG.UNAVAILABLE, "Bluetooth is disabled")
+            stateStorage.set(SensorState(SensorState.FLAG.UNAVAILABLE, "Bluetooth is disabled"))
         }
     }
 

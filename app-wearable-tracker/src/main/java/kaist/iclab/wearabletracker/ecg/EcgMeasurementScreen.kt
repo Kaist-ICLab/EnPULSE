@@ -126,9 +126,11 @@ fun EcgMeasurementScreenContent(uiState: EcgMeasurementUiState) {
             // pivot at the screen center rather than the icon's own center. Galaxy Watch's Home
             // button sits on the right edge just above vertical center (above the Back button),
             // hence the negative (counter-clockwise) angle.
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .rotate(-25f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .rotate(-25f)
+            ) {
                 HomeButtonHint(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)

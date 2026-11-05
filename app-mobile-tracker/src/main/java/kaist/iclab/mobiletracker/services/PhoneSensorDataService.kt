@@ -10,7 +10,6 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
-import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.PhoneSensorRepository
@@ -21,6 +20,8 @@ import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorEntity
+import kaist.iclab.tracker.trigger.state.DetectionStateTracker
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
@@ -36,7 +37,7 @@ import org.koin.core.qualifier.named
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Foreground service for receiving and storing phone sensor data locally in Room database.
+ * Foreground service for receiving and storing phone sensor data locally in ObjectBox database.
  * Replicates the wearable tracker's batching mechanism using Channels.
  *
  * Uses LifecycleService for automatic coroutine lifecycle management.
@@ -60,7 +61,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     private val phoneSensorRepository by inject<PhoneSensorRepository>()
     private val serviceNotification by inject<BackgroundController.ServiceNotification>()
     private val timestampService by inject<SyncTimestampService>()
-    private val bleHelper by inject<BLEHelper>()
+    private val detectionStateTracker by inject<DetectionStateTracker>()
 
     // Channel for batching
     private val eventChannel = Channel<Pair<String, SensorEntity>>(
@@ -71,6 +72,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     // Guards against duplicate registration / batch processing on repeated onStartCommand
     private var listenersRegistered = false
     private var batchProcessingJob: Job? = null
+
 
     // Listener just sends to channel
     private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate { sensor ->
@@ -91,17 +93,22 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
 
         val label = when (activityEntity.activityType) {
             com.google.android.gms.location.DetectedActivity.STILL -> "Still"
-            com.google.android.gms.location.DetectedActivity.WALKING -> "Walking"
+            com.google.android.gms.location.DetectedActivity.WALKING,
+            com.google.android.gms.location.DetectedActivity.ON_FOOT -> "Walking" // Maps both to "Walking"
             com.google.android.gms.location.DetectedActivity.RUNNING -> "Running"
-            com.google.android.gms.location.DetectedActivity.ON_FOOT -> "On Foot"
             com.google.android.gms.location.DetectedActivity.ON_BICYCLE -> "On Bicycle"
             com.google.android.gms.location.DetectedActivity.IN_VEHICLE -> "In Vehicle"
             else -> "Unknown"
         }
 
         if (label != "Unknown") {
-            Log.d(TAG, "Phone activity detected: $label. Syncing to watch...")
-            bleHelper.sendDetectionStateUpdates(mapOf("physical_activity" to label))
+            // Feed the phone's own trigger engine directly. This used to go to the watch, which
+            // only sent it back, so activity triggers needed a connected watch and two hops.
+            detectionStateTracker.updateState(
+                "physical_activity",
+                label,
+                activityEntity.timestamp.coerceAtMost(System.currentTimeMillis())
+            )
         }
     }
 
@@ -199,7 +206,10 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
 
                 when (val result =
                     phoneSensorRepository.insertSensorDataBatch(sensorId, batchToInsert)) {
-                    is Result.Success -> timestampService.updateLastPhoneSensorData()
+                    is Result.Success -> {
+                        timestampService.updateLastPhoneSensorData()
+                    }
+
                     is Result.Error -> Log.e(
                         TAG,
                         "Failed to insert batch for $sensorId: ${result.message}"
@@ -212,7 +222,16 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     override fun onDestroy() {
         // Only remove if we registered
         if (listenersRegistered) {
-            sensors.forEach { it.removeListener(listener[it.id]!!) }
+            // ActivityRecognition is registered with activityRecognitionListener, not
+            // listener[id]; removing the wrong one left it attached, so every stop/start
+            // added another duplicate "physical_activity" send.
+            sensors.forEach { sensor ->
+                if (sensor is ActivityRecognitionSensor) {
+                    sensor.removeListener(activityRecognitionListener)
+                } else {
+                    sensor.removeListener(listener[sensor.id]!!)
+                }
+            }
             listenersRegistered = false
         }
 

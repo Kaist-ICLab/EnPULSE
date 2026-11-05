@@ -35,7 +35,6 @@ import kaist.iclab.tracker.sensor.survey.Survey
 import kaist.iclab.tracker.sensor.survey.question.BinaryQuestion
 import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberScaleQuestion
-import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
 import kaist.iclab.tracker.sensor.survey.question.SingleSelectionQuestion
 import kaist.iclab.tracker.sensor.survey.question.TextQuestion
 import kotlinx.serialization.json.JsonElement
@@ -62,7 +61,6 @@ fun SurveyScreen(
                 is MultipleSelectionQuestion -> CheckboxQuestion(question)
                 is NumberScaleQuestion -> NumberScaleQuestion(question)
                 is TextQuestion -> TextQuestion(question)
-                is NumberQuestion -> NumberQuestion(question)
             }
         }
         item {
@@ -415,28 +413,3 @@ private fun ScaleDirectionIcon(
     }
 }
 
-@Composable
-fun NumberQuestion(
-    question: NumberQuestion,
-    modifier: Modifier = Modifier,
-) {
-    val response = question.response.collectAsState()
-    val isHidden = question.isHidden.collectAsState()
-
-    if (isHidden.value) return
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-    ) {
-        QuestionText(
-            question = question.question,
-            isMandatory = question.isMandatory
-        )
-        TextQuestionInput(
-            value = response.value.run { this?.toString() ?: "" },
-            onValueChange = { question.setResponse(it.toDoubleOrNull()) },
-            allowNumberOnly = true
-        )
-    }
-}

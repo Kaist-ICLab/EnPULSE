@@ -19,7 +19,7 @@ import androidx.compose.ui.res.integerResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import kaist.iclab.mobiletracker.ui.screens.webapp.WebAppsScreen
+import kaist.iclab.mobiletracker.ui.components.ServerUnreachableDialog
 import kaist.iclab.mobiletracker.ui.screens.data.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.home.HomeScreen
 import kaist.iclab.mobiletracker.ui.screens.login.LoginScreen
@@ -34,6 +34,7 @@ import kaist.iclab.mobiletracker.ui.screens.settings.permission.PermissionSettin
 import kaist.iclab.mobiletracker.ui.screens.settings.sensor.PhoneSensorConfigSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.server.ServerConnectionScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.sync.ServerSyncSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.webapp.WebAppsScreen
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthUiEvent
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
@@ -52,6 +53,7 @@ fun NavGraph(
 ) {
     val userState by authViewModel.userState.collectAsState()
     val userProfile by authViewModel.userProfile.collectAsState()
+    val serverUnreachable by authViewModel.serverUnreachable.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -82,16 +84,17 @@ fun NavGraph(
         }
     }
 
-    // Get system animation duration (respects user's animation speed settings)
-    // Fallback to 400ms if system value is unavailable or invalid
-//    val animationDuration = try {
-//        val systemDuration = integerResource(android.R.integer.config_mediumAnimTime)
-//        if (systemDuration > 0) systemDuration else 400
-//    } catch (_: Exception) {
-//        400 // Fallback to 300ms if system resource is unavailable
-//    }
+    serverUnreachable?.let { state ->
+        ServerUnreachableDialog(
+            hasCachedConfig = state.hasCachedConfig,
+            onRetry = authViewModel::retryConnection,
+            onExit = { activity?.finishAffinity() },
+            onContinueOffline = authViewModel::continueOffline
+        )
+    }
 
-    val animationDuration = integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
+    val animationDuration =
+        integerResource(android.R.integer.config_mediumAnimTime).takeIf { it > 0 } ?: 400
 
     // Handle language change by recreating activity
     val onLanguageChanged: () -> Unit = {
@@ -184,7 +187,12 @@ fun NavGraph(
                 },
                 onNavigateToServerConnection = {
                     navController.navigate(Screen.ServerConnection.route)
-                }
+                },
+                showEmailLogin = authViewModel.supportsEmailLogin,
+                onSignInWithEmail = { email, password ->
+                    authViewModel.loginWithEmail(email, password)
+                },
+                errorMessage = userState.message
             )
         }
 

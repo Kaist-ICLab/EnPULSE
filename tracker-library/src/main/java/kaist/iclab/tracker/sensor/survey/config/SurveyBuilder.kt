@@ -7,7 +7,6 @@ import kaist.iclab.tracker.sensor.survey.question.BinaryQuestion
 import kaist.iclab.tracker.sensor.survey.question.ComparablePredicate
 import kaist.iclab.tracker.sensor.survey.question.Expression
 import kaist.iclab.tracker.sensor.survey.question.MultipleSelectionQuestion
-import kaist.iclab.tracker.sensor.survey.question.NumberQuestion
 import kaist.iclab.tracker.sensor.survey.question.NumberScaleQuestion
 import kaist.iclab.tracker.sensor.survey.question.Predicate
 import kaist.iclab.tracker.sensor.survey.question.Question
@@ -153,13 +152,6 @@ object SurveyBuilder {
                     )
                 }
 
-                "NUMBER" -> NumberQuestion(
-                    id = config.id,
-                    question = config.text,
-                    isMandatory = config.isMandatory,
-                    questionTrigger = childrenQuestions as? List<QuestionTrigger<Double?>>
-                )
-
                 "NUMBERSCALE" -> {
                     NumberScaleQuestion(
                         id = config.id,
@@ -167,8 +159,10 @@ object SurveyBuilder {
                         isMandatory = config.isMandatory,
                         min = config.min ?: 0,
                         max = config.max ?: 10,
-                        minLabel = config.minLabel!!,
-                        maxLabel = config.maxLabel!!,
+                        // The dashboard leaves labels empty by default, which arrive as null;
+                        // `!!` threw and silently dropped the question (and its follow-ups).
+                        minLabel = config.minLabel ?: "",
+                        maxLabel = config.maxLabel ?: "",
                         questionTrigger = childrenQuestions as? List<QuestionTrigger<Int?>>
                     )
                 }
@@ -198,25 +192,51 @@ object SurveyBuilder {
         val expression = parseExpression(op, value, parentType) ?: return null
         val question = buildQuestion(config, parentIdMap) ?: return null
 
+        // The expression's type must match the parent question's answer type: a mismatch is not
+        // caught here (generics are erased) but fails at evaluation time.
         return when (parentType.uppercase()) {
             "TEXT" -> QuestionTrigger(expression as Expression<String>, listOf(question))
-            "NUMBER", "NUMBERSCALE" -> QuestionTrigger(expression as Expression<Double?>, listOf(question))
-            "RADIO", "BINARY" -> QuestionTrigger(expression as Expression<Int?>, listOf(question))
+            "NUMBERSCALE", "RADIO" -> QuestionTrigger(expression as Expression<Int?>, listOf(question))
+            "BINARY" -> QuestionTrigger(expression as Expression<Boolean?>, listOf(question))
             "CHECKBOX" -> QuestionTrigger(expression as Expression<Set<Int>>, listOf(question))
             else -> null
         }
     }
 
-    private fun parseExpression(
+    internal fun parseExpression(
         op: String,
         value: JsonElement?,
         parentType: String
     ): Expression<*>? {
         return when (parentType.uppercase()) {
             "TEXT" -> parseTextExpression(op, value)
-            "NUMBER", "NUMBERSCALE" -> parseNumberExpression(op, value)
-            "RADIO", "BINARY" -> parseRadioExpression(op, value)
+            // NumberScaleQuestion answers are whole numbers (Question<Int?>); a Double rule value
+            // threw ClassCastException on >, >=, <, <= and never matched on =.
+            "NUMBERSCALE", "RADIO" -> parseRadioExpression(op, value)
+            "BINARY" -> parseBinaryExpression(op, value)
             "CHECKBOX" -> parseCheckboxExpression(op, value)
+            else -> null
+        }
+    }
+
+    /**
+     * Answers of a Yes/No question in the order the dashboard lists them (["Yes", "No"] in
+     * ExpressionBuilder.tsx), which is also the order the phone shows them (Yes = true).
+     */
+    private val YES_NO_ANSWERS = listOf(true, false)
+
+    /**
+     * Yes/No rules. The rule's value is not a boolean but the index of the option chosen in the
+     * dashboard's dropdown (0 = "Yes", 1 = "No"), so it is looked up in [YES_NO_ANSWERS].
+     */
+    private fun parseBinaryExpression(op: String, value: JsonElement?): Expression<Boolean?>? {
+        val content = value?.jsonPrimitive?.content ?: return null
+        val target: Boolean = content.toBooleanStrictOrNull()
+            ?: content.toDoubleOrNull()?.toInt()?.let { YES_NO_ANSWERS.getOrNull(it) }
+            ?: return null
+        return when (op) {
+            "Equal" -> Predicate.Equal<Boolean?>(target)
+            "NotEqual" -> Predicate.NotEqual<Boolean?>(target)
             else -> null
         }
     }
@@ -228,20 +248,6 @@ object SurveyBuilder {
             "Empty" -> StringPredicate.Empty()
             else -> null
         }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun parseNumberExpression(op: String, value: JsonElement?): Expression<Double?>? {
-        val target = value?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0
-        return when (op) {
-            "Equal" -> Predicate.Equal(target as Double?)
-            "NotEqual" -> Predicate.NotEqual(target as Double?)
-            "GreaterThan" -> ComparablePredicate.GreaterThan(target)
-            "GreaterThanOrEqual" -> ComparablePredicate.GreaterThanOrEqual(target)
-            "LessThan" -> ComparablePredicate.LessThan(target)
-            "LessThanOrEqual" -> ComparablePredicate.LessThanOrEqual(target)
-            else -> null
-        } as Expression<Double?>?
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -263,20 +269,19 @@ object SurveyBuilder {
     }
 
     private fun parseCheckboxExpression(op: String, value: JsonElement?): Expression<Set<Int>>? {
-        return when (op) {
-            "Equal" -> {
-                val array = try {
-                    if (value is JsonArray) {
-                        Json.decodeFromJsonElement<List<Int>>(value)
-                    } else if (value != null) {
-                        listOf(value.jsonPrimitive.content.toDoubleOrNull()?.toInt() ?: 0)
-                    } else emptyList()
-                } catch (_: Exception) {
-                    emptyList()
-                }
-                Predicate.Equal(array.toSet())
-            }
+        fun parseIndexSet(): Set<Int> = try {
+            if (value is JsonArray) {
+                Json.decodeFromJsonElement<List<Int>>(value)
+            } else if (value != null) {
+                listOf(value.jsonPrimitive.content.toDoubleOrNull()?.toInt() ?: 0)
+            } else emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }.toSet()
 
+        return when (op) {
+            "Equal" -> Predicate.Equal(parseIndexSet())
+            "NotEqual" -> Predicate.NotEqual(parseIndexSet())
             "Contains" -> {
                 val target = value?.jsonPrimitive?.content?.toDoubleOrNull()?.toInt() ?: return null
                 SetPredicate.Contains(target)

@@ -1,21 +1,19 @@
 package kaist.iclab.mobiletracker.helpers
 
 
-import kotlinx.coroutines.CancellationException
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.net.toUri
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.config.AppConfig
+import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
-import kaist.iclab.mobiletracker.db.obx.MicroEmaResponseStore
-import kaist.iclab.mobiletracker.db.entity.phone.MicroEmaResponseEntity
-
+import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
+import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
-import kaist.iclab.mobiletracker.services.SurveyService
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
 import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
@@ -24,6 +22,7 @@ import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -35,10 +34,13 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import androidx.core.net.toUri
+
+/** Payload key for the watch's detection time; must match the watch's DetectionStateForwarder. */
+private const val DETECTED_AT_KEY = "_ts"
 
 /**
  * Helper class for managing BLE communication with wearable devices.
@@ -49,15 +51,13 @@ class BLEHelper(
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
     private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
-    private val microEmaResponseStore: MicroEmaResponseStore,
+    private val surveyResponseStore: SensorStore<SurveyResponseEntity>,
     private val detectionStateTracker: DetectionStateTracker,
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
     private val appScope by inject<AppCoroutineScope>()
-    private val surveyService by inject<SurveyService>()
     private val surveySensor by inject<SurveySensor>()
-    private val userProfileRepository by inject<UserProfileRepository>()
     private val webAppTriggerHandler by inject<WebAppTriggerHandler>()
     private val webAppRegistry by inject<kaist.iclab.mobiletracker.webapp.WebAppRegistry>()
 
@@ -73,7 +73,11 @@ class BLEHelper(
         Constants.SensorId.EDA to { csv -> SensorDataCsvParser.parseEDACsv(csv) },
         Constants.SensorId.HEART_RATE to { csv -> SensorDataCsvParser.parseHeartRateCsv(csv) },
         Constants.SensorId.PPG to { csv -> SensorDataCsvParser.parsePPGCsv(csv) },
-        Constants.SensorId.SKIN_TEMPERATURE to { csv -> SensorDataCsvParser.parseSkinTemperatureCsv(csv) },
+        Constants.SensorId.SKIN_TEMPERATURE to { csv ->
+            SensorDataCsvParser.parseSkinTemperatureCsv(
+                csv
+            )
+        },
         Constants.SensorId.IMU to { csv -> SensorDataCsvParser.parseIMUCsv(csv) },
         Constants.SensorId.GESTURE to { csv -> SensorDataCsvParser.parseGestureCsv(csv) },
         Constants.SensorId.STRESS to { csv -> SensorDataCsvParser.parseStressCsv(csv) },
@@ -82,13 +86,11 @@ class BLEHelper(
 
     fun initialize() {
         if (isInitialized) {
-            Log.d(AppConfig.LogTags.PHONE_BLE, "BLEHelper already initialized, skipping...")
             return
         }
         bleChannel = BLEDataChannel(context)
         setupListeners()
         isInitialized = true
-        Log.d(AppConfig.LogTags.PHONE_BLE, "BLEHelper initialized successfully")
     }
 
     /**
@@ -160,12 +162,23 @@ class BLEHelper(
         // Listen for sensor detection state updates forwarded live from the watch's
         // StressDetectionAdapter/GestureDetectionAdapter (via the watch's DetectionStateForwarder)
         // — the trigger engine now runs on the phone, so these feed its DetectionStateTracker
-        // directly. The same key is also used by TriggerDebugReceiver-style ADB/dashboard test
-        // tooling to simulate states in the opposite direction; a real incoming payload here is
+        // directly. The same key is also used by dashboard test tooling to simulate states in the
+        // opposite direction; a real incoming payload here is
         // just another producer of the same {sensor: value} shape.
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.DETECTION_STATE_UPDATE)) { _, json ->
             handleDetectionStateUpdate(json)
         }
+        // Detections are momentary; once applied they must not be delivered again later.
+        // Sensor chunks and microEMA responses each get a unique DataItem path, so without
+        // deleting them they pile up on both devices forever. Safe to drop on delivery: the
+        // watch keeps its copy until our ACK, and resends if storing here fails.
+        bleChannel.deleteAfterDelivery(
+            setOf(
+                AppConfig.BLEKeys.DETECTION_STATE_UPDATE,
+                AppConfig.BLEKeys.SENSOR_DATA_CSV,
+                AppConfig.BLEKeys.MICRO_EMA_RESPONSE
+            )
+        )
     }
 
     private fun handleOpenUrlTrigger(url: String) {
@@ -181,13 +194,20 @@ class BLEHelper(
                 // (documentLaunchMode="intoExisting" + per-webapp data URI) so this gets the same
                 // distinct-task-card behavior as any other WebApp launch.
                 Intent(context, kaist.iclab.mobiletracker.webapp.WebAppActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    flags =
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     data = "webapp://${trustedWebApp.id}".toUri()
                     putExtra(kaist.iclab.mobiletracker.webapp.WebAppActivity.EXTRA_URL, url)
-                    putExtra(kaist.iclab.mobiletracker.webapp.WebAppActivity.EXTRA_WEBAPP_ID, trustedWebApp.id)
+                    putExtra(
+                        kaist.iclab.mobiletracker.webapp.WebAppActivity.EXTRA_WEBAPP_ID,
+                        trustedWebApp.id
+                    )
                 }
             } else {
-                Intent(context, kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity::class.java).apply {
+                Intent(
+                    context,
+                    kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity::class.java
+                ).apply {
                     putExtra(kaist.iclab.mobiletracker.webapp.SimpleWebViewActivity.EXTRA_URL, url)
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
@@ -198,7 +218,11 @@ class BLEHelper(
                 "Opened url relayed from watch (in-app, trusted=${trustedWebApp != null}): $url"
             )
         } catch (e: Exception) {
-            Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to open url relayed from watch: ${e.message}", e)
+            Log.e(
+                AppConfig.LogTags.PHONE_BLE,
+                "Failed to open url relayed from watch: ${e.message}",
+                e
+            )
         }
     }
 
@@ -210,13 +234,23 @@ class BLEHelper(
                 else -> Json.parseToJsonElement(json.toString()).jsonObject
             }
 
+            // Use the watch's detection time when present (capped at now, in case the watch clock
+            // runs ahead), so detections queued while the watch was out of range stay stale and
+            // the trigger engine's 60 s cutoff can ignore them.
             val now = System.currentTimeMillis()
+            val detectedAt = payload[DETECTED_AT_KEY]?.jsonPrimitive?.longOrNull
+                ?.coerceAtMost(now) ?: now
             payload.forEach { (sensor, valueElement) ->
+                if (sensor == DETECTED_AT_KEY) return@forEach
                 val value = valueElement.jsonPrimitive.content
-                detectionStateTracker.updateState(sensor, value, now)
+                detectionStateTracker.updateState(sensor, value, detectedAt)
             }
         } catch (e: Exception) {
-            Log.e(AppConfig.LogTags.PHONE_BLE, "[TRIGGER] Error applying detection state update: ${e.message}", e)
+            Log.e(
+                AppConfig.LogTags.PHONE_BLE,
+                "[TRIGGER] Error applying detection state update: ${e.message}",
+                e
+            )
         }
     }
 
@@ -227,16 +261,13 @@ class BLEHelper(
      * [{"questionId":"101","value":"3","status":"ANSWERED","triggerTime":"17...","surveyStartTime":"17...","responseTime":"17..."}]
      *
      * For EXPIRED/DISMISSED, "value" is null.
+     *
+     * Answers are stored as watch-side rows of the "Survey" sensor and upload with it. `uuid` is
+     * stamped at upload time, like every other sensor.
      */
     private fun handleMicroEmaResponse(jsonString: String) {
         appScope.io.launch {
             try {
-                val uuid = userProfileRepository.getCurrentUuid()
-                if (uuid == null) {
-                    Log.w(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] No user UUID available")
-                    return@launch
-                }
-
                 val jsonArray = Json.parseToJsonElement(jsonString).jsonArray
                 val processedIds = mutableListOf<Long>()
 
@@ -262,34 +293,31 @@ class BLEHelper(
 
                     if (watchId != null) processedIds.add(watchId)
 
-                    MicroEmaResponseEntity(
-                        watchId = watchId ?: 0L,
-                        uuid = uuid,
+                    val now = System.currentTimeMillis()
+                    val triggerMillis = triggerTime?.toLongOrNull() ?: now
+                    SurveyResponseEntity(
+                        // The watch re-sends until it gets the ACK, so one answer must always map
+                        // to the same eventId for the store to drop the resend.
+                        eventId = "microema-$questionId-$triggerTime-$surveyStartTime",
+                        deviceType = DeviceType.WATCH.value,
                         questionId = questionId,
-                        triggerTime = triggerTime,
-                        actualTriggerTime = triggerTime,
-                        surveyStartTime = surveyStartTime,
-                        responseSubmissionTime = responseTime,
-                        responseJson = responseJson.toString(),
-                        deviceType = 1,
-                        isSynced = false
+                        triggerTime = triggerMillis,
+                        actualTriggerTime = triggerMillis,
+                        surveyStartTime = surveyStartTime?.toLongOrNull() ?: now,
+                        responseSubmissionTime = responseTime?.toLongOrNull() ?: triggerMillis,
+                        responseJson = responseJson.toString()
                     )
                 }
 
                 if (responses.isNotEmpty()) {
-                    microEmaResponseStore.insertAll(responses)
+                    val newCount = surveyResponseStore.insertBatch(responses)
                     Log.d(
                         AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] Cached ${responses.size} responses locally on phone"
+                        "[MICRO_EMA] Cached $newCount new responses locally on phone " +
+                            "(${responses.size - newCount} already stored)"
                     )
-                    // Send ACK back to watch immediately so it can clean up its DB
+                    // ACK every id, duplicates included, so the watch stops re-sending them
                     sendMicroEmaAck(processedIds)
-
-                    // Attempt to upload immediately for real-time responsiveness
-                    // We launch this in the IO dispatcher so it doesn't block BLE reception
-                    appScope.io.launch {
-                        surveyService.uploadUnsyncedMicroEmaResponses(microEmaResponseStore)
-                    }
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -310,40 +338,11 @@ class BLEHelper(
         appScope.io.launch {
             try {
                 val ackData = ids.joinToString(",")
-                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_ACK, ackData)
+                bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_ACK, ackData, isUrgent = true)
                 Log.d(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Sent ACK for IDs: $ackData")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Failed to send ACK: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Send simulated detection state updates to the watch.
-     * This allows the phone to trigger generic evaluation rules on the watch.
-     */
-    fun sendDetectionStateUpdates(states: Map<String, String>) {
-        appScope.io.launch {
-            try {
-                // Serialize map to JSON
-                val payload = buildJsonObject {
-                    states.forEach { (key, value) ->
-                        put(key, value)
-                    }
-                }.toString()
-
-                bleChannel.send(AppConfig.BLEKeys.DETECTION_STATE_UPDATE, payload)
-                Log.d(
-                    AppConfig.LogTags.PHONE_BLE,
-                    "[TRIGGER] Sent state updates to watch: $payload"
-                )
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Log.e(
-                    AppConfig.LogTags.PHONE_BLE,
-                    "[TRIGGER] Failed to send state updates: ${e.message}"
-                )
             }
         }
     }
@@ -459,7 +458,11 @@ class BLEHelper(
      * has nothing left below its cursor to (re)send, so the phone's gap back to "0" can never
      * close and every future chunk for that sensor ACKs 0 forever.
      */
-    private fun computeAckEndTimestamp(sensorId: String, chunkStartTs: Long?, chunkEndTs: Long?): Long {
+    private fun computeAckEndTimestamp(
+        sensorId: String,
+        chunkStartTs: Long?,
+        chunkEndTs: Long?
+    ): Long {
         val contiguousUpTo = timestampService.getBleContiguousTimestamp(sensorId)
         if (contiguousUpTo == null) {
             val bootstrapped = chunkEndTs ?: chunkStartTs ?: 0L
@@ -519,18 +522,34 @@ class BLEHelper(
             if (entities.isEmpty()) {
                 Log.w(AppConfig.LogTags.PHONE_BLE, "No rows parsed for $sensorId chunk")
                 // Still ACK - an empty but valid chunk still needs its range confirmed.
-                sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
+                sendAck(
+                    sensorId,
+                    success = true,
+                    endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs)
+                )
                 return
             }
 
             when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
                 is Result.Success -> {
                     timestampService.updateLastWatchDataReceived()
-                    Log.d(AppConfig.LogTags.PHONE_BLE, "Stored ${entities.size} $sensorId entries locally")
-                    sendAck(sensorId, success = true, endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs))
+                    Log.d(
+                        AppConfig.LogTags.PHONE_BLE,
+                        "Stored ${entities.size} $sensorId entries locally"
+                    )
+                    sendAck(
+                        sensorId,
+                        success = true,
+                        endTimestamp = computeAckEndTimestamp(sensorId, chunkStartTs, chunkEndTs)
+                    )
                 }
+
                 is Result.Error -> {
-                    Log.e(AppConfig.LogTags.PHONE_BLE, "Failed to store $sensorId data: ${result.message}", result.exception)
+                    Log.e(
+                        AppConfig.LogTags.PHONE_BLE,
+                        "Failed to store $sensorId data: ${result.message}",
+                        result.exception
+                    )
                     sendAck(sensorId, success = false, endTimestamp = null)
                 }
             }

@@ -1,10 +1,13 @@
 package kaist.iclab.wearabletracker.ema
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
+import androidx.core.app.NotificationManagerCompat
+import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -29,6 +32,11 @@ class WatchSurveyActivity : ComponentActivity() {
                     WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON
         )
 
+        // The trigger also posts a notification that opens this activity, but the receiver starts
+        // the activity directly, so that notification is never tapped. Left in the tray it would
+        // reopen the survey later for whoever is wearing the watch.
+        NotificationManagerCompat.from(this).cancel(Constants.NotificationId.TRIGGER)
+
         // Handle back press / swipe-to-dismiss as a DISMISSED event.
         onBackPressedDispatcher.addCallback(this) {
             microEmaViewModel.dismiss()
@@ -42,5 +50,30 @@ class WatchSurveyActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    // The activity is singleTop, so a trigger that arrives while it is still on screen (e.g.
+    // during the 3 s "Done" view) comes here instead of onCreate. Without this the new survey
+    // never showed and its notification stayed in the tray for the next wearer.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        NotificationManagerCompat.from(this).cancel(Constants.NotificationId.TRIGGER)
+        // Ignores a launch for the survey that is still open; restarts after a finished one,
+        // which also cancels the pending "Done" close.
+        microEmaViewModel.startSurvey()
+    }
+
+    // Catches any exit this activity didn't already record as a result (answer, expiry, or the
+    // back-press dismiss above) — e.g. the task being removed from Recents, or a swipe gesture
+    // some Wear OS versions handle without going through onBackPressedDispatcher. Called before
+    // super.onDestroy() so the ViewModel's own coroutine scope is still alive to persist the
+    // response. Without this the session (and its stale cached survey) was left dangling until
+    // the next trigger overwrote it.
+    override fun onDestroy() {
+        if (!microEmaViewModel.isComplete.value) {
+            microEmaViewModel.dismiss()
+        }
+        super.onDestroy()
     }
 }

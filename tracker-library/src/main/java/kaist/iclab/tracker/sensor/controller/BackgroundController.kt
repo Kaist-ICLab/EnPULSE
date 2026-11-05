@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -90,12 +91,16 @@ class BackgroundController(
         companion object {
             private val TAG = ControllerService::class.simpleName
             var isServiceRunning = false
+
+            /** How long the watch must read as off-wrist before sensors are paused. */
+            private const val OFF_WRIST_PAUSE_DELAY_MS = 10_000L
         }
 
         private lateinit var stateStorage: StateStorage<ControllerState>
         private lateinit var sensors: List<Sensor<*, *>>
         private lateinit var serviceNotification: ServiceNotification
         private var partialSensingAllowed: Boolean = false
+        private var restartAfterProcessDeath: Boolean = true
 
         private lateinit var offBodyDetector: OffBodyDetector
         private var serviceScope: CoroutineScope? = null
@@ -120,6 +125,7 @@ class BackgroundController(
                 sensors = dependencies.sensors
                 serviceNotification = dependencies.serviceNotification
                 partialSensingAllowed = dependencies.allowPartialSensing
+                restartAfterProcessDeath = dependencies.restartAfterProcessDeath
                 offBodyDetector = dependencies.offBodyDetector
                 return
             }
@@ -133,6 +139,14 @@ class BackgroundController(
         }
 
         private fun run() {
+            // A second start command (e.g. Start tapped twice) reaches onStartCommand again. Running
+            // the rest again would replace offBodyJob without cancelling it, leaving an extra
+            // wrist-state collector running.
+            if (offBodyJob != null) {
+                Log.i(TAG, "Already running; ignoring the repeated start")
+                return
+            }
+
             // Now do the rest of the work after startForeground is called
             if (!(partialSensingAllowed) && sensors.any { it.sensorStateFlow.value.flag == SensorState.FLAG.DISABLED }) {
                 stateStorage.set(
@@ -145,8 +159,16 @@ class BackgroundController(
             }
 
             stateStorage.set(ControllerState(ControllerState.FLAG.RUNNING))
+            // One sensor failing to start must not take the others down with it (the caller's
+            // catch stops everything). A failed sensor stays ENABLED, so it shows as not running.
             sensors.filter { it.sensorStateFlow.value.flag == SensorState.FLAG.ENABLED }
-                .forEach { it.start() }
+                .forEach { sensor ->
+                    try {
+                        sensor.start()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to start sensor ${sensor.id}", e)
+                    }
+                }
             isServiceRunning = true
 
             // Start off-body detection and observe wrist state
@@ -154,10 +176,15 @@ class BackgroundController(
             serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
             offBodyJob = serviceScope?.launch {
                 offBodyDetector.isOnWrist.collectLatest { isWorn ->
-                    val currentFlag = stateStorage.get().flag
-                    if (!isWorn && currentFlag == ControllerState.FLAG.RUNNING) {
-                        pauseSensors()
-                    } else if (isWorn && currentFlag == ControllerState.FLAG.PAUSED) {
+                    if (!isWorn) {
+                        // Pause only once the watch has stayed off the wrist for a while. A loose
+                        // strap or a quick adjustment flips the reading for a moment; collectLatest
+                        // cancels this wait as soon as the watch reads as worn again.
+                        delay(OFF_WRIST_PAUSE_DELAY_MS)
+                        if (stateStorage.get().flag == ControllerState.FLAG.RUNNING) {
+                            pauseSensors()
+                        }
+                    } else if (stateStorage.get().flag == ControllerState.FLAG.PAUSED) {
                         resumeSensors()
                     }
                 }
@@ -168,10 +195,18 @@ class BackgroundController(
          * Pause all running sensors because the watch is not being worn.
          * The foreground service stays alive to keep the off-body listener active.
          */
+        // Pause and resume run on the main thread outside any try, at every watch handover, so a
+        // sensor that throws must not crash the app or leave the other sensors in the old state.
         private fun pauseSensors() {
             Log.i(TAG, "Pausing sensors — watch not worn")
             sensors.filter { it.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING }
-                .forEach { it.stop() }
+                .forEach { sensor ->
+                    try {
+                        sensor.stop()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to pause sensor ${sensor.id}", e)
+                    }
+                }
             stateStorage.set(ControllerState(ControllerState.FLAG.PAUSED, "Watch not worn"))
         }
 
@@ -182,7 +217,13 @@ class BackgroundController(
             Log.i(TAG, "Resuming sensors — watch is worn again")
             stateStorage.set(ControllerState(ControllerState.FLAG.RUNNING))
             sensors.filter { it.sensorStateFlow.value.flag == SensorState.FLAG.ENABLED }
-                .forEach { it.start() }
+                .forEach { sensor ->
+                    try {
+                        sensor.start()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to resume sensor ${sensor.id}", e)
+                    }
+                }
         }
 
         private fun stop() {
@@ -199,7 +240,13 @@ class BackgroundController(
             stateStorage.set(ControllerState(ControllerState.FLAG.READY))
             sensors.filter {
                 it.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING
-            }.forEach { it.stop() }
+            }.forEach { sensor ->
+                try {
+                    sensor.stop()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to stop sensor ${sensor.id}", e)
+                }
+            }
             stopSelf()
             stopForeground(STOP_FOREGROUND_REMOVE)
         }
@@ -222,7 +269,7 @@ class BackgroundController(
                 postEmergencyNotification()
                 stop()
             }
-            return START_STICKY
+            return if (restartAfterProcessDeath) START_STICKY else START_NOT_STICKY
         }
 
         private data class NotificationProperties(

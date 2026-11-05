@@ -42,7 +42,7 @@ data class WebAppLogRow(
  * Drains [WebAppLogStore] into the `web_app_log` Supabase table.
  *
  * Intentionally independent of the sensor upload machinery:
- * - **not campaign-gated** — unlike [SensorUploadService.uploadSensorData], there is no
+ * - **not campaign-gated** — unlike [SensorDataUploader.uploadSensorData], there is no
  *   `campaign_table` active-sensor check, so a webapp's logs upload as soon as it emits them;
  * - **not collection-gated** — [kaist.iclab.mobiletracker.services.AutoSyncService] flushes this
  *   on its own loop, outside the `getDataCollectionStarted()` guard, so logging keeps working
@@ -69,11 +69,15 @@ class WebAppLogUploader(
         // See SensorUploadService.uploadSensorData's identical guard: don't suspend forever if
         // SessionStatus is ever stuck at Initializing (normally prevented by SupabaseHelper's
         // enableLifecycleCallbacks = false).
-        val initialized = withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
-            supabaseHelper.supabaseClient.auth.awaitInitialization()
-        } != null
+        val initialized =
+            withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
+                supabaseHelper.supabaseClient.auth.awaitInitialization()
+            } != null
         if (!initialized) {
-            Log.w(TAG, "Timed out waiting for Supabase auth to initialize; keeping webapp log rows pending")
+            Log.w(
+                TAG,
+                "Timed out waiting for Supabase auth to initialize; keeping webapp log rows pending"
+            )
             return@withLock Result.Success(0)
         }
         val userUuid = getUserUuid()
@@ -99,7 +103,8 @@ class WebAppLogUploader(
                         properties = entity.propertiesJson
                     )
                 }
-                supabaseHelper.supabaseClient.from(AppConfig.SupabaseTables.WEB_APP_LOG).insert(rows)
+                supabaseHelper.supabaseClient.from(AppConfig.SupabaseTables.WEB_APP_LOG)
+                    .insert(rows)
 
                 store.markSynced(batch.map { it.id })
                 uploaded += batch.size

@@ -7,9 +7,11 @@ import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
+import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
 import kaist.iclab.tracker.sensor.phone.ConnectivitySensor
 import kaist.iclab.tracker.sensor.phone.DeviceModeSensor
 import kaist.iclab.tracker.sensor.phone.ScreenSensor
+import kaist.iclab.tracker.sensor.phone.VADSensor
 import kaist.iclab.tracker.sensor.phone.WifiScanSensor
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -116,6 +118,33 @@ val coreSensorsModule = module {
                 couchbase = get(),
                 collectionName = WifiScanSensor::class.simpleName ?: ""
             )
+        )
+    }
+
+    // Audio Sensor (VAD)
+    single {
+        AudioSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = SimpleStateStorage(AudioSensor.Config()),
+            stateStorage = CouchbaseSensorStateStorage(
+                couchbase = get(),
+                collectionName = AudioSensor::class.simpleName ?: ""
+            )
+        )
+    }
+
+    // VAD Sensor
+    single {
+        VADSensor(
+            context = androidContext(),
+            permissionManager = get<AndroidPermissionManager>(),
+            configStorage = SimpleStateStorage(VADSensor.Config()),
+            stateStorage = CouchbaseSensorStateStorage(
+                couchbase = get(),
+                collectionName = VADSensor::class.simpleName ?: ""
+            ),
+            audioSensor = get<AudioSensor>()
         )
     }
 }

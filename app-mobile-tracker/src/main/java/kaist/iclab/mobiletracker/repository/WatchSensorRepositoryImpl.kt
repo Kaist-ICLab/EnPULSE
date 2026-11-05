@@ -57,7 +57,6 @@ class WatchSensorRepositoryImpl(
     }
 
 
-
     override suspend fun getLatestTimestamp(sensorId: String): Long? {
         return ErrorClassifier.runClassified(TAG, "getLatestTimestamp $sensorId") {
             if (sensorId == Constants.SensorId.LOCATION) {
@@ -106,16 +105,29 @@ class WatchSensorRepositoryImpl(
                             .await()
 
                     if (allNodes.nodes.isEmpty()) {
-                        trySend(WatchConnectionInfo(WatchConnectionStatus.NOT_INSTALLED, emptyList()))
+                        trySend(
+                            WatchConnectionInfo(
+                                WatchConnectionStatus.NOT_INSTALLED,
+                                emptyList()
+                            )
+                        )
                     } else {
                         val reachableNodes = capabilityClient.getCapability(
                             capabilityName,
                             CapabilityClient.FILTER_REACHABLE
                         ).await()
                         if (reachableNodes.nodes.isEmpty()) {
-                            trySend(WatchConnectionInfo(WatchConnectionStatus.DISCONNECTED, allNodes.nodes.map { it.displayName }))
+                            trySend(
+                                WatchConnectionInfo(
+                                    WatchConnectionStatus.DISCONNECTED,
+                                    allNodes.nodes.map { it.displayName })
+                            )
                         } else {
-                            trySend(WatchConnectionInfo(WatchConnectionStatus.CONNECTED, reachableNodes.nodes.map { it.displayName }))
+                            trySend(
+                                WatchConnectionInfo(
+                                    WatchConnectionStatus.CONNECTED,
+                                    reachableNodes.nodes.map { it.displayName })
+                            )
                         }
                     }
                 } catch (_: Exception) {

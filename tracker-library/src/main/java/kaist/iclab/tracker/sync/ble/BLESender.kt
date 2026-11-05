@@ -1,7 +1,6 @@
 package kaist.iclab.tracker.sync.ble
 
 import android.content.Context
-import android.util.Log
 import com.google.android.gms.wearable.Asset
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
@@ -18,10 +17,6 @@ import kotlinx.coroutines.tasks.await
 internal class BLESender(
     private val context: Context
 ) : DataChannelSender<Unit>() {
-    companion object {
-        private val TAG = BLESender::class.simpleName
-    }
-
     private val dataClient by lazy { Wearable.getDataClient(context) }
 
     override suspend fun send(key: String, value: String) {
@@ -35,7 +30,6 @@ internal class BLESender(
         val uniquePath = "$basePath/$key/${System.currentTimeMillis()}-${System.nanoTime()}"
         val asset = Asset.createFromBytes(value.toByteArray())
 
-        Log.d(TAG, "send: $key, $value (path: $uniquePath)")
 
         val request = PutDataMapRequest.create(uniquePath).apply {
             dataMap.putString("key", key)

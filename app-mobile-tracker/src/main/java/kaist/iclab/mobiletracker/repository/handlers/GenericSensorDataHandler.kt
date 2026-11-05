@@ -23,7 +23,9 @@ class GenericSensorDataHandler<T>(
     override val isWatchSensor: Boolean,
     override val supabaseTableName: String,
     private val store: SensorStore<T>,
-    private val serializer: KSerializer<T>
+    private val serializer: KSerializer<T>,
+    /** False when the table has no `event_id` column, so a local delete can't be mirrored remotely. */
+    private val hasRemoteEventId: Boolean = true
 ) : SensorDataHandler where T : BaseEntity, T : RecordSerializable {
     override suspend fun getRecordCount() = store.count()
     override suspend fun getLatestTimestamp() = store.latestTimestamp()
@@ -50,6 +52,10 @@ class GenericSensorDataHandler<T>(
             .map { SupabaseJson.encodeToJsonElement(serializer, it) }
 
     override suspend fun deleteAll() = store.removeAll()
-    override suspend fun deleteById(id: Long) { store.removeById(id) }
-    override suspend fun getEventIdById(id: Long) = store.eventIdById(id)
+    override suspend fun deleteById(id: Long) {
+        store.removeById(id)
+    }
+
+    override suspend fun getEventIdById(id: Long) =
+        if (hasRemoteEventId) store.eventIdById(id) else null
 }

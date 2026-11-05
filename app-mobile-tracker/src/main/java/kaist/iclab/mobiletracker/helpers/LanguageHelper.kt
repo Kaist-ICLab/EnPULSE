@@ -13,7 +13,6 @@ import java.util.Locale
  */
 class LanguageHelper(context: Context) {
 
-
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
         Constants.Prefs.PREFS_NAME,
         Context.MODE_PRIVATE
@@ -76,36 +75,5 @@ class LanguageHelper(context: Context) {
         return base.createConfigurationContext(config)
     }
 
-    /**
-     * Get language display name
-     */
-    fun getLanguageDisplayName(language: String): String {
-        return when (language) {
-            Constants.Language.KOREAN -> "한국어"
-            Constants.Language.ENGLISH -> "English"
-            else -> "English"
-        }
-    }
-
-    /**
-     * Check if current language is Korean
-     */
-    fun isKorean(): Boolean {
-        return getLanguage() == Constants.Language.KOREAN
-    }
-
-    /**
-     * Toggle between English and Korean
-     */
-    fun toggleLanguage(): String {
-        val currentLang = getLanguage()
-        val newLang = if (currentLang == Constants.Language.KOREAN) {
-            Constants.Language.ENGLISH
-        } else {
-            Constants.Language.KOREAN
-        }
-        saveLanguage(newLang)
-        return newLang
-    }
 }
 

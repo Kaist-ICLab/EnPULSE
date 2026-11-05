@@ -133,8 +133,15 @@ fun ServerSyncSettingsScreen(
                     settingsItems.forEachIndexed { index, item ->
                         val isLast = index == settingsItems.size - 1
                         val currentValue = when (item) {
-                            SettingItem.Interval -> getIntervalLabel(LocalResources.current, selectedIntervalMs)
-                            SettingItem.Network -> getNetworkLabel(LocalResources.current, selectedNetworkMode)
+                            SettingItem.Interval -> getIntervalLabel(
+                                LocalResources.current,
+                                selectedIntervalMs
+                            )
+
+                            SettingItem.Network -> getNetworkLabel(
+                                LocalResources.current,
+                                selectedNetworkMode
+                            )
                         }
                         val icon = when (item) {
                             SettingItem.Interval -> Icons.Filled.Schedule

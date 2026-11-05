@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.BatteryManager
 import android.os.Build
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
-import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
@@ -46,7 +45,11 @@ class DeviceBridgeHandler(
     suspend fun getWatchConnectionStatus(request: BridgeRequest): BridgeResponse {
         val info = withTimeoutOrNull(3000L) {
             watchSensorRepository.getWatchConnectionInfo().first()
-        } ?: return BridgeResponse(request.requestId, "error", errorMessage = "Timeout querying watch status")
+        } ?: return BridgeResponse(
+            request.requestId,
+            "error",
+            errorMessage = "Timeout querying watch status"
+        )
 
         val data = buildJsonObject {
             put("status", info.status.name)

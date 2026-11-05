@@ -20,8 +20,8 @@ import kotlinx.serialization.json.put
  * - Outbound: subscribes to [DetectionStateTracker.stateChanges] (fed locally by
  *   `StressDetectionAdapter`/`GestureDetectionAdapter`, unchanged) and BLE-sends each update on
  *   `KEY_DETECTION_STATE_UPDATE` to the phone.
- * - Inbound: still listens on the same key for ADB/dashboard-driven debug simulation
- *   (`TriggerDebugReceiver`'s use case) — a simulated state gets applied to the local tracker,
+ * - Inbound: still listens on the same key for dashboard-driven debug simulation — a simulated
+ *   state gets applied to the local tracker,
  *   which immediately re-forwards it outbound too, exercising the full pipeline end-to-end
  *   without real sensor hardware.
  */
@@ -32,6 +32,9 @@ class DetectionStateForwarder(
 ) {
     companion object {
         private const val TAG = "DetectionStateForwarder"
+
+        /** Payload key for the detection time; must match the phone's BLEHelper. */
+        private const val DETECTED_AT_KEY = "_ts"
     }
 
     private var isStarted = false
@@ -43,8 +46,15 @@ class DetectionStateForwarder(
         coroutineScope.launch {
             detectionStateTracker.stateChanges.collect { (sensor, state) ->
                 try {
-                    val payload = buildJsonObject { put(sensor, state.value) }.toString()
-                    bleChannel.send(Constants.BLE.KEY_DETECTION_STATE_UPDATE, payload)
+                    // Carry the detection time: if the watch was out of range, queued detections all
+                    // arrive together, and stamping them on arrival would make stale ones look fresh.
+                    val payload = buildJsonObject {
+                        put(sensor, state.value)
+                        put(DETECTED_AT_KEY, state.timestamp)
+                    }.toString()
+                    // Urgent: non-urgent DataItems may be batched for up to ~30 min, and the phone-side
+                    // trigger engine needs this detection while the wearer is still there.
+                    bleChannel.send(Constants.BLE.KEY_DETECTION_STATE_UPDATE, payload, isUrgent = true)
                 } catch (e: Exception) {
                     Log.e(
                         TAG,
@@ -75,6 +85,7 @@ class DetectionStateForwarder(
 
             val now = System.currentTimeMillis()
             payload.forEach { (sensor, valueElement) ->
+                if (sensor == DETECTED_AT_KEY) return@forEach
                 val value = valueElement.jsonPrimitive.content
                 detectionStateTracker.updateState(sensor, value, now)
             }

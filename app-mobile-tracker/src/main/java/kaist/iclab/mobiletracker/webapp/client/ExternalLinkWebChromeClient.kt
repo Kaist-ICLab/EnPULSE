@@ -1,7 +1,6 @@
 package kaist.iclab.mobiletracker.webapp.client
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Message
 import android.util.Log
 import android.webkit.WebChromeClient
@@ -49,7 +48,11 @@ class ExternalLinkWebChromeClient : WebChromeClient() {
                         val intent = Intent(Intent.ACTION_VIEW, request.url)
                         tempView.context.startActivity(intent)
                     } catch (e: Exception) {
-                        Log.e(TAG, "Failed to launch external window from transport: ${request.url}", e)
+                        Log.e(
+                            TAG,
+                            "Failed to launch external window from transport: ${request.url}",
+                            e
+                        )
                     }
                     return true
                 }

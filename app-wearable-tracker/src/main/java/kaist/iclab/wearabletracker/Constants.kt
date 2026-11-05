@@ -2,7 +2,6 @@ package kaist.iclab.wearabletracker
 
 import kaist.iclab.wearabletracker.Constants.DB.OBJECTBOX_MAX_SIZE_KB
 
-
 /**
  * Centralized constants for the wearable tracker app.
  * All constants used across the app should be defined here.
@@ -42,18 +41,6 @@ object Constants {
     }
 
     /**
-     * Sensor Type Constants
-     */
-    object SensorType {
-        const val ACCELEROMETER = "Accelerometer"
-        const val PPG = "PPG"
-        const val HEART_RATE = "HeartRate"
-        const val SKIN_TEMPERATURE = "SkinTemperature"
-        const val EDA = "EDA"
-        const val LOCATION = "Location"
-    }
-
-    /**
      * Notification Channel Constants
      */
     object NotificationChannel {
@@ -84,6 +71,7 @@ object Constants {
         const val FLUSH_DATA_FAILURE = 1004
         const val TRIGGER = 1005
         const val GENERIC_TRIGGER = 1006
+        const val COLLECTION_STOPPED = 1007
         const val ERROR = 2000 // Base ID for errors, will be incremented for multiple errors
     }
 

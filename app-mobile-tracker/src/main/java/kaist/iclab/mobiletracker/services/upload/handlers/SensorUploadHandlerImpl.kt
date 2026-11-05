@@ -29,15 +29,23 @@ class SensorUploadHandlerImpl<T>(
     private val serializer: KSerializer<T>,
     private val tableName: String,
     private val sensorName: String,
-    private val supabase: SupabaseUploadService
+    private val supabase: SupabaseUploadService,
+    override val isCampaignGated: Boolean = true,
+    private val supabaseColumns: Set<String>? = null,
+    private val insertOnly: Boolean = false
 ) : SensorUploadHandler where T : BaseEntity, T : CsvSerializable {
 
     override val displayName: String get() = sensorName
 
     private fun toSupabaseRow(entity: T, userUuid: String): JsonObject {
         val obj = SupabaseJson.encodeToJsonElement(serializer, entity).jsonObject
-        return JsonObject(obj + ("uuid" to JsonPrimitive(userUuid)))
+        val row = obj + ("uuid" to JsonPrimitive(userUuid))
+        return JsonObject(supabaseColumns?.let { columns -> row.filterKeys { it in columns } } ?: row)
     }
+
+    private suspend fun sendBatch(rows: List<JsonObject>): Result<Unit> =
+        if (insertOnly) supabase.insertBatch(tableName, sensorName, rows)
+        else supabase.upsertBatch(tableName, sensorName, rows)
 
     // Cursor is the local ObjectBox row id (not the record's own `timestamp`) — see
     // SensorStore.hasDataWithIdAfter's doc comment for why: id is assigned in true insertion
@@ -57,6 +65,7 @@ class SensorUploadHandlerImpl<T>(
             val batchSize = Constants.Network.UPLOAD_BATCH_SIZE
             var currentCursor = lastUploadCursor
             var uploadedRows = 0
+            var quarantinedThisRun = false
 
             while (true) {
                 val entities = store.recordsWithIdAfter(afterId = currentCursor, limit = batchSize)
@@ -70,14 +79,20 @@ class SensorUploadHandlerImpl<T>(
                 // batch every run (a row the server rejects, a batch big enough to time out) never
                 // made any forward progress at all.
                 val rows = entities.map { toSupabaseRow(it, userUuid) }
-                when (val result = supabase.upsertBatch(tableName, sensorName, rows)) {
+                when (val result = sendBatch(rows)) {
                     is Result.Success -> {
                         currentCursor = entities.maxOf { it.id }
                         uploadedRows += entities.size
                         onBatchUploaded(currentCursor, entities.size)
                     }
+
                     is Result.Error -> {
-                        if (allowQuarantine && result.exception is AppError.ServerRejected) {
+                        // At most one batch per run: if the next one is rejected too, the problem is
+                        // likely not this data, and skipping on would drop the whole backlog.
+                        if (allowQuarantine && !quarantinedThisRun &&
+                            result.exception is AppError.ServerRejected
+                        ) {
+                            quarantinedThisRun = true
                             // The caller has already seen this exact spot fail this way repeatedly
                             // across separate upload cycles (see SensorUploadService's streak
                             // tracking) — give up on this whole batch rather than the entire sensor,
@@ -88,7 +103,7 @@ class SensorUploadHandlerImpl<T>(
                             Log.e(
                                 TAG,
                                 "Quarantining $sensorId batch of ${entities.size} records up to " +
-                                    "cursor $currentCursor: $reason"
+                                        "cursor $currentCursor: $reason"
                             )
                             onBatchQuarantined(currentCursor, entities.size, reason)
                             uploadedRows += entities.size
@@ -96,7 +111,7 @@ class SensorUploadHandlerImpl<T>(
                             Log.w(
                                 TAG,
                                 "Partial upload for $sensorId: $uploadedRows rows committed up to " +
-                                    "cursor $currentCursor, resuming from there next run",
+                                        "cursor $currentCursor, resuming from there next run",
                                 result.exception
                             )
                             throw result.exception

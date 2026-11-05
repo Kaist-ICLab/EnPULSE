@@ -23,6 +23,14 @@ class BLEDataChannel(
     }
 
     /**
+     * Delete received DataItems for [keys] once their listeners have handled them. Use for
+     * short-lived commands and states (triggers, detections) that must not be delivered again.
+     */
+    fun deleteAfterDelivery(keys: Set<String>) {
+        BLEReceiver.deleteAfterDelivery(keys)
+    }
+
+    /**
      * Send data with urgency flag
      */
     suspend fun send(key: String, value: String, isUrgent: Boolean) {

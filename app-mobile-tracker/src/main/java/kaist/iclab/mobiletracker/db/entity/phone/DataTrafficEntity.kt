@@ -47,7 +47,12 @@ class DataTrafficEntity : BaseEntity, CsvSerializable, RecordSerializable {
     }
 
     override fun csvHeader() = "eventId,uuid,received,timestamp,totalRx,totalTx,mobileRx,mobileTx"
-    override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$totalRx,$totalTx,$mobileRx,$mobileTx"
+    override fun toCsvRow() =
+        "$eventId,$uuid,$received,$timestamp,$totalRx,$totalTx,$mobileRx,$mobileTx"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Total Rx" to "${totalRx / 1024} KB", "Total Tx" to "${totalTx / 1024} KB"))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Total Rx" to "${totalRx / 1024} KB", "Total Tx" to "${totalTx / 1024} KB")
+    )
 }

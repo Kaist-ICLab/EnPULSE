@@ -43,5 +43,9 @@ class SkinTemperatureEntity : BaseEntity, CsvSerializable, RecordSerializable {
     override fun csvHeader() = "eventId,uuid,received,timestamp,ambientTemp,objectTemp,status"
     override fun toCsvRow() = "$eventId,$uuid,$received,$timestamp,$ambientTemp,$objectTemp,$status"
 
-    override fun toRecord() = SensorRecord(id = id, timestamp = timestamp, fields = mapOf("Skin Temp" to String.format(Locale.getDefault(), "%.1f°C", objectTemp)))
+    override fun toRecord() = SensorRecord(
+        id = id,
+        timestamp = timestamp,
+        fields = mapOf("Skin Temp" to String.format(Locale.getDefault(), "%.1f°C", objectTemp))
+    )
 }

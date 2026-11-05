@@ -31,6 +31,11 @@
     <string name="about_description">연구 데이터 수집을 위한 모바일 추적 애플리케이션</string>
     <string name="sign_out">로그아웃</string>
     <string name="sign_in_with_google">Google로 로그인</string>
+    <string name="sign_in_with_email">이메일로 로그인</string>
+    <string name="login_email_label">이메일</string>
+    <string name="login_password_label">비밀번호</string>
+    <string name="login_email_submit">로그인</string>
+    <string name="login_use_google_instead">Google로 로그인하기</string>
     <string name="login_not_configured_error">서버 연결을 먼저 구성해 주세요.</string>
 
     <!-- Enable Tracker -->
@@ -46,8 +51,6 @@
     <!-- Login Screen -->
     <string name="mobile_tracker">EnPULSE</string>
     <string name="mobile_tracker_logo">EnPULSE 로고</string>
-    <string name="language_english">English</string>
-    <string name="language_korean">한국어</string>
 
     <!-- Settings Menu -->
     <string name="menu_account">계정</string>
@@ -82,26 +85,16 @@
     <string name="web_apps_empty_config">아직 등록된 웹앱이 없습니다.</string>
     <string name="web_app_add_to_home">홈 화면에 추가</string>
     <string name="permission_screen_description">추적할 데이터에 대한 권한을 허용해주세요. 권한을 거부하면 해당 센서의 추적만 비활성화되며 앱의 다른 기능에는 영향을 미치지 않습니다.</string>
-    <string name="restricted_settings_title">제한된 설정</string>
-    <string name="restricted_settings_desc">이 앱을 수동으로 설치했기 때문에 Android에서 이 설정을 제한합니다.\n\n활성화하려면:\n1. 앱 정보로 이동합니다 (앱에서 열어드립니다)\n2. 오른쪽 상단 메뉴(점 3개)를 탭합니다\n3. \'제한된 설정 허용\'을 선택합니다\n4. 여기로 돌아와서 권한을 활성화합니다.</string>
-    <string name="restricted_settings_got_it">확인</string>
-    <string name="restricted_settings_cancel">취소</string>
 
     <!-- Permission Names -->
     <string name="permission_name_notifications">알림</string>
     <string name="permission_name_location">위치</string>
     <string name="permission_name_background_location">백그라운드 위치</string>
-    <string name="permission_name_contacts">연락처</string>
-    <string name="permission_name_camera">카메라</string>
     <string name="permission_name_microphone">마이크</string>
     <string name="permission_name_storage">저장소</string>
     <string name="permission_name_media_images">미디어 이미지</string>
     <string name="permission_name_media_video">미디어 동영상</string>
     <string name="permission_name_media_audio">미디어 오디오</string>
-    <string name="permission_name_calendar">캘린더</string>
-    <string name="permission_name_body_sensors">신체 센서</string>
-    <string name="permission_name_accessibility">접근성</string>
-    <string name="permission_name_notification_listener">알림 리스너</string>
     <string name="permission_name_usage_stats">사용 통계</string>
     <string name="permission_name_activity_recognition">신체 활동 인식</string>
     <string name="permission_name_steps">신체 활동 (걸음 수)</string>
@@ -113,18 +106,12 @@
     <string name="permission_desc_notifications">앱이 알림을 보낼 수 있도록 허용</string>
     <string name="permission_desc_location">기기 위치 데이터 액세스</string>
     <string name="permission_desc_background_location">백그라운드에서 위치 데이터 액세스</string>
-    <string name="permission_desc_contacts">연락처 정보 데이터 읽기</string>
-    <string name="permission_desc_camera">사진 촬영 및 동영상 녹화</string>
     <string name="permission_desc_microphone">마이크에서 오디오 녹음</string>
     <string name="permission_desc_storage">기기 저장소 파일 액세스</string>
     <string name="permission_desc_media_images">기기에 저장된 이미지 액세스</string>
     <string name="permission_desc_media_video">기기에 저장된 동영상 액세스</string>
     <string name="permission_desc_media_audio">기기에 저장된 오디오 파일 액세스</string>
-    <string name="permission_desc_calendar">캘린더 이벤트 및 데이터 읽기</string>
     <string name="permission_desc_activity_recognition">사용자 신체 활동 인식</string>
-    <string name="permission_desc_body_sensors">신체 센서 데이터 액세스</string>
-    <string name="permission_desc_accessibility">사용자 상호작용 이벤트 모니터링</string>
-    <string name="permission_desc_notification_listener">알림 내용 읽기</string>
     <string name="permission_desc_usage_stats">앱 사용 통계 수집</string>
     <string name="permission_desc_steps">걸음 수 데이터 읽기</string>
     <string name="permission_desc_sleep">삼성 헬스에서 수면 세션 데이터 읽기</string>
@@ -155,8 +142,6 @@
     <string name="sensor_detail_total_records">총 레코드</string>
     <string name="sensor_detail_today">오늘</string>
     <string name="sensor_detail_last_recorded">마지막 기록</string>
-    <string name="sensor_detail_upload_success_rate">업로드 성공률</string>
-    <string name="sensor_detail_upload_success_rate_value">%1$d / %2$d (%3$d%%)</string>
     <string name="sensor_detail_raw_data">모든 기록된 데이터</string>
     <string name="sensor_detail_no_records">레코드가 없습니다</string>
     <string name="data_screen_last_recorded_none">데이터 없음</string>
@@ -188,6 +173,12 @@
     <string name="reload_config_dialog_title">설정 새로고침 및 동기화</string>
     <string name="reload_config_dialog_message">설정을 새로고침하시겠습니까? 현재 캠페인의 최신 설정을 가져옵니다.\n\n워치가 연결되어 있고 가까이 있는지 확인해 주세요. 또한 워치의 데이터 수집을 중지해야 설정이 워치에도 올바르게 적용될 수 있습니다.</string>
     <string name="error_generic">문제가 발생했습니다. 다시 시도해 주세요.</string>
+    <string name="error_server_unreachable">EnPULSE 서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 나중에 다시 시도해 주세요.</string>
+    <string name="server_unreachable_title">서버에 연결할 수 없음</string>
+    <string name="server_unreachable_message">연구 설정을 다운로드할 수 없습니다. 인터넷 연결을 확인한 후 다시 시도해 주세요.</string>
+    <string name="server_unreachable_message_cached">연구 설정을 업데이트할 수 없습니다. 인터넷 연결을 확인한 후 다시 시도하거나, 이 메시지 바깥을 눌러 저장된 설정을 계속 사용하세요.</string>
+    <string name="server_unreachable_retry">다시 시도</string>
+    <string name="server_unreachable_exit">종료</string>
     <string name="toast_success_saved">설정을 성공적으로 불러왔습니다.</string>
 
     <string name="menu_leave_campaign">캠페인 나가기</string>
@@ -195,6 +186,8 @@
     <string name="leave_campaign_dialog_title">캠페인 나가기</string>
     <string name="leave_campaign_dialog_message">정말 나가시겠습니까? 캠페인 설정이 삭제되고 데이터 수집이 중지됩니다. 언제든지 다시 참여할 수 있습니다.</string>
     <string name="toast_campaign_left">캠페인에서 나갔습니다</string>
+    <string name="toast_campaign_left_sync_failed">캠페인에서 나갔지만 이 휴대폰을 업데이트하지 못했습니다. \"설정 새로고침 및 동기화\"를 눌러 주세요.</string>
+    <string name="toast_config_download_failed">캠페인을 다운로드하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.</string>
 
     <!-- Sensor Descriptions -->
     <string name="sensor_desc_ambient_light">조도 센서 데이터</string>
@@ -202,17 +195,14 @@
     <string name="sensor_desc_app_usage">앱 활동 추적</string>
     <string name="sensor_desc_battery">배터리 상태 정보</string>
     <string name="sensor_desc_bluetooth">블루투스 기기 상태</string>
-    <string name="sensor_desc_call_log">통화 기록</string>
     <string name="sensor_desc_data_traffic">네트워크 데이터 사용량</string>
     <string name="sensor_desc_device_mode">기기 상태 변경</string>
     <string name="sensor_desc_location">GPS 위치 추적</string>
     <string name="sensor_desc_media">미디어 재생 활동</string>
-    <string name="sensor_desc_message">SMS 및 MMS 메시지</string>
     <string name="sensor_desc_connectivity">네트워크 연결 상태</string>
-    <string name="sensor_desc_notification">알림 이벤트</string>
     <string name="sensor_desc_screen">화면 켜짐/꺼짐 상태</string>
+    <string name="sensor_desc_vad">마이크를 이용한 음성 활동 감지</string>
     <string name="sensor_desc_step">걸음 수 데이터</string>
-    <string name="sensor_desc_user_interaction">사용자 터치 이벤트</string>
     <string name="sensor_desc_wifi">WiFi 연결 상태</string>
     <string name="sensor_desc_imu">워치 IMU 센서 데이터</string>
     <string name="sensor_desc_gesture">워치 제스처 인식 데이터</string>
@@ -232,8 +222,6 @@
     <string name="server_config_title">서버 설정</string>
     <string name="server_config_description">사용자 지정 Supabase 백엔드 URL과 Anonymous Key를 설정하세요.</string>
     <string name="server_config_url_label">Supabase URL</string>
-    <string name="server_config_key_label">Supabase Anon Key</string>
-    <string name="server_config_save">저장 및 연결</string>
     <string name="server_config_save_restart">저장 및 앱 다시 시작</string>
     <string name="server_config_current_title">현재 활성 연결 정보:</string>
     <string name="server_config_current_url">URL: %1$s</string>
@@ -307,17 +295,14 @@
     <string name="sensor_app_usage">앱 사용 로그</string>
     <string name="sensor_battery">배터리</string>
     <string name="sensor_bluetooth_scan">블루투스 스캔</string>
-    <string name="sensor_call_log">통화 기록</string>
     <string name="sensor_data_traffic">데이터 트래픽</string>
     <string name="sensor_device_mode">기기 모드</string>
     <string name="sensor_location">위치</string>
     <string name="sensor_media">미디어</string>
-    <string name="sensor_message">메시지</string>
     <string name="sensor_connectivity">연결 상태</string>
-    <string name="sensor_notification">알림</string>
     <string name="sensor_screen">화면</string>
+    <string name="sensor_vad">VAD</string>
     <string name="sensor_step">걸음</string>
-    <string name="sensor_user_interaction">사용자 상호작용</string>
     <string name="sensor_wifi_scan">Wifi 스캔</string>
     <string name="sensor_imu">IMU</string>
     <string name="sensor_gesture">제스처</string>
@@ -331,7 +316,6 @@
     <string name="sensor_desc_heart_rate">심박수 데이터</string>
     <string name="sensor_desc_skin_temperature">피부 온도 데이터</string>
     <string name="sensor_desc_eda">땀 등 수분으로 인한 피부 전도도 측정</string>
-    <string name="sensor_desc_audio">소리 시그널</string>
     <string name="sensor_web_app_log">웹앱 로그</string>
 
 
@@ -343,7 +327,6 @@
     <string name="toast_sensor_data_uploaded">데이터가 성공적으로 업로드되었습니다</string>
     <string name="toast_sensor_data_upload_error">센서 데이터 업로드에 실패했습니다</string>
     <string name="toast_no_data_to_upload">업로드할 새로운 데이터가 없습니다. 모든 데이터가 이미 업로드되었습니다.</string>
-    <string name="toast_upload_all_summary">%1$d개 센서 업로드 성공</string>
     <string name="sensor_upload_data_confirm">센서 데이터 업로드</string>
     <string name="sensor_upload_data_message">이 센서의 모든 저장된 데이터를 서버에 업로드하시겠습니까?</string>
 
@@ -352,7 +335,6 @@
     <string name="toast_offline_using_cache">인터넷 연결 없음. 저장된 설정을 표시합니다.</string>
 
     <string name="toast_error_generic">오류가 발생했습니다</string>
-    <string name="toast_request_timeout">요청 시간이 초과되었습니다. 연결 상태를 확인하고 다시 시도해 주세요.</string>
     <string name="toast_no_data_to_export">내보낼 데이터가 없습니다</string>
     <string name="toast_export_failed">데이터 내보내기 실패</string>
     <string name="sensor_export_csv">CSV 내보내기</string>
@@ -384,7 +366,6 @@
 
     <!-- Data Upload Dialog -->
     <string name="upload_dialog_title">데이터 업로드 중</string>
-    <string name="upload_dialog_status">%1$s 업로드 중…</string>
     <string name="upload_dialog_progress">%1$d / %2$d</string>
     <string name="upload_dialog_progress_sensor">%1$s · %2$d / %3$d</string>
     <string name="upload_complete_title">업로드 완료</string>
@@ -395,7 +376,6 @@
     <string name="ok">확인</string>
 
     <string name="permission_instruction_title">작업 필요</string>
-    <string name="grant_permissions_in_menu_first">먼저 권한 메뉴에서 권한을 허용해 주세요.</string>
 
     <!-- WebView Error Strings -->
     <string name="webview_failed_to_load">로드하지 못했습니다</string>

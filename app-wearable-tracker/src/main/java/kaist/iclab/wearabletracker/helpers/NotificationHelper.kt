@@ -11,6 +11,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.wearabletracker.Constants
+import kaist.iclab.wearabletracker.MainActivity
 import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.helpers.NotificationHelper.showSurveyTriggerNotification
 
@@ -309,7 +310,8 @@ object NotificationHelper {
         context: Context,
         pendingIntent: PendingIntent,
         title: String,
-        text: String
+        text: String,
+        timeoutMs: Long? = null
     ) {
         ensureNotificationChannel(context, NotificationChannelConfig.TRIGGER)
         val notificationManager =
@@ -326,9 +328,43 @@ object NotificationHelper {
                 .setContentIntent(pendingIntent)
                 .setFullScreenIntent(pendingIntent, true)
                 .setAutoCancel(true)
+                // A survey can't be answered after it expires, so neither can its notification.
+                .apply { if (timeoutMs != null) setTimeoutAfter(timeoutMs) }
                 .build()
 
         notificationManager.notify(Constants.NotificationId.TRIGGER, notification)
+    }
+
+    /**
+     * Tell the wearer that collection stopped because the app was restarted (reboot, or the
+     * process was killed). It is not resumed automatically; tapping just opens the app.
+     */
+    fun showCollectionStoppedNotification(context: Context) {
+        ensureNotificationChannel(context, NotificationChannelConfig.ERROR)
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            Constants.NotificationId.COLLECTION_STOPPED,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification =
+            NotificationCompat.Builder(context, NotificationChannelConfig.ERROR.channelId)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(context.getString(R.string.notification_collection_stopped_title))
+                .setContentText(context.getString(R.string.notification_collection_stopped_message))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+                .build()
+
+        notificationManager.notify(Constants.NotificationId.COLLECTION_STOPPED, notification)
     }
 
     /**

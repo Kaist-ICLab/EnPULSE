@@ -37,7 +37,8 @@ object WebAppNotificationBuilder {
             "$baseUrl?survey_id=$surveyId&schedule_id=$scheduleId"
         }
         return Intent(context, WebAppActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags =
+                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_CLEAR_TOP
             data = "webapp://$webAppId".toUri()
             putExtra(WebAppActivity.EXTRA_URL, fullUrl)
             putExtra(WebAppActivity.EXTRA_WEBAPP_ID, webAppId)
@@ -112,9 +113,11 @@ object WebAppNotificationBuilder {
                 putExtra(WebAppActivity.EXTRA_URL, url)
                 putExtra(WebAppActivity.EXTRA_WEBAPP_ID, trustedWebApp.id)
             }
+
             url != null -> Intent(context, SimpleWebViewActivity::class.java).apply {
                 putExtra(SimpleWebViewActivity.EXTRA_URL, url)
             }
+
             else -> Intent(context, MainActivity::class.java)
         }.apply {
             flags = if (trustedWebApp != null) {
@@ -125,7 +128,7 @@ object WebAppNotificationBuilder {
         }
         val uniqueString = "$title|$body|$url"
         val uniqueHash = uniqueString.hashCode()
-        
+
         val pendingIntent = PendingIntent.getActivity(
             context,
             uniqueHash,

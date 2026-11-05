@@ -1,6 +1,5 @@
 package kaist.iclab.tracker.sensor.survey.question
 
-import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +37,6 @@ sealed class Question<T>(
 
         CoroutineScope(Dispatchers.IO).launch {
             response.collect { res ->
-                Log.d("Question", "Response: $res")
                 questionTrigger?.forEach { trigger ->
                     trigger.children.forEach { it.setIsHidden(!eval(trigger.predicate, res)) }
                 }

@@ -32,5 +32,10 @@ object Styles {
     val BUTTON_ICON_TITLE_SPACING = 12.dp
     val BUTTON_ICON_INTERNAL_SPACING = 1.dp
     val BUTTON_SHAPE = RoundedCornerShape(BUTTON_CORNER_RADIUS)
+
+    // Email/password fallback form
+    val FORM_FIELD_SPACING = 12.dp
+    val FORM_SECTION_SPACING = 16.dp
+    val FORM_LABEL_FONT_SIZE = 14.sp
 }
 

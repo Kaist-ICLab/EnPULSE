@@ -56,7 +56,8 @@ val triggerModule = module {
     // persistent storage synchronously in its constructor, so this sees the last-synced config
     // immediately, before any network call.
     single<StateStorage<TimingSensor.Config>>(named("timingSensorConfigStorage")) {
-        val configJson = get<CampaignSensorRepository>().getSensorConfig(TimingSensor.CAMPAIGN_TABLE_NAME)
+        val configJson =
+            get<CampaignSensorRepository>().getSensorConfig(TimingSensor.CAMPAIGN_TABLE_NAME)
         val initialConfig = if (configJson != null) {
             try {
                 TimingSensor.Config.fromJson(configJson.toString())

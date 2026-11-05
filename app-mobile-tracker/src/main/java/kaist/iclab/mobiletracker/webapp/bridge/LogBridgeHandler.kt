@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.webapp.bridge
 
-import android.util.Log
 import kaist.iclab.mobiletracker.db.entity.phone.WebAppLogEntity
 import kaist.iclab.mobiletracker.db.obx.WebAppLogStore
 import kaist.iclab.mobiletracker.webapp.WebAppRegistry
@@ -37,13 +36,21 @@ class LogBridgeHandler(
 ) {
     fun log(request: BridgeRequest, callerWebAppId: String): BridgeResponse {
         if (webAppRegistry.get(callerWebAppId) == null) {
-            return BridgeResponse(request.requestId, "error", errorMessage = "Unknown caller webapp: $callerWebAppId")
+            return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Unknown caller webapp: $callerWebAppId"
+            )
         }
-        Log.d(TAG, "log: $request")
 
         val params = request.payload.jsonObject
-        val eventType = (params["event_type"] as? JsonPrimitive)?.contentOrNullSafe()?.takeIf { it.isNotBlank() }
-            ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing event_type")
+        val eventType = (params["event_type"] as? JsonPrimitive)?.contentOrNullSafe()
+            ?.takeIf { it.isNotBlank() }
+            ?: return BridgeResponse(
+                request.requestId,
+                "error",
+                errorMessage = "Missing event_type"
+            )
 
         // Local write only — no immediate flush. AutoSyncService's periodic loop drains this store
         // into Supabase, same as sensor data: capture and upload are decoupled so a burst of log()
@@ -82,8 +89,4 @@ class LogBridgeHandler(
     }
 
     private fun JsonPrimitive.contentOrNullSafe(): String? = if (this is JsonNull) null else content
-
-    companion object {
-        private const val TAG = "LogBridgeHandler"
-    }
 }

@@ -96,7 +96,9 @@ class AccountSettingsViewModel(
     }
 
     fun fetchCampaigns() {
-        if (campaigns.value.isNotEmpty() || _isLoadingCampaigns.value) return
+        // Always refetch: the list is a process-wide cache, so returning early when it was
+        // non-empty hid campaigns created on the dashboard until the app restarted.
+        if (_isLoadingCampaigns.value) return
 
         viewModelScope.launch {
             _isLoadingCampaigns.value = true
@@ -105,10 +107,12 @@ class AccountSettingsViewModel(
             campaignRepository.fetchCampaigns()
                 .onSuccess { _isLoadingCampaigns.value = false }
                 .onFailure {
-                    val errorKey = if (it is AppError.CollectionRunning) {
-                        "turn_off_data_collection_first"
-                    } else {
-                        it.message ?: "Unknown error"
+                    // Keys, not raw messages: a Supabase exception message carries the request URL
+                    // and headers, which is unreadable and should not be shown to users.
+                    val errorKey = when (it) {
+                        is AppError.CollectionRunning -> "turn_off_data_collection_first"
+                        is AppError.Network, is AppError.Timeout -> "error_server_unreachable"
+                        else -> "error_generic"
                     }
                     _campaignError.value = errorKey
                     _isLoadingCampaigns.value = false
@@ -117,7 +121,10 @@ class AccountSettingsViewModel(
     }
 
     fun selectCampaign(campaignId: String) {
-        _selectedCampaignId.value = campaignId
+        // Doesn't set _selectedCampaignId here: it's driven by profileFlow (see init), which
+        // syncFullStudyConfig below only republishes on success. Setting it eagerly showed the
+        // newly picked campaign as selected even when the sync that was supposed to load its
+        // sensors/surveys failed, leaving a half-updated cache behind a UI that looked fine.
         viewModelScope.launch { saveCampaignToProfile(campaignId) }
     }
 
@@ -134,6 +141,8 @@ class AccountSettingsViewModel(
             val exception = (syncResult as? Result.Error)?.exception
             if (exception is AppError.CollectionRunning) {
                 _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.turn_off_data_collection_first))
+            } else if (exception is AppError.Network) {
+                _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_config_download_failed))
             } else {
                 _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_experiment_group_selected_partial_error))
             }
@@ -150,16 +159,26 @@ class AccountSettingsViewModel(
         viewModelScope.launch {
             _isLeavingCampaign.value = true
             try {
-                when (userProfileRepository.leaveCampaign()) {
+                when (val leaveResult = userProfileRepository.leaveCampaign()) {
                     is Result.Success -> {
-                        // Clear cached sensors/surveys and refresh the profile so the
+                        // Clear cached sensors/surveys/triggers and refresh the profile so the
                         // UI reflects that no campaign is joined.
-                        userProfileRepository.syncFullStudyConfig()
-                        _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_campaign_left))
+                        val syncResult = userProfileRepository.syncFullStudyConfig()
+                        _uiEvent.emit(
+                            AccountSettingsUiEvent.ShowToast(
+                                if (syncResult.isSuccess) R.string.toast_campaign_left
+                                else R.string.toast_campaign_left_sync_failed
+                            )
+                        )
                     }
 
                     is Result.Error -> {
-                        _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.error_generic))
+                        _uiEvent.emit(
+                            AccountSettingsUiEvent.ShowToast(
+                                if (leaveResult.exception is AppError.CollectionRunning) R.string.turn_off_data_collection_first
+                                else R.string.error_generic
+                            )
+                        )
                     }
                 }
             } finally {
@@ -182,6 +201,8 @@ class AccountSettingsViewModel(
                     val exception = (result as? Result.Error)?.exception
                     if (exception is AppError.CollectionRunning) {
                         _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.turn_off_data_collection_first))
+                    } else if (exception is AppError.Network) {
+                        _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_config_download_failed))
                     } else {
                         _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.error_generic))
                     }

@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kaist.iclab.mobiletracker.di.appModule
 import kaist.iclab.mobiletracker.di.authModule
 import kaist.iclab.mobiletracker.di.databaseModule
@@ -13,17 +14,16 @@ import kaist.iclab.mobiletracker.di.phoneSensorModule
 import kaist.iclab.mobiletracker.di.repositoryModule
 import kaist.iclab.mobiletracker.di.viewModelModule
 import kaist.iclab.mobiletracker.di.watchSensorModule
-import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.tracker.sensor.controller.BackgroundController
-import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.controller.OffBodyDetector
+import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
@@ -151,7 +151,8 @@ class MobileTrackerApplication : Application(), KoinComponent,
         // AutoSyncService.checkAndSyncIfNeeded() gates on, so this only restarts the service when
         // the user actually had logging running.
         try {
-            val syncTimestampService = getKoin().get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
+            val syncTimestampService =
+                getKoin().get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
             if (syncTimestampService.getDataCollectionStarted() != null) {
                 getKoin().get<kaist.iclab.mobiletracker.services.AutoSyncManager>().start()
             }
@@ -216,6 +217,7 @@ class MobileTrackerApplication : Application(), KoinComponent,
                             PhoneSensorDataService.start(this@MobileTrackerApplication)
                             surveyResponseCapture.start()
                         }
+
                         else -> {
                             PhoneSensorDataService.stop(this@MobileTrackerApplication)
                             surveyResponseCapture.stop()

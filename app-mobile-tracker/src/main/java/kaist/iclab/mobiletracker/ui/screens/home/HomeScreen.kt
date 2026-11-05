@@ -12,14 +12,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
-import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.AppRegistration
 import androidx.compose.material.icons.filled.BackHand
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bluetooth
-import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CompassCalibration
 import androidx.compose.material.icons.filled.DataUsage
 import androidx.compose.material.icons.filled.Favorite
@@ -28,15 +26,14 @@ import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MonitorHeart
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.StayCurrentPortrait
 import androidx.compose.material.icons.filled.Thermostat
-import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiTethering
@@ -154,12 +151,6 @@ fun HomeScreen(
                     Styles.Colors.BLUETOOTH
                 ),
                 SensorItem(
-                    "CallLog",
-                    uiState.callLogCount,
-                    Icons.Default.Call,
-                    Styles.Colors.CALL_LOG
-                ),
-                SensorItem(
                     "DataTraffic",
                     uiState.dataTrafficCount,
                     Icons.Default.DataUsage,
@@ -196,28 +187,22 @@ fun HomeScreen(
                     Styles.Colors.MEDIA
                 ),
                 SensorItem(
-                    "MessageLog",
-                    uiState.messageLogCount,
-                    Icons.AutoMirrored.Filled.Message,
-                    Styles.Colors.MESSAGE_LOG
-                ),
-                SensorItem(
                     "Connectivity",
                     uiState.connectivityCount,
                     Icons.Default.Wifi,
                     Styles.Colors.CONNECTIVITY
                 ),
                 SensorItem(
-                    "Notification",
-                    uiState.notificationCount,
-                    Icons.Default.Notifications,
-                    Styles.Colors.NOTIFICATIONS
-                ),
-                SensorItem(
-                    "Step",
+                    "ActivityRecognition",
                     uiState.activityCount,
                     Icons.AutoMirrored.Filled.DirectionsWalk,
                     Styles.Colors.ACTIVITY
+                ),
+                SensorItem(
+                    "Step",
+                    uiState.stepCount,
+                    Icons.AutoMirrored.Filled.DirectionsWalk,
+                    Styles.Colors.STEP
                 ),
                 SensorItem(
                     "PPG",
@@ -238,16 +223,16 @@ fun HomeScreen(
                     Styles.Colors.WATCH_SKIN_TEMP
                 ),
                 SensorItem(
-                    "UserInteraction",
-                    uiState.userInteractionCount,
-                    Icons.Default.TouchApp,
-                    Styles.Colors.USER_INTERACTION
-                ),
-                SensorItem(
                     "WifiScan",
                     uiState.wifiScanCount,
                     Icons.Default.WifiTethering,
                     Styles.Colors.WIFI_SCAN
+                ),
+                SensorItem(
+                    "VAD",
+                    uiState.vadCount,
+                    Icons.Default.RecordVoiceOver,
+                    Styles.Colors.VAD
                 ),
                 SensorItem(
                     "WatchIMU",
@@ -326,7 +311,11 @@ fun HomeScreen(
                 ) { sensor ->
                     InsightRow(
                         title = getSensorDisplayName(sensor.sensorId),
-                        value = pluralStringResource(R.plurals.home_logs_unit, sensor.count, sensor.count),
+                        value = pluralStringResource(
+                            R.plurals.home_logs_unit,
+                            sensor.count,
+                            sensor.count
+                        ),
                         icon = sensor.icon,
                         iconColor = sensor.iconColor
                     )

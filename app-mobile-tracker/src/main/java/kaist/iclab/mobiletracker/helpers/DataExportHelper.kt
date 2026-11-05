@@ -3,8 +3,8 @@ package kaist.iclab.mobiletracker.helpers
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 import androidx.core.content.FileProvider
+import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

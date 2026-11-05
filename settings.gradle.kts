@@ -22,9 +22,6 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven {
-            url = uri("https://jitpack.io")
-        }
     }
 }
 
@@ -38,20 +35,3 @@ include(":samsung-health-sensor-api")
 include(":tracker-library")
 include(":app-wearable-tracker")
 include(":app-mobile-tracker")
-
-// Test Modules
-//include(":test-controller")
-//include(":test-galaxywatch-sensor")
-//include(":test-listener")
-//include(":test-notification")
-//include(":test-permission")
-//include(":test-sensor")
-//include(":test-survey")
-//include(":test-sync")
-//include(":test-sync-watch")
-//include(":test-survey")
-
-// Other Modules
-//include(":phone")
-//include(":galaxywatch-monitor")
-//include(":galaxywatch")

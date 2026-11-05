@@ -15,6 +15,7 @@ import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.watchhar.FloatRingBuffer
 import kaist.iclab.tracker.sensor.watchhar.WatchHarEventDetector
 import kaist.iclab.tracker.sensor.watchhar.ShortRingBuffer
+import android.util.Log
 import kaist.iclab.tracker.sensor.watchhar.loadModelFile
 import kaist.iclab.tracker.storage.core.StateStorage
 import kotlinx.serialization.Serializable
@@ -44,6 +45,13 @@ class GestureSensor(
         private const val EVENT_WINDOW_FRAMES = 150
         private const val CLASSIFIER_WINDOW_FRAMES = 50
         private const val AUDIO_WINDOW_SIZE = 950
+
+        /**
+         * Sample rate the WatchHAR audio branch was trained on, so [AUDIO_WINDOW_SIZE] is ~950 ms.
+         * [AudioSensor] records at 16 kHz for the phone's VAD, so audio is decimated to this rate
+         * here, keeping every Nth sample exactly as AudioSensor used to before it stopped downsampling.
+         */
+        private const val MODEL_AUDIO_SAMPLE_RATE_HZ = 1_000
         private const val PROBABILITY_SCALE = 1000
 
         private const val IMU_ENCODER_MODEL = "float32/imu_encoder.tflite"
@@ -129,6 +137,10 @@ class GestureSensor(
     private val movingAvgWindow = FloatRingBuffer(100)
     private val dataLock = Any()
 
+    // Guards modelRunner: inference runs on the audio thread, close() on the stopping thread, and
+    // closing a TFLite interpreter mid-inference is a native crash.
+    private val classifierLock = Any()
+
     private var modelRunner: WatchHarClassifier? = null
     private var eventDetector: WatchHarEventDetector? = null
     private var eventActive = false
@@ -139,6 +151,12 @@ class GestureSensor(
 
     private var ownsImuSensor = false
     private var ownsAudioSensor = false
+
+    // Guards ownsAudioSensor and the audio sensor's start/stop calls: handleImuEntity decides to
+    // start it (on the IMU callback thread) at the same time onStop (on the stopping thread) can
+    // decide whether to stop it. Without this, a gesture starting at the exact moment the sensor
+    // is stopped could leave the microphone running with nothing left to stop it.
+    private val audioOwnershipLock = Any()
 
     private val imuListener: (IMUSensor.Entity) -> Unit = { entity ->
         handleImuEntity(entity)
@@ -155,8 +173,12 @@ class GestureSensor(
     }
 
     override fun onStart() {
-        modelRunner = WatchHarClassifier(context, configStateFlow.value.interpreterThreads)
-        eventDetector = WatchHarEventDetector(context, configStateFlow.value.interpreterThreads)
+        synchronized(classifierLock) {
+            modelRunner = WatchHarClassifier(context, configStateFlow.value.interpreterThreads)
+        }
+        synchronized(dataLock) {
+            eventDetector = WatchHarEventDetector(context, configStateFlow.value.interpreterThreads)
+        }
         eventActive = false
         synchronized(dataLock) {
             imuWindow.clear()
@@ -192,11 +214,14 @@ class GestureSensor(
         if (ownsImuSensor && imuSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
             imuSensor.stop()
         }
-        if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
-            audioSensor.stop()
-        }
         ownsImuSensor = false
-        ownsAudioSensor = false
+
+        synchronized(audioOwnershipLock) {
+            if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
+                audioSensor.stop()
+            }
+            ownsAudioSensor = false
+        }
 
         synchronized(dataLock) {
             imuWindow.clear()
@@ -207,10 +232,14 @@ class GestureSensor(
         }
         eventActive = false
         resetEventAggregation()
-        eventDetector?.close()
-        eventDetector = null
-        modelRunner?.close()
-        modelRunner = null
+        synchronized(dataLock) {
+            eventDetector?.close()
+            eventDetector = null
+        }
+        synchronized(classifierLock) {
+            modelRunner?.close()
+            modelRunner = null
+        }
     }
 
     private fun handleImuEntity(entity: IMUSensor.Entity) {
@@ -262,17 +291,30 @@ class GestureSensor(
                     audioBuffer.clear()
                     lastClassificationTimestamp = Long.MIN_VALUE
                 }
-                if (audioSensor.sensorStateFlow.value.flag != SensorState.FLAG.RUNNING) {
-                    ownsAudioSensor = true
-                    audioSensor.start()
-                } else {
-                    ownsAudioSensor = false
+                synchronized(audioOwnershipLock) {
+                    if (audioSensor.sensorStateFlow.value.flag != SensorState.FLAG.RUNNING) {
+                        // This runs on the IMU callback thread, where an uncaught exception kills
+                        // the app. If the microphone can't start (busy, revoked,
+                        // background-restricted), let this event finish without audio votes,
+                        // which emits nothing, and retry at the next event.
+                        ownsAudioSensor = try {
+                            audioSensor.start()
+                            true
+                        } catch (e: Exception) {
+                            Log.e(name, "Microphone failed to start; skipping audio for this gesture", e)
+                            false
+                        }
+                    } else {
+                        ownsAudioSensor = false
+                    }
                 }
             } else {
-                if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
-                    audioSensor.stop()
+                synchronized(audioOwnershipLock) {
+                    if (ownsAudioSensor && audioSensor.sensorStateFlow.value.flag == SensorState.FLAG.RUNNING) {
+                        audioSensor.stop()
+                    }
+                    ownsAudioSensor = false
                 }
-                ownsAudioSensor = false
                 synchronized(dataLock) {
                     audioBuffer.clear()
                     lastClassificationTimestamp = Long.MIN_VALUE
@@ -283,11 +325,25 @@ class GestureSensor(
         }
     }
 
+    private fun decimate(samples: ShortArray, step: Int): ShortArray {
+        val out = ShortArray((samples.size + step - 1) / step)
+        var src = 0
+        var dst = 0
+        while (src < samples.size) {
+            out[dst++] = samples[src]
+            src += step
+        }
+        return out
+    }
+
     private fun handleAudioEntity(entity: AudioSensor.Entity) {
         if (!eventActive) return
 
+        val step = (entity.sampleRateHz / MODEL_AUDIO_SAMPLE_RATE_HZ).coerceAtLeast(1)
+        val modelSamples = if (step == 1) entity.samples else decimate(entity.samples, step)
+
         val shouldClassify = synchronized(dataLock) {
-            audioBuffer.write(entity.samples.toShortArray())
+            audioBuffer.write(modelSamples)
             if (!audioBuffer.isFull() || imuWindow.size < CLASSIFIER_WINDOW_FRAMES) {
                 return
             }
@@ -329,7 +385,9 @@ class GestureSensor(
             audioBuffer.getLastData(AUDIO_WINDOW_SIZE)
         }
 
-        val result = modelRunner?.runClassifier(imuInput, audioInput) ?: return
+        val result = synchronized(classifierLock) {
+            modelRunner?.runClassifier(imuInput, audioInput)
+        } ?: return
         val classIndex = result.indices.maxByOrNull { result[it] } ?: return
         synchronized(dataLock) {
             classVoteCounts[classIndex] += 1

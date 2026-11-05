@@ -1,7 +1,7 @@
 [versions]
+gson = "2.8.9"
 agp = "9.2.0"
 authKt = "3.7.0"
-firebaseMessaging = "25.1.1"
 kotlin = "2.4.10"
 kotlinxCoroutines = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
@@ -52,6 +52,7 @@ targetSdk = "37"
 buildTools = "36.1.0"
 
 [libraries]
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 #androidx
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
@@ -61,9 +62,7 @@ androidx-lifecycle-service = { group = "androidx.lifecycle", name = "lifecycle-s
 #compose
 supabase-auth-kt = { module = "io.github.jan-tennert.supabase:auth-kt", version.ref = "authKt" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
 compose-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-compose-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
 compose-lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 compose-ui = { group = "androidx.compose.ui", name = "ui" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
@@ -75,7 +74,6 @@ compose-material = { group = "androidx.compose.material", name = "material", ver
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "composeMaterialIconsExtended" }
 
 #wear-compose
-firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
@@ -86,12 +84,10 @@ realtime-kt = { module = "io.github.jan-tennert.supabase:realtime-kt", version.r
 storage-kt = { module = "io.github.jan-tennert.supabase:storage-kt", version.ref = "supabaseKt" }
 supabase-kt = { module = "io.github.jan-tennert.supabase:supabase-kt", version.ref = "supabaseKt" }
 wear-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "wearCompose" }
-wear-compose-ui-tooling = { group = "androidx.wear.compose", name = "compose-ui-tooling", version.ref = "wearCompose" }
 wear-input = { group = "androidx.wear", name = "wear-input", version.ref = "wearInput" }
 wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wearToolingPreview" }
 
 #koin
-koin-core = { module = "io.insert-koin:koin-core" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
 
@@ -128,47 +124,16 @@ androidx-compose-foundation-layout = { group = "androidx.compose.foundation", na
 
 
 [bundles]
-#firebase = ["firebase-analytics", "firebase-cloud-messaging"]
-#androidx-lifecycle = ["androidx-lifecycle-runtime-ktx", "androidx-lifecycle-viewmodel-ktx"]
-#androidx-navigation = ["navigation-fragment-ktx", "navigation-ui-ktx"]
-#coroutine = ["kotlinx-coroutines-android", "kotlinx-coroutines-core"]
-compose = [
-    "compose-activity",
-    "compose-runtime",
-    "compose-lifecycle-runtime",
-    "compose-lifecycle-viewmodel",
-    "compose-ui",
-    "compose-ui-graphics",
-    "compose-ui-tooling",
-    "compose-ui-tooling-preview",
-    "compose-navigation",
-    "compose-material3",
-    "compose-material-icons-extended",
-    #    "compose-compiler"
-]
-compose-wear = [
-    "wear-compose-material",
-    "wear-compose-ui-tooling",
-    "wear-tooling-preview",
-]
 androidx = [
-    #    "androidx-junit",
-    #    "androidx-espresso-core",
     "androidx-core-ktx",
     "androidx-appcompat",
     "androidx-lifecycle-runtime-ktx",
-    #    "androidx-navigation-runtime-ktx",
 ]
 auth = [
     "firebase-auth",
     "androidx-credentials",
     "androidx-credentials-auth",
     "googleid",
-]
-koin = [
-    "koin-android",
-    "koin-core",
-    "koin-androidx-compose",
 ]
 
 [plugins]

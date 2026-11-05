@@ -1,17 +1,15 @@
 package kaist.iclab.tracker.sensor.phone
 
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Poll
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.tracker.R
 import kaist.iclab.tracker.listener.BroadcastListener
 import kaist.iclab.tracker.permission.PermissionManager
@@ -34,12 +32,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 /**
- * Hosts survey UI and collects responses. As of the trigger-system unification, this sensor no
- * longer decides *when* a survey fires — that's the trigger engine's job now (a `Detection`
- * condition, possibly gated by [kaist.iclab.tracker.sensor.phone.TimingSensor] for time-based
- * cases, combined with an `Ema`/`WatchEma` action). [triggerSurveyNotification] is invoked by the
- * app's `PhoneTriggerActionHandler` whenever an `Ema` action fires; [openSurvey] remains available
- * for manual/immediate opening (e.g. a "preview this survey" debug action in settings).
+ * SurveySensor is capable of generating notifications and opening surveys.
+ * It also captures result submission event.
  */
 class SurveySensor(
     private val context: Context,
@@ -62,9 +56,7 @@ class SurveySensor(
         const val RESULT_ACTION_NAME = "kaist.iclab.tracker.survey_sensor_result"
     }
 
-    override val permissions: Array<String> = listOfNotNull(
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.POST_NOTIFICATIONS else null,
-    ).toTypedArray()
+    override val permissions: Array<String> = arrayOf()
 
     override val foregroundServiceTypes = arrayOf<Int>()
 
@@ -115,23 +107,16 @@ class SurveySensor(
         }
 
 
-        SurveyActivity.initSurvey = { id: String, scheduleId: String? ->
-            val requestedSurvey = configStorage.get().survey[id]!!
+        SurveyActivity.initSurvey = initSurvey@{ id: String, scheduleId: String? ->
+            val requestedSurvey = configStorage.get().survey[id]
+            if (requestedSurvey == null) {
+                Log.w(TAG, "Survey $id is not in the current config")
+                return@initSurvey null
+            }
             if(scheduleId != null) scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
             requestedSurvey.initSurveyResponse()
             requestedSurvey
         }
-    }
-
-    fun openSurvey(id: String) {
-        val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = id))
-        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            putExtra("id", id)
-            putExtra("scheduleId", scheduleId)
-        }
-
-        context.startActivity(intent)
     }
 
     /**
@@ -156,11 +141,15 @@ class SurveySensor(
             return
         }
 
-        // Fallback to internal notification logic if no handler is provided
+        // Fallback to internal notification logic if no handler is provided.
+        // Use a unique notification ID based on scheduleId to ensure every trigger alerts the user
+        // even if a previous one is still active.
+        val triggerNotificationId = NOTIFICATION_ID + scheduleId.hashCode()
         val surveyActivityIntent = Intent(context, DefaultSurveyActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("id", id)
             putExtra("scheduleId", scheduleId)
+            putExtra(SurveyActivity.EXTRA_NOTIFICATION_ID, triggerNotificationId)
         }
 
         val pendingIntent = PendingIntent.getActivity(
@@ -181,9 +170,6 @@ class SurveySensor(
             .setFullScreenIntent(pendingIntent, true) // Add full screen intent to wake device
 
         try {
-            // Use a unique notification ID based on scheduleId to ensure every trigger alerts the user
-            // even if a previous one is still active.
-            val triggerNotificationId = NOTIFICATION_ID + scheduleId.hashCode()
             NotificationManagerCompat.from(context).notify(triggerNotificationId, builder.build())
             Log.d(TAG, "Triggered phone survey notification (survey: $id, schedule: $scheduleId)")
         } catch (e: SecurityException) {
@@ -199,22 +185,26 @@ class SurveySensor(
 
     private val surveyResultCallback = surveyResultCallback@{ intent: Intent? ->
         if(intent == null) return@surveyResultCallback
-        Log.d(TAG, "Received Survey intent")
+
         val scheduleId = intent.getStringExtra("scheduleId") ?: return@surveyResultCallback
         val result = intent.getStringExtra("result") ?: return@surveyResultCallback
         val responseTime = intent.getLongExtra("responseTime", -1)
-        Log.d(TAG, "scheduleId: $scheduleId, result: $result, responseTime: $responseTime")
 
         scheduleStorage.setResponseSubmissionTime(scheduleId, responseTime)
-        val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)!!
+        // Schedules are wiped when collection stops (resetSchedule) or surveys are cleared, so a
+        // survey answered across a stop/start has none. Record the answer anyway, with its
+        // submission time standing in for the lost schedule times, instead of crashing.
+        val schedule = scheduleStorage.getScheduleByScheduleId(scheduleId)
+        if (schedule == null) Log.w(TAG, "No schedule for $scheduleId; using the submission time")
+        val fallbackTime = responseTime.takeIf { it > 0 } ?: System.currentTimeMillis()
         val resultJson = Json.decodeFromString<JsonElement>(result)
 
         listeners.forEach { it.invoke(
             Entity(
                 response = resultJson,
-                triggerTime = schedule.triggerTime,
-                actualTriggerTime = schedule.actualTriggerTime,
-                surveyStartTime = schedule.surveyStartTime,
+                triggerTime = if (schedule != null) schedule.triggerTime else fallbackTime,
+                actualTriggerTime = if (schedule != null) schedule.actualTriggerTime else fallbackTime,
+                surveyStartTime = if (schedule != null) schedule.surveyStartTime else fallbackTime,
                 responseSubmissionTime = responseTime,
                 deviceType = 0 // Phone
             )

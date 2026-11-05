@@ -11,8 +11,8 @@ import io.objectbox.annotation.Index
  * Deliberately **not** a sensor: it does not extend
  * [kaist.iclab.mobiletracker.db.entity.BaseEntity], is absent from
  * [kaist.iclab.mobiletracker.db.obx.SensorStores]/[kaist.iclab.mobiletracker.di.SensorRegistry],
- * and never rides the campaign-gated sensor upload path. It follows the
- * [MicroEmaResponseEntity] pattern instead — a small dedicated store keyed on [isSynced], drained
+ * and never rides the campaign-gated sensor upload path. Instead it has a small dedicated store
+ * keyed on [isSynced], drained
  * by [kaist.iclab.mobiletracker.services.upload.WebAppLogUploader] into the `web_app_log` table
  * regardless of whether sensor collection is running.
  */

@@ -49,10 +49,26 @@ class PhoneTriggerActionHandler(
         surveySensor.triggerSurveyNotification(action.surveyId.toString())
     }
 
-    private suspend fun handleWatchEma(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.WatchEma) {
-        Log.d(TAG, "Sending WatchEma trigger to watch: surveyId=${action.surveyId}, trigger=${trigger.name}")
+    private suspend fun handleWatchEma(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.WatchEma
+    ) {
+        Log.d(
+            TAG,
+            "Sending WatchEma trigger to watch: surveyId=${action.surveyId}, trigger=${trigger.name}"
+        )
         try {
-            bleChannel.send(AppConfig.BLEKeys.WATCH_EMA_TRIGGER, action.surveyId.toString(), isUrgent = true)
+            // The timestamp lets the watch drop commands that sat in the Data Layer queue while it
+            // was out of range, instead of opening them later on the next wearer.
+            val payload = buildJsonObject {
+                put("surveyId", action.surveyId)
+                put("ts", System.currentTimeMillis())
+            }.toString()
+            bleChannel.send(
+                AppConfig.BLEKeys.WATCH_EMA_TRIGGER,
+                payload,
+                isUrgent = true
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to send WatchEma trigger to watch: ${e.message}", e)
         }
@@ -100,14 +116,27 @@ class PhoneTriggerActionHandler(
         webAppTriggerHandler.launch(surveyId, webAppId)
     }
 
-    private suspend fun handleNotification(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.Notification) {
-        if (action.deviceType == 1) {
-            handleWatchNotification(trigger, action)
-            return
-        }
+    private suspend fun handleNotification(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Notification
+    ) {
+        when (action.deviceType) {
+            1 -> {
+                // Watch only (deviceType == 1)
+                handleWatchNotification(trigger, action)
+            }
 
-        Log.d(TAG, "Showing notification: title=${action.title}, url=${action.url}")
-        webAppTriggerHandler.launchNotification(action.title, action.description, action.url)
+            2 -> {
+                // Both: Show on phone and send to watch
+                webAppTriggerHandler.launchNotification(action.title, action.description, action.url)
+                handleWatchNotification(trigger, action)
+            }
+
+            else -> {
+                // Phone only (deviceType == 0)
+                webAppTriggerHandler.launchNotification(action.title, action.description, action.url)
+            }
+        }
     }
 
     /**
@@ -118,13 +147,23 @@ class PhoneTriggerActionHandler(
      * [AppConfig.BLEKeys.PHONE_OPEN_URL_TRIGGER]/[kaist.iclab.mobiletracker.helpers.BLEHelper])
      * so the phone opens it there, since the watch has no browser of its own.
      */
-    private suspend fun handleWatchNotification(trigger: ParsedCampaignTrigger, action: TriggerActionConfig.Notification) {
-        Log.d(TAG, "Sending watch notification: title=${action.title}, url=${action.url}, trigger=${trigger.name}")
+    private suspend fun handleWatchNotification(
+        trigger: ParsedCampaignTrigger,
+        action: TriggerActionConfig.Notification
+    ) {
+        Log.d(
+            TAG,
+            "Sending watch notification: title=${action.title}, url=${action.url}, trigger=${trigger.name}"
+        )
         try {
             val payload = buildJsonObject {
                 put("title", action.title)
                 put("description", action.description)
                 if (action.url != null) put("url", action.url)
+                // Lets the watch drop this if it was queued while out of range and only
+                // delivered on reconnect, possibly to the next wearer (see WatchEmaTriggerReceiver,
+                // same pattern).
+                put("ts", System.currentTimeMillis())
             }.toString()
             bleChannel.send(AppConfig.BLEKeys.WATCH_NOTIFICATION_TRIGGER, payload, isUrgent = true)
         } catch (e: Exception) {

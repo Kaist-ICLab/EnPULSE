@@ -66,6 +66,14 @@ sealed class ConditionNode {
      * @param value The expected detection label (e.g., "High", "Drinking").
      */
     data class Detection(val sensor: String, val value: String) : ConditionNode()
+
+    /** Names of every sensor this condition tree reads. */
+    fun referencedSensors(): Set<String> = when (this) {
+        is And -> children.flatMapTo(mutableSetOf()) { it.referencedSensors() }
+        is Or -> children.flatMapTo(mutableSetOf()) { it.referencedSensors() }
+        is Not -> child.referencedSensors()
+        is Detection -> setOf(sensor)
+    }
 }
 
 /**

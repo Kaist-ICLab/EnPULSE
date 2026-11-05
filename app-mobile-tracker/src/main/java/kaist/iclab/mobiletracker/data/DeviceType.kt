@@ -9,11 +9,5 @@ enum class DeviceType(val value: Int) {
     WATCH(1);
 
     companion object {
-        /**
-         * Get DeviceType from integer value
-         */
-        fun fromInt(value: Int): DeviceType {
-            return entries.find { it.value == value } ?: PHONE
-        }
     }
 }
