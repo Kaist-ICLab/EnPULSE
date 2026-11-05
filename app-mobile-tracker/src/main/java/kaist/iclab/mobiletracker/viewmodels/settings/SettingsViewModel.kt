@@ -54,11 +54,6 @@ class SettingsViewModel(
     private val permissionManager: AndroidPermissionManager,
     private val syncTimestampService: SyncTimestampService,
     private val campaignSensorRepository: CampaignSensorRepository,
-//    private val bleHelper: BLEHelper,
-//    private val surveyService: SurveyService,
-//    private val campaignRepository: CampaignRepository,
-//    private val userProfileRepository: UserProfileRepository,
-//    private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
     private val autoSyncManager: AutoSyncManager
 ) : ViewModel() {
     companion object {

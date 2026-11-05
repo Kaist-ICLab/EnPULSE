@@ -117,14 +117,6 @@ fun getSensorDisplayName(sensorId: String): String {
 }
 
 /**
- * Get the localized description for a sensor.
- */
-@Composable
-fun getLocalizedSensorDescription(sensorId: String): String {
-    return stringResource(getSensorDescriptionResId(sensorId))
-}
-
-/**
  * Get the icon for a sensor.
  */
 fun getSensorIcon(sensorId: String): ImageVector {

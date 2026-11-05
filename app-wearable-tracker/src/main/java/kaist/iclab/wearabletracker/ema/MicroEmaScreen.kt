@@ -20,8 +20,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,8 +59,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.rotary.onPreRotaryScrollEvent
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -93,10 +89,6 @@ import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import kotlinx.coroutines.delay
-import kotlin.math.PI
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.hypot
 import kotlin.time.Duration.Companion.milliseconds
 
 // --- Color Palette ---
@@ -114,69 +106,6 @@ private val TimerCritical = Color(0xFFF28B82)
  */
 private fun isLikertScale(options: List<WatchOption>): Boolean =
     options.all { it.display.toDoubleOrNull() != null }
-
-private fun Modifier.edgeSwipeInput(
-    enabled: Boolean,
-    onCounterClockwise: () -> Unit,
-    onClockwise: () -> Unit
-): Modifier {
-    if (!enabled) return this
-
-    return pointerInput(onCounterClockwise, onClockwise) {
-        val edgeWidthPx = 34.dp.toPx()
-        val triggerAngle = (PI / 6.0).toFloat()
-
-        awaitEachGesture {
-            val down = awaitFirstDown(requireUnconsumed = false)
-            val centerX = size.width / 2f
-            val centerY = size.height / 2f
-            val outerRadius = minOf(size.width, size.height) / 2f
-            val downRadius = hypot(down.position.x - centerX, down.position.y - centerY)
-            if (downRadius < outerRadius - edgeWidthPx) return@awaitEachGesture
-
-            var previousAngle = atan2(down.position.y - centerY, down.position.x - centerX)
-            var accumulatedAngle = 0f
-            var triggered = false
-
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-                val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                if (!change.pressed) break
-
-                val position = change.position
-                val currentRadius = hypot(position.x - centerX, position.y - centerY)
-                if (currentRadius < outerRadius - edgeWidthPx * 1.6f) break
-
-                val currentAngle = atan2(position.y - centerY, position.x - centerX)
-                var delta = currentAngle - previousAngle
-                if (delta > PI) delta -= (2 * PI).toFloat()
-                if (delta < -PI) delta += (2 * PI).toFloat()
-                previousAngle = currentAngle
-                accumulatedAngle += delta
-
-                when {
-                    accumulatedAngle >= triggerAngle -> {
-                        onClockwise()
-                        accumulatedAngle = 0f
-                        triggered = true
-                        change.consume()
-                    }
-
-                    accumulatedAngle <= -triggerAngle -> {
-                        onCounterClockwise()
-                        accumulatedAngle = 0f
-                        triggered = true
-                        change.consume()
-                    }
-
-                    triggered || abs(delta) > 0.01f -> {
-                        change.consume()
-                    }
-                }
-            }
-        }
-    }
-}
 
 private fun Modifier.rotarySelectionInput(
     enabled: Boolean,

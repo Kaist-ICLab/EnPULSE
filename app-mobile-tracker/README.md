@@ -48,8 +48,6 @@ The app signs in through Supabase Auth, with two options:
 - **Email and password:** no extra setup.
 - **Google:** uses Credential Manager. The client ID is set by `default_web_client_id` in `src/main/res/values/strings.xml` and `values-ko/strings.xml`, and currently points to the KAIST ICLab project. For your own deployment, replace it in both files with your own web client ID, and enable the Google provider on your Supabase server.
 
-The `WEB_CLIENT_ID` line in `local.properties.example` is not read by the build.
-
 ## Code layout
 
 Packages are under `src/main/java/kaist/iclab/mobiletracker/`:

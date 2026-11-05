@@ -7,6 +7,3 @@ sdk.dir=/path/to/your/Android/sdk
 # Supabase backend credentials (used for data collection sync and authentication)
 SUPABASE_URL=https://your-supabase-instance.url/
 SUPABASE_ANON_KEY=your_supabase_anon_public_key
-
-# Google Auth client id for the Android app (Optional)
-WEB_CLIENT_ID=your_google_web_client_id

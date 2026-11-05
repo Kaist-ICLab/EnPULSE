@@ -40,11 +40,6 @@ val viewModelModule = module {
             permissionManager = get<AndroidPermissionManager>(),
             syncTimestampService = get(),
             campaignSensorRepository = get(),
-//            bleHelper = get(),
-//            surveyService = get(),
-//            campaignRepository = get(),
-//            userProfileRepository = get(),
-//            microEmaConfigStorage = get(named("microEmaConfigStorage")),
             autoSyncManager = get()
         )
     }

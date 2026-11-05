@@ -40,9 +40,6 @@ dependencies {
     implementation(libs.android.gms.wearable)
     implementation(libs.kotlinx.coroutines.play.services)
 
-    /* Network */
-    implementation(libs.firebase.messaging)
-
     /* On-device model */
     implementation(libs.tensorflow.lite)
 

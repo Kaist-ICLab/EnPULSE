@@ -9,7 +9,7 @@ fun WearableTrackerTheme(
 ) {
     /**
      * Empty theme to customize for your app.
-     * See: https://kaisteloper.android.com/jetpack/compose/designsystems/custom
+     * See: https://developer.android.com/jetpack/compose/designsystems/custom
      */
     MaterialTheme(
         content = content

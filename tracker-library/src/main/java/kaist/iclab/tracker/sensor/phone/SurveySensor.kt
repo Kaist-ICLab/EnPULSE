@@ -119,17 +119,6 @@ class SurveySensor(
         }
     }
 
-//    fun openSurvey(id: String) {
-//        val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = id))
-//        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
-//            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//            putExtra("id", id)
-//            putExtra("scheduleId", scheduleId)
-//        }
-//
-//        context.startActivity(intent)
-//    }
-
     /**
      * Trigger a survey by posting a High-Priority Notification.
      * This is safe to call from the background (e.g., when the trigger engine's action handler
