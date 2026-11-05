@@ -122,11 +122,6 @@ class MediaSensor(
             "kaist.iclab.tracker.MediaSensor.ACTION_MEDIA_SCAN_REQUEST"
         private const val REQUEST_CODE_MEDIA_SCAN_REQUEST = 0x12
 
-        // Method to manually trigger periodic scan for testing
-        fun triggerPeriodicScan(context: Context) {
-            val intent = Intent(ACTION_MEDIA_SCAN_REQUEST).setPackage(context.packageName)
-            context.sendBroadcast(intent)
-        }
     }
 
     init {
@@ -618,11 +613,6 @@ class MediaSensor(
                 )
             )
         }
-    }
-
-    // Method to manually trigger periodic scan for testing
-    fun triggerPeriodicScanNow() {
-        handlePeriodicMediaScan()
     }
 
     override fun onStop() {

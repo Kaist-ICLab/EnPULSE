@@ -53,12 +53,6 @@ class DetectionStateTracker {
     }
 
     /**
-     * Get the latest detection state for a specific sensor.
-     * @return The detection state, or null if no detection has been reported.
-     */
-    fun getState(sensor: String): DetectionState? = states[sensor]
-
-    /**
      * Get a snapshot of all current detection states.
      * @return An immutable copy of the state map.
      */

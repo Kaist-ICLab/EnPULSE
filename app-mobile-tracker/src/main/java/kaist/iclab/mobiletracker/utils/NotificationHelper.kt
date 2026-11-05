@@ -152,53 +152,6 @@ object NotificationHelper {
     }
 
     /**
-     * Show a notification for a scheduled survey.
-     */
-    fun showSurveyNotification(
-        context: Context,
-        surveyId: String,
-        scheduleId: String,
-        config: SurveyNotificationConfig,
-        notificationId: Int
-    ) {
-        val channelId = "${Constants.Notification.CHANNEL_ID_SURVEY}_$surveyId"
-        ensureNotificationChannel(
-            context,
-            channelId,
-            Constants.Notification.CHANNEL_NAME_SURVEY,
-            NotificationManager.IMPORTANCE_HIGH
-        )
-
-        val intent = Intent(context, DefaultSurveyActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            putExtra("id", surveyId)
-            putExtra("scheduleId", scheduleId)
-            // Lets the survey screen cancel this (ongoing) notification once it opens.
-            putExtra(SurveyActivity.EXTRA_NOTIFICATION_ID, notificationId)
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            scheduleId.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = buildNotification(
-            context = context,
-            channelId = channelId,
-            title = config.title,
-            text = config.description,
-            smallIcon = config.icon,
-            priority = NotificationCompat.PRIORITY_HIGH,
-            ongoing = true,
-            pendingIntent = pendingIntent
-        ).build()
-
-        showNotification(context, notificationId, notification)
-    }
-
-    /**
      * Show a notification for a triggered survey (JIT).
      * Uses Full Screen Intent to wake the device.
      */

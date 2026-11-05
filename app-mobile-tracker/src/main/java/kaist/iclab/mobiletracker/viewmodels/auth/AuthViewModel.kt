@@ -260,13 +260,6 @@ class AuthViewModel(
         }
     }
 
-    /**
-     * Refresh user profile from Supabase
-     */
-    fun refreshUserProfile() {
-        loadUserProfile()
-    }
-
     fun getToken() {
         viewModelScope.launch {
             authentication.getToken()

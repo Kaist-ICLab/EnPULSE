@@ -21,9 +21,4 @@ class MicroEmaResponseStore(boxStore: BoxStore) {
         box.put(items)
     }
 
-    fun getTotalCount(): Int = box.count().toInt()
-
-    fun getUnsyncedCount(): Int =
-        box.query().equal(MicroEmaResponseEntity_.isSynced, false).build()
-            .use { it.count().toInt() }
 }

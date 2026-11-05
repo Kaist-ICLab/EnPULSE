@@ -55,11 +55,4 @@ class WatchSurveyConfigStorage(context: Context) {
         }
     }
 
-    /**
-     * Clear the persisted configuration.
-     */
-    fun clearConfig() {
-        prefs.edit { remove(KEY_CONFIG) }
-        Log.d(TAG, "Cleared persisted watch survey config")
-    }
 }

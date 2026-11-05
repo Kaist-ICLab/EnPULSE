@@ -68,7 +68,6 @@ class AndroidPermissionManager(
 
     val specialPermissions = buildMap {
         put(Manifest.permission.PACKAGE_USAGE_STATS, ::requestPackageUsageStat)
-        put(Manifest.permission.SYSTEM_ALERT_WINDOW, ::requestSystemAlertWindow)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) put(
             Manifest.permission.SCHEDULE_EXACT_ALARM,
             ::requestScheduleExactAlarm
@@ -262,7 +261,6 @@ class AndroidPermissionManager(
 
         return when (permission) {
             Manifest.permission.PACKAGE_USAGE_STATS -> getPackageUsageStatsPermissionState()
-            Manifest.permission.SYSTEM_ALERT_WINDOW -> getSystemAlertWindowPermissionState()
             Manifest.permission.SCHEDULE_EXACT_ALARM -> getScheduleExactAlarmPermissionState()
             Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> getIgnoreBatteryOptimizationsPermissionState()
             else -> getRuntimePermissionState(permission)
@@ -381,10 +379,6 @@ class AndroidPermissionManager(
                 context.packageName
             )
         return if (mode == AppOpsManager.MODE_ALLOWED) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
-    }
-
-    private fun getSystemAlertWindowPermissionState(): PermissionState {
-        return if (Settings.canDrawOverlays(context)) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
     }
 
     private fun getScheduleExactAlarmPermissionState(): PermissionState {
@@ -566,15 +560,6 @@ class AndroidPermissionManager(
         getActivity()?.startActivity(createUsageAccessSettingsIntent())
     }
 
-    private fun requestSystemAlertWindow() {
-        if (getSystemAlertWindowPermissionState() == PermissionState.GRANTED) return
-        val intent = Intent(
-            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            "package:${context.packageName}".toUri()
-        )
-        getActivity()?.startActivity(intent)
-    }
-
     private fun requestScheduleExactAlarm() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         if (getPermissionState(Manifest.permission.SCHEDULE_EXACT_ALARM) == PermissionState.GRANTED) return
@@ -619,12 +604,6 @@ class AndroidPermissionManager(
         val intent = when (permissionId) {
             Manifest.permission.PACKAGE_USAGE_STATS -> {
                 createUsageAccessSettingsIntent().apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-            }
-            Manifest.permission.SYSTEM_ALERT_WINDOW -> {
-                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                    data = "package:${context.packageName}".toUri()
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }

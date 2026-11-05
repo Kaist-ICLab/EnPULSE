@@ -23,8 +23,6 @@ class WatchSensorStore<T>(
         box.put(entities.flatMap { fromSensorEntity(it) })
     }
 
-    fun getAllForExport(): List<CsvSerializable> = box.all
-
     /**
      * Up to [limit] rows after [timestamp], extended so the batch never ends partway through rows
      * that share one timestamp: the next batch resumes strictly after this batch's last timestamp,

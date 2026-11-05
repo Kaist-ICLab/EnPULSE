@@ -286,18 +286,6 @@ class SyncTimestampService(context: Context) {
     }
 
     /**
-     * Get formatted last phone sensor data timestamp
-     */
-    fun getLastPhoneSensorData(): String? {
-        val timestamp = prefs.getLong(Constants.Prefs.KEY_LAST_PHONE_SENSOR, 0L)
-        return if (timestamp > 0) {
-            DateTimeFormatter.formatTimestampShort(timestamp)
-        } else {
-            null
-        }
-    }
-
-    /**
      * Get formatted last successful upload timestamp
      */
     fun getLastSuccessfulUpload(): String? {
@@ -320,7 +308,6 @@ class SyncTimestampService(context: Context) {
             null
         }
     }
-
 
     /**
      * Clear the last successful upload timestamp AND upload cursor for a specific sensor (e.g.
@@ -357,34 +344,6 @@ class SyncTimestampService(context: Context) {
         keysToRemove.forEach { editor.remove(it) }
         if (existingEditor == null) {
             editor.apply()
-        }
-    }
-
-    /**
-     * Clear all sync-related timestamps.
-     * This includes:
-     * - All per-sensor upload timestamps
-     * - Global last successful upload
-     * - Last watch data received
-     * - Last phone sensor data
-     * - Data collection started
-     */
-    fun clearAllSyncTimestamps() {
-        prefs.edit {
-
-            // Clear all per-sensor upload timestamps using the same editor
-            clearAllSensorUploadTimestamps(this)
-
-            // Clear global upload timestamp
-            remove(Constants.Prefs.KEY_LAST_SUCCESSFUL_UPLOAD)
-
-            // Clear last received timestamps
-            remove(Constants.Prefs.KEY_LAST_WATCH_DATA)
-            remove(Constants.Prefs.KEY_LAST_PHONE_SENSOR)
-
-            // Clear data collection started
-            remove(Constants.Prefs.KEY_DATA_COLLECTION_STARTED)
-
         }
     }
 

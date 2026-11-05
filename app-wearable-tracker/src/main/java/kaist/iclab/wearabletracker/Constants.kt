@@ -2,7 +2,6 @@ package kaist.iclab.wearabletracker
 
 import kaist.iclab.wearabletracker.Constants.DB.OBJECTBOX_MAX_SIZE_KB
 
-
 /**
  * Centralized constants for the wearable tracker app.
  * All constants used across the app should be defined here.
@@ -39,18 +38,6 @@ object Constants {
      */
     object Trigger {
         const val ACTION_OPEN_WEBAPP = "kaist.iclab.mobiletracker.OPEN_WEBAPP"
-    }
-
-    /**
-     * Sensor Type Constants
-     */
-    object SensorType {
-        const val ACCELEROMETER = "Accelerometer"
-        const val PPG = "PPG"
-        const val HEART_RATE = "HeartRate"
-        const val SKIN_TEMPERATURE = "SkinTemperature"
-        const val EDA = "EDA"
-        const val LOCATION = "Location"
     }
 
     /**

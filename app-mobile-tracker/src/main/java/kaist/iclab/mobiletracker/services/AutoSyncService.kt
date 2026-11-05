@@ -25,7 +25,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.core.component.KoinComponent
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -78,8 +77,6 @@ class AutoSyncService : LifecycleService(), KoinComponent {
 
     private val syncTimestampService by inject<SyncTimestampService>()
     private val webAppLogUploader by inject<WebAppLogUploader>()
-
-    private val isoFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
     private var lastSyncTime: Long = 0
 

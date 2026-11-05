@@ -1,7 +1,5 @@
 package kaist.iclab.mobiletracker.ui.screens.settings.permission
 
-import android.Manifest
-import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,10 +62,6 @@ fun PermissionSettingsScreen(
     val controllerState = settingsViewModel.controllerState.collectAsState().value
     val isCollecting = controllerState.flag == ControllerState.FLAG.RUNNING
 
-    // State for Restricted Settings Dialog
-    var showRestrictedDialog by remember { mutableStateOf(false) }
-    var pendingPermissionId by remember { mutableStateOf<String?>(null) }
-
     // State for Instruction Dialog
     var pendingPermissionForInstruction by remember { mutableStateOf<Permission?>(null) }
 
@@ -78,20 +72,7 @@ fun PermissionSettingsScreen(
                 permissionManager.openPermissionSettings(permission.ids.first())
             }
 
-            else -> {
-                // Handle Android 13+ Restricted Settings for special accessibility/notification permissions
-                val id = permission.ids.first()
-                if (Build.VERSION.SDK_INT >= 33 &&
-                    (id == Manifest.permission.BIND_ACCESSIBILITY_SERVICE ||
-                            id == Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE)
-                ) {
-                    pendingPermissionId = id
-                    showRestrictedDialog = true
-                } else {
-                    // Request permission normally
-                    permissionManager.request(permission.ids)
-                }
-            }
+            else -> permissionManager.request(permission.ids)
         }
     }
 
@@ -195,39 +176,6 @@ fun PermissionSettingsScreen(
                 }
             }
         }
-    }
-
-    if (showRestrictedDialog && pendingPermissionId != null) {
-        PopupDialog(
-            title = stringResource(R.string.restricted_settings_title),
-            content = {
-                Text(
-                    text = stringResource(R.string.restricted_settings_desc),
-                    color = AppColors.TextSecondary,
-                    fontSize = Styles.SCREEN_DESCRIPTION_FONT_SIZE
-                )
-            },
-            primaryButton = DialogButtonConfig(
-                text = stringResource(R.string.restricted_settings_got_it),
-                onClick = {
-                    showRestrictedDialog = false
-                    permissionManager.openPermissionSettings(pendingPermissionId!!)
-                    pendingPermissionId = null
-                }
-            ),
-            secondaryButton = DialogButtonConfig(
-                text = stringResource(R.string.restricted_settings_cancel),
-                onClick = {
-                    showRestrictedDialog = false
-                    pendingPermissionId = null
-                },
-                isPrimary = false
-            ),
-            onDismiss = {
-                showRestrictedDialog = false
-                pendingPermissionId = null
-            }
-        )
     }
 
     pendingPermissionForInstruction?.let { permission ->

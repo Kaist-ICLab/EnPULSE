@@ -18,7 +18,6 @@ class PhoneSensorRepositoryImpl(
 
     companion object {
         private const val TAG = "PhoneSensorRepository"
-        private const val LOCATION_ID = "Location"
     }
 
     override suspend fun insertSensorData(sensorId: String, entity: SensorEntity): Result<Unit> {
