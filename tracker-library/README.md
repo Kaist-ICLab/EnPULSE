@@ -33,7 +33,7 @@ The **Device** column shows where each sensor runs:
 | --- | --- | --- | --- |
 | `ActivityRecognitionSensor` | Phone / Watch | Physical activity classification from Google Activity Recognition. | `activityType`, `score`, `probabilities` |
 | `AmbientLightSensor` | Phone | Illuminance from the device light sensor. | `value`, `accuracy` |
-| `AppListChangeSensor` | Phone | Emits an event when an installed app is added or removed. | `changedApp` |
+| `AppListChangeSensor` | Phone | Emits an event when an installed app is added or removed. | `changedApp`, optional `appList` |
 | `AppUsageLogSensor` | Phone | App usage events from `UsageStatsManager`. | `packageName`, `installedBy`, `eventType` |
 | `AudioSensor` | Phone / Watch | Raw microphone audio at 16 kHz. Input to `VADSensor` and `GestureSensor`. | `samples`, `sampleRateHz` |
 | `BatterySensor` | Phone / Watch | Battery level, charging status, plug type, and temperature. | `level`, `status`, `temperature`, `connectedType` |

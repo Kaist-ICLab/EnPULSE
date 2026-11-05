@@ -12,7 +12,7 @@
 | [EnPULSE-backend](https://github.com/Kaist-ICLab/EnPULSE-backend) | Self-hosted, Supabase-based server for sensor data and campaign configuration. |
 | [EnPULSE-dashboard](https://github.com/Kaist-ICLab/EnPULSE-dashboard) | Web dashboard for managing campaigns and monitoring data. |
 
-Data flows from the watch to the phone over the Wearable Data Layer, then from the phone to the backend. Each app stores data locally in ObjectBox until it has been delivered.
+Data flows from the watch to the phone over the Wearable Data Layer, then from the phone to the backend. Both apps store data locally in ObjectBox. The watch deletes data once the phone confirms it, and the phone keeps uploaded data for at least 7 more days.
 
 Campaigns decide which sensors run. A participant joins a campaign, and the app collects only the sensors that campaign includes.
 

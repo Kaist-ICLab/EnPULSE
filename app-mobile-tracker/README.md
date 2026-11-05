@@ -55,9 +55,12 @@ Packages are under `src/main/java/kaist/iclab/mobiletracker/`:
 | Package | Contents |
 | --- | --- |
 | `auth`, `config` | Supabase sign-in and server configuration |
+| `data` | Campaign, survey, and trigger data models |
 | `db` | ObjectBox entities and stores |
 | `di` | Koin modules. `SensorRegistry.kt` maps each sensor to its store and Supabase table |
+| `helpers`, `utils` | Phone-watch messaging, Supabase client, language, CSV export, and notifications |
 | `repository` | Data access and error classification |
+| `storage` | Couchbase and local storage for configuration and sensor state |
 | `services` | Foreground services for collection, sync, and upload |
 | `trigger`, `webapp` | Trigger actions, and the WebApp host and bridge |
 | `ui`, `viewmodels`, `navigation` | Compose screens and their state |
