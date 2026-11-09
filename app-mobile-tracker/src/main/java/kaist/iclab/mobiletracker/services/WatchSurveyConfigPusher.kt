@@ -67,15 +67,12 @@ class WatchSurveyConfigPusher(
             )
             val payloadJson = json.encodeToString(WatchSurveyConfigPayload.serializer(), payload)
 
-            Log.d(TAG, "Pushing ${watchSurveyConfigs.size} watch survey config(s) to watch")
-
             bleChannel.send(
                 AppConfig.BLEKeys.TRIGGER_CONFIG,
                 payloadJson,
                 isUrgent = true
             )
 
-            Log.d(TAG, "Watch survey config pushed successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to push watch survey config: ${e.message}", e)
         }

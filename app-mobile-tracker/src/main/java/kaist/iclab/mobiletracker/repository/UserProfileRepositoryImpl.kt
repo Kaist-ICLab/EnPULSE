@@ -36,11 +36,6 @@ class UserProfileRepositoryImpl(
     private val backgroundController: BackgroundController,
     private val bleHelper: BLEHelper
 ) : UserProfileRepository {
-
-    companion object {
-        private const val TAG = "UserProfileRepo"
-    }
-
     private val _profile = MutableStateFlow(
         persistentStorage.get().takeIf { it.uuid.isNotEmpty() }
     )
@@ -74,25 +69,6 @@ class UserProfileRepositoryImpl(
     private fun clearTriggerEngine() {
         triggerEngine.loadTriggers(emptyList())
         detectionStateTracker.clear()
-    }
-
-    override suspend fun refreshProfile(): Result<ProfileData?> {
-        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
-            return Result.Error(AppError.CollectionRunning("Cannot refresh profile while data collection is running"))
-        }
-
-        val uuid = getCurrentUuid()
-            ?: return Result.Error(AppError.Unknown("User not logged in"))
-
-        return when (val result = profileService.getProfileByUuid(uuid)) {
-            is Result.Success -> {
-                _profile.value = result.data
-                result.data?.let { persistentStorage.set(it) }
-                result
-            }
-
-            is Result.Error -> result
-        }
     }
 
     override suspend fun syncFullStudyConfig(): Result<ProfileData?> {

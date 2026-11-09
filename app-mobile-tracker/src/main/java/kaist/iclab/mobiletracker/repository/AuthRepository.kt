@@ -20,10 +20,5 @@ interface AuthRepository {
      * Clear authentication token
      */
     fun clearToken()
-
-    /**
-     * Check if a token exists
-     */
-    fun hasToken(): Boolean
 }
 

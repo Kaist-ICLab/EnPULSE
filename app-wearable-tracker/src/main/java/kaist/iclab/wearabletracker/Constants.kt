@@ -15,17 +15,12 @@ object Constants {
         const val KEY_SYNC_ACK = "sync_ack"
         const val KEY_MICRO_EMA_RESPONSE = "micro_ema_response"
         const val KEY_MICRO_EMA_ACK = "micro_ema_ack"
-        const val KEY_MICRO_EMA_TRIGGER = "micro_ema_trigger"
         const val KEY_TRIGGER_CONFIG = "trigger_config"
-        const val KEY_PHONE_EMA_TRIGGER = "phone_ema_trigger"
         const val KEY_WATCH_EMA_TRIGGER = "watch_ema_trigger"
         const val KEY_WATCH_NOTIFICATION_TRIGGER = "watch_notification_trigger"
         const val KEY_PHONE_OPEN_URL_TRIGGER = "phone_open_url_trigger"
         const val KEY_DETECTION_STATE_UPDATE = "detection_state_update"
         const val KEY_ACTIVE_SENSOR_CONFIG = "active_sensor_config"
-        const val KEY_WEBAPP_TRIGGER = "webapp_trigger"
-        const val KEY_NOTIFICATION_TRIGGER = "notification_trigger"
-        const val KEY_BROADCAST_TRIGGER = "broadcast_trigger"
     }
 
     /**

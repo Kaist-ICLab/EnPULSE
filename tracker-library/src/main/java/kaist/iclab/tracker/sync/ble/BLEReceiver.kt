@@ -77,7 +77,6 @@ internal class BLEReceiver : DataChannelReceiver() {
                 sharedList.getOrPut(key) { mutableListOf() }.add(callback)
             }
         }
-        Log.d(TAG, "Added listeners for keys: $keys")
     }
 
     override fun removeOnReceivedListener(
@@ -92,7 +91,6 @@ internal class BLEReceiver : DataChannelReceiver() {
                 sharedList[key]?.remove(callback)
             }
         }
-        Log.d(TAG, "Removed listeners for keys: $keys")
     }
 
     class BLEReceiverService : WearableListenerService() {

@@ -137,8 +137,6 @@ class MicroEmaViewModel(
             _remainingTimeMs.value = it
             startCountdown(it)
         }
-
-        Log.d(TAG, "Survey started: ${config.title}, question: ${selectedQuestion.text}")
     }
 
     /**

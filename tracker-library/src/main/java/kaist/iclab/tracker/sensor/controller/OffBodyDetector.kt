@@ -67,7 +67,6 @@ class OffBodyDetector(context: Context) {
             offBodySensor,
             SensorManager.SENSOR_DELAY_NORMAL
         )
-        Log.i(TAG, "Off-body detection started")
     }
 
     /**
@@ -75,6 +74,5 @@ class OffBodyDetector(context: Context) {
      */
     fun stop() {
         sensorManager.unregisterListener(listener)
-        Log.i(TAG, "Off-body detection stopped")
     }
 }

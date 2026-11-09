@@ -134,7 +134,6 @@ class AutoSyncService : LifecycleService(), KoinComponent {
     private fun startAutoSync() {
         startWebAppLogSync()
         if (syncLoopJob?.isActive == true) return
-        Log.d(TAG, "Starting auto sync service")
 
         // lifecycleScope automatically cancels when service is destroyed
         syncLoopJob = lifecycleScope.launch(Dispatchers.IO) {

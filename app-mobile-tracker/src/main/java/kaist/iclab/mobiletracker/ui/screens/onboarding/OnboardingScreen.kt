@@ -45,11 +45,7 @@ import kaist.iclab.mobiletracker.ui.components.campaign.PasswordDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.onboarding.OnboardingViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
-import java.net.HttpURLConnection
-import java.net.URL
 
 @Composable
 fun OnboardingScreen(
@@ -251,7 +247,6 @@ fun OnboardingScreen(
                     }
                 }
             } // Close Bottom Section Column
-
         } // Close main Column
     }
 
@@ -318,24 +313,3 @@ fun CampaignListItem(
     }
 }
 
-private suspend fun checkConnection(urlStr: String, anonKey: String): Boolean = withContext(
-    Dispatchers.IO
-) {
-    try {
-        val cleanedUrl = urlStr.trim().removeSuffix("/")
-        val restUrl = "$cleanedUrl/rest/v1/"
-
-        val url = URL(restUrl)
-        val conn = url.openConnection() as HttpURLConnection
-        conn.requestMethod = "GET"
-        conn.connectTimeout = 5000
-        conn.readTimeout = 5000
-        conn.setRequestProperty("apikey", anonKey.trim())
-        conn.setRequestProperty("Authorization", "Bearer ${anonKey.trim()}")
-
-        val responseCode = conn.responseCode
-        responseCode == 200
-    } catch (_: Exception) {
-        false
-    }
-}

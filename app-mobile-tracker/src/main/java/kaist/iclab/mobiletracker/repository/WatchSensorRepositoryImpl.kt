@@ -2,7 +2,6 @@ package kaist.iclab.mobiletracker.repository
 
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
-import io.objectbox.BoxStore
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.data.DeviceType
 import kaist.iclab.mobiletracker.db.entity.BaseEntity
@@ -19,11 +18,9 @@ import kotlinx.coroutines.tasks.await
 
 class WatchSensorRepositoryImpl(
     private val context: android.content.Context,
-    private val boxStore: BoxStore,
     private val stores: SensorStores,
     private val supabaseHelper: SupabaseHelper
 ) : WatchSensorRepository {
-
     companion object {
         private const val TAG = "WatchSensorRepository"
     }
@@ -56,7 +53,6 @@ class WatchSensorRepositoryImpl(
         }
     }
 
-
     override suspend fun getLatestTimestamp(sensorId: String): Long? {
         return ErrorClassifier.runClassified(TAG, "getLatestTimestamp $sensorId") {
             if (sensorId == Constants.SensorId.LOCATION) {
@@ -82,14 +78,6 @@ class WatchSensorRepositoryImpl(
             val store = storeById[sensorId]
                 ?: throw IllegalArgumentException("Unknown sensor ID: $sensorId")
             store.removeAll()
-        }
-    }
-
-    override suspend fun flushAllData(): Result<Unit> {
-        return ErrorClassifier.runClassified(TAG, "flush all watch data") {
-            boxStore.runInTx {
-                storeById.values.forEach { it.removeAll() }
-            }
         }
     }
 

@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.helpers
 
-
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -16,10 +15,6 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.WatchSensorRepository
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SensorDataCsvParser
-import kaist.iclab.mobiletracker.webapp.WebAppTriggerHandler
-import kaist.iclab.tracker.sensor.galaxywatch.MicroEmaSensor
-import kaist.iclab.tracker.sensor.phone.SurveySensor
-import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kotlinx.coroutines.CancellationException
@@ -50,15 +45,12 @@ class BLEHelper(
     private val context: Context,
     private val watchSensorRepository: WatchSensorRepository,
     private val timestampService: SyncTimestampService,
-    private val microEmaConfigStorage: StateStorage<MicroEmaSensor.Config>,
     private val surveyResponseStore: SensorStore<SurveyResponseEntity>,
     private val detectionStateTracker: DetectionStateTracker,
 ) : KoinComponent {
     private lateinit var bleChannel: BLEDataChannel
 
     private val appScope by inject<AppCoroutineScope>()
-    private val surveySensor by inject<SurveySensor>()
-    private val webAppTriggerHandler by inject<WebAppTriggerHandler>()
     private val webAppRegistry by inject<kaist.iclab.mobiletracker.webapp.WebAppRegistry>()
 
     private var isInitialized = false
@@ -93,14 +85,6 @@ class BLEHelper(
         isInitialized = true
     }
 
-    /**
-     * Cleanup method to cancel all coroutines when BLEHelper is no longer needed.
-     * Should be called when the helper is being destroyed.
-     */
-    fun cleanup() {
-        // No need to cancel scope as it's app-level
-    }
-
     private fun setupListeners() {
         // Listen for sensor CSV data from watch
         bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.SENSOR_DATA_CSV)) { _, json ->
@@ -119,32 +103,6 @@ class BLEHelper(
                 else -> json.toString()
             }
             handleMicroEmaResponse(jsonString)
-        }
-
-        // Listen for phone EMA triggers from watch
-        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.PHONE_EMA_TRIGGER)) { _, json ->
-            val surveyId = when {
-                json is kotlinx.serialization.json.JsonPrimitive -> json.content
-                else -> json.toString()
-            }
-            Log.d(AppConfig.LogTags.PHONE_BLE, "Received PHONE_EMA_TRIGGER for surveyId=$surveyId")
-            surveySensor.triggerSurveyNotification(surveyId)
-        }
-
-        // Legacy listeners: the trigger engine now lives entirely on the phone
-        // (PhoneTriggerActionHandler executes Ema/WatchEma/Broadcast/Notification actions
-        // in-process), so nothing forwards these BLE keys from the watch anymore. Left in place
-        // as harmless backward-compat handling per the migration plan, not actively exercised.
-        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.WEBAPP_TRIGGER)) { _, json ->
-            webAppTriggerHandler.handleWebAppTriggerPayload(json)
-        }
-
-        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.NOTIFICATION_TRIGGER)) { _, json ->
-            webAppTriggerHandler.handleNotificationTriggerPayload(json)
-        }
-
-        bleChannel.addOnReceivedListener(setOf(AppConfig.BLEKeys.BROADCAST_TRIGGER)) { _, json ->
-            webAppTriggerHandler.handleBroadcastTriggerPayload(json)
         }
 
         // Listen for the watch relaying a tapped watch-notification's url back to the phone
@@ -213,10 +171,6 @@ class BLEHelper(
                 }
             }
             context.startActivity(intent)
-            Log.d(
-                AppConfig.LogTags.PHONE_BLE,
-                "Opened url relayed from watch (in-app, trusted=${trustedWebApp != null}): $url"
-            )
         } catch (e: Exception) {
             Log.e(
                 AppConfig.LogTags.PHONE_BLE,
@@ -311,11 +265,6 @@ class BLEHelper(
 
                 if (responses.isNotEmpty()) {
                     val newCount = surveyResponseStore.insertBatch(responses)
-                    Log.d(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "[MICRO_EMA] Cached $newCount new responses locally on phone " +
-                            "(${responses.size - newCount} already stored)"
-                    )
                     // ACK every id, duplicates included, so the watch stops re-sending them
                     sendMicroEmaAck(processedIds)
                 }
@@ -339,7 +288,6 @@ class BLEHelper(
             try {
                 val ackData = ids.joinToString(",")
                 bleChannel.send(AppConfig.BLEKeys.MICRO_EMA_ACK, ackData, isUrgent = true)
-                Log.d(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Sent ACK for IDs: $ackData")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(AppConfig.LogTags.PHONE_BLE, "[MICRO_EMA] Failed to send ACK: ${e.message}")
@@ -359,10 +307,6 @@ class BLEHelper(
                 }.toString()
 
                 bleChannel.send(AppConfig.BLEKeys.ACTIVE_SENSOR_CONFIG, payload)
-                Log.d(
-                    AppConfig.LogTags.PHONE_BLE,
-                    "Sent active sensor config to watch: $activeSensorIds"
-                )
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(
@@ -404,10 +348,6 @@ class BLEHelper(
             // Urgent: the watch resends after 45 s without this, and the Data Layer can hold a
             // non-urgent item for much longer than that.
             bleChannel.send(AppConfig.BLEKeys.SYNC_ACK, ackData, isUrgent = true)
-            Log.d(
-                AppConfig.LogTags.PHONE_BLE,
-                "Sent ACK for $sensorId: $status (ts=$endTimestamp)"
-            )
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             Log.e(
@@ -535,10 +475,6 @@ class BLEHelper(
             when (val result = watchSensorRepository.insertBatch(sensorId, entities)) {
                 is Result.Success -> {
                     timestampService.updateLastWatchDataReceived()
-                    Log.d(
-                        AppConfig.LogTags.PHONE_BLE,
-                        "Stored ${entities.size} $sensorId entries locally"
-                    )
                     sendAck(
                         sensorId,
                         success = true,

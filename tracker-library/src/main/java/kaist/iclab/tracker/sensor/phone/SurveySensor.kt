@@ -176,7 +176,6 @@ class SurveySensor(
         try {
             NotificationManagerCompat.from(context).notify(triggerNotificationId, builder.build())
             scheduleStorage.setActualTriggerTime(scheduleId, System.currentTimeMillis())
-            Log.d(TAG, "Triggered phone survey notification (survey: $id, schedule: $scheduleId)")
         } catch (e: SecurityException) {
             Log.e(TAG, "Failed to post survey notification due to SecurityException", e)
         }

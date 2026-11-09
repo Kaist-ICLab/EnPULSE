@@ -45,7 +45,6 @@ class PhoneTriggerActionHandler(
     }
 
     private fun handleEma(action: TriggerActionConfig.Ema) {
-        Log.d(TAG, "Triggering phone EMA: surveyId=${action.surveyId}")
         surveySensor.triggerSurveyNotification(action.surveyId.toString())
     }
 
@@ -53,10 +52,6 @@ class PhoneTriggerActionHandler(
         trigger: ParsedCampaignTrigger,
         action: TriggerActionConfig.WatchEma
     ) {
-        Log.d(
-            TAG,
-            "Sending WatchEma trigger to watch: surveyId=${action.surveyId}, trigger=${trigger.name}"
-        )
         try {
             // The timestamp lets the watch drop commands that sat in the Data Layer queue while it
             // was out of range, instead of opening them later on the next wearer.
@@ -84,7 +79,6 @@ class PhoneTriggerActionHandler(
             return
         }
 
-        Log.d(TAG, "Sending broadcast: action=${action.action}")
         try {
             val intent = Intent(action.action)
             action.extras.forEach { extra ->
@@ -112,7 +106,6 @@ class PhoneTriggerActionHandler(
             return
         }
 
-        Log.d(TAG, "Launching webapp: surveyId=$surveyId webAppId=$webAppId")
         webAppTriggerHandler.launch(surveyId, webAppId)
     }
 
@@ -151,10 +144,6 @@ class PhoneTriggerActionHandler(
         trigger: ParsedCampaignTrigger,
         action: TriggerActionConfig.Notification
     ) {
-        Log.d(
-            TAG,
-            "Sending watch notification: title=${action.title}, url=${action.url}, trigger=${trigger.name}"
-        )
         try {
             val payload = buildJsonObject {
                 put("title", action.title)

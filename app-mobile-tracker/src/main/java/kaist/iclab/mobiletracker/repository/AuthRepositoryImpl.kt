@@ -14,7 +14,6 @@ import androidx.security.crypto.MasterKey
 class AuthRepositoryImpl(
     context: Context
 ) : AuthRepository {
-
     companion object {
         private const val TAG = "AuthRepositoryImpl"
         private const val PREFS_NAME = "auth_preferences_encrypted"
@@ -63,12 +62,5 @@ class AuthRepositoryImpl(
         sharedPreferences.edit {
             remove(KEY_AUTH_TOKEN)
         }
-    }
-
-    /**
-     * Check if a token exists
-     */
-    override fun hasToken(): Boolean {
-        return getToken() != null
     }
 }

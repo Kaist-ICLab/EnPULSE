@@ -349,7 +349,6 @@ val koinModule = module {
             repository = get(),
             samsungHealthSensorInitializer = get(),
             applicationContext = androidContext(),
-            autoSyncManager = get(),
             ecgSensor = get(),
             campaignSensorConfigRepository = get()
         )
@@ -369,8 +368,6 @@ val koinModule = module {
 
     single {
         MicroEmaResponseManager(
-            context = androidContext(),
-            repository = get(),
             store = get(),
             phoneCommunicationManager = get(),
             coroutineScope = get()

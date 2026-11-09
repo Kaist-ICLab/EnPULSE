@@ -68,8 +68,6 @@ class DetectionStateForwarder(
         bleChannel.addOnReceivedListener(setOf(Constants.BLE.KEY_DETECTION_STATE_UPDATE)) { _, json ->
             handleSimulatedDetectionState(json)
         }
-
-        Log.d(TAG, "Started forwarding detection states to phone")
     }
 
     private fun handleSimulatedDetectionState(json: JsonElement) {

@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.webapp.bridge
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
-import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -12,7 +11,6 @@ import kotlinx.serialization.json.put
 
 class PermissionBridgeHandler(
     private val context: Context,
-    private val permissionManager: AndroidPermissionManager,
     private val requestPermissionAction: (List<String>, BridgeRequest) -> Unit
 ) {
     fun checkPermissions(request: BridgeRequest): BridgeResponse {

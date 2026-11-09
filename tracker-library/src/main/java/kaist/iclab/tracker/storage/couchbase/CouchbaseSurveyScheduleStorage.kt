@@ -9,7 +9,6 @@ import com.couchbase.lite.MutableDocument
 import com.couchbase.lite.Ordering
 import com.couchbase.lite.QueryBuilder
 import com.couchbase.lite.SelectResult
-import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import java.util.UUID
@@ -53,12 +52,10 @@ class CouchbaseSurveyScheduleStorage(
                 )
             }
 
-            if(result != null) Log.d(TAG, "Next Schedule for $surveyId: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
             return result
 
         } catch(e: Exception) {
-            if(e is NoSuchElementException) Log.d(TAG, "No next schedule today for $surveyId")
-            else e.printStackTrace()
+            if (e !is NoSuchElementException) Log.e(TAG, "Failed to read a schedule", e)
         }
 
         return null
@@ -87,14 +84,11 @@ class CouchbaseSurveyScheduleStorage(
                 )
             }
 
-            if(result != null) Log.d(TAG, "Next Schedule: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
-            else Log.d(TAG, "No next schedule today")
 
             return result
 
         } catch(e: Exception) {
-            if(e is NoSuchElementException) Log.d(TAG, "No next schedule today")
-            else e.printStackTrace()
+            if (e !is NoSuchElementException) Log.e(TAG, "Failed to read a schedule", e)
             return null
         }
     }

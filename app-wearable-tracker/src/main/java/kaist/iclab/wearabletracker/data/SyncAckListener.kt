@@ -82,7 +82,6 @@ class SyncAckListener(
                 }
 
                 if (syncPreferencesHelper.advanceSensorWatermarkIfNewer(sensorId, endTimestamp)) {
-                    Log.d(TAG, "Pruning $sensorId data up to: $endTimestamp")
                     store.deleteDataBefore(endTimestamp)
                 } else {
                     Log.d(TAG, "Stale/duplicate ACK for $sensorId at $endTimestamp, ignoring")
@@ -119,6 +118,4 @@ class SyncAckListener(
             store.deleteDataBefore(watermark)
         }
     }
-
-    fun cleanup() {}
 }

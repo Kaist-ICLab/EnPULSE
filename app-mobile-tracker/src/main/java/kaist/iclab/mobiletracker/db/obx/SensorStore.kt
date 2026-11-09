@@ -175,13 +175,6 @@ open class SensorStore<T : BaseEntity>(
             .greaterOrEqual(timestampProperty, afterTimestamp).build()
             .use { it.count() }
 
-    fun hasDataAfter(afterTimestamp: Long, deviceType: Int? = null): Boolean =
-        box.query().run {
-            if (deviceType != null) equal(deviceTypeProperty, deviceType.toLong()) else this
-        }
-            .greater(timestampProperty, afterTimestamp).build()
-            .use { it.count() > 0 }
-
     fun latestTimestamp(deviceType: Int? = null): Long? {
         if (deviceType != null) {
             if (box.isEmpty) return null

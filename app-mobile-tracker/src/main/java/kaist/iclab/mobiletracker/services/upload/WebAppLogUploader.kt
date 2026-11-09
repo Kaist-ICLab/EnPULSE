@@ -112,7 +112,6 @@ class WebAppLogUploader(
                 if (batch.size < batchSize) break
             }
 
-            Log.d(TAG, "Uploaded $uploaded webapp log rows")
             uploaded
         }
     }

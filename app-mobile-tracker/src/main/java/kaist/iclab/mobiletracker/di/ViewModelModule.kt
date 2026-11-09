@@ -49,7 +49,6 @@ val viewModelModule = module {
         AccountSettingsViewModel(
             campaignRepository = get<CampaignRepository>(),
             userProfileRepository = get<UserProfileRepository>(),
-            surveyRepository = get<SurveyRepository>(),
             campaignSensorRepository = get(),
             backgroundController = get(),
         )

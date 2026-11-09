@@ -8,7 +8,6 @@ import com.couchbase.lite.MutableDocument
 import com.couchbase.lite.Ordering
 import com.couchbase.lite.QueryBuilder
 import com.couchbase.lite.SelectResult
-import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.sensor.timing.TimingSchedule
 import kaist.iclab.tracker.storage.core.TimingScheduleStorage
 import java.util.UUID
@@ -57,11 +56,9 @@ class CouchbaseTimingScheduleStorage(
                 )
             }
 
-            if (result != null) Log.d(TAG, "Next schedule for $value: value=${result.value}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
             return result
         } catch (e: Exception) {
-            if (e is NoSuchElementException) Log.d(TAG, "No next schedule today for $value")
-            else e.printStackTrace()
+            if (e !is NoSuchElementException) Log.e(TAG, "Failed to read a schedule", e)
         }
 
         return null
@@ -90,13 +87,10 @@ class CouchbaseTimingScheduleStorage(
                 )
             }
 
-            if (result != null) Log.d(TAG, "Last schedule: value=${result.value}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
-            else Log.d(TAG, "No last schedule for $value")
 
             return result
         } catch (e: Exception) {
-            if (e is NoSuchElementException) Log.d(TAG, "No last schedule for $value")
-            else e.printStackTrace()
+            if (e !is NoSuchElementException) Log.e(TAG, "Failed to read a schedule", e)
             return null
         }
     }

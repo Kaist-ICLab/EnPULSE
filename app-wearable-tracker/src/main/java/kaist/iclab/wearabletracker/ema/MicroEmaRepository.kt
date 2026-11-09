@@ -1,6 +1,5 @@
 package kaist.iclab.wearabletracker.ema
 
-import android.util.Log
 import kaist.iclab.tracker.sensor.microema.WatchQuestion
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.tracker.sensor.microema.nextQuestionInRotation
@@ -16,10 +15,6 @@ import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 class MicroEmaRepository(
     private val prefsHelper: MicroEmaPreferencesHelper
 ) {
-    companion object {
-        private const val TAG = "MicroEmaRepo"
-    }
-
     // In-memory holder for the active session configuration
     private var activeConfig: WatchSurveyConfig? = null
 
@@ -47,7 +42,6 @@ class MicroEmaRepository(
      * Get the active survey config received from the phone.
      */
     fun loadSurveyConfig(): WatchSurveyConfig? {
-        Log.d(TAG, "Loading active config. Is null? ${activeConfig == null}")
         return activeConfig
     }
 
@@ -67,10 +61,6 @@ class MicroEmaRepository(
         // Update persistent storage with the new last shown ID
         prefsHelper.saveLastQuestionId(config.surveyId, nextQuestion.id)
 
-        Log.d(
-            TAG,
-            "Queue update for Survey ${config.surveyId}: lastId=$lastId -> nextId=${nextQuestion.id}"
-        )
         return nextQuestion
     }
 
@@ -79,10 +69,6 @@ class MicroEmaRepository(
      */
     fun updateConfig(config: WatchSurveyConfig) {
         this.activeConfig = config
-        Log.d(
-            TAG,
-            "Active config updated for Survey ID: ${config.surveyId} with ${config.questions.size} questions"
-        )
     }
 
     /**

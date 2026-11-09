@@ -35,7 +35,6 @@ class WatchSurveyConfigStorage(context: Context) {
         try {
             val jsonString = json.encodeToString(payload)
             prefs.edit { putString(KEY_CONFIG, jsonString) }
-            Log.d(TAG, "Persisted watch survey config to disk (${jsonString.length} bytes)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to persist watch survey config: ${e.message}", e)
         }

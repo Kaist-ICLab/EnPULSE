@@ -5,11 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
 import kaist.iclab.tracker.R
-import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.listener.AlarmListener
 import kaist.iclab.tracker.listener.SingleAlarmListener
 import kaist.iclab.tracker.permission.PermissionManager
@@ -57,7 +55,6 @@ class TimingSensor(
     icon = Icons.Default.Schedule
 ) {
     companion object {
-        private val TAG = TimingSensor::class.simpleName
         private val SCHEDULE_INTERVAL = TimeUnit.MINUTES.toMillis(15)
 
         /**
@@ -218,7 +215,6 @@ class TimingSensor(
     }
 
     private fun scheduleForDate(baseDate: Long, value: String) {
-        Log.d(TAG, "Schedule $value using base date ${baseDate.formatLocalDateTime()}")
         val now = System.currentTimeMillis()
         val entry = configStorage.get().schedules.find { it.value == value } ?: return
 
@@ -268,8 +264,6 @@ class TimingSensor(
         val nextSchedule = scheduleStorage.getNextSchedule() ?: return
         val timeUntilNext = nextSchedule.triggerTime!! - currentTime
         if (timeUntilNext <= SCHEDULE_INTERVAL * 2) {
-            Log.d(TAG, "Timing scheduled after $timeUntilNext ms! Using exact alarm for next wakeup")
-
             val bundle = Bundle()
             bundle.putString("scheduleId", nextSchedule.scheduleId)
             bundle.putString("value", nextSchedule.value)
@@ -285,7 +279,6 @@ class TimingSensor(
 
         val scheduleId = intent.getStringExtra("scheduleId") ?: return@timingCallback
         val value = intent.getStringExtra("value") ?: return@timingCallback
-        Log.d(TAG, "Timing fired (value: $value): $scheduleId")
 
         val now = System.currentTimeMillis()
         scheduleStorage.setFiredAt(scheduleId, now)

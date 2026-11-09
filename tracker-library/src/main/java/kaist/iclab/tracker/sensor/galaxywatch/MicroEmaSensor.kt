@@ -1,5 +1,6 @@
 package kaist.iclab.tracker.sensor.galaxywatch
 
+import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QuestionAnswer
 import kaist.iclab.tracker.R
@@ -82,7 +83,7 @@ class MicroEmaSensor(
                 callback(surveyEntity)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e(name, "Failed to handle a microEMA response", e)
         }
     }
 

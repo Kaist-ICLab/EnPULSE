@@ -57,7 +57,6 @@ class SamsungHealthSensorInitializer(context: Context) {
 
     private fun connect() {
         try {
-            Log.d(TAG, "Connecting to Samsung Health Tracking Service (Attempt ${retryCount + 1})...")
             healthTrackingService.connectService()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initiate connection: ${e.message}")
@@ -71,8 +70,6 @@ class SamsungHealthSensorInitializer(context: Context) {
         currentDelay = minOf(MAX_RETRY_DELAY, currentDelay * 2)
         retryCount++
 
-        Log.d(TAG, "Scheduling reconnection in ${delay / 1000}s...")
-        
         // Using a Handler or similar to avoid complex coroutine dependency in this basic initializer
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             connect()

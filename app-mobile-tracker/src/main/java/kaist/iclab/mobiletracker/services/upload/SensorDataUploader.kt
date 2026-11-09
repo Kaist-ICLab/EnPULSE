@@ -230,21 +230,15 @@ class SensorDataUploader(
 
     suspend fun hasDataToUpload(sensorId: String): Boolean {
         if (!isSensorActive(sensorId)) {
-            Log.d(TAG, "hasDataToUpload: $sensorId is NOT active")
             return false
         }
         return try {
             val handler = handlerRegistry.getHandler(sensorId)
             if (handler == null) {
-                Log.d(TAG, "hasDataToUpload: No handler for $sensorId")
                 return false
             }
             val lastUploadCursor = syncTimestampService.getUploadCursor(sensorId)
             val hasData = handler.hasDataToUpload(lastUploadCursor)
-            Log.d(
-                TAG,
-                "hasDataToUpload: $sensorId hasData=$hasData (cursor=$lastUploadCursor)"
-            )
             hasData
         } catch (e: Exception) {
             if (e is CancellationException) throw e

@@ -74,12 +74,11 @@ class SurveyResponseCapture(
             if (entities.isEmpty()) {
                 // Was there anything to parse at all? If so, this is a shape mismatch worth
                 // surfacing loudly — it used to fail silently (nothing stored, nothing logged).
-                Log.w(TAG, "No parseable question responses in: ${surveyEntity.response}")
+                Log.w(TAG, "Survey response had no parseable questions")
                 return
             }
 
             surveyResponseStore.insertBatch(entities)
-            Log.d(TAG, "Queued ${entities.size} responses for upload")
             // No immediate flush — AutoSyncService's gated cycle uploads this, same as every
             // other sensor.
         } catch (e: Exception) {

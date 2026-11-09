@@ -8,14 +8,6 @@ import kaist.iclab.tracker.sensor.core.SensorEntity
  */
 interface PhoneSensorRepository {
     /**
-     * Insert sensor data for a specific sensor
-     * @param sensorId The ID of the sensor
-     * @param entity The sensor entity to insert
-     * @return Result indicating success or failure with error details
-     */
-    suspend fun insertSensorData(sensorId: String, entity: SensorEntity): Result<Unit>
-
-    /**
      * Insert sensor data in batch
      * @param sensorId The ID of the sensor
      * @param entities List of sensor entities to insert
@@ -36,19 +28,6 @@ interface PhoneSensorRepository {
      * @return true if storage is available, false otherwise
      */
     fun hasStorageForSensor(sensorId: String): Boolean
-
-    /**
-     * Delete all sensor data from all sensors
-     * @return Result indicating success or failure with error details
-     */
-    suspend fun flushAllData(): Result<Unit>
-
-    /**
-     * Get the latest recorded timestamp for a specific sensor
-     * @param sensorId The ID of the sensor
-     * @return Latest timestamp in milliseconds, or null if no data exists
-     */
-    suspend fun getLatestRecordedTimestamp(sensorId: String): Long?
 
     /**
      * Get the record count for a specific sensor

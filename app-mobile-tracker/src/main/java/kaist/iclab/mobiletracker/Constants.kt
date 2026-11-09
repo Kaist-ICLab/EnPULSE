@@ -2,7 +2,6 @@ package kaist.iclab.mobiletracker
 
 import kaist.iclab.mobiletracker.Constants.Network.SUPABASE_REQUEST_TIMEOUT_MS
 
-
 /**
  * Centralized constants for the mobile tracker app.
  *
@@ -30,7 +29,6 @@ object Constants {
         // Survey Tables
         const val TABLE_SURVEY = "survey"
         const val TABLE_QUESTION = "survey_question"
-        const val TABLE_OPTION = "survey_question_option"
         const val TABLE_TRIGGER = "survey_question_trigger"
         const val TABLE_RESPONSE = "survey_question_response"
     }
@@ -137,7 +135,6 @@ object Constants {
         // Survey Notifications
         const val ID_SURVEY_BASE = 2000
         const val CHANNEL_ID_SURVEY = "survey_channel"
-        const val CHANNEL_NAME_SURVEY = "Survey Notifications"
         const val CHANNEL_ID_SURVEY_TRIGGER = "survey_trigger_channel"
         const val CHANNEL_NAME_SURVEY_TRIGGER = "Survey Triggers"
     }
@@ -170,9 +167,6 @@ object Constants {
      * Trigger Constants
      */
     object Trigger {
-        /** Threshold for discarding stale BLE triggers (5 minutes) */
-        const val STALE_THRESHOLD_MS = 5 * 60 * 1000L
-
         /**
          * Broadcast action id used by the Dashboard's "open webapp" trigger preset. Recognized by
          * [kaist.iclab.mobiletracker.trigger.PhoneTriggerActionHandler] and routed to

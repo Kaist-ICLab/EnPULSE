@@ -44,11 +44,6 @@ class WatchNotificationTriggerReceiver(
         bleChannel.addOnReceivedListener(setOf(Constants.BLE.KEY_WATCH_NOTIFICATION_TRIGGER)) { _, json ->
             handleNotificationTrigger(json)
         }
-
-        Log.d(
-            TAG,
-            "Started listening for watch notification triggers on BLE key: ${Constants.BLE.KEY_WATCH_NOTIFICATION_TRIGGER}"
-        )
     }
 
     private fun handleNotificationTrigger(json: JsonElement) {
@@ -73,8 +68,6 @@ class WatchNotificationTriggerReceiver(
                     return
                 }
             }
-
-            Log.d(TAG, "Triggering watch notification: title=$title, url=$url")
 
             val tapIntent = if (url != null) {
                 Intent(context, WatchNotificationTapReceiver::class.java).apply {

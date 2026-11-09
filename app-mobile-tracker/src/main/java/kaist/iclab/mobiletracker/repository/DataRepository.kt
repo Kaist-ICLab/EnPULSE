@@ -127,13 +127,6 @@ interface DataRepository {
     suspend fun getAllSensorInfo(): List<SensorInfo>
 
     /**
-     * Get summary information for a specific sensor.
-     * @param sensorId The sensor ID
-     * @return SensorInfo or null if not found
-     */
-    suspend fun getSensorInfo(sensorId: String): SensorInfo?
-
-    /**
      * Get detailed information for a specific sensor.
      * @param sensorId The sensor ID
      * @return SensorDetailInfo with counts and timestamps
