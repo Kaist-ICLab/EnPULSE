@@ -14,7 +14,7 @@ import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 class WebAppService(
     private val supabaseHelper: SupabaseHelper
 ) {
-    private val supabaseClient = supabaseHelper.supabaseClient
+    private val supabaseClient get() = supabaseHelper.supabaseClient
     private val tableName = "campaign_webapp"
     private val iconBucket = "campaign-webapp-icons"
 

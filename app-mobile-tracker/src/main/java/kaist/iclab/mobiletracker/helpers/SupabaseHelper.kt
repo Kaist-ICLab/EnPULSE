@@ -6,6 +6,7 @@ package kaist.iclab.mobiletracker.helpers
  * For specific data operations, use services in the services package.
  */
 import android.content.Context
+import android.util.Log
 import com.russhwolf.settings.SharedPreferencesSettings
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
@@ -16,6 +17,10 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class SupabaseHelper(context: Context) {
     private val settings = SharedPreferencesSettings(
@@ -24,8 +29,13 @@ class SupabaseHelper(context: Context) {
 
     private val configManager = SupabaseConfigManager(context)
 
-    var supabaseClient: SupabaseClient = buildClient()
-        private set
+    private val clientState = MutableStateFlow(buildClient())
+
+    /** Emits the replacement client after [reinitialize], for code that observes the client. */
+    val clientFlow: StateFlow<SupabaseClient> = clientState.asStateFlow()
+
+    /** Always the current client. Read it on each use; a saved copy goes stale on [reinitialize]. */
+    val supabaseClient: SupabaseClient get() = clientState.value
 
     private fun buildClient(): SupabaseClient {
         val url = configManager.getUrl()
@@ -63,7 +73,16 @@ class SupabaseHelper(context: Context) {
      * Rebuilds the Supabase client using the latest configuration.
      * Useful when the user updates the backend connection details dynamically.
      */
-    fun reinitialize() {
-        supabaseClient = buildClient()
+    suspend fun reinitialize() {
+        val previous = clientState.value
+        clientState.value = buildClient()
+        // Close the old client so it stops auto-refreshing the same session as the new one:
+        // refresh tokens rotate, so two clients refreshing one token can end up signing out.
+        try {
+            previous.close()
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Log.w("SupabaseHelper", "Error closing the previous client: ${e.message}", e)
+        }
     }
 }

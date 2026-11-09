@@ -12,9 +12,9 @@ import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
  * Service for handling profile data operations with Supabase
  */
 class ProfileService(
-    supabaseHelper: SupabaseHelper
+    private val supabaseHelper: SupabaseHelper
 ) {
-    private val supabaseClient = supabaseHelper.supabaseClient
+    private val supabaseClient get() = supabaseHelper.supabaseClient
     private val tableName = "profiles"
 
     companion object {

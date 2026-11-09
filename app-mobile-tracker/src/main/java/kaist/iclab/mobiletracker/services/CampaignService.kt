@@ -17,9 +17,9 @@ import kotlinx.serialization.json.put
  * Service for handling campaign data operations with Supabase
  */
 class CampaignService(
-    supabaseHelper: SupabaseHelper
+    private val supabaseHelper: SupabaseHelper
 ) {
-    private val supabaseClient = supabaseHelper.supabaseClient
+    private val supabaseClient get() = supabaseHelper.supabaseClient
     private val tableName = "campaigns"
 
     companion object {

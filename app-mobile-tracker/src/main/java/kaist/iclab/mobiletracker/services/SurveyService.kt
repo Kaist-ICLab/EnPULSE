@@ -21,9 +21,9 @@ import kotlinx.serialization.json.intOrNull
  * Service for fetching survey configuration from Supabase
  */
 class SurveyService(
-    supabaseHelper: SupabaseHelper
+    private val supabaseHelper: SupabaseHelper
 ) {
-    private val supabaseClient = supabaseHelper.supabaseClient
+    private val supabaseClient get() = supabaseHelper.supabaseClient
 
     companion object {
         /** Must match QUESTION_POSITION_KEY in the dashboard's campaignService.ts. */

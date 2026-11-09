@@ -33,6 +33,7 @@ import kaist.iclab.tracker.auth.UserState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -49,7 +50,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 class SupabaseAuth(
     context: Context,
     private val clientId: String,
-    supabaseHelper: SupabaseHelper,
+    private val supabaseHelper: SupabaseHelper,
     private val syncTimestampService: SyncTimestampService
 ) : Authentication, EmailPasswordAuthentication {
 
@@ -57,7 +58,7 @@ class SupabaseAuth(
         private const val TAG = "SupabaseAuth"
     }
 
-    private val supabaseClient = supabaseHelper.supabaseClient
+    private val supabaseClient get() = supabaseHelper.supabaseClient
     private val credentialManager = CredentialManager.create(context)
     private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
@@ -92,11 +93,14 @@ class SupabaseAuth(
             }
         }
         authScope.launch {
-            supabaseClient.auth.sessionStatus.collect { status ->
-                try {
-                    handleSessionStatus(status)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error handling session status $status: ${e.message}", e)
+            // collectLatest moves to the new client's status when the client is rebuilt.
+            supabaseHelper.clientFlow.collectLatest { client ->
+                client.auth.sessionStatus.collect { status ->
+                    try {
+                        handleSessionStatus(status)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error handling session status $status: ${e.message}", e)
+                    }
                 }
             }
         }
