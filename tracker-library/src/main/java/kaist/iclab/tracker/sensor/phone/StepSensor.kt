@@ -3,6 +3,7 @@ package kaist.iclab.tracker.sensor.phone
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,7 @@ import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -103,20 +105,27 @@ class StepSensor(
         val timestamp = System.currentTimeMillis()
 
         CoroutineScope(Dispatchers.IO).launch {
-            store.aggregateData(req).dataList.forEach {
-                val startTime = it.startTime.toEpochMilli()
-                val duration = it.endTime.toEpochMilli() - startTime
-                val entity = Entity(
-                    timestamp,
-                    startTime,
-                    duration,
-                    it.value ?: 0
-                )
-                lastSynced = max(lastSynced, it.endTime.toEpochMilli())
+            try {
+                store.aggregateData(req).dataList.forEach {
+                    val startTime = it.startTime.toEpochMilli()
+                    val duration = it.endTime.toEpochMilli() - startTime
+                    val entity = Entity(
+                        timestamp,
+                        startTime,
+                        duration,
+                        it.value ?: 0
+                    )
+                    lastSynced = max(lastSynced, it.endTime.toEpochMilli())
 
-                listeners.forEach { l ->
-                    l.invoke(entity)
+                    listeners.forEach { l ->
+                        l.invoke(entity)
+                    }
                 }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                // Nothing else catches this, so it would crash the app. lastSynced only moves
+                // past rows already read, so the next poll retries the rest.
+                Log.e(name, "Failed to read step data: ${e.message}", e)
             }
         }
         Unit
