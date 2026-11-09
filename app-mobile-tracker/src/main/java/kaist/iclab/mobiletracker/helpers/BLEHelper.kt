@@ -401,7 +401,9 @@ class BLEHelper(
             } else {
                 "$sensorId:$status"
             }
-            bleChannel.send(AppConfig.BLEKeys.SYNC_ACK, ackData)
+            // Urgent: the watch resends after 45 s without this, and the Data Layer can hold a
+            // non-urgent item for much longer than that.
+            bleChannel.send(AppConfig.BLEKeys.SYNC_ACK, ackData, isUrgent = true)
             Log.d(
                 AppConfig.LogTags.PHONE_BLE,
                 "Sent ACK for $sensorId: $status (ts=$endTimestamp)"
