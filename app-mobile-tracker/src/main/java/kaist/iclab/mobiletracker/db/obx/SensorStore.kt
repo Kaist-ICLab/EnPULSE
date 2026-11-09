@@ -26,7 +26,11 @@ enum class DedupStrategy {
     /** Always insert a new row, even if an equivalent one already exists. */
     NONE,
 
-    /** Upsert by (timestamp, deviceType) — for sensors that re-read a trailing margin on every poll. */
+    /**
+     * One row per (timestamp, deviceType), for sensors that re-read a trailing margin on every
+     * poll. Unchanged re-reads are dropped and corrected ones upload again: see
+     * [selectReadingsToStore].
+     */
     TIMESTAMP,
 
     /**
@@ -63,6 +67,8 @@ open class SensorStore<T : BaseEntity>(
     protected val boxStore: BoxStore,
     private val entityClass: Class<T>,
     private val dedupStrategy: DedupStrategy = DedupStrategy.NONE,
+    /** The values that count as a correction under [DedupStrategy.TIMESTAMP]; excludes `received`. */
+    private val readingContent: (T) -> Any? = { Any() },
 ) {
     protected val box: Box<T> = boxStore.boxFor(entityClass)
 
@@ -95,8 +101,8 @@ open class SensorStore<T : BaseEntity>(
     }
 
     fun insert(entity: T): Long {
-        val deduped = applyDedup(listOf(entity))
-        val toPut = deduped.firstOrNull() ?: entity
+        // Dedup can decide there is nothing to store, and putting the entity anyway would undo that.
+        val toPut = applyDedup(listOf(entity)).firstOrNull() ?: return 0L
         return synchronized(cacheLock) {
             ensureCacheInitializedLocked()
             val before = box.count()
@@ -130,7 +136,7 @@ open class SensorStore<T : BaseEntity>(
 
     private fun applyDedup(entities: List<T>): List<T> = when (dedupStrategy) {
         DedupStrategy.NONE -> entities
-        DedupStrategy.TIMESTAMP -> applyExistingIds(entities)
+        DedupStrategy.TIMESTAMP -> applyCorrections(entities)
         DedupStrategy.KEEP_EXISTING_EVENT_ID -> dropExistingEventIds(entities)
     }
 
@@ -144,30 +150,11 @@ open class SensorStore<T : BaseEntity>(
         return deduped.filter { it.eventId !in existing }
     }
 
-    /**
-     * For dedup-enabled stores: first collapses entities that duplicate each other *within this
-     * same incoming batch* (kept: the first occurrence per (timestamp, deviceType) — a resend
-     * within one batch carries equivalent data, so either copy is fine to drop). Without this step,
-     * two such entities would both stay unmatched against the DB below and get `box.put` as two
-     * separate new rows.
-     *
-     * Then, for what's left, reuses an already-persisted row's id wherever (timestamp, deviceType)
-     * matches — making that entity's `box.put` an update instead of an insert.
-     */
-    private fun applyExistingIds(entities: List<T>): List<T> {
+    private fun applyCorrections(entities: List<T>): List<T> {
         if (entities.isEmpty()) return entities
-        val deduped = entities.distinctBy { it.timestamp to it.deviceType }
-        val timestamps = deduped.map { it.timestamp }.distinct().toLongArray()
-        val existingByKey = box.query(timestampProperty.oneOf(timestamps))
-            .build()
-            .use { it.find() }
-            .associate { (it.timestamp to it.deviceType) to it.id }
-        deduped.forEach { entity ->
-            existingByKey[entity.timestamp to entity.deviceType]?.let { existingId ->
-                entity.id = existingId
-            }
-        }
-        return deduped
+        val timestamps = entities.map { it.timestamp }.distinct().toLongArray()
+        val existing = box.query(timestampProperty.oneOf(timestamps)).build().use { it.find() }
+        return selectReadingsToStore(entities, existing, readingContent)
     }
 
     fun count(deviceType: Int? = null): Int {
