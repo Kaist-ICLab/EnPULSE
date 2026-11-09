@@ -226,6 +226,8 @@
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">Data collection is running in the background</string>
+    <string name="notification_collection_stopped_title">Data collection stopped</string>
+    <string name="notification_collection_stopped_message">EnPULSE could not keep collecting data due to errors. Please open the app and start data collection again.</string>
 
     <!-- Phone Sensor Screen -->
     <string name="turn_off_data_collection_first">Data collection is still running</string>

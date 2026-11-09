@@ -11,6 +11,7 @@ import androidx.core.app.NotificationCompat
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.MainActivity
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.utils.NotificationHelper.showSurveyTriggerNotification
 import kaist.iclab.tracker.sensor.survey.SurveyNotificationConfig
 import kaist.iclab.tracker.sensor.survey.activity.DefaultSurveyActivity
@@ -52,6 +53,34 @@ object NotificationHelper {
     /**
      * Creates a PendingIntent that opens the MainActivity when clicked
      */
+    fun showCollectionStoppedNotification(context: Context) {
+        val localizedContext = LanguageHelper(context).applyLanguage(context)
+        ensureNotificationChannel(
+            context,
+            Constants.Notification.CHANNEL_ID_COLLECTION_STOPPED,
+            Constants.Notification.CHANNEL_NAME_COLLECTION_STOPPED,
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        val notification = buildNotification(
+            context = context,
+            channelId = Constants.Notification.CHANNEL_ID_COLLECTION_STOPPED,
+            title = localizedContext.getString(R.string.notification_collection_stopped_title),
+            text = localizedContext.getString(R.string.notification_collection_stopped_message),
+            priority = NotificationCompat.PRIORITY_HIGH,
+            pendingIntent = createMainActivityPendingIntent(
+                context,
+                Constants.Notification.ID_COLLECTION_STOPPED
+            )
+        ).build()
+        context.getSystemService(NotificationManager::class.java)
+            .notify(Constants.Notification.ID_COLLECTION_STOPPED, notification)
+    }
+
+    fun cancelCollectionStoppedNotification(context: Context) {
+        context.getSystemService(NotificationManager::class.java)
+            .cancel(Constants.Notification.ID_COLLECTION_STOPPED)
+    }
+
     fun createMainActivityPendingIntent(
         context: Context,
         requestCode: Int = 0

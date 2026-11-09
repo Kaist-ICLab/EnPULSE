@@ -18,6 +18,7 @@ import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.mobiletracker.services.SurveyResponseCapture
+import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
@@ -213,6 +214,9 @@ class MobileTrackerApplication : Application(), KoinComponent,
                 try {
                     when (state.flag) {
                         ControllerState.FLAG.RUNNING -> {
+                            NotificationHelper.cancelCollectionStoppedNotification(
+                                this@MobileTrackerApplication
+                            )
                             PhoneSensorDataService.start(this@MobileTrackerApplication)
                             surveyResponseCapture.start()
                         }
@@ -242,7 +246,10 @@ class MobileTrackerApplication : Application(), KoinComponent,
             allowPartialSensing = true,
             offBodyDetector = OffBodyDetector(
                 context = this
-            )
+            ),
+            onCollectionStartFailed = {
+                NotificationHelper.showCollectionStoppedNotification(this)
+            }
         )
     }
 }

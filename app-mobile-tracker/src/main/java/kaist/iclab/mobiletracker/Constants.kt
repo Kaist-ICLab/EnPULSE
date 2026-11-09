@@ -129,6 +129,11 @@ object Constants {
         const val CHANNEL_NAME_AUTO_SYNC = "Auto Sync Notifications"
         const val ID_AUTO_SYNC_ACTIVE = 1003
 
+        // Shown when collection could not start or restart and has stopped.
+        const val CHANNEL_ID_COLLECTION_STOPPED = "collection_stopped_channel"
+        const val CHANNEL_NAME_COLLECTION_STOPPED = "Data Collection Status"
+        const val ID_COLLECTION_STOPPED = 1004
+
         // Survey Notifications
         const val ID_SURVEY_BASE = 2000
         const val CHANNEL_ID_SURVEY = "survey_channel"

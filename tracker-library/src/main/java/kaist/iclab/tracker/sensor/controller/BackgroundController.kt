@@ -110,6 +110,7 @@ class BackgroundController(
         private lateinit var serviceNotification: ServiceNotification
         private var partialSensingAllowed: Boolean = false
         private var restartAfterProcessDeath: Boolean = true
+        private var onCollectionStartFailed: () -> Unit = {}
 
         private lateinit var offBodyDetector: OffBodyDetector
         private var serviceScope: CoroutineScope? = null
@@ -135,6 +136,7 @@ class BackgroundController(
                 serviceNotification = dependencies.serviceNotification
                 partialSensingAllowed = dependencies.allowPartialSensing
                 restartAfterProcessDeath = dependencies.restartAfterProcessDeath
+                onCollectionStartFailed = dependencies.onCollectionStartFailed
                 offBodyDetector = dependencies.offBodyDetector
                 return
             }
@@ -277,6 +279,12 @@ class BackgroundController(
                 Log.e(TAG, "Error in onStartCommand", e)
                 postEmergencyNotification()
                 stop()
+                // stop() removes the emergency notification, so this is what the participant sees.
+                try {
+                    onCollectionStartFailed()
+                } catch (callbackError: Exception) {
+                    Log.e(TAG, "Could not report the failed start", callbackError)
+                }
             }
             return if (restartAfterProcessDeath) START_STICKY else START_NOT_STICKY
         }

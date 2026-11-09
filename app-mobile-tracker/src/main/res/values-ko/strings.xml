@@ -218,6 +218,8 @@
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">백그라운드 센서 컨트롤러가 실행 중입니다</string>
+    <string name="notification_collection_stopped_title">데이터 수집이 중지되었습니다</string>
+    <string name="notification_collection_stopped_message">EnPULSE가 데이터 수집을 계속할 수 없습니다. 앱을 열고 데이터 수집을 다시 시작하세요.</string>
     <string name="menu_server_connection">서버 연결 설정</string>
 
     <string name="server_config_title">서버 설정</string>
