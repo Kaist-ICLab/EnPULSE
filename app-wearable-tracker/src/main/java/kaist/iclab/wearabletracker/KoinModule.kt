@@ -434,7 +434,6 @@ val koinModule = module {
     single {
         WatchSurveyConfigReceiver(
             bleChannel = get<PhoneCommunicationManager>().getBleChannel(),
-            microEmaRepository = get(),
             storage = get()
         )
     }

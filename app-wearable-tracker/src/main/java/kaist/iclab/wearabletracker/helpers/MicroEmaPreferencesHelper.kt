@@ -31,15 +31,6 @@ class MicroEmaPreferencesHelper(context: Context) {
         return sharedPreferences.getInt(KEY_LAST_QUESTION_ID_PREFIX + surveyId, -1)
     }
 
-    /**
-     * Clear the last shown question ID for a specific survey.
-     */
-    fun clearLastQuestionId(surveyId: Int) {
-        sharedPreferences.edit {
-            remove(KEY_LAST_QUESTION_ID_PREFIX + surveyId)
-        }
-    }
-
     companion object {
         private const val PREFS_NAME = "micro_ema_preferences"
         private const val KEY_LAST_QUESTION_ID_PREFIX = "last_q_id_"

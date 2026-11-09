@@ -3,6 +3,7 @@ package kaist.iclab.wearabletracker.ema
 import android.util.Log
 import kaist.iclab.tracker.sensor.microema.WatchQuestion
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
+import kaist.iclab.tracker.sensor.microema.nextQuestionInRotation
 import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 
 /**
@@ -60,20 +61,10 @@ class MicroEmaRepository(
      * 4. Update the last shown question ID in persistent storage.
      */
     fun getNextQuestion(config: WatchSurveyConfig): WatchQuestion? {
-        if (config.questions.isEmpty()) return null
-
-        // 1. Questions in the order the phone sent them
-        val orderedQuestions = config.questions
-
-        // 2. Get the last shown question ID for this survey
         val lastId = prefsHelper.getLastQuestionId(config.surveyId)
+        val nextQuestion = nextQuestionInRotation(config.questions, lastId) ?: return null
 
-        // 3. Find the next question in sequence
-        val lastIndex = orderedQuestions.indexOfFirst { it.id == lastId }
-        val nextQuestion = orderedQuestions.getOrNull(lastIndex + 1)
-            ?: orderedQuestions.first() // Wrap around if we reached the end or it's the first time
-
-        // 4. Update persistent storage with the new last shown ID
+        // Update persistent storage with the new last shown ID
         prefsHelper.saveLastQuestionId(config.surveyId, nextQuestion.id)
 
         Log.d(
@@ -99,12 +90,5 @@ class MicroEmaRepository(
      */
     fun clearCache() {
         activeConfig = null
-    }
-
-    /**
-     * Reset the queue progress for a specific survey so it starts from the first question.
-     */
-    fun resetQueueProgress(surveyId: Int) {
-        prefsHelper.clearLastQuestionId(surveyId)
     }
 }

@@ -4,7 +4,6 @@ import android.util.Log
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
-import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -29,7 +28,6 @@ import kotlinx.serialization.json.jsonObject
  */
 class WatchSurveyConfigReceiver(
     private val bleChannel: BLEDataChannel,
-    private val microEmaRepository: MicroEmaRepository,
     private val storage: WatchSurveyConfigStorage
 ) {
     companion object {
@@ -126,14 +124,11 @@ class WatchSurveyConfigReceiver(
     }
 
     private fun applyConfig(configs: Map<Int, WatchSurveyConfig>) {
+        // Question position is kept across pushes and restarts: resetting it here meant later
+        // questions were rarely asked.
         surveyConfigs = configs
 
-        // Reset the queue progress for these surveys so they start from Q1
-        configs.keys.forEach { surveyId ->
-            microEmaRepository.resetQueueProgress(surveyId)
-        }
-
-        Log.d(TAG, "Updated survey configs and reset queue progress: ${configs.keys}")
+        Log.d(TAG, "Updated survey configs: ${configs.keys}")
     }
 }
 
