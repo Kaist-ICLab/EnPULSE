@@ -117,6 +117,9 @@ class SurveySensor(
             requestedSurvey.initSurveyResponse()
             requestedSurvey
         }
+
+        // Registered here, not in onStart: a survey can be answered while collection is stopped.
+        surveyResultListener.addListener(surveyResultCallback)
     }
 
     /**
@@ -211,12 +214,9 @@ class SurveySensor(
         )}
     }
 
-    override fun onStart() {
-        surveyResultListener.addListener(surveyResultCallback)
-    }
+    override fun onStart() {}
 
     override fun onStop() {
-        surveyResultListener.removeListener(surveyResultCallback)
         scheduleStorage.resetSchedule()
     }
 }

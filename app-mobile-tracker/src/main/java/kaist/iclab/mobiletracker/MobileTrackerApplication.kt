@@ -201,10 +201,9 @@ class MobileTrackerApplication : Application(), KoinComponent,
      * response capture accordingly. Placed at the Application level so it persists regardless of
      * Activity/ViewModel lifecycle.
      *
-     * Survey rides the same RUNNING/not-RUNNING transitions as PhoneSensorDataService — capture
-     * tracks Start/Stop Logging like every other sensor — but goes through
-     * [SurveyResponseCapture] directly instead of the `"phoneSensors"` list's per-sensor
-     * ENABLED/campaign_table filtering (see its doc comment for why).
+     * Survey rides the same RUNNING/not-RUNNING transitions as PhoneSensorDataService, which reset
+     * its schedule, but goes through [SurveyResponseCapture] directly instead of the
+     * `"phoneSensors"` list's per-sensor ENABLED/campaign_table filtering (see its doc comment).
      */
     private fun observeControllerStateForService() {
         val backgroundController = getKoin().get<BackgroundController>()

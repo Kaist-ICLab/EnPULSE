@@ -4,7 +4,6 @@ import android.util.Log
 import kaist.iclab.mobiletracker.db.entity.phone.SurveyResponseEntity
 import kaist.iclab.mobiletracker.db.obx.SensorStore
 import kaist.iclab.mobiletracker.di.AppCoroutineScope
-import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -12,13 +11,13 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Captures phone survey responses in step with "Start Logging" but independent of the per-sensor
+ * Saves every submitted phone survey response, regardless of "Start Logging" or the per-sensor
  * `campaign_table` gate. A submission (native [kaist.iclab.tracker.sensor.survey.activity.SurveyActivity]
  * or the EnPulse webapp's `setSurveyResponse` bridge call) arrives as a
- * [SurveySensor.RESULT_ACTION_NAME] broadcast — capture should still track "Start/Stop Logging"
- * like every other phone sensor, but must NOT depend on `survey_sensor` happening to be in the
- * current campaign's `campaign_table` or on a per-sensor Settings toggle (unlike other sensors,
- * survey has neither).
+ * [SurveySensor.RESULT_ACTION_NAME] broadcast. Triggers keep running after Stop Logging and a
+ * notification can outlive it, so an answer given while collection is off must still be kept. It
+ * must also NOT depend on `survey_sensor` happening to be in the current campaign's
+ * `campaign_table` or on a per-sensor Settings toggle (unlike other sensors, survey has neither).
  *
  * That's why [SurveySensor] is deliberately **not** in the `"phoneSensors"` list
  * ([kaist.iclab.mobiletracker.di.phone.ControllerModule]): there, `BackgroundController` only
@@ -27,8 +26,7 @@ import kotlinx.serialization.json.JsonObject
  * gap that used to drop responses silently even while "Start Logging" was on. Instead,
  * [kaist.iclab.mobiletracker.MobileTrackerApplication] drives [start]/[stop] off the same
  * `BackgroundController.controllerStateFlow` transitions that start/stop
- * [PhoneSensorDataService] — so survey capture still respects Start/Stop Logging, just not the
- * per-sensor/campaign gate.
+ * [PhoneSensorDataService], which only resets the survey schedule; answers are saved either way.
  *
  * Storage/upload is the regular sensor path: this class only ever writes to the "Survey" sensor
  * store (shared with watch MicroEMA answers). Upload is entirely [AutoSyncService]'s job, on the
@@ -42,10 +40,13 @@ class SurveyResponseCapture(
 ) {
     private var isStarted = false
 
-    private val surveyResponseListener: (SensorEntity) -> Unit = listener@{ entity ->
-        val surveyEntity = entity as? SurveySensor.Entity ?: return@listener
+    init {
+        surveySensor.addListener { entity -> saveResponse(entity) }
+    }
+
+    private fun saveResponse(entity: SurveySensor.Entity) {
         appScope.io.launch {
-            handleSurveyResponse(surveyEntity)
+            handleSurveyResponse(entity)
         }
     }
 
@@ -58,14 +59,12 @@ class SurveyResponseCapture(
         if (isStarted) return
         isStarted = true
         surveySensor.start()
-        surveySensor.addListener(surveyResponseListener)
     }
 
     /** Call whenever data collection stops (mirrors [PhoneSensorDataService.stop]). Idempotent. */
     fun stop() {
         if (!isStarted) return
         isStarted = false
-        surveySensor.removeListener(surveyResponseListener)
         surveySensor.stop()
     }
 
