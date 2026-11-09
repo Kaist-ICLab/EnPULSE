@@ -7,12 +7,14 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import kaist.iclab.tracker.sensor.core.Sensor
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
@@ -94,6 +96,13 @@ class BackgroundController(
 
             /** How long the watch must read as off-wrist before sensors are paused. */
             private const val OFF_WRIST_PAUSE_DELAY_MS = 10_000L
+
+            /** Android 14+ allows the health service type only with one of these granted. */
+            private val HEALTH_SERVICE_TYPE_PERMISSIONS = arrayOf(
+                Manifest.permission.ACTIVITY_RECOGNITION,
+                Manifest.permission.BODY_SENSORS,
+                Manifest.permission.HIGH_SAMPLING_RATE_SENSORS
+            )
         }
 
         private lateinit var stateStorage: StateStorage<ControllerState>
@@ -464,10 +473,21 @@ class BackgroundController(
                 )
             }.flatMap { it.foregroundServiceTypes.toList() }
                 .toSet()
-                .filter { it in allowedServiceTypes }.toList() // Only keep types declared in manifest
+                .filter { it in allowedServiceTypes } // Only keep types declared in manifest
+                .filter { it != ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH || canUseHealthServiceType() }
 
             // Combine allowed types with default
             return calculatedTypes.fold(defaultServiceType) { acc, type -> acc or type }
         }
+
+        /**
+         * Sleep and Exercise read Samsung Health data, so they can be enabled with none of these
+         * permissions granted. Requesting the health type then would make startForeground throw
+         * and stop every sensor, while those sensors work under the default type anyway.
+         */
+        private fun canUseHealthServiceType(): Boolean =
+            HEALTH_SERVICE_TYPE_PERMISSIONS.any {
+                ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+            }
     }
 }
