@@ -143,6 +143,7 @@ class WebAppTriggerHandler(
             scheduleId = scheduleId,
             baseUrl = webApp.url
         )
+        scheduleStorage.setActualTriggerTime(scheduleId, System.currentTimeMillis())
     }
 
     fun launchNotification(title: String, body: String, url: String?) {

@@ -2,6 +2,7 @@ package kaist.iclab.tracker.storage.couchbase
 
 import android.util.Log
 import com.couchbase.lite.DataSource
+import com.couchbase.lite.DictionaryInterface
 import com.couchbase.lite.Expression
 import com.couchbase.lite.Meta
 import com.couchbase.lite.MutableDocument
@@ -48,7 +49,7 @@ class CouchbaseSurveyScheduleStorage(
                 if(resultDict == null) null else SurveySchedule(
                     scheduleId = docUuid,
                     surveyId = resultDict.getString("surveyId") ?: "",
-                    triggerTime = resultDict.getLong("triggerTime"),
+                    triggerTime = resultDict.getLongOrNull("triggerTime"),
                 )
             }
 
@@ -82,7 +83,7 @@ class CouchbaseSurveyScheduleStorage(
                 if(resultDict == null) null else SurveySchedule(
                     scheduleId = docUuid,
                     surveyId = resultDict.getString("surveyId") ?: "",
-                    triggerTime = resultDict.getLong("triggerTime"),
+                    triggerTime = resultDict.getLongOrNull("triggerTime"),
                 )
             }
 
@@ -108,10 +109,10 @@ class CouchbaseSurveyScheduleStorage(
         return SurveySchedule(
             scheduleId = scheduleId,
             surveyId = document.getString("surveyId") ?: "",
-            triggerTime = document.getLong("triggerTime"),
-            actualTriggerTime = document.getLong("actualTriggerTime"),
-            surveyStartTime = document.getLong("surveyStartTime"),
-            responseSubmissionTime = document.getLong("responseSubmissionTime"),
+            triggerTime = document.getLongOrNull("triggerTime"),
+            actualTriggerTime = document.getLongOrNull("actualTriggerTime"),
+            surveyStartTime = document.getLongOrNull("surveyStartTime"),
+            responseSubmissionTime = document.getLongOrNull("responseSubmissionTime"),
         )
     }
 
@@ -170,3 +171,7 @@ class CouchbaseSurveyScheduleStorage(
     }
 
 }
+
+/** Couchbase returns 0 for a field that was never set, which would upload as a 1970 timestamp. */
+private fun DictionaryInterface.getLongOrNull(key: String): Long? =
+    if (contains(key)) getLong(key) else null
