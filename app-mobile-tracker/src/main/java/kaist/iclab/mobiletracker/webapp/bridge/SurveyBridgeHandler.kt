@@ -10,8 +10,10 @@ import kaist.iclab.tracker.sensor.survey.config.SurveyConfig
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Handles the `getSurvey` / `setSurveyResponse` bridge actions.
@@ -26,6 +28,9 @@ class SurveyBridgeHandler(
     private val scheduleStorage: SurveyScheduleStorage,
     private val userProfileRepository: UserProfileRepository
 ) {
+    /** The schedule each survey's page was last opened for, by survey id. See [resolveScheduleId]. */
+    private val pageScheduleIds = ConcurrentHashMap<String, String>()
+
     fun getSurvey(request: BridgeRequest): BridgeResponse {
         val params = request.payload.jsonObject
         val surveyTitle = params["survey_title"]?.jsonPrimitive?.content
@@ -60,7 +65,11 @@ class SurveyBridgeHandler(
         )
 
         if (!scheduleId.isNullOrBlank()) {
+            pageScheduleIds[survey.id.toString()] = scheduleId
             scheduleStorage.setSurveyStartTime(scheduleId, System.currentTimeMillis())
+        } else {
+            // Opened without a trigger, so its answers must not attach to an earlier one.
+            pageScheduleIds.remove(survey.id.toString())
         }
 
         return BridgeResponse(
@@ -87,10 +96,10 @@ class SurveyBridgeHandler(
             "error",
             errorMessage = "Missing survey_id"
         )
-        val scheduleId = scheduleStorage.addSchedule(SurveySchedule(surveyId = surveyId))
         val answers = params["response"]
             ?: return BridgeResponse(request.requestId, "error", errorMessage = "Missing response")
-
+        val scheduleId =
+            resolveScheduleId(surveyId, params["schedule_id"]?.jsonPrimitive?.contentOrNull)
 
         // Same broadcast SurveyActivity.pushSurveyResult() sends — the existing
         // SurveySensor.surveyResultCallback absorbs it with no new storage logic.
@@ -103,5 +112,19 @@ class SurveyBridgeHandler(
         context.sendBroadcast(intent)
 
         return BridgeResponse(request.requestId, "success")
+    }
+
+    /**
+     * The schedule this submission belongs to, so it keeps the trigger and start times recorded
+     * when the survey fired. Pages may not repeat `schedule_id` on submit, so this falls back to
+     * the one passed to `getSurvey`, and kept for further submissions since a page can submit one
+     * question per call. A new schedule is only created when neither exists any more.
+     */
+    private fun resolveScheduleId(surveyId: String, requestedScheduleId: String?): String {
+        val known = requestedScheduleId?.takeIf { it.isNotBlank() } ?: pageScheduleIds[surveyId]
+        if (known != null && scheduleStorage.getScheduleByScheduleId(known) != null) return known
+        return scheduleStorage.addSchedule(
+            SurveySchedule(surveyId = surveyId, triggerTime = System.currentTimeMillis())
+        )
     }
 }
