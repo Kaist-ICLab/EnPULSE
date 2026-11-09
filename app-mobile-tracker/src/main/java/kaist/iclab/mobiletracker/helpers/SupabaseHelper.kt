@@ -14,7 +14,6 @@ import io.github.jan.supabase.auth.SettingsSessionManager
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kotlinx.coroutines.CancellationException
@@ -49,7 +48,6 @@ class SupabaseHelper(context: Context) {
             supabaseKey = finalAnonKey
         ) {
             install(Postgrest)
-            install(Realtime)
             install(Auth) {
                 // Persist session across app restarts
                 sessionManager = SettingsSessionManager(settings)
