@@ -30,6 +30,8 @@ class SensorDataUploader(
         private const val PRUNE_BUFFER_MS = 7 * 24 * 60 * 60 * 1000L
     }
 
+    private val uploadLocks = PerKeyLock()
+
     /**
      * Whether [sensorId] should upload: it's part of the currently joined campaign's active sensor
      * set, or it isn't campaign-gated at all (see [SensorUploadHandler.isCampaignGated]).
@@ -58,6 +60,14 @@ class SensorDataUploader(
     suspend fun uploadSensorData(
         sensorId: String,
         onBatchUploaded: suspend () -> Unit = {}
+    ): SensorUploadOutcome =
+        // A full sync and a manual upload can target one sensor at once. Taking turns stops them
+        // sending the same rows and overwriting each other's upload position.
+        uploadLocks.withLock(sensorId) { uploadWithLockHeld(sensorId, onBatchUploaded) }
+
+    private suspend fun uploadWithLockHeld(
+        sensorId: String,
+        onBatchUploaded: suspend () -> Unit
     ): SensorUploadOutcome {
         val handler = handlerRegistry.getHandler(sensorId)
         if (handler == null) {
@@ -75,6 +85,8 @@ class SensorDataUploader(
         // exactly where the last accepted batch put it, so "records the cursor passed" counts only
         // the successes and every interrupted upload would report a perfect 100%.
         val pendingBefore = handler.pendingRecordCount(lastUploadCursor)
+        // The upload this one waited for may have sent everything already.
+        if (pendingBefore == 0) return SensorUploadOutcome.UP_TO_DATE
 
         // Belt-and-suspenders: normally SupabaseHelper's enableLifecycleCallbacks = false keeps
         // SessionStatus from ever getting stuck at Initializing mid-upload. If it does anyway (any
