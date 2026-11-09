@@ -124,6 +124,17 @@ class MicroEmaResponseManager(
         }
     }
 
+    /** Saves on the app-wide scope, so the save outlives the screen that recorded the response. */
+    fun saveAndSyncInBackground(responses: List<MicroEmaResponse>) {
+        coroutineScope.launch {
+            try {
+                saveAndSync(responses)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to persist response", e)
+            }
+        }
+    }
+
     suspend fun saveAndSync(responses: List<MicroEmaResponse>) {
         val entities = responses.map { it.toEntity() }
         val ids = store.insertAll(entities)

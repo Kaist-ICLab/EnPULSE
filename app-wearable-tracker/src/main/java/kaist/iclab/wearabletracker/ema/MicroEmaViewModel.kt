@@ -199,13 +199,9 @@ class MicroEmaViewModel(
             responseTime = responseTime ?: System.currentTimeMillis()
         )
 
-        viewModelScope.launch {
-            try {
-                responseManager.saveAndSync(listOf(response))
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to persist response", e)
-            }
-        }
+        // Not viewModelScope: when this runs from the Activity's onDestroy, that scope is already
+        // cancelled and a launch on it would silently drop the response.
+        responseManager.saveAndSyncInBackground(listOf(response))
 
         endSession()
     }
