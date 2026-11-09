@@ -178,9 +178,10 @@
     <string name="error_server_unreachable">Can\'t reach the EnPULSE server. Check your internet connection or try again later.</string>
     <string name="server_unreachable_title">Can\'t reach the server</string>
     <string name="server_unreachable_message">EnPULSE couldn\'t download your study configuration. Check your internet connection and try again.</string>
-    <string name="server_unreachable_message_cached">EnPULSE couldn\'t update your study configuration. Check your internet connection and try again, or tap outside this message to keep using the saved configuration.</string>
+    <string name="server_unreachable_message_cached">EnPULSE couldn\'t update your study configuration. Check your internet connection and try again, or continue offline with the saved configuration.</string>
     <string name="server_unreachable_retry">Retry</string>
     <string name="server_unreachable_exit">Exit</string>
+    <string name="server_unreachable_continue_offline">Continue offline</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
     <string name="menu_leave_campaign">Leave Campaign</string>
