@@ -8,6 +8,7 @@ import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.wearabletracker.Constants
+import kaist.iclab.wearabletracker.ema.screen.MicroEmaScreen
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
