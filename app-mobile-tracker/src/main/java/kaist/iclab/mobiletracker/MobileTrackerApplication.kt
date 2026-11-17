@@ -16,6 +16,7 @@ import kaist.iclab.mobiletracker.di.viewModelModule
 import kaist.iclab.mobiletracker.di.watchSensorModule
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
+import kaist.iclab.mobiletracker.repository.TriggerRepository
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.mobiletracker.utils.NotificationHelper
@@ -25,6 +26,8 @@ import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesPro
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.controller.OffBodyDetector
 import kaist.iclab.tracker.sensor.phone.SurveySensor
+import kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter
+import kaist.iclab.tracker.trigger.engine.TriggerEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
@@ -70,14 +73,10 @@ class MobileTrackerApplication : Application(), KoinComponent,
     }
 
     private fun initializeApp() {
-        // Eagerly initialize BackgroundController to ensure service locator is set up
-        // This prevents crashes when Android creates the ControllerService before
-        // BackgroundController is initialized
+        // Create BackgroundController at launch: its init block creates the service notification
+        // channel and initializes the phone sensors (permission registration, initial state).
         try {
-            val backgroundController = getKoin().get<BackgroundController>()
-            // Access the controller to trigger its initialization
-            // The init block will set up BackgroundControllerServiceLocator
-            backgroundController.controllerStateFlow
+            getKoin().get<BackgroundController>()
         } catch (e: Exception) {
             // Log error but don't crash - this is just eager initialization
             Log.e(
@@ -131,10 +130,11 @@ class MobileTrackerApplication : Application(), KoinComponent,
         // action ever fires. Loading from TriggerRepository's persisted Couchbase cache here
         // requires no network call and keeps this in sync with whatever was last synced.
         try {
-            getKoin().get<kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter>().start()
-            val triggerEngine = getKoin().get<kaist.iclab.tracker.trigger.engine.TriggerEngine>()
+            getKoin().get<TimingDetectionAdapter>().start()
+            val triggerEngine = getKoin().get<TriggerEngine>()
             triggerEngine.loadTriggers(
-                getKoin().get<kaist.iclab.mobiletracker.repository.TriggerRepository>()
+                getKoin()
+                    .get<TriggerRepository>()
                     .getParsedTriggers()
             )
             triggerEngine.start()

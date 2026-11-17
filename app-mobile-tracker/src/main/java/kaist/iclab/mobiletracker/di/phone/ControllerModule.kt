@@ -103,7 +103,6 @@ val controllerModule = module {
             controllerStateStorage = get(named("phoneControllerStateStorage")),
             sensors = get(named("phoneSensors")),
             serviceNotification = get<BackgroundController.ServiceNotification>(),
-            allowPartialSensing = true,
         )
     }
 }

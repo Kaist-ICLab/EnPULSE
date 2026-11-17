@@ -27,13 +27,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class BackgroundController(
     private val context: Context,
     private val controllerStateStorage: StateStorage<ControllerState>,
     override val sensors: List<Sensor<*, *>>,
-    private val serviceNotification: ServiceNotification,
-    private val allowPartialSensing: Boolean = false,
+    serviceNotification: ServiceNotification,
 ) : Controller {
     companion object {
         private val TAG = BackgroundController::class.simpleName
@@ -59,12 +59,6 @@ class BackgroundController(
         notificationManager.createNotificationChannel(serviceChannel)
 
         sensors.forEach { it.init() }
-
-        BackgroundControllerServiceLocator.controllerStateStorage = controllerStateStorage
-        BackgroundControllerServiceLocator.sensors = sensors
-        BackgroundControllerServiceLocator.serviceNotification = serviceNotification
-        BackgroundControllerServiceLocator.allowPartialSensing = allowPartialSensing
-        BackgroundControllerServiceLocator.offBodyDetector = OffBodyDetector(context)
     }
 
     override val controllerStateFlow: StateFlow<ControllerState> = controllerStateStorage.stateFlow
@@ -98,10 +92,10 @@ class BackgroundController(
             private const val OFF_WRIST_PAUSE_DELAY_MS = 10_000L
 
             /** Android 14+ allows the health service type only with one of these granted. */
-            private val HEALTH_SERVICE_TYPE_PERMISSIONS = arrayOf(
+            private val HEALTH_SERVICE_TYPE_PERMISSIONS = listOfNotNull(
                 Manifest.permission.ACTIVITY_RECOGNITION,
                 Manifest.permission.BODY_SENSORS,
-                Manifest.permission.HIGH_SAMPLING_RATE_SENSORS
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Manifest.permission.HIGH_SAMPLING_RATE_SENSORS else null
             )
         }
 
@@ -128,25 +122,19 @@ class BackgroundController(
 
         private fun resolveDependencies() {
             val provider = application as? BackgroundControllerDependenciesProvider
-            val dependencies = provider?.provideBackgroundControllerDependencies()
+                ?: throw IllegalStateException(
+                    "${application::class.java.name} must implement " +
+                        "BackgroundControllerDependenciesProvider to use BackgroundController"
+                )
+            val dependencies = provider.provideBackgroundControllerDependencies()
 
-            if (dependencies != null) {
-                stateStorage = dependencies.controllerStateStorage
-                sensors = dependencies.sensors
-                serviceNotification = dependencies.serviceNotification
-                partialSensingAllowed = dependencies.allowPartialSensing
-                restartAfterProcessDeath = dependencies.restartAfterProcessDeath
-                onCollectionStartFailed = dependencies.onCollectionStartFailed
-                offBodyDetector = dependencies.offBodyDetector
-                return
-            }
-
-            // Fallback for callers that still rely on the process-local locator.
-            stateStorage = BackgroundControllerServiceLocator.controllerStateStorage
-            sensors = BackgroundControllerServiceLocator.sensors
-            serviceNotification = BackgroundControllerServiceLocator.serviceNotification
-            partialSensingAllowed = BackgroundControllerServiceLocator.allowPartialSensing
-            offBodyDetector = BackgroundControllerServiceLocator.offBodyDetector
+            stateStorage = dependencies.controllerStateStorage
+            sensors = dependencies.sensors
+            serviceNotification = dependencies.serviceNotification
+            partialSensingAllowed = dependencies.allowPartialSensing
+            restartAfterProcessDeath = dependencies.restartAfterProcessDeath
+            onCollectionStartFailed = dependencies.onCollectionStartFailed
+            offBodyDetector = dependencies.offBodyDetector
         }
 
         private fun run() {
@@ -191,7 +179,7 @@ class BackgroundController(
                         // Pause only once the watch has stayed off the wrist for a while. A loose
                         // strap or a quick adjustment flips the reading for a moment; collectLatest
                         // cancels this wait as soon as the watch reads as worn again.
-                        delay(OFF_WRIST_PAUSE_DELAY_MS)
+                        delay(OFF_WRIST_PAUSE_DELAY_MS.milliseconds)
                         if (stateStorage.get().flag == ControllerState.FLAG.RUNNING) {
                             pauseSensors()
                         }
