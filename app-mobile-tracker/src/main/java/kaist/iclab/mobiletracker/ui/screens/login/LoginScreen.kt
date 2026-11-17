@@ -26,7 +26,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -49,9 +48,8 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 
 /**
- * @param showEmailLogin whether the email/password fallback is offered. Google stays the
- *   primary path; the form is only revealed on request, for networks where Google's
- *   identity endpoints are unreachable but the configured backend is not.
+ * @param showEmailLogin whether the email/password form is offered. When it is, it is the
+ *   default sign-in method and the Google button follows below it.
  * @param errorMessage the latest sign-in error, shown under the email form.
  */
 @Composable
@@ -67,11 +65,11 @@ fun LoginScreen(
     var expanded by remember { mutableStateOf(false) }
     val configManager = remember { SupabaseConfigManager(context) }
 
-    var emailFormVisible by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    // Hides an error once the user edits the form or it predates opening the form.
-    var errorHidden by remember { mutableStateOf(false) }
+    // Hides an error once the user edits the form, or one left over from before this screen
+    // (or from a Google attempt), since the error line belongs to the email form.
+    var errorHidden by remember { mutableStateOf(true) }
     val focusManager = LocalFocusManager.current
 
     // Both sign-in paths talk to the configured backend, so neither is worth attempting
@@ -162,10 +160,74 @@ fun LoginScreen(
                 )
             }
             Spacer(modifier = Modifier.height(Styles.CONTENT_SPACING))
-            // One sign-in method at a time: the Google button is hidden while the email form is
-            // open, and "Use Google instead" closes the form to bring it back.
-            if (!emailFormVisible) Button(
-                onClick = { ifConfigured { onSignInWithGoogle() } },
+            // Email is the default sign-in method; Google follows below it. Backends without
+            // email support only get the Google button.
+            if (showEmailLogin) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        errorHidden = true
+                    },
+                    label = { Text(stringResource(R.string.login_email_label)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        errorHidden = true
+                    },
+                    label = { Text(stringResource(R.string.login_password_label)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { submitEmail() }),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (errorMessage != null && !errorHidden) {
+                    Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
+                    Text(
+                        text = errorMessage,
+                        color = AppColors.ErrorColor,
+                        fontSize = Styles.FORM_LABEL_FONT_SIZE,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
+                Button(
+                    onClick = { submitEmail() },
+                    enabled = email.isNotBlank() && password.isNotEmpty(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(Styles.BUTTON_HEIGHT),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.PrimaryColor,
+                        contentColor = Color.White
+                    ),
+                    shape = Styles.BUTTON_SHAPE
+                ) {
+                    Text(
+                        text = stringResource(R.string.login_email_submit),
+                        fontSize = Styles.BUTTON_TEXT_FONT_SIZE
+                    )
+                }
+                Spacer(modifier = Modifier.height(Styles.FORM_SECTION_SPACING))
+            }
+            Button(
+                onClick = {
+                    errorHidden = true
+                    ifConfigured { onSignInWithGoogle() }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(Styles.BUTTON_HEIGHT),
@@ -194,91 +256,6 @@ fun LoginScreen(
                         fontSize = Styles.BUTTON_TEXT_FONT_SIZE,
                         color = Color.Black
                     )
-                }
-            }
-
-            if (showEmailLogin) {
-                if (!emailFormVisible) {
-                    Spacer(modifier = Modifier.height(Styles.FORM_SECTION_SPACING))
-                    TextButton(onClick = {
-                        emailFormVisible = true
-                        errorHidden = true
-                    }) {
-                        Text(
-                            text = stringResource(R.string.sign_in_with_email),
-                            fontSize = Styles.FORM_LABEL_FONT_SIZE,
-                            color = AppColors.PrimaryColor
-                        )
-                    }
-                } else {
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = {
-                            email = it
-                            errorHidden = true
-                        },
-                        label = { Text(stringResource(R.string.login_email_label)) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = {
-                            password = it
-                            errorHidden = true
-                        },
-                        label = { Text(stringResource(R.string.login_password_label)) },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(onDone = { submitEmail() }),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (errorMessage != null && !errorHidden) {
-                        Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
-                        Text(
-                            text = errorMessage,
-                            color = AppColors.ErrorColor,
-                            fontSize = Styles.FORM_LABEL_FONT_SIZE,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
-                    Button(
-                        onClick = { submitEmail() },
-                        enabled = email.isNotBlank() && password.isNotEmpty(),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(Styles.BUTTON_HEIGHT),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = AppColors.PrimaryColor,
-                            contentColor = Color.White
-                        ),
-                        shape = Styles.BUTTON_SHAPE
-                    ) {
-                        Text(
-                            text = stringResource(R.string.login_email_submit),
-                            fontSize = Styles.BUTTON_TEXT_FONT_SIZE
-                        )
-                    }
-                    TextButton(onClick = {
-                        emailFormVisible = false
-                        password = ""
-                    }) {
-                        Text(
-                            text = stringResource(R.string.login_use_google_instead),
-                            fontSize = Styles.FORM_LABEL_FONT_SIZE,
-                            color = AppColors.TextSecondary
-                        )
-                    }
                 }
             }
         }
