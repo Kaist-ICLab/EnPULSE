@@ -118,6 +118,8 @@ class AudioSensor(
                     val readCount = audioRecord?.read(readBuffer, 0, READ_CHUNK_SIZE) ?: -1
                     if (readCount <= 0) continue
 
+                    // TODO: check readCount error case handling
+
                     val timestamp = System.currentTimeMillis()
                     val entity = Entity(
                         received = timestamp,
