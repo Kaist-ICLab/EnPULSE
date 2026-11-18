@@ -112,17 +112,18 @@ abstract class BaseSensor<C : SensorConfig, E : SensorEntity>(
 
     override fun start() {
         val wasEnabled = sensorStateFlow.value.flag == SensorState.FLAG.ENABLED
-        if (wasEnabled) {
-            stateStorage.set(SensorState(SensorState.FLAG.RUNNING))
+        if(!wasEnabled) { // Running, Disabled, or N/A => Don't have to run again
+            return
         }
+
+        stateStorage.set(SensorState(SensorState.FLAG.RUNNING))
+
         try {
             onStart()
         } catch (e: Exception) {
             // Callers start a sensor only when it is not RUNNING, so a failed start left marked
             // RUNNING would never be retried.
-            if (wasEnabled) {
-                stateStorage.set(SensorState(SensorState.FLAG.ENABLED))
-            }
+            stateStorage.set(SensorState(SensorState.FLAG.ENABLED))
             throw e
         }
     }
