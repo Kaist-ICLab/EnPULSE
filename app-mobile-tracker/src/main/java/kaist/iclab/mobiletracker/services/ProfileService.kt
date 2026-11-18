@@ -136,4 +136,27 @@ class ProfileService(
         }
     }
 
+    /**
+     * Record that the user has replaced their initial password, so the app stops sending them
+     * to the change-password screen. A targeted UPDATE, like [leaveCampaign].
+     *
+     * @param uuid The user UUID
+     * @return Result containing Unit on success or error
+     */
+    suspend fun markPasswordReset(uuid: String): Result<Unit> {
+        return SupabaseLoadingInterceptor.withLoading {
+            ErrorClassifier.runClassified(TAG, "markPasswordReset($uuid)") {
+                supabaseClient.from(tableName).update(
+                    {
+                        set("reset_password", true)
+                    }
+                ) {
+                    filter {
+                        eq("uuid", uuid)
+                    }
+                }
+                Unit
+            }
+        }
+    }
 }

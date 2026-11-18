@@ -450,9 +450,9 @@ class BackgroundController(
         private fun requiredForegroundServiceType(): Int {
             // Allowed service types as declared in AndroidManifest.xml:
             // health|specialUse|location|connectedDevice
-            val allowedServiceTypes = setOf(
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+            val allowedServiceTypes = setOfNotNull(
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH else null,
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE else null,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
@@ -470,7 +470,7 @@ class BackgroundController(
             }.flatMap { it.foregroundServiceTypes.toList() }
                 .toSet()
                 .filter { it in allowedServiceTypes } // Only keep types declared in manifest
-                .filter { it != ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH || canUseHealthServiceType() }
+                .filter { ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) && (it != ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)) || canUseHealthServiceType() }
 
             // Combine allowed types with default
             return calculatedTypes.fold(defaultServiceType) { acc, type -> acc or type }

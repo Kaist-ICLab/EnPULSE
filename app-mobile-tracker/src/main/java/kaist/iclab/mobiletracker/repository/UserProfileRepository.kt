@@ -39,6 +39,12 @@ interface UserProfileRepository {
     suspend fun leaveCampaign(): Result<Unit>
 
     /**
+     * Record on the server that the user has replaced their initial password, and update the
+     * cached profile to match.
+     */
+    suspend fun markPasswordReset(): Result<Unit>
+
+    /**
      * Create profile if it doesn't exist
      * @param email User email
      * @param campaignId Optional campaign ID

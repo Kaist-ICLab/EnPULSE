@@ -19,4 +19,17 @@ interface EmailPasswordAuthentication {
      * than by throwing.
      */
     suspend fun loginWithEmail(email: String, password: String)
+
+    /**
+     * Whether the current session was signed in with an email and password, as opposed to a
+     * federated provider. Only such a session has a password that [changePassword] can replace.
+     */
+    val isPasswordSession: Boolean
+
+    /**
+     * Replace the signed-in user's password with [newPassword].
+     *
+     * @return null on success, otherwise a message to show the user.
+     */
+    suspend fun changePassword(newPassword: String): String?
 }

@@ -181,6 +181,16 @@ class UserProfileRepositoryImpl(
         return profileService.leaveCampaign(uuid)
     }
 
+    override suspend fun markPasswordReset(): Result<Unit> {
+        val uuid = getCurrentUuid()
+            ?: return Result.Error(AppError.Unknown("User not logged in"))
+        val result = profileService.markPasswordReset(uuid)
+        if (result is Result.Success) {
+            _profile.value?.let { saveProfile(it.copy(resetPassword = true)) }
+        }
+        return result
+    }
+
     override suspend fun createProfileIfNotExists(
         email: String,
         campaignId: Int?

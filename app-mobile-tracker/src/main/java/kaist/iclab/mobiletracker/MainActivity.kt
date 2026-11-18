@@ -60,11 +60,13 @@ class MainActivity : ComponentActivity() {
 
         val userState by authViewModel.userState.collectAsState()
         val userProfile by authViewModel.userProfile.collectAsState()
+        val needsPasswordReset by authViewModel.needsPasswordReset.collectAsState()
 
         // Determine start destination based on full profile state
         // Note: If logged in but profile not loaded yet, start at Login and NavGraph will redirect
         val startDestination = when {
             !userState.isLoggedIn -> Screen.Login.route
+            needsPasswordReset -> Screen.ChangePassword.route
             userProfile == null -> Screen.Home.route  // Default to Home while profile is loading to avoid flicker
             userProfile?.campaignId == null -> Screen.Onboarding.route  // No campaign -> onboarding
             else -> Screen.Home.route  // Has campaign -> home

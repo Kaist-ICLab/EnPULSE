@@ -22,6 +22,8 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
@@ -38,6 +40,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Supabase-based authentication implementation using Google Sign-In.
@@ -60,6 +65,8 @@ class SupabaseAuth(
     }
 
     private val supabaseClient get() = supabaseHelper.supabaseClient
+    // Application context: this object outlives the Activity it is created with.
+    private val appContext = context.applicationContext
     private val credentialManager = CredentialManager.create(context)
     private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
@@ -85,7 +92,7 @@ class SupabaseAuth(
         // guard) ends the cold-start loading state instead of leaving isInitializing = true.
         authScope.launch {
             val initialized =
-                withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS) {
+                withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS.milliseconds) {
                     supabaseClient.auth.awaitInitialization()
                 } != null
             if (!initialized && _userStateFlow.value.isInitializing) {
@@ -240,6 +247,53 @@ class SupabaseAuth(
         e is HttpRequestException || e is TimeoutCancellationException ->
             "Can't reach the server. Check the connection and try again."
         else -> "Sign-in failed. Please try again."
+    }
+
+    override val isPasswordSession: Boolean
+        get() = try {
+            supabaseClient.auth.currentSessionOrNull()?.user?.appMetadata
+                ?.get("provider")?.jsonPrimitive?.contentOrNull == "email"
+        } catch (e: Exception) {
+            false
+        }
+
+    override suspend fun changePassword(newPassword: String): String? {
+        return SupabaseLoadingInterceptor.withLoading {
+            try {
+                supabaseClient.auth.updateUser { password = newPassword }
+                null
+            } catch (e: Exception) {
+                if (e is CancellationException && e !is TimeoutCancellationException) throw e
+                Log.e(TAG, "Password change failed: ${e.message}", e)
+                changePasswordErrorMessage(e)
+            }
+        }
+    }
+
+    private fun changePasswordErrorMessage(e: Exception): String {
+        // Resolved per call, so a language switched while the app is running is respected.
+        val localized = LanguageHelper(appContext).applyLanguage(appContext)
+        return when (e) {
+            is AuthRestException -> when (e.errorCode) {
+                AuthErrorCode.WeakPassword ->
+                    localized.getString(R.string.change_password_error_weak, e.errorDescription)
+
+                AuthErrorCode.SamePassword ->
+                    localized.getString(R.string.change_password_error_same)
+
+                AuthErrorCode.ReauthenticationNeeded ->
+                    localized.getString(R.string.change_password_error_reauth)
+
+                AuthErrorCode.OverRequestRateLimit ->
+                    localized.getString(R.string.change_password_error_rate_limit)
+
+                else ->
+                    localized.getString(R.string.change_password_error_with_detail, e.errorDescription)
+            }
+
+            is HttpRequestException, is TimeoutCancellationException -> localized.getString(R.string.change_password_error_network)
+            else -> localized.getString(R.string.change_password_error_generic)
+        }
     }
 
     override suspend fun logout() {

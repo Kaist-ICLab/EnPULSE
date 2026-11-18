@@ -35,6 +35,20 @@
     <string name="login_password_label">비밀번호</string>
     <string name="login_email_submit">로그인</string>
     <string name="login_not_configured_error">서버 연결을 먼저 구성해 주세요.</string>
+    <string name="change_password_title">새 비밀번호 설정</string>
+    <string name="change_password_description">계정이 초기 비밀번호로 생성되었습니다. 계속하려면 새 비밀번호를 설정해 주세요.</string>
+    <string name="change_password_new_label">새 비밀번호</string>
+    <string name="change_password_confirm_label">새 비밀번호 확인</string>
+    <string name="change_password_submit">비밀번호 변경</string>
+    <string name="change_password_mismatch">비밀번호가 일치하지 않습니다.</string>
+    <string name="change_password_error_weak">비밀번호가 너무 약합니다: %1$s</string>
+    <string name="change_password_error_same">현재 비밀번호와 다른 비밀번호를 입력해 주세요.</string>
+    <string name="change_password_error_reauth">비밀번호를 변경하려면 로그아웃 후 다시 로그인해 주세요.</string>
+    <string name="change_password_error_rate_limit">시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요.</string>
+    <string name="change_password_error_with_detail">비밀번호 변경에 실패했습니다: %1$s</string>
+    <string name="change_password_error_network">서버에 연결할 수 없습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="change_password_error_generic">비밀번호 변경에 실패했습니다. 다시 시도해 주세요.</string>
+    <string name="toast_password_flag_failed">비밀번호는 변경되었지만 서버에 기록하지 못했습니다. 다시 시도해 주세요.</string>
 
     <!-- Enable Tracker -->
     <string name="enable_tracker_title">데이터 수집 시작</string>

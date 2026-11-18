@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import kaist.iclab.mobiletracker.navigation.NavGraph
@@ -44,8 +43,6 @@ fun MainScreen(
     // Loading state for Supabase operations
     var isLoading by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-
     // Set up loading interceptor callback
     DisposableEffect(Unit) {
         val callback: (Boolean) -> Unit = { loading ->
@@ -66,8 +63,9 @@ fun MainScreen(
         Scaffold(
             containerColor = AppColors.Background,
             bottomBar = {
-                // Show bottom navigation only for logged in users, and not on Login/Onboarding screens
-                if (userState.isLoggedIn && currentRoute != Screen.Login.route && currentRoute != Screen.Onboarding.route) {
+                // Show bottom navigation only for logged in users, and not on the full-screen
+                // Login/ChangePassword/Onboarding screens
+                if (userState.isLoggedIn && currentRoute !in fullScreenRoutes) {
                     BottomNavigationBar(navController = navController)
                 }
             }
@@ -98,3 +96,8 @@ fun MainScreen(
     }
 }
 
+private val fullScreenRoutes = setOf(
+    Screen.Login.route,
+    Screen.ChangePassword.route,
+    Screen.Onboarding.route
+)
