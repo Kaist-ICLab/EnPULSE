@@ -24,10 +24,7 @@ class SensorDataUploader(
     private val campaignSensorRepository: CampaignSensorRepository
 ) {
     companion object {
-        private const val TAG = "SensorUploadService"
-
-        /** Buffer to keep synced data locally (7 days) */
-        private const val PRUNE_BUFFER_MS = 7 * 24 * 60 * 60 * 1000L
+        private const val TAG = "SensorDataUploader"
     }
 
     private val uploadLocks = PerKeyLock()
@@ -172,21 +169,6 @@ class SensorDataUploader(
                     syncTimestampService.updateLastSuccessfulUpload(sensorId)
                     syncTimestampService.clearUploadFailureStreak(sensorId)
 
-                    // Prune data that is BOTH synced AND older than PRUNE_BUFFER_MS
-                    // NOTE: This is currently disabled as per user preference for infinite local retention.
-                    // Infrastructure is kept for future manual activation. If re-enabled: result.data
-                    // is now the upload cursor (a local row id), not a timestamp — pruneData() takes a
-                    // timestamp threshold, so this needs a real "max uploaded timestamp" from the
-                    // handler again (e.g. have uploadData() report both the new cursor and the max
-                    // event timestamp of the batch) before this can be un-commented as-is.
-                    /*
-                    val pruneThreshold = minOf(
-                        result.data,
-                        System.currentTimeMillis() - PRUNE_BUFFER_MS
-                    )
-                    handler.pruneData(pruneThreshold)
-                    */
-
                     SensorUploadOutcome(succeeded, attempted, isUpToDate = false)
                 }
 
@@ -233,10 +215,7 @@ class SensorDataUploader(
             return false
         }
         return try {
-            val handler = handlerRegistry.getHandler(sensorId)
-            if (handler == null) {
-                return false
-            }
+            val handler = handlerRegistry.getHandler(sensorId) ?: return false
             val lastUploadCursor = syncTimestampService.getUploadCursor(sensorId)
             val hasData = handler.hasDataToUpload(lastUploadCursor)
             hasData
