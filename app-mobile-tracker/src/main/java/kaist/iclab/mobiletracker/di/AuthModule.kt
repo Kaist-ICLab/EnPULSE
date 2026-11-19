@@ -25,6 +25,7 @@ val authModule = module {
 
     single<Authentication> {
         SupabaseAuth(
+            context = androidContext(),
             supabaseHelper = get<SupabaseHelper>(),
             syncTimestampService = get<SyncTimestampService>()
         )

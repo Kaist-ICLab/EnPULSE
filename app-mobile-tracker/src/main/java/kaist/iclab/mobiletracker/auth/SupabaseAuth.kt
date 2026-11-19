@@ -1,6 +1,8 @@
 package kaist.iclab.mobiletracker.auth
 
+import android.content.Context
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import io.github.jan.supabase.auth.auth
@@ -10,6 +12,8 @@ import io.github.jan.supabase.exceptions.HttpRequestException
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import kaist.iclab.mobiletracker.Constants
+import kaist.iclab.mobiletracker.R
+import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
@@ -31,6 +35,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * app does not sign new users up.
  */
 class SupabaseAuth(
+    context: Context,
     private val supabaseHelper: SupabaseHelper,
     private val syncTimestampService: SyncTimestampService
 ) : Authentication {
@@ -40,6 +45,8 @@ class SupabaseAuth(
     }
 
     private val supabaseClient get() = supabaseHelper.supabaseClient
+    // Application context: this object outlives any Activity.
+    private val appContext = context.applicationContext
     private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
     private val _userStateFlow = MutableStateFlow(
@@ -159,7 +166,7 @@ class SupabaseAuth(
 
         val trimmedEmail = email.trim()
         if (trimmedEmail.isEmpty() || password.isEmpty()) {
-            _userStateFlow.value = createErrorState("Enter both an email and a password.")
+            _userStateFlow.value = createErrorState(string(R.string.login_error_missing_fields))
             return
         }
 
@@ -173,16 +180,24 @@ class SupabaseAuth(
 
     private fun emailLoginErrorMessage(e: Exception): String = when {
         e is AuthRestException -> when (e.errorCode) {
-            AuthErrorCode.InvalidCredentials -> "Incorrect email or password."
-            AuthErrorCode.EmailNotConfirmed -> "This account's email address is not confirmed yet."
-            AuthErrorCode.EmailProviderDisabled -> "Email sign-in is not enabled on this server."
-            AuthErrorCode.OverRequestRateLimit -> "Too many attempts. Wait a moment and try again."
-            else -> "Sign-in failed: ${e.errorDescription}"
+            AuthErrorCode.InvalidCredentials -> string(R.string.login_error_invalid_credentials)
+            AuthErrorCode.EmailNotConfirmed -> string(R.string.login_error_email_not_confirmed)
+            AuthErrorCode.EmailProviderDisabled -> string(R.string.login_error_email_disabled)
+            AuthErrorCode.OverRequestRateLimit -> string(R.string.login_error_rate_limit)
+            // The server's description is not translated.
+            else -> string(R.string.login_error_with_detail, e.errorDescription)
         }
         e is HttpRequestException || e is TimeoutCancellationException ->
-            "Can't reach the server. Check the connection and try again."
-        else -> "Sign-in failed. Please try again."
+            string(R.string.login_error_network)
+        else -> string(R.string.login_error_generic)
     }
+
+    /**
+     * A string in the app's chosen language. Resolved on each call so it follows a language
+     * change made while the app is running.
+     */
+    private fun string(@StringRes id: Int, vararg args: Any): String =
+        LanguageHelper(appContext).applyLanguage(appContext).getString(id, *args)
 
     override suspend fun logout() {
         // signOut() keeps the session when the server can't be reached, so remove it locally.
@@ -221,7 +236,7 @@ class SupabaseAuth(
      */
     private fun createUserStateFromSession(session: io.github.jan.supabase.auth.user.UserSession): UserState {
         val sessionInfo = SupabaseSessionHelper.getSessionInfo(session)
-            ?: return createErrorState("Session has no user")
+            ?: return createErrorState(string(R.string.login_error_generic))
 
         return UserState(
             isLoggedIn = true,
