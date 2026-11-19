@@ -14,10 +14,10 @@ import kaist.iclab.wearabletracker.storage.SensorDataReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
-import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.SyncAckListener
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
+import kaist.iclab.wearabletracker.health.HealthSensorPlatform
 import kaist.iclab.wearabletracker.trigger.DetectionStateForwarder
 import kaist.iclab.wearabletracker.trigger.WatchEmaTriggerReceiver
 import kaist.iclab.wearabletracker.trigger.WatchNotificationTriggerReceiver
@@ -48,7 +48,7 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         // Trigger condition sources: feed the local DetectionStateTracker, then forward it to
         // the phone-hosted trigger engine. WatchSurveyConfigReceiver caches survey question
         // content; WatchEmaTriggerReceiver executes the phone's "launch this survey" commands.
-        get<StressDetectionAdapter>().start()
+        get<HealthSensorPlatform>().startTriggerSources() // Stress detection, samsung flavor only
         get<GestureDetectionAdapter>().start()
         get<DetectionStateForwarder>().start()
         get<WatchSurveyConfigReceiver>().startListening()

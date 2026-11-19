@@ -1,28 +1,19 @@
 package kaist.iclab.wearabletracker
 
 import com.google.android.gms.location.Priority
-import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.common.LocationSensor
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.controller.OffBodyDetector
-import kaist.iclab.tracker.sensor.galaxywatch.AccelerometerSensor
 import kaist.iclab.tracker.sensor.galaxywatch.AudioSensor
-import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
-import kaist.iclab.tracker.sensor.galaxywatch.EDASensor
 import kaist.iclab.tracker.sensor.galaxywatch.GestureSensor
-import kaist.iclab.tracker.sensor.galaxywatch.HeartRateSensor
 import kaist.iclab.tracker.sensor.galaxywatch.IMUSensor
-import kaist.iclab.tracker.sensor.galaxywatch.PPGSensor
-import kaist.iclab.tracker.sensor.galaxywatch.SkinTemperatureSensor
-import kaist.iclab.tracker.sensor.galaxywatch.StressSensor
 import kaist.iclab.tracker.storage.core.RmssdHistory
 import kaist.iclab.tracker.storage.core.StateStorage
 import kaist.iclab.tracker.storage.couchbase.CouchbaseDB
 import kaist.iclab.tracker.storage.couchbase.CouchbaseStateStorage
 import kaist.iclab.tracker.trigger.adapter.galaxywatch.GestureDetectionAdapter
-import kaist.iclab.tracker.trigger.adapter.galaxywatch.StressDetectionAdapter
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
@@ -32,8 +23,10 @@ import kaist.iclab.wearabletracker.db.entity.MyObjectBox
 import kaist.iclab.wearabletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStores
-import kaist.iclab.wearabletracker.ecg.EcgViewModel
 import kaist.iclab.wearabletracker.ema.MicroEmaRepository
+import kaist.iclab.wearabletracker.health.HEALTH_EXTRA_STORES
+import kaist.iclab.wearabletracker.health.HEALTH_SENSOR_DESCRIPTORS
+import kaist.iclab.wearabletracker.health.healthSensorModule
 import kaist.iclab.wearabletracker.ema.MicroEmaResponseManager
 import kaist.iclab.wearabletracker.ema.MicroEmaViewModel
 import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
@@ -59,9 +52,8 @@ import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
 
 val koinModule = module {
-    single {
-        SamsungHealthSensorInitializer(context = androidContext())
-    }
+    // Samsung Health sensors (samsung flavor) or none (open flavor).
+    includes(healthSensorModule)
 
     single {
         CouchbaseDB(context = androidContext())
@@ -94,54 +86,6 @@ val koinModule = module {
     }
 
     // Sensors
-    single {
-        AccelerometerSensor(
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(AccelerometerSensor::class, AccelerometerSensor.Config()),
-            stateStorage = sensorState(AccelerometerSensor::class),
-            samsungHealthSensorInitializer = get()
-        )
-    }
-
-    single {
-        PPGSensor(
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(PPGSensor::class, PPGSensor.Config()),
-            stateStorage = sensorState(PPGSensor::class),
-            samsungHealthSensorInitializer = get()
-        )
-    }
-
-    single {
-        HeartRateSensor(
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(HeartRateSensor::class, HeartRateSensor.Config()),
-            stateStorage = sensorState(HeartRateSensor::class),
-            samsungHealthSensorInitializer = get()
-        )
-    }
-
-    single {
-        SkinTemperatureSensor(
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(
-                SkinTemperatureSensor::class,
-                SkinTemperatureSensor.Config()
-            ),
-            stateStorage = sensorState(SkinTemperatureSensor::class),
-            samsungHealthSensorInitializer = get()
-        )
-    }
-
-    single {
-        EDASensor(
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(EDASensor::class, EDASensor.Config()),
-            stateStorage = sensorState(EDASensor::class),
-            samsungHealthSensorInitializer = get()
-        )
-    }
-
     single {
         IMUSensor(
             context = androidContext(),
@@ -176,17 +120,6 @@ val koinModule = module {
     }
 
     single {
-        StressSensor(
-            context = androidContext(),
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(StressSensor::class, StressSensor.Config()),
-            stateStorage = sensorState(StressSensor::class),
-            heartRateSensor = get(),
-            rmssdHistory = get()
-        )
-    }
-
-    single {
         LocationSensor(
             context = androidContext(),
             permissionManager = get<AndroidPermissionManager>(),
@@ -206,30 +139,20 @@ val koinModule = module {
         )
     }
 
-    // ECG is on-demand only (Samsung HealthTrackerType.ECG_ON_DEMAND), triggered manually via
-    // EcgViewModel — intentionally NOT added to watchSensorDescriptors so it is excluded from
-    // BackgroundController's auto start/stop loop and SensorDataReceiver's auto-listener wiring.
-    single {
-        ECGSensor(
-            permissionManager = get<AndroidPermissionManager>(),
-            configStorage = sensorConfig(ECGSensor::class, ECGSensor.Config()),
-            stateStorage = sensorState(ECGSensor::class),
-            samsungHealthSensorInitializer = get()
-        )
-    }
-
     // Single source of truth: all descriptors drive both registries below
     single(named("watchSensorDescriptors")) {
         val stores = get<WatchSensorStores>()
-        listOf(
-            WatchSensorDescriptor(get<AccelerometerSensor>(), stores.accelerometer),
-            WatchSensorDescriptor(get<PPGSensor>(), stores.ppg),
-            WatchSensorDescriptor(get<HeartRateSensor>(), stores.heartRate),
-            WatchSensorDescriptor(get<SkinTemperatureSensor>(), stores.skinTemperature),
-            WatchSensorDescriptor(get<EDASensor>(), stores.eda),
+        val health = get<List<WatchSensorDescriptor>>(named(HEALTH_SENSOR_DESCRIPTORS))
+            .associateBy { it.sensor.id }
+        listOfNotNull(
+            health["Accelerometer"],
+            health["PPG"],
+            health["HeartRate"],
+            health["SkinTemperature"],
+            health["EDA"],
             WatchSensorDescriptor(get<IMUSensor>(), stores.watchIMU),
             WatchSensorDescriptor(get<GestureSensor>(), stores.watchGesture),
-            WatchSensorDescriptor(get<StressSensor>(), stores.watchStress),
+            health["Stress"],
             WatchSensorDescriptor(get<LocationSensor>(), stores.location),
         )
     }
@@ -242,11 +165,8 @@ val koinModule = module {
         val base = get<List<WatchSensorDescriptor>>(named("watchSensorDescriptors"))
             .filter { it.store != null }
             .associate { it.sensor.id to it.store!! }
-        // ECG's store still participates in phone-sync/record-counts/flush even though
-        // the sensor itself isn't part of watchSensorDescriptors (see ECGSensor single above).
-        val ecgSensor = get<ECGSensor>()
-        val stores = get<WatchSensorStores>()
-        base + (ecgSensor.id to stores.ecg)
+        // Health sensor stores outside BackgroundController (ECG) still take part in sync.
+        base + get<Map<String, WatchSensorStore<*>>>(named(HEALTH_EXTRA_STORES))
     }
 
     // Global Controller
@@ -347,9 +267,8 @@ val koinModule = module {
             sensorController = get(),
             phoneCommunicationManager = get(),
             repository = get(),
-            samsungHealthSensorInitializer = get(),
+            healthSensorPlatform = get(),
             applicationContext = androidContext(),
-            ecgSensor = get(),
             campaignSensorConfigRepository = get()
         )
     }
@@ -381,16 +300,6 @@ val koinModule = module {
         )
     }
 
-    // --- ECG (on-demand) ---
-
-    viewModel {
-        EcgViewModel(
-            ecgSensor = get(),
-            watchSensorStores = get(),
-            permissionManager = get<AndroidPermissionManager>()
-        )
-    }
-
     // --- Trigger condition sources ---
     // The trigger engine now lives entirely on the phone (see
     // kaist.iclab.mobiletracker.di.phone.triggerModule). The watch only: (1) keeps its local
@@ -400,13 +309,6 @@ val koinModule = module {
 
     single {
         DetectionStateTracker()
-    }
-
-    single {
-        StressDetectionAdapter(
-            stressSensor = get(),
-            tracker = get()
-        )
     }
 
     single {

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- On-demand ECG uses the Samsung Health Sensor SDK, so only the samsung flavor has it. -->
+        <activity
+            android:name=".ecg.EcgMeasurementActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault" />
+    </application>
+
+</manifest>

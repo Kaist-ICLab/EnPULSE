@@ -75,12 +75,6 @@
             android:name=".trigger.WatchNotificationTapReceiver"
             android:exported="false" />
 
-        <activity
-            android:name=".ecg.EcgMeasurementActivity"
-            android:exported="false"
-            android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault" />
-
     </application>
 
 </manifest>

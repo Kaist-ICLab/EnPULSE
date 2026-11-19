@@ -11,14 +11,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
-import kaist.iclab.tracker.listener.SamsungHealthSensorInitializer
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
-import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
+import kaist.iclab.wearabletracker.health.HealthSensorPlatform
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.repository.Result
 import kaist.iclab.wearabletracker.repository.WatchSensorRepository
@@ -42,9 +41,8 @@ class SettingsViewModel(
     private val sensorController: BackgroundController,
     private val phoneCommunicationManager: PhoneCommunicationManager,
     private val repository: WatchSensorRepository,
-    private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer,
+    private val healthSensorPlatform: HealthSensorPlatform,
     private val applicationContext: Context,
-    private val ecgSensor: ECGSensor,
     campaignSensorConfigRepository: CampaignSensorConfigRepository
 ) : ViewModel() {
     companion object {
@@ -99,22 +97,26 @@ class SettingsViewModel(
     val recordingStartTime: StateFlow<Long?> = _recordingStartTime.asStateFlow()
 
     // Samsung Health connection state - Start button should be disabled when false
-    val isSamsungHealthConnected: StateFlow<Boolean> =
-        samsungHealthSensorInitializer.connectionStateFlow
+    val isSamsungHealthConnected: StateFlow<Boolean> = healthSensorPlatform.isConnected
 
     // SDK Policy Error state - true when dev mode is not enabled on Health Platform
-    val sdkPolicyError: StateFlow<Boolean> = samsungHealthSensorInitializer.sdkPolicyErrorStateFlow
+    val sdkPolicyError: StateFlow<Boolean> = healthSensorPlatform.sdkPolicyError
 
     // ECG is on-demand only and isn't part of `sensorState` (not in watchSensorDescriptors);
     // this drives visibility of the "Measure ECG" button. Also requires ECG to be part of the
-    // wearer's campaign (a never-synced/null config fails open).
-    val ecgAvailable: StateFlow<Boolean> = combine(
-        ecgSensor.sensorStateFlow,
-        campaignSensorConfigRepository.configFlow
-    ) { sensorState, config ->
-        sensorState.flag != SensorState.FLAG.UNAVAILABLE &&
-                (config.activeSensorIds == null || ecgSensor.id in config.activeSensorIds)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    // wearer's campaign (a never-synced/null config fails open). Builds without ECG never show it.
+    private val ecgSensor = healthSensorPlatform.ecgSensor
+    val ecgAvailable: StateFlow<Boolean> = if (ecgSensor == null) {
+        MutableStateFlow(false)
+    } else {
+        combine(
+            ecgSensor.sensorStateFlow,
+            campaignSensorConfigRepository.configFlow
+        ) { sensorState, config ->
+            sensorState.flag != SensorState.FLAG.UNAVAILABLE &&
+                    (config.activeSensorIds == null || ecgSensor.id in config.activeSensorIds)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    }
 
     // Names (not bare ids) of sensors active for the wearer's campaign, translated via
     // `sensorController.sensors` since `sensorState`/`sensorMap` below are keyed by `.name`
@@ -129,21 +131,25 @@ class SettingsViewModel(
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val ecgPermissions: Array<String> get() = ecgSensor.permissions
+    val ecgPermissions: Array<String> get() = ecgSensor?.permissions ?: emptyArray()
+
+    /** Opens the ECG measurement screen, or null when this build has no ECG. */
+    fun ecgMeasurementIntent(context: Context): Intent? =
+        healthSensorPlatform.ecgMeasurementIntent(context)
 
     /**
      * Clear the SDK Policy Error and stop logging (called when user dismisses the error screen).
      */
     fun clearSdkPolicyError() {
         sensorController.stop()
-        samsungHealthSensorInitializer.clearSdkPolicyError()
+        healthSensorPlatform.clearSdkPolicyError()
     }
 
     init {
         // ECG is excluded from BackgroundController's managed sensor list (see KoinModule.kt),
         // so nothing else calls init() on it — without this, its persisted state stays at the
         // default UNAVAILABLE forever and the "Measure ECG" button never appears.
-        ecgSensor.init()
+        ecgSensor?.init()
 
         viewModelScope.launch {
             repository.lastSyncTimestampFlow.collect {

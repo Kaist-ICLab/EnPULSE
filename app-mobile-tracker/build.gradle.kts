@@ -17,6 +17,18 @@ kotlin {
     jvmToolchain(17)
 }
 
+// Load local.properties for local development
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun configValue(name: String): String? =
+    findProperty(name)?.toString() ?: localProperties.getProperty(name) ?: System.getenv(name)
+
+// The Samsung Health module is included only when its SDK AAR is present (see settings.gradle.kts).
+val samsungHealthAvailable = rootProject.findProject(":tracker-samsung-data") != null
+
 
 android {
     namespace = "kaist.iclab.mobiletracker"
@@ -28,7 +40,9 @@ android {
     }
 
     defaultConfig {
-        applicationId = "kaist.iclab.trackerSystem"
+        // Must match the watch app's. Researchers distributing a samsung build use the package
+        // name registered with their own Samsung Health partnership.
+        applicationId = configValue("ENPULSE_APPLICATION_ID") ?: "kaist.iclab.trackerSystem"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
@@ -39,26 +53,27 @@ android {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
 
-        // Load local.properties for local development
-        val localProperties = Properties()
-        val localPropertiesFile = rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localPropertiesFile.inputStream().use { localProperties.load(it) }
-        }
-
         // Supabase credentials: read from local.properties or environment (for CI)
-        val supabaseUrl: String = findProperty("SUPABASE_URL")?.toString()
-            ?: localProperties.getProperty("SUPABASE_URL")
-            ?: System.getenv("SUPABASE_URL")
-            ?: "MISSING_SUPABASE_URL"
-
-        val supabaseAnonKey: String = findProperty("SUPABASE_ANON_KEY")?.toString()
-            ?: localProperties.getProperty("SUPABASE_ANON_KEY")
-            ?: System.getenv("SUPABASE_ANON_KEY")
-            ?: "MISSING_SUPABASE_ANON_KEY"
+        val supabaseUrl: String = configValue("SUPABASE_URL") ?: "MISSING_SUPABASE_URL"
+        val supabaseAnonKey: String = configValue("SUPABASE_ANON_KEY") ?: "MISSING_SUPABASE_ANON_KEY"
 
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
+    }
+
+    // "open" builds without the Samsung Health SDK (no step, sleep or exercise data) and can be
+    // distributed. "samsung" adds those sensors and needs the SDK AAR and a Samsung Health
+    // partnership before it is distributed.
+    flavorDimensions += "health"
+    productFlavors {
+        create("open") {
+            dimension = "health"
+            isDefault = !samsungHealthAvailable
+        }
+        create("samsung") {
+            dimension = "health"
+            isDefault = samsungHealthAvailable
+        }
     }
 
     compileOptions {
@@ -102,9 +117,15 @@ android {
 }
 
 androidComponents {
+    beforeVariants { variant ->
+        if (variant.productFlavors.contains("health" to "samsung") && !samsungHealthAvailable) {
+            variant.enable = false
+        }
+    }
     onVariants { variant ->
+        val suffix = if (variant.flavorName == "samsung") "-Samsung" else ""
         variant.outputs.forEach { output ->
-            output.outputFileName.set("EnPULSE-Mobile.apk")
+            output.outputFileName.set("EnPULSE-Mobile$suffix.apk")
         }
     }
 }
@@ -112,6 +133,9 @@ androidComponents {
 dependencies {
     /* Android Tracker Library */
     implementation(project(":tracker-library"))
+    if (samsungHealthAvailable) {
+        "samsungImplementation"(project(":tracker-samsung-data"))
+    }
 
     /* Couchbase Lite - tracker-library exposes CouchbaseDB but not the underlying com.couchbase.lite
        types, needed directly here by CouchbaseWebAppStorage */

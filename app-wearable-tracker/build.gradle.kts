@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinCompose)
@@ -12,13 +14,28 @@ kotlin {
     jvmToolchain(17)
 }
 
+// Load local.properties for local development
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun configValue(name: String): String? =
+    findProperty(name)?.toString() ?: localProperties.getProperty(name) ?: System.getenv(name)
+
+// The Samsung Health module is included only when its SDK AAR is present (see settings.gradle.kts).
+val samsungHealthAvailable = rootProject.findProject(":tracker-samsung-sensor") != null
+
 
 android {
     namespace = "kaist.iclab.wearabletracker"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "kaist.iclab.trackerSystem"
+        // Must match the phone app's, or the Wear Data Layer won't connect them. Researchers
+        // distributing a samsung build use the package name registered with their own Samsung
+        // Health partnership.
+        applicationId = configValue("ENPULSE_APPLICATION_ID") ?: "kaist.iclab.trackerSystem"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
@@ -54,6 +71,21 @@ android {
         }
     }
 
+    // "open" builds without the Samsung Health SDK (no heart rate, PPG, EDA, skin temperature,
+    // accelerometer, stress or ECG) and can be distributed. "samsung" adds those sensors and needs
+    // the SDK AAR and a Samsung Health partnership before it is distributed.
+    flavorDimensions += "health"
+    productFlavors {
+        create("open") {
+            dimension = "health"
+            isDefault = !samsungHealthAvailable
+        }
+        create("samsung") {
+            dimension = "health"
+            isDefault = samsungHealthAvailable
+        }
+    }
+
     buildFeatures {
         compose = true
     }
@@ -65,9 +97,15 @@ android {
 }
 
 androidComponents {
+    beforeVariants { variant ->
+        if (variant.productFlavors.contains("health" to "samsung") && !samsungHealthAvailable) {
+            variant.enable = false
+        }
+    }
     onVariants { variant ->
+        val suffix = if (variant.flavorName == "samsung") "-Samsung" else ""
         variant.outputs.forEach { output ->
-            output.outputFileName.set("EnPULSE-Watch.apk")
+            output.outputFileName.set("EnPULSE-Watch$suffix.apk")
         }
     }
 }
@@ -102,6 +140,9 @@ dependencies {
 
     // tracker library
     implementation(project(":tracker-library"))
+    if (samsungHealthAvailable) {
+        "samsungImplementation"(project(":tracker-samsung-sensor"))
+    }
 
     // kotlinx serialization (for JSON handling in BLE communication)
     implementation(libs.kotlinx.serialization.json)

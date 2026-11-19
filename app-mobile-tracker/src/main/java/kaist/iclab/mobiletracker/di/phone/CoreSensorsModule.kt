@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.di.phone
 import com.google.android.gms.location.Priority
 import kaist.iclab.mobiletracker.storage.CouchbaseSensorStateStorage
 import kaist.iclab.mobiletracker.storage.SimpleStateStorage
-import kaist.iclab.tracker.listener.SamsungHealthDataInitializer
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.common.BatterySensor
 import kaist.iclab.tracker.sensor.common.LocationSensor
@@ -23,13 +22,11 @@ import java.util.concurrent.TimeUnit
 val coreSensorsModule = module {
     // Sensor Management Dependencies
     single {
-        SamsungHealthDataInitializer(context = androidContext())
-    }
-
-    single {
         AndroidPermissionManager(
             context = androidContext(),
-            scope = get<kaist.iclab.mobiletracker.di.AppCoroutineScope>().io
+            scope = get<kaist.iclab.mobiletracker.di.AppCoroutineScope>().io,
+            // Provided by the samsung flavor only; see SamsungHealthSensorsModule.
+            healthDataPermissionHandler = getOrNull()
         )
     }
 

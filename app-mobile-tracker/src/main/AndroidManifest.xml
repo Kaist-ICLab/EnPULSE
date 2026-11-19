@@ -86,15 +86,6 @@
     <!-- Activity Recognition -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
-    <!-- Body Sensors: only the watch app reads them (watch data reaches the phone over BLE), so
-         drop the library's declarations from the phone APK. -->
-    <uses-permission
-        android:name="android.permission.BODY_SENSORS"
-        tools:node="remove" />
-    <uses-permission
-        android:name="android.permission.BODY_SENSORS_BACKGROUND"
-        tools:node="remove" />
-
     <!-- Hardware features -->
     <!-- Telephony hardware feature (optional) - required for phone-related permissions -->
     <uses-feature

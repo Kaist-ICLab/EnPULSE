@@ -5,6 +5,7 @@ import kaist.iclab.mobiletracker.di.phone.communicationSensorsModule
 import kaist.iclab.mobiletracker.di.phone.controllerModule
 import kaist.iclab.mobiletracker.di.phone.coreSensorsModule
 import kaist.iclab.mobiletracker.di.phone.microEmaSensorModule
+import kaist.iclab.mobiletracker.di.phone.samsungHealthSensorsModule
 import kaist.iclab.mobiletracker.di.phone.surveySensorModule
 import kaist.iclab.mobiletracker.di.phone.triggerModule
 import kaist.iclab.mobiletracker.di.phone.uploadModule
@@ -19,6 +20,7 @@ val phoneSensorModule = module {
         coreSensorsModule,
         communicationSensorsModule,
         activitySensorsModule,
+        samsungHealthSensorsModule,
         surveySensorModule,
         controllerModule,
         uploadModule,

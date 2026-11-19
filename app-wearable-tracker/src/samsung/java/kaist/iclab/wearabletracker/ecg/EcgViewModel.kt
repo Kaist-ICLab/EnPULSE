@@ -7,7 +7,7 @@ import kaist.iclab.tracker.permission.PermissionManager
 import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
-import kaist.iclab.wearabletracker.db.obx.WatchSensorStores
+import kaist.iclab.wearabletracker.db.obx.SamsungWatchSensorStores
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,7 +40,7 @@ sealed class EcgMeasurementUiState {
  */
 class EcgViewModel(
     private val ecgSensor: ECGSensor,
-    private val watchSensorStores: WatchSensorStores,
+    private val watchSensorStores: SamsungWatchSensorStores,
     private val permissionManager: PermissionManager
 ) : ViewModel() {
 

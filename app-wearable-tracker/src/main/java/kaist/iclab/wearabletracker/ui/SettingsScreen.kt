@@ -1,6 +1,5 @@
 package kaist.iclab.wearabletracker.ui
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,7 +35,6 @@ import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.wearabletracker.R
 import kaist.iclab.wearabletracker.data.DeviceInfo
-import kaist.iclab.wearabletracker.ecg.EcgMeasurementActivity
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
 import kaist.iclab.wearabletracker.helpers.PermissionHelper
 import kaist.iclab.wearabletracker.theme.AppSizes
@@ -212,7 +210,7 @@ fun SettingsScreen(
         onStartEcgMeasurement = {
             showEcgInstructionDialog = false
             androidPermissionManager.request(settingsViewModel.ecgPermissions)
-            context.startActivity(Intent(context, EcgMeasurementActivity::class.java))
+            settingsViewModel.ecgMeasurementIntent(context)?.let { context.startActivity(it) }
         }
     )
 }
