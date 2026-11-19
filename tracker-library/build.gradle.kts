@@ -23,10 +23,6 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 
-    /* Google Authentication */
-    api(platform(libs.firebase.bom))
-    implementation(libs.bundles.auth)
-
     /* Local Database*/
     implementation(libs.couchbase)
 

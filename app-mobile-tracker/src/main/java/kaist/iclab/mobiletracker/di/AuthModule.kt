@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.di
 
-import android.app.Activity
 import kaist.iclab.mobiletracker.auth.SupabaseAuth
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.AuthRepository
@@ -11,7 +10,6 @@ import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
 import kaist.iclab.tracker.auth.Authentication
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
-import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 
 val authModule = module {
@@ -25,22 +23,16 @@ val authModule = module {
         AuthRepositoryImpl(context = androidContext())
     }
 
-    // SupabaseAuth - factory for creating with Activity and server client ID
-    factory { (activity: Activity, serverClientId: String) ->
+    single<Authentication> {
         SupabaseAuth(
-            context = activity,
-            clientId = serverClientId,
             supabaseHelper = get<SupabaseHelper>(),
             syncTimestampService = get<SyncTimestampService>()
-        ) as Authentication
+        )
     }
 
-    // AuthViewModel - factory that creates SupabaseAuth internally
-    viewModel { (activity: Activity, serverClientId: String) ->
-        val authentication: Authentication =
-            get(parameters = { parametersOf(activity, serverClientId) })
+    viewModel {
         AuthViewModel(
-            authentication = authentication,
+            authentication = get<Authentication>(),
             authRepository = get<AuthRepository>(),
             userProfileRepository = get<UserProfileRepository>(),
             campaignSensorRepository = get(),
@@ -48,4 +40,3 @@ val authModule = module {
         )
     }
 }
-

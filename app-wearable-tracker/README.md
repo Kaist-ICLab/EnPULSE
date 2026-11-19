@@ -2,7 +2,7 @@
 
 The EnPULSE Galaxy Watch app. It collects biosignals, stores them in ObjectBox, and sends them to the phone app over the Wearable Data Layer. The phone uploads them to the backend.
 
-For build setup, follow the [root README](../README.md#build-from-source). The watch app needs `local.properties`, but not `google-services.json`. Its biosignal sensors need the Samsung Health Sensor SDK and the `samsung` flavor.
+For build setup, follow the [root README](../README.md#build-from-source). The watch app needs `local.properties`. Its biosignal sensors need the Samsung Health Sensor SDK and the `samsung` flavor.
 
 ## Installation
 

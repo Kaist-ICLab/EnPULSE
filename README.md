@@ -61,21 +61,7 @@ You can add only one of them. The Sensor SDK enables the watch sensors and the D
 > [!IMPORTANT]
 > Without an approved Samsung partner license, enable Developer Mode on your test phone. In Samsung Health, open **Settings**, then **About Samsung Health**, and tap the version line 10 times. Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
 
-### 4. Add `google-services.json`
-
-The phone app does not build without `app-mobile-tracker/google-services.json`. Use one of these:
-
-- Copy the template. This is enough to build the app:
-
-  ```bash
-  cp app-mobile-tracker/google-services.json.example app-mobile-tracker/google-services.json
-  ```
-
-- Or download the real file from a [Firebase](https://console.firebase.google.com/) project, with an Android app registered as `kaist.iclab.trackerSystem` (or your own `ENPULSE_APPLICATION_ID`).
-
-See [Sign-in](app-mobile-tracker/README.md#sign-in) to set up Google sign-in for your own project. Email and password sign-in works without it.
-
-### 5. Build and install
+### 4. Build and install
 
 Each app has two flavors:
 
@@ -125,7 +111,7 @@ To distribute a `samsung` build:
    ENPULSE_APPLICATION_ID=org.example.yourstudy
    ```
 
-   A Gradle property (`-PENPULSE_APPLICATION_ID=...`) or an environment variable of the same name also works. If you use a real `google-services.json`, register this package name in Firebase.
+   A Gradle property (`-PENPULSE_APPLICATION_ID=...`) or an environment variable of the same name also works.
 3. Sign both apps with your own release key. The `release` build type uses the debug key by default.
 4. Build and distribute `assembleSamsungRelease` for both apps.
 
