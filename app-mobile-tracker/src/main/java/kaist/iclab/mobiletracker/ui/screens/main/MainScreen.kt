@@ -18,10 +18,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import kaist.iclab.mobiletracker.navigation.NavGraph
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.BottomNavigationBar
-import kaist.iclab.mobiletracker.ui.components.FullScreenIntentPermissionDialog
 import kaist.iclab.mobiletracker.ui.components.loading.LoadingOverlay
 import kaist.iclab.mobiletracker.ui.theme.AppColors
-import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
@@ -47,7 +45,6 @@ fun MainScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    var showFullScreenIntentWarning by remember { mutableStateOf(false) }
 
     // Set up loading interceptor callback
     DisposableEffect(Unit) {
@@ -97,15 +94,6 @@ fun MainScreen(
             isLoading = isLoading || userState.isInitializing,
             showOverlay = true,
             blockNavigation = true
-        )
-
-        FullScreenIntentPermissionDialog(
-            showDialog = showFullScreenIntentWarning,
-            onDismiss = { showFullScreenIntentWarning = false },
-            onConfirm = {
-                showFullScreenIntentWarning = false
-                NotificationHelper.openFullScreenIntentSettings(context)
-            }
         )
     }
 }

@@ -639,6 +639,5 @@ class DataUploadService : LifecycleService(), KoinComponent {
             Constants.Notification.ID_DATA_UPLOAD_RESULT,
             notification
         )
-        Log.d(TAG, "Result notification shown: ${succeeded.size} succeeded, ${failed.size} failed")
     }
 }

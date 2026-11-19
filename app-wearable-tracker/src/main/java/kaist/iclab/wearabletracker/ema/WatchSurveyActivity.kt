@@ -8,6 +8,7 @@ import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.wearabletracker.Constants
+import kaist.iclab.wearabletracker.ema.screen.MicroEmaScreen
 import kaist.iclab.wearabletracker.theme.WearableTrackerTheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -66,9 +67,8 @@ class WatchSurveyActivity : ComponentActivity() {
 
     // Catches any exit this activity didn't already record as a result (answer, expiry, or the
     // back-press dismiss above) — e.g. the task being removed from Recents, or a swipe gesture
-    // some Wear OS versions handle without going through onBackPressedDispatcher. Called before
-    // super.onDestroy() so the ViewModel's own coroutine scope is still alive to persist the
-    // response. Without this the session (and its stale cached survey) was left dangling until
+    // some Wear OS versions handle without going through onBackPressedDispatcher. The response is saved
+    // on an app-wide scope because the ViewModel's scope is already cancelled here. Without this the session (and its stale cached survey) was left dangling until
     // the next trigger overwrote it.
     override fun onDestroy() {
         if (!microEmaViewModel.isComplete.value) {

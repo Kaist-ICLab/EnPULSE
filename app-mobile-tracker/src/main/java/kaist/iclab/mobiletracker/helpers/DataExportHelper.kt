@@ -75,7 +75,6 @@ class DataExportHelper(
             val zipFile = File(exportDir, "Data_${timestamp}.zip")
             createZip(csvFiles, zipFile)
 
-            Log.i(TAG, "Export completed successfully: ${zipFile.absolutePath}")
             zipFile
         } catch (e: Exception) {
             Log.e(TAG, "Error during data export", e)

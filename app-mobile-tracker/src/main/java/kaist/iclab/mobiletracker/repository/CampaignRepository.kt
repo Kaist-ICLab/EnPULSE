@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.StateFlow
  * Centralizes campaign fetching and caching.
  */
 interface CampaignRepository {
-
     /**
      * Observable flow of cached campaigns
      */
@@ -19,11 +18,6 @@ interface CampaignRepository {
      * Updates the campaignsFlow on success.
      */
     suspend fun fetchCampaigns(): Result<List<CampaignData>>
-
-    /**
-     * Get cached campaigns (non-suspending)
-     */
-    fun getCachedCampaigns(): List<CampaignData>
 
     /**
      * Join a campaign

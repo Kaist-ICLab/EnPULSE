@@ -24,7 +24,6 @@ val helperModule = module {
             context = androidContext(),
             watchSensorRepository = get<WatchSensorRepository>(),
             timestampService = get(),
-            microEmaConfigStorage = get(org.koin.core.qualifier.named("microEmaConfigStorage")),
             surveyResponseStore = get<SensorStores>().surveyResponse,
             detectionStateTracker = get<DetectionStateTracker>()
         )

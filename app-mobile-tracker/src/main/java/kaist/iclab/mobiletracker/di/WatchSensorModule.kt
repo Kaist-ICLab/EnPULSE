@@ -10,7 +10,6 @@ val watchSensorModule = module {
     single<WatchSensorRepository> {
         WatchSensorRepositoryImpl(
             context = androidContext(),
-            boxStore = get(),
             stores = get<SensorStores>(),
             supabaseHelper = get()
         )

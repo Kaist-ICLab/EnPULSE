@@ -248,6 +248,8 @@ fun AccountSettingsScreen(
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(0) { inclusive = true }
                             }
+                        } else if (isDataCollectionRunning) {
+                            AppToast.show(context, R.string.turn_off_data_collection_first)
                         } else {
                             // Otherwise show logout dialog
                             showLogoutDialog = true

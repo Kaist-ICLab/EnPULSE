@@ -49,11 +49,6 @@ class WatchEmaTriggerReceiver(
         bleChannel.addOnReceivedListener(setOf(Constants.BLE.KEY_WATCH_EMA_TRIGGER)) { _, json ->
             handleWatchEmaTrigger(json)
         }
-
-        Log.d(
-            TAG,
-            "Started listening for watch EMA triggers on BLE key: ${Constants.BLE.KEY_WATCH_EMA_TRIGGER}"
-        )
     }
 
     private fun handleWatchEmaTrigger(json: JsonElement) {
@@ -100,8 +95,6 @@ class WatchEmaTriggerReceiver(
             Log.w(TAG, "No survey config found for surveyId=$surveyId")
             return
         }
-
-        Log.d(TAG, "Triggering MicroEMA: surveyId=$surveyId")
 
         // Update the active config in the repository
         microEmaRepository.updateConfig(config)
@@ -154,7 +147,6 @@ class WatchEmaTriggerReceiver(
             // on Wear OS may only show a heads-up notification without auto-launching.
             context.startActivity(intent)
 
-            Log.d(TAG, "WatchSurveyActivity launched via Full-Screen Intent Notification")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch WatchSurveyActivity: ${e.message}", e)
         }

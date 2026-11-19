@@ -27,7 +27,6 @@ class DataRepositoryImpl(
     private val supabaseHelper: SupabaseHelper,
     private val campaignSensorRepository: CampaignSensorRepository
 ) : DataRepository {
-
     companion object {
         private const val TAG = "DataRepository"
     }
@@ -69,9 +68,6 @@ class DataRepositoryImpl(
                     }
                 )
             }.sortedBy { it.displayName }
-
-    override suspend fun getSensorInfo(sensorId: String): SensorInfo? =
-        getAllSensorInfo().find { it.sensorId == sensorId }
 
     override suspend fun getSensorDetailInfo(sensorId: String): SensorDetailInfo? {
         val handler = handlerRegistry.getHandler(sensorId) ?: return null
@@ -214,7 +210,6 @@ class DataRepositoryImpl(
                         eq(handler.remoteIdColumnName, eventId)
                     }
                 }
-                Log.d("DataRepositoryImpl", "Deleted record from Supabase: $eventId")
             } catch (e: Exception) {
                 // Log error but don't fail - local deletion already succeeded
                 Log.e("DataRepositoryImpl", "Failed to delete from Supabase: ${e.message}")

@@ -20,6 +20,7 @@ import kaist.iclab.wearabletracker.repository.ErrorClassifier.runClassified
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -62,6 +63,10 @@ class SensorDataReceiver(
             onBufferOverflow = BufferOverflow.DROP_OLDEST
         )
         private var batchJob: Job? = null
+
+        // Rows waiting to be written. Only the batch job touches this until onDestroy has joined
+        // it, which is what lets onDestroy save the batch that was still being built.
+        private val pendingBatches = mutableMapOf<String, MutableList<SensorEntity>>()
         private var listenersRegistered = false
 
         private val listener: Map<String, (SensorEntity) -> Unit> = sensors.associate {
@@ -129,7 +134,6 @@ class SensorDataReceiver(
             if (batchJob?.isActive == true) return
 
             batchJob = coroutineScope.launch {
-                val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
                 var lastFlushTime = System.currentTimeMillis()
 
                 try {
@@ -145,17 +149,17 @@ class SensorDataReceiver(
 
                         if (result != null) {
                             val (sensorId, entity) = result
-                            val sensorBuffer = buffer.getOrPut(sensorId) { mutableListOf() }
+                            val sensorBuffer = pendingBatches.getOrPut(sensorId) { mutableListOf() }
                             sensorBuffer.add(entity)
 
                             if (sensorBuffer.size >= BATCH_SIZE) {
-                                flushBuffer(buffer)
+                                flushBuffer(pendingBatches)
                                 lastFlushTime = System.currentTimeMillis()
                                 autoSyncManager.evalSync()
                             }
                         } else {
-                            if (buffer.isNotEmpty()) {
-                                flushBuffer(buffer)
+                            if (pendingBatches.isNotEmpty()) {
+                                flushBuffer(pendingBatches)
                             }
                             lastFlushTime = System.currentTimeMillis()
                             autoSyncManager.evalSync()
@@ -225,24 +229,22 @@ class SensorDataReceiver(
                 listenersRegistered = false
             }
 
-            batchJob?.cancel()
-
-            val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
-            while (true) {
-                val result = eventChannel.tryReceive()
-                if (result.isSuccess) {
-                    val (sensorId, entity) = result.getOrThrow()
-                    buffer.getOrPut(sensorId) { mutableListOf() }.add(entity)
-                } else {
-                    break
-                }
-            }
-            if (buffer.isNotEmpty()) {
-                runBlocking {
-                    withTimeoutOrNull(3000L.milliseconds) {
-                        flushBuffer(buffer)
-                    } ?: Log.w("SensorDataReceiver", "Flush timed out during onDestroy")
-                }
+            runBlocking {
+                withTimeoutOrNull(3000L.milliseconds) {
+                    batchJob?.cancelAndJoin()
+                    while (true) {
+                        val result = eventChannel.tryReceive()
+                        if (result.isSuccess) {
+                            val (sensorId, entity) = result.getOrThrow()
+                            pendingBatches.getOrPut(sensorId) { mutableListOf() }.add(entity)
+                        } else {
+                            break
+                        }
+                    }
+                    if (pendingBatches.isNotEmpty()) {
+                        flushBuffer(pendingBatches)
+                    }
+                } ?: Log.w("SensorDataReceiver", "Flush timed out during onDestroy")
             }
         }
     }

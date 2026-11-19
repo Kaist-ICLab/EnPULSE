@@ -1,7 +1,5 @@
 package kaist.iclab.mobiletracker.repository
 
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Sealed class representing the result of a repository operation.
@@ -41,14 +39,6 @@ sealed class Result<out T> {
     }
 
     /**
-     * Gets the exception if error, null otherwise
-     */
-    fun exceptionOrNull(): Throwable? = when (this) {
-        is Success -> null
-        is Error -> exception
-    }
-
-    /**
      * Returns the encapsulated data if this instance is [Success] or the
      * result of [onFailure] function for [Error]
      */
@@ -57,44 +47,6 @@ sealed class Result<out T> {
             is Success -> data
             is Error -> onFailure(exception)
         }
-    }
-
-    /**
-     * Returns the encapsulated data if this instance is [Success] or [defaultValue]
-     */
-    fun getOrDefault(defaultValue: @UnsafeVariance T): T {
-        return when (this) {
-            is Success -> data
-            is Error -> defaultValue
-        }
-    }
-}
-
-/**
- * Helper function to create a Result from a try-catch block
- */
-inline fun <T> runCatching(block: () -> T): Result<T> {
-    return try {
-        Result.Success(block())
-    } catch (e: Throwable) {
-        Result.Error(e)
-    }
-}
-
-/**
- * Helper function to create a Result from a suspend function
- */
-suspend inline fun <T> runCatchingSuspend(crossinline block: suspend () -> T): Result<T> {
-    return try {
-        Result.Success(block())
-    } catch (e: TimeoutCancellationException) {
-        // A real request timeout (from withTimeout) — surface it as a failure.
-        Result.Error(e)
-    } catch (e: CancellationException) {
-        // Propagate genuine coroutine cancellation instead of swallowing it as a failure.
-        throw e
-    } catch (e: Throwable) {
-        Result.Error(e)
     }
 }
 
@@ -147,13 +99,3 @@ inline fun <T, R> Result<T>.flatMap(transform: (T) -> Result<R>): Result<R> {
     }
 }
 
-/**
- * Transforms the exception inside a [Result.Error] while leaving [Result.Success] unchanged.
- * Useful for classifying raw exceptions into typed [AppError] subtypes.
- */
-inline fun <T> Result<T>.mapError(transform: (Throwable) -> Throwable): Result<T> {
-    return when (this) {
-        is Result.Success -> this
-        is Result.Error -> Result.Error(transform(exception))
-    }
-}

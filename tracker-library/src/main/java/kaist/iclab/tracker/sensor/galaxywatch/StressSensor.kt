@@ -241,8 +241,6 @@ class StressSensor(
                     ibiValuesMs.addLast(v)
                     accepted++
                 }
-                if (accepted == 0) {
-                }
             }
         }
     }

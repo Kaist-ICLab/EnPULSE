@@ -117,6 +117,9 @@ class SurveySensor(
             requestedSurvey.initSurveyResponse()
             requestedSurvey
         }
+
+        // Registered here, not in onStart: a survey can be answered while collection is stopped.
+        surveyResultListener.addListener(surveyResultCallback)
     }
 
     /**
@@ -138,6 +141,7 @@ class SurveySensor(
         val handler = notificationHandler
         if (handler != null) {
             handler.showTriggeredNotification(id, scheduleId, notificationConfig)
+            scheduleStorage.setActualTriggerTime(scheduleId, System.currentTimeMillis())
             return
         }
 
@@ -171,7 +175,7 @@ class SurveySensor(
 
         try {
             NotificationManagerCompat.from(context).notify(triggerNotificationId, builder.build())
-            Log.d(TAG, "Triggered phone survey notification (survey: $id, schedule: $scheduleId)")
+            scheduleStorage.setActualTriggerTime(scheduleId, System.currentTimeMillis())
         } catch (e: SecurityException) {
             Log.e(TAG, "Failed to post survey notification due to SecurityException", e)
         }
@@ -211,12 +215,9 @@ class SurveySensor(
         )}
     }
 
-    override fun onStart() {
-        surveyResultListener.addListener(surveyResultCallback)
-    }
+    override fun onStart() {}
 
     override fun onStop() {
-        surveyResultListener.removeListener(surveyResultCallback)
         scheduleStorage.resetSchedule()
     }
 }

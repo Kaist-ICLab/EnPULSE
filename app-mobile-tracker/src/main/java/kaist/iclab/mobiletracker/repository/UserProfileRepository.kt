@@ -29,11 +29,6 @@ interface UserProfileRepository {
     fun clearProfile()
 
     /**
-     * Refresh profile from remote source
-     */
-    suspend fun refreshProfile(): Result<ProfileData?>
-
-    /**
      * Consolidates refresh of profile, campaign sensors, and surveys into one operation.
      */
     suspend fun syncFullStudyConfig(): Result<ProfileData?>

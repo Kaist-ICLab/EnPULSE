@@ -90,9 +90,8 @@ val surveySensorModule = module {
         }
     }
 
-    // Survey response capture (store only — upload is AutoSyncService's job). Tracks
-    // "Start Logging" but not campaign_table/per-sensor Enabling — see doc comment.
-    // Started/stopped from MobileTrackerApplication.
+    // Survey response capture (store only — upload is AutoSyncService's job). Saves answers
+    // regardless of "Start Logging" and campaign_table/per-sensor Enabling — see doc comment.
     single {
         SurveyResponseCapture(
             surveySensor = get(),

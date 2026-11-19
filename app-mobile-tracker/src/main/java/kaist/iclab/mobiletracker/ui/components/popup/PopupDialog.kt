@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kaist.iclab.mobiletracker.ui.theme.AppColors
@@ -40,6 +42,9 @@ data class DialogButtonConfig(
     val width: androidx.compose.ui.unit.Dp = Styles.ButtonDefaultWidth,
     val height: androidx.compose.ui.unit.Dp = Styles.ButtonDefaultHeight
 )
+
+/** Side by side, the default side padding leaves too little room for a two-word label. */
+private val TwoButtonContentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
 
 /**
  * Reusable popup dialog component
@@ -127,7 +132,8 @@ fun PopupDialog(
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (primaryButton.isPrimary) AppColors.PrimaryColor else Color.Gray
                                 ),
-                                shape = Styles.ButtonCornerRadius
+                                shape = Styles.ButtonCornerRadius,
+                                contentPadding = TwoButtonContentPadding
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxWidth(),
@@ -154,7 +160,8 @@ fun PopupDialog(
                                     Styles.ButtonBorderWidth,
                                     Styles.ButtonBorderColor
                                 ),
-                                shape = Styles.OutlinedButtonCornerRadius
+                                shape = Styles.OutlinedButtonCornerRadius,
+                                contentPadding = TwoButtonContentPadding
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxWidth(),

@@ -22,9 +22,6 @@ class WatchSensorRepositoryImpl(
     override suspend fun getTotalRecordCount(): Int =
         sensorDataStorages.values.sumOf { it.getCount() }
 
-    override suspend fun getRecordCountSince(timestamp: Long): Int =
-        sensorDataStorages.values.sumOf { it.getCountSince(timestamp) }
-
     override suspend fun getPendingRecordCountsBySensor(): Map<String, Int> =
         sensorDataStorages.mapValues { (sensorId, store) ->
             // ACKed data is pruned from the store, so a null watermark (never confirmed) just

@@ -9,7 +9,6 @@ import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.repository.onFailure
 import kaist.iclab.mobiletracker.repository.onSuccess
@@ -30,7 +29,6 @@ import kotlinx.coroutines.launch
 class AccountSettingsViewModel(
     private val campaignRepository: CampaignRepository,
     private val userProfileRepository: UserProfileRepository,
-    private val surveyRepository: SurveyRepository,
     campaignSensorRepository: CampaignSensorRepository,
     backgroundController: BackgroundController,
 ) : ViewModel() {

@@ -14,6 +14,7 @@ import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.ErrorClassifier
 import kaist.iclab.wearabletracker.repository.Result
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,8 +54,9 @@ class PhoneCommunicationManager(
         false
     }
 
-    fun sendDataToPhone(isSilent: Boolean = false) {
-        coroutineScope.launch {
+    /** @return the running sync, so a caller holding a wake lock can wait for it to finish. */
+    fun sendDataToPhone(isSilent: Boolean = false): Job {
+        return coroutineScope.launch {
             if (!syncMutex.tryLock()) {
                 Log.w(TAG, "Sync already in progress, skipping")
                 return@launch

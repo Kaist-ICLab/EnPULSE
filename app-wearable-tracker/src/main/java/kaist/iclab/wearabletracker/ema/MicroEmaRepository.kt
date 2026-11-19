@@ -1,8 +1,8 @@
 package kaist.iclab.wearabletracker.ema
 
-import android.util.Log
 import kaist.iclab.tracker.sensor.microema.WatchQuestion
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
+import kaist.iclab.tracker.sensor.microema.nextQuestionInRotation
 import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 
 /**
@@ -15,10 +15,6 @@ import kaist.iclab.wearabletracker.helpers.MicroEmaPreferencesHelper
 class MicroEmaRepository(
     private val prefsHelper: MicroEmaPreferencesHelper
 ) {
-    companion object {
-        private const val TAG = "MicroEmaRepo"
-    }
-
     // In-memory holder for the active session configuration
     private var activeConfig: WatchSurveyConfig? = null
 
@@ -46,7 +42,6 @@ class MicroEmaRepository(
      * Get the active survey config received from the phone.
      */
     fun loadSurveyConfig(): WatchSurveyConfig? {
-        Log.d(TAG, "Loading active config. Is null? ${activeConfig == null}")
         return activeConfig
     }
 
@@ -60,26 +55,12 @@ class MicroEmaRepository(
      * 4. Update the last shown question ID in persistent storage.
      */
     fun getNextQuestion(config: WatchSurveyConfig): WatchQuestion? {
-        if (config.questions.isEmpty()) return null
-
-        // 1. Questions in the order the phone sent them
-        val orderedQuestions = config.questions
-
-        // 2. Get the last shown question ID for this survey
         val lastId = prefsHelper.getLastQuestionId(config.surveyId)
+        val nextQuestion = nextQuestionInRotation(config.questions, lastId) ?: return null
 
-        // 3. Find the next question in sequence
-        val lastIndex = orderedQuestions.indexOfFirst { it.id == lastId }
-        val nextQuestion = orderedQuestions.getOrNull(lastIndex + 1)
-            ?: orderedQuestions.first() // Wrap around if we reached the end or it's the first time
-
-        // 4. Update persistent storage with the new last shown ID
+        // Update persistent storage with the new last shown ID
         prefsHelper.saveLastQuestionId(config.surveyId, nextQuestion.id)
 
-        Log.d(
-            TAG,
-            "Queue update for Survey ${config.surveyId}: lastId=$lastId -> nextId=${nextQuestion.id}"
-        )
         return nextQuestion
     }
 
@@ -88,10 +69,6 @@ class MicroEmaRepository(
      */
     fun updateConfig(config: WatchSurveyConfig) {
         this.activeConfig = config
-        Log.d(
-            TAG,
-            "Active config updated for Survey ID: ${config.surveyId} with ${config.questions.size} questions"
-        )
     }
 
     /**
@@ -99,12 +76,5 @@ class MicroEmaRepository(
      */
     fun clearCache() {
         activeConfig = null
-    }
-
-    /**
-     * Reset the queue progress for a specific survey so it starts from the first question.
-     */
-    fun resetQueueProgress(surveyId: Int) {
-        prefsHelper.clearLastQuestionId(surveyId)
     }
 }

@@ -7,7 +7,6 @@ package kaist.iclab.mobiletracker.navigation
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Onboarding : Screen("onboarding")
-    object Dashboard : Screen("dashboard")
 
     // Main tabs
     object Home : Screen("home")
@@ -24,7 +23,6 @@ sealed class Screen(val route: String) {
 
     object ServerSync : Screen("server_sync")
     object ServerConnection : Screen("server_connection")
-    object MicroEma : Screen("micro_ema")
     object About : Screen("about")
 
     // Data screen sub-screens

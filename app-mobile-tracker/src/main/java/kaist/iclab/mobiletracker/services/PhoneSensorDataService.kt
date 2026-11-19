@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -72,6 +73,10 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     // Guards against duplicate registration / batch processing on repeated onStartCommand
     private var listenersRegistered = false
     private var batchProcessingJob: Job? = null
+
+    // Rows waiting to be written. Only the batch job touches this until onDestroy has joined it,
+    // which is what lets onDestroy save the batch that was still being built.
+    private val pendingBatches = mutableMapOf<String, MutableList<SensorEntity>>()
 
 
     // Listener just sends to channel
@@ -173,50 +178,61 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
     private fun startBatchProcessing() {
         if (batchProcessingJob?.isActive == true) return
         batchProcessingJob = lifecycleScope.launch(Dispatchers.IO) {
-            val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
             var lastFlushTime = System.currentTimeMillis()
+            var lastFlushFailed = false
 
             while (isActive) {
                 val result = eventChannel.tryReceive()
                 if (result.isSuccess) {
                     val (sensorId, entity) = result.getOrThrow()
-                    buffer.getOrPut(sensorId) { mutableListOf() }.add(entity)
+                    pendingBatches.getOrPut(sensorId) { mutableListOf() }.add(entity)
                 } else {
                     delay(100.milliseconds)
                 }
 
                 val currentTime = System.currentTimeMillis()
-                val shouldFlush = buffer.values.any { it.size >= Constants.DB.BATCH_SIZE } ||
-                        (currentTime - lastFlushTime >= Constants.DB.FLUSH_INTERVAL_MS && buffer.isNotEmpty())
+                // After a failed write, wait for the interval instead of retrying on every event.
+                val batchFull = !lastFlushFailed &&
+                        pendingBatches.values.any { it.size >= Constants.DB.BATCH_SIZE }
+                val intervalElapsed = currentTime - lastFlushTime >= Constants.DB.FLUSH_INTERVAL_MS
 
-                if (shouldFlush) {
-                    flushBuffer(buffer)
+                if (batchFull || (intervalElapsed && pendingBatches.isNotEmpty())) {
+                    lastFlushFailed = !flushBuffer(pendingBatches)
                     lastFlushTime = currentTime
                 }
             }
         }
     }
 
-    private suspend fun flushBuffer(buffer: MutableMap<String, MutableList<SensorEntity>>) {
+    /** @return false if any batch could not be written; those rows stay queued for a retry. */
+    private suspend fun flushBuffer(
+        buffer: MutableMap<String, MutableList<SensorEntity>>
+    ): Boolean {
+        var allWritten = true
         buffer.forEach { (sensorId, entities) ->
             if (entities.isNotEmpty()) {
-                // Copy and insert
-                val batchToInsert = entities.toList()
-                entities.clear()
-
                 when (val result =
-                    phoneSensorRepository.insertSensorDataBatch(sensorId, batchToInsert)) {
+                    phoneSensorRepository.insertSensorDataBatch(sensorId, entities.toList())) {
                     is Result.Success -> {
+                        entities.clear()
                         timestampService.updateLastPhoneSensorData()
                     }
 
-                    is Result.Error -> Log.e(
-                        TAG,
-                        "Failed to insert batch for $sensorId: ${result.message}"
-                    )
+                    is Result.Error -> {
+                        allWritten = false
+                        // Bounded so a lasting failure such as a full disk can't exhaust memory.
+                        val excess = entities.size - Constants.DB.BUFFER_SIZE
+                        if (excess > 0) entities.subList(0, excess).clear()
+                        Log.e(
+                            TAG,
+                            "Failed to insert batch for $sensorId, keeping ${entities.size} " +
+                                    "records for retry: ${result.message}"
+                        )
+                    }
                 }
             }
         }
+        return allWritten
     }
 
     override fun onDestroy() {
@@ -238,15 +254,15 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
         // Flush remaining data before destruction with a timeout to avoid ANR
         runBlocking {
             val flushed = withTimeoutOrNull(3000L.milliseconds) {
-                val buffer = mutableMapOf<String, MutableList<SensorEntity>>()
+                batchProcessingJob?.cancelAndJoin()
                 while (true) {
                     val result = eventChannel.tryReceive()
                     if (result.isSuccess) {
                         val (id, entity) = result.getOrThrow()
-                        buffer.getOrPut(id) { mutableListOf() }.add(entity)
+                        pendingBatches.getOrPut(id) { mutableListOf() }.add(entity)
                     } else break
                 }
-                flushBuffer(buffer)
+                flushBuffer(pendingBatches)
             }
             if (flushed == null) {
                 Log.w(TAG, "onDestroy flush timed out after 3s — some buffered data may be lost")

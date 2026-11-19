@@ -26,7 +26,6 @@ import kaist.iclab.mobiletracker.webapp.bridge.SurveyBridgeHandler
 import kaist.iclab.mobiletracker.webapp.client.ExternalLinkWebChromeClient
 import kaist.iclab.mobiletracker.webapp.client.RestrictedWebViewClient
 import kaist.iclab.mobiletracker.webapp.client.WebAppPermissionHelper
-import kaist.iclab.tracker.permission.AndroidPermissionManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -43,7 +42,6 @@ import org.koin.core.component.inject
  * in the Android recents menu.
  */
 class WebAppActivity : ComponentActivity(), KoinComponent {
-
     override fun attachBaseContext(newBase: Context) {
         val context = LanguageHelper(newBase).attachBaseContextWithLanguage(newBase)
         super.attachBaseContext(context)
@@ -55,7 +53,6 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
     private val storageBridgeHandler by inject<StorageBridgeHandler>()
     private val deviceBridgeHandler by inject<DeviceBridgeHandler>()
     private val logBridgeHandler by inject<LogBridgeHandler>()
-    private val permissionManager by inject<AndroidPermissionManager>()
     private val appScope by inject<AppCoroutineScope>()
 
     private lateinit var webView: WebView
@@ -138,7 +135,7 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         val appBridgeHandler = AppBridgeHandler(this) { finish() }
 
         val permissionBridgeHandler =
-            PermissionBridgeHandler(this, permissionManager) { permissions, request ->
+            PermissionBridgeHandler(this) { permissions, request ->
                 permissionHelper.requestPermissions(permissions, request)
             }
 
@@ -191,7 +188,6 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
         // into this same Activity/task.
         if (savedInstanceState != null && webView.restoreState(savedInstanceState) != null) {
             loadedUrl = savedInstanceState.getString(STATE_LOADED_URL) ?: url
-            Log.d(TAG, "Restored WebView state for webAppId=$webAppId from savedInstanceState")
         } else {
             loadedUrl = url
             webView.loadUrl(url)
@@ -250,7 +246,6 @@ class WebAppActivity : ComponentActivity(), KoinComponent {
                     "Received new intent for the same URL as before; keeping existing WebView state"
                 )
             } else {
-                Log.d(TAG, "Received new intent, reloading WebView with new URL: $url")
                 loadedUrl = url
                 webView.loadUrl(url)
             }

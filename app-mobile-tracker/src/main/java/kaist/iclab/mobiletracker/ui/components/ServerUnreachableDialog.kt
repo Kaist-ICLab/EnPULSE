@@ -11,8 +11,8 @@ import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 
 /**
  * Shown when the study config can't be downloaded because the server is unreachable.
- * With a cached config the user can dismiss it and keep working offline; without one the app
- * has nothing to run, so the only choices are retrying or exiting.
+ * With a cached config the user can continue offline; without one the app has nothing to run,
+ * so the only choices are retrying or exiting.
  */
 @Composable
 fun ServerUnreachableDialog(
@@ -37,11 +37,19 @@ fun ServerUnreachableDialog(
             text = stringResource(R.string.server_unreachable_retry),
             onClick = onRetry
         ),
-        secondaryButton = DialogButtonConfig(
-            text = stringResource(R.string.server_unreachable_exit),
-            onClick = onExit,
-            isPrimary = false
-        ),
+        secondaryButton = if (hasCachedConfig) {
+            DialogButtonConfig(
+                text = stringResource(R.string.server_unreachable_continue_offline),
+                onClick = onContinueOffline,
+                isPrimary = false
+            )
+        } else {
+            DialogButtonConfig(
+                text = stringResource(R.string.server_unreachable_exit),
+                onClick = onExit,
+                isPrimary = false
+            )
+        },
         onDismiss = onContinueOffline,
         dismissible = hasCachedConfig
     )

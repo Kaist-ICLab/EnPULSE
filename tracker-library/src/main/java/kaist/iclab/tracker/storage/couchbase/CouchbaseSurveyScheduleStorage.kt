@@ -2,13 +2,13 @@ package kaist.iclab.tracker.storage.couchbase
 
 import android.util.Log
 import com.couchbase.lite.DataSource
+import com.couchbase.lite.DictionaryInterface
 import com.couchbase.lite.Expression
 import com.couchbase.lite.Meta
 import com.couchbase.lite.MutableDocument
 import com.couchbase.lite.Ordering
 import com.couchbase.lite.QueryBuilder
 import com.couchbase.lite.SelectResult
-import kaist.iclab.tracker.TrackerUtil.formatLocalDateTime
 import kaist.iclab.tracker.sensor.survey.SurveySchedule
 import kaist.iclab.tracker.storage.core.SurveyScheduleStorage
 import java.util.UUID
@@ -48,16 +48,14 @@ class CouchbaseSurveyScheduleStorage(
                 if(resultDict == null) null else SurveySchedule(
                     scheduleId = docUuid,
                     surveyId = resultDict.getString("surveyId") ?: "",
-                    triggerTime = resultDict.getLong("triggerTime"),
+                    triggerTime = resultDict.getLongOrNull("triggerTime"),
                 )
             }
 
-            if(result != null) Log.d(TAG, "Next Schedule for $surveyId: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
             return result
 
         } catch(e: Exception) {
-            if(e is NoSuchElementException) Log.d(TAG, "No next schedule today for $surveyId")
-            else e.printStackTrace()
+            if (e !is NoSuchElementException) Log.e(TAG, "Failed to read a schedule", e)
         }
 
         return null
@@ -82,18 +80,15 @@ class CouchbaseSurveyScheduleStorage(
                 if(resultDict == null) null else SurveySchedule(
                     scheduleId = docUuid,
                     surveyId = resultDict.getString("surveyId") ?: "",
-                    triggerTime = resultDict.getLong("triggerTime"),
+                    triggerTime = resultDict.getLongOrNull("triggerTime"),
                 )
             }
 
-            if(result != null) Log.d(TAG, "Next Schedule: surveyId=${result.surveyId}, uuid=${result.scheduleId!!}, triggerTime=${result.triggerTime?.formatLocalDateTime()}")
-            else Log.d(TAG, "No next schedule today")
 
             return result
 
         } catch(e: Exception) {
-            if(e is NoSuchElementException) Log.d(TAG, "No next schedule today")
-            else e.printStackTrace()
+            if (e !is NoSuchElementException) Log.e(TAG, "Failed to read a schedule", e)
             return null
         }
     }
@@ -108,10 +103,10 @@ class CouchbaseSurveyScheduleStorage(
         return SurveySchedule(
             scheduleId = scheduleId,
             surveyId = document.getString("surveyId") ?: "",
-            triggerTime = document.getLong("triggerTime"),
-            actualTriggerTime = document.getLong("actualTriggerTime"),
-            surveyStartTime = document.getLong("surveyStartTime"),
-            responseSubmissionTime = document.getLong("responseSubmissionTime"),
+            triggerTime = document.getLongOrNull("triggerTime"),
+            actualTriggerTime = document.getLongOrNull("actualTriggerTime"),
+            surveyStartTime = document.getLongOrNull("surveyStartTime"),
+            responseSubmissionTime = document.getLongOrNull("responseSubmissionTime"),
         )
     }
 
@@ -170,3 +165,7 @@ class CouchbaseSurveyScheduleStorage(
     }
 
 }
+
+/** Couchbase returns 0 for a field that was never set, which would upload as a 1970 timestamp. */
+private fun DictionaryInterface.getLongOrNull(key: String): Long? =
+    if (contains(key)) getLong(key) else null

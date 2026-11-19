@@ -33,6 +33,8 @@ import kaist.iclab.tracker.auth.UserState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
@@ -49,7 +51,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 class SupabaseAuth(
     context: Context,
     private val clientId: String,
-    supabaseHelper: SupabaseHelper,
+    private val supabaseHelper: SupabaseHelper,
     private val syncTimestampService: SyncTimestampService
 ) : Authentication, EmailPasswordAuthentication {
 
@@ -57,7 +59,7 @@ class SupabaseAuth(
         private const val TAG = "SupabaseAuth"
     }
 
-    private val supabaseClient = supabaseHelper.supabaseClient
+    private val supabaseClient get() = supabaseHelper.supabaseClient
     private val credentialManager = CredentialManager.create(context)
     private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
@@ -92,11 +94,14 @@ class SupabaseAuth(
             }
         }
         authScope.launch {
-            supabaseClient.auth.sessionStatus.collect { status ->
-                try {
-                    handleSessionStatus(status)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error handling session status $status: ${e.message}", e)
+            // collectLatest moves to the new client's status when the client is rebuilt.
+            supabaseHelper.clientFlow.collectLatest { client ->
+                client.auth.sessionStatus.collect { status ->
+                    try {
+                        handleSessionStatus(status)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error handling session status $status: ${e.message}", e)
+                    }
                 }
             }
         }
@@ -238,27 +243,43 @@ class SupabaseAuth(
     }
 
     override suspend fun logout() {
-        SupabaseLoadingInterceptor.withLoading {
-            try {
-                // Sign out from Supabase
-                supabaseClient.auth.signOut()
+        // signOut() keeps the session when the server can't be reached, so remove it locally.
+        // Logging out must work with no connection.
+        val signedOut = attemptLogoutStep("sign out on the server") {
+            SupabaseLoadingInterceptor.withLoading { supabaseClient.auth.signOut() }
+        }
+        if (!signedOut) {
+            attemptLogoutStep("clear the local session") { supabaseClient.auth.clearSession() }
+        }
 
-                // Clear credential state from all credential providers
+        // Clear credential state from all credential providers
+        attemptLogoutStep("clear stored credentials") {
+            SupabaseLoadingInterceptor.withLoading {
                 credentialManager.clearCredentialState(
                     androidx.credentials.ClearCredentialStateRequest()
                 )
-
-                // Clear cached UUID
-                syncTimestampService.clearUserUuid()
-
-                _userStateFlow.value = UserState(
-                    isLoggedIn = false,
-                    user = null,
-                    token = null
-                )
-            } catch (e: Exception) {
-                Log.e(TAG, "Error during logout: ${e.message}", e)
             }
+        }
+
+        // Clear cached UUID
+        syncTimestampService.clearUserUuid()
+
+        _userStateFlow.value = UserState(
+            isLoggedIn = false,
+            user = null,
+            token = null
+        )
+    }
+
+    /** Runs one logout step; a failure is logged so the remaining steps still run. */
+    private suspend fun attemptLogoutStep(step: String, action: suspend () -> Unit): Boolean {
+        return try {
+            action()
+            true
+        } catch (e: Exception) {
+            if (e is CancellationException && e !is TimeoutCancellationException) throw e
+            Log.w(TAG, "Logout could not $step: ${e.message}", e)
+            false
         }
     }
 

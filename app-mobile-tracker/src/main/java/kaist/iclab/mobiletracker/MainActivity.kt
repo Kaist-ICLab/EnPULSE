@@ -15,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
-import kaist.iclab.mobiletracker.helpers.BLEHelper
 import kaist.iclab.mobiletracker.helpers.LanguageHelper
 import kaist.iclab.mobiletracker.navigation.Screen
 import kaist.iclab.mobiletracker.ui.screens.main.MainScreen
@@ -26,7 +25,6 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 class MainActivity : ComponentActivity() {
-    private val bleHelper by inject<BLEHelper>()
     private val permissionManager by inject<AndroidPermissionManager>()
 
     override fun attachBaseContext(newBase: Context) {
@@ -40,7 +38,6 @@ class MainActivity : ComponentActivity() {
 
         // Bind permission manager to activity
         permissionManager.bind(this)
-
 
         setContent {
             MaterialTheme {
@@ -81,10 +78,5 @@ class MainActivity : ComponentActivity() {
             startDestination = startDestination,
             permissionManager = permissionManager
         )
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        bleHelper.cleanup()
     }
 }

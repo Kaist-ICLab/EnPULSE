@@ -85,7 +85,7 @@ class AutoSyncManager(
                 wakeLock.acquire(kaist.iclab.wearabletracker.Constants.AutoSync.WAKELOCK_TIMEOUT_MS)
 
                 try {
-                    phoneCommunicationManager.sendDataToPhone(isSilent = true)
+                    phoneCommunicationManager.sendDataToPhone(isSilent = true).join()
 
                     // Also retry any pending MicroEMA responses
                     microEmaResponseManager.retrySyncUnsynced()

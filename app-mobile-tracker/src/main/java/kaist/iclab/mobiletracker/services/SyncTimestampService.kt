@@ -328,26 +328,6 @@ class SyncTimestampService(context: Context) {
     }
 
     /**
-     * Clear all sensor upload timestamps and cursors.
-     * @param existingEditor Optional existing editor to use for atomicity
-     */
-    fun clearAllSensorUploadTimestamps(existingEditor: SharedPreferences.Editor? = null) {
-        val allKeys = prefs.all.keys
-        val keysToRemove = allKeys.filter {
-            it.startsWith("last_upload_") || it.startsWith("upload_cursor_id_") ||
-                    it.startsWith("upload_failure_cursor_") || it.startsWith("upload_failure_streak_") ||
-                    it.startsWith("uploaded_record_count_") ||
-                    it.startsWith("upload_succeeded_batches_") || it.startsWith("upload_quarantined_batches_") ||
-                    it.startsWith("upload_quarantined_records_")
-        }
-        val editor = existingEditor ?: prefs.edit()
-        keysToRemove.forEach { editor.remove(it) }
-        if (existingEditor == null) {
-            editor.apply()
-        }
-    }
-
-    /**
      * Get the verified-contiguous watch->phone BLE sync watermark for a sensor.
      * Distinct from [getLastSuccessfulUploadTimestamp]: this tracks how far BLE receipt
      * from the watch has been confirmed gap-free, not how far upload-to-server has progressed.

@@ -178,9 +178,10 @@
     <string name="error_server_unreachable">Can\'t reach the EnPULSE server. Check your internet connection or try again later.</string>
     <string name="server_unreachable_title">Can\'t reach the server</string>
     <string name="server_unreachable_message">EnPULSE couldn\'t download your study configuration. Check your internet connection and try again.</string>
-    <string name="server_unreachable_message_cached">EnPULSE couldn\'t update your study configuration. Check your internet connection and try again, or tap outside this message to keep using the saved configuration.</string>
+    <string name="server_unreachable_message_cached">EnPULSE couldn\'t update your study configuration. Check your internet connection and try again, or continue offline with the saved configuration.</string>
     <string name="server_unreachable_retry">Retry</string>
     <string name="server_unreachable_exit">Exit</string>
+    <string name="server_unreachable_continue_offline">Continue offline</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
     <string name="menu_leave_campaign">Leave Campaign</string>
@@ -225,6 +226,8 @@
     <!-- Notification -->
     <string name="notification_title">EnPULSE</string>
     <string name="notification_description">Data collection is running in the background</string>
+    <string name="notification_collection_stopped_title">Data collection stopped</string>
+    <string name="notification_collection_stopped_message">EnPULSE could not keep collecting data due to errors. Please open the app and start data collection again.</string>
 
     <!-- Phone Sensor Screen -->
     <string name="turn_off_data_collection_first">Data collection is still running</string>

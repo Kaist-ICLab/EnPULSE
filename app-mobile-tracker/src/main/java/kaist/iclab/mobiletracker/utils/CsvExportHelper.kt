@@ -86,8 +86,6 @@ class CsvExportHelper(
                 }
             }
 
-            Log.d(TAG, "Exported ${records.size} records to ${file.absolutePath}")
-
             // Return file URI using FileProvider
             return FileProvider.getUriForFile(
                 context,

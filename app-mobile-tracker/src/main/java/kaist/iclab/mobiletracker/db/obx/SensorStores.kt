@@ -45,13 +45,24 @@ class SensorStores(boxStore: BoxStore) {
     val dataTraffic = SensorStore(boxStore, DataTrafficEntity::class.java)
     val deviceMode = SensorStore(boxStore, DeviceModeEntity::class.java)
     val exercise =
-        SensorStore(boxStore, ExerciseEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
+        SensorStore(boxStore, ExerciseEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP) {
+            listOf(
+                it.duration, it.exerciseType, it.customTitle, it.calories, it.distance, it.count,
+                it.meanHeartRate, it.maxHeartRate, it.minHeartRate, it.altitudeGain, it.altitudeLoss,
+                it.meanCadence, it.maxCadence, it.meanPower, it.maxPower, it.meanSpeed, it.maxSpeed,
+                it.meanRpm, it.maxRpm
+            )
+        }
     val media = SensorStore(boxStore, MediaEntity::class.java)
     val screen = SensorStore(boxStore, ScreenEntity::class.java)
     val sleep =
-        SensorStore(boxStore, SleepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
+        SensorStore(boxStore, SleepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP) {
+            listOf(it.duration, it.sleepScore, it.stagesJson)
+        }
     val step =
-        SensorStore(boxStore, StepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP)
+        SensorStore(boxStore, StepEntity::class.java, dedupStrategy = DedupStrategy.TIMESTAMP) {
+            it.duration to it.steps
+        }
     val vad = SensorStore(boxStore, VADEntity::class.java)
     val wifiScan = SensorStore(boxStore, WifiScanEntity::class.java)
 

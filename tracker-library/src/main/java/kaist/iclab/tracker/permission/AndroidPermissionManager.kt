@@ -479,8 +479,6 @@ class AndroidPermissionManager(
     private fun requestHealthDataPermission(permissions: Array<String>) {
         if (permissions.isEmpty()) return
         
-        Log.v(TAG, "Requesting Samsung Health permissions: ${permissions.joinToString()}")
-        
         val store = try {
             HealthDataService.getStore(context)
         } catch (e: Exception) {
@@ -505,11 +503,9 @@ class AndroidPermissionManager(
         store.getGrantedPermissionsAsync(possiblePermission).setCallback(
             Looper.getMainLooper(),
             { res: Set<com.samsung.android.sdk.health.data.permission.Permission> ->
-                Log.v(TAG, "Granted permissions check result: ${res.size}/${possiblePermission.size}")
                 if (res.containsAll(possiblePermission)) {
                     setHealthDataPermissionState(possiblePermission, res)
                 } else {
-                    Log.v(TAG, "Requesting missing health permissions...")
                     store.requestPermissionsAsync(possiblePermission, activity).setCallback(
                         Looper.getMainLooper(),
                         { res2: Set<com.samsung.android.sdk.health.data.permission.Permission> ->

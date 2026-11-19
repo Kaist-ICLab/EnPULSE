@@ -5,7 +5,7 @@ package kaist.iclab.tracker.auth
  * plain email and password, alongside whatever federated provider they normally use.
  *
  * Kept separate from [Authentication] so implementations that only support a federated
- * provider (see [GoogleAuth]) stay valid. Callers test for it with `as?` and hide the
+ * provider stay valid. Callers test for it with `as?` and hide the
  * email/password UI when the active implementation does not provide it.
  *
  * The reason this exists: federated sign-in needs to reach the identity provider, which is

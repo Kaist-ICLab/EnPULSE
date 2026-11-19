@@ -76,17 +76,12 @@ object AppConfig {
         const val SYNC_ACK = "sync_ack"
         const val MICRO_EMA_RESPONSE = "micro_ema_response"
         const val MICRO_EMA_ACK = "micro_ema_ack"
-        const val MICRO_EMA_TRIGGER = "micro_ema_trigger"
         const val TRIGGER_CONFIG = "trigger_config"
-        const val PHONE_EMA_TRIGGER = "phone_ema_trigger"
         const val WATCH_EMA_TRIGGER = "watch_ema_trigger"
         const val WATCH_NOTIFICATION_TRIGGER = "watch_notification_trigger"
         const val PHONE_OPEN_URL_TRIGGER = "phone_open_url_trigger"
         const val DETECTION_STATE_UPDATE = "detection_state_update"
         const val ACTIVE_SENSOR_CONFIG = "active_sensor_config"
-        const val WEBAPP_TRIGGER = "webapp_trigger"
-        const val NOTIFICATION_TRIGGER = "notification_trigger"
-        const val BROADCAST_TRIGGER = "broadcast_trigger"
     }
 
     /**

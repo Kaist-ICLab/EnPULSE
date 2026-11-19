@@ -214,7 +214,6 @@ class SettingsViewModel(
             permissions = arrayOf(Manifest.permission.POST_NOTIFICATIONS),
             onGranted = {
                 startLoggingSafely()
-                Log.d(TAG, "Started logging after notification permission granted")
             },
             errorContext = "notification permission"
         )

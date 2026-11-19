@@ -37,7 +37,6 @@ class CampaignSensorConfigRepository(
                 try {
                     val ids = (jsonElement as JsonArray).map { it.jsonPrimitive.content }.toSet()
                     storage.set(CampaignSensorConfig(ids))
-                    Log.d(TAG, "Received active sensor config: $ids")
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to parse active sensor config: ${e.message}")
                 }

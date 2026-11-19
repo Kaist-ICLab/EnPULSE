@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.helpers
 
+import android.util.Log
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
@@ -52,7 +53,7 @@ private fun loadBitmapFromAssets(context: Context, assetPath: String): android.g
             inputStream.close()
         }
     } catch (e: IOException) {
-        e.printStackTrace()
+        Log.e("ImageAsset", "Failed to load $assetPath", e)
         null
     }
 }

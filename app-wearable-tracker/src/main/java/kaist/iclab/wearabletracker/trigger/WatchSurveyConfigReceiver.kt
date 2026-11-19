@@ -4,7 +4,6 @@ import android.util.Log
 import kaist.iclab.tracker.sensor.microema.WatchSurveyConfig
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
-import kaist.iclab.wearabletracker.ema.MicroEmaRepository
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -29,7 +28,6 @@ import kotlinx.serialization.json.jsonObject
  */
 class WatchSurveyConfigReceiver(
     private val bleChannel: BLEDataChannel,
-    private val microEmaRepository: MicroEmaRepository,
     private val storage: WatchSurveyConfigStorage
 ) {
     companion object {
@@ -65,21 +63,12 @@ class WatchSurveyConfigReceiver(
             handleConfig(jsonElement)
         }
 
-        Log.d(
-            TAG,
-            "Started listening for watch survey config on BLE key: ${Constants.BLE.KEY_TRIGGER_CONFIG}"
-        )
-
         // Load persisted configuration on startup if it exists
         try {
             val cachedConfig = storage.loadConfig()
             synchronized(this) {
                 // The listener above is already registered, so a fresh push may have been applied by now.
                 if (cachedConfig != null && (appliedPushedAt == 0L || cachedConfig.pushedAt >= appliedPushedAt)) {
-                    Log.d(
-                        TAG,
-                        "Loading cached watch survey config from disk: ${cachedConfig.surveyConfigs.size} survey(s)"
-                    )
                     applyConfig(cachedConfig.surveyConfigs)
                     appliedPushedAt = cachedConfig.pushedAt
                 }
@@ -92,8 +81,6 @@ class WatchSurveyConfigReceiver(
     @Synchronized
     private fun handleConfig(jsonElement: JsonElement) {
         try {
-            Log.d(TAG, "Received watch survey config payload")
-
             val payload = when (jsonElement) {
                 is kotlinx.serialization.json.JsonObject -> jsonElement
                 is kotlinx.serialization.json.JsonPrimitive -> json.parseToJsonElement(jsonElement.content).jsonObject
@@ -101,8 +88,6 @@ class WatchSurveyConfigReceiver(
             }
 
             val configPayload = json.decodeFromJsonElement<WatchSurveyConfigPayload>(payload)
-
-            Log.d(TAG, "Parsed ${configPayload.surveyConfigs.size} survey config(s)")
 
             // Each push is its own Data Layer item, so pushes queued while the watch was away all
             // arrive on reconnect in no fixed order. Keep the newest; 0 means the phone didn't say.
@@ -119,21 +104,15 @@ class WatchSurveyConfigReceiver(
             appliedPushedAt = configPayload.pushedAt
             storage.saveConfig(configPayload)
 
-            Log.d(TAG, "Watch survey config applied and persisted successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing watch survey config payload: ${e.message}", e)
         }
     }
 
     private fun applyConfig(configs: Map<Int, WatchSurveyConfig>) {
+        // Question position is kept across pushes and restarts: resetting it here meant later
+        // questions were rarely asked.
         surveyConfigs = configs
-
-        // Reset the queue progress for these surveys so they start from Q1
-        configs.keys.forEach { surveyId ->
-            microEmaRepository.resetQueueProgress(surveyId)
-        }
-
-        Log.d(TAG, "Updated survey configs and reset queue progress: ${configs.keys}")
     }
 }
 

@@ -106,7 +106,6 @@ class AppListChangeSensor(
 
     private fun stopPeriodicMonitoring() {
         isMonitoring = false
-        Log.d(TAG, "Stopping periodic app change monitoring")
     }
 
     private fun checkForAppChanges() {

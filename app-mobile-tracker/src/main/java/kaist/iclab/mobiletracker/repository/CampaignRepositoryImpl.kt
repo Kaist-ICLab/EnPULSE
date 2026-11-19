@@ -42,10 +42,6 @@ class CampaignRepositoryImpl(
         }
     }
 
-    override fun getCachedCampaigns(): List<CampaignData> {
-        return _campaignsFlow.value
-    }
-
     override suspend fun joinCampaign(campaignId: String, password: String): Result<Boolean> {
         return campaignService.joinCampaign(campaignId, password)
     }

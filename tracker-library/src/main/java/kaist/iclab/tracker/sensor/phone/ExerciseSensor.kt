@@ -2,6 +2,7 @@ package kaist.iclab.tracker.sensor.phone
 
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.content.pm.ServiceInfo
 import android.os.Build
 import com.samsung.android.sdk.health.data.request.DataType
@@ -19,6 +20,7 @@ import kaist.iclab.tracker.sensor.core.SensorConfig
 import kaist.iclab.tracker.sensor.core.SensorEntity
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.storage.core.StateStorage
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -109,37 +111,44 @@ class ExerciseSensor(
         val timestamp = System.currentTimeMillis()
 
         CoroutineScope(Dispatchers.IO).launch {
-            store.readData(req).dataList.forEach { dataPoint ->
-                dataPoint.getValueOrDefault(DataType.ExerciseType.SESSIONS, emptyList()).forEach { session ->
-                    val entity = Entity(
-                        timestamp,
-                        session.startTime.toEpochMilli(),
-                        session.duration.toMillis(),
-                        session.exerciseType.name,
-                        session.customTitle,
-                        session.calories,
-                        session.distance,
-                        session.count,
-                        session.meanHeartRate,
-                        session.maxHeartRate,
-                        session.minHeartRate,
-                        session.altitudeGain,
-                        session.altitudeLoss,
-                        session.meanCadence,
-                        session.maxCadence,
-                        session.meanPower,
-                        session.maxPower,
-                        session.meanSpeed,
-                        session.maxSpeed,
-                        session.meanRpm,
-                        session.maxRpm
-                    )
-                    lastSynced = max(lastSynced, session.endTime.toEpochMilli())
+            try {
+                store.readData(req).dataList.forEach { dataPoint ->
+                    dataPoint.getValueOrDefault(DataType.ExerciseType.SESSIONS, emptyList()).forEach { session ->
+                        val entity = Entity(
+                            timestamp,
+                            session.startTime.toEpochMilli(),
+                            session.duration.toMillis(),
+                            session.exerciseType.name,
+                            session.customTitle,
+                            session.calories,
+                            session.distance,
+                            session.count,
+                            session.meanHeartRate,
+                            session.maxHeartRate,
+                            session.minHeartRate,
+                            session.altitudeGain,
+                            session.altitudeLoss,
+                            session.meanCadence,
+                            session.maxCadence,
+                            session.meanPower,
+                            session.maxPower,
+                            session.meanSpeed,
+                            session.maxSpeed,
+                            session.meanRpm,
+                            session.maxRpm
+                        )
+                        lastSynced = max(lastSynced, session.endTime.toEpochMilli())
 
-                    listeners.forEach {
-                        it.invoke(entity)
+                        listeners.forEach {
+                            it.invoke(entity)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                // Nothing else catches this, so it would crash the app. lastSynced only moves
+                // past rows already read, so the next poll retries the rest.
+                Log.e(name, "Failed to read exercise data: ${e.message}", e)
             }
         }
         Unit

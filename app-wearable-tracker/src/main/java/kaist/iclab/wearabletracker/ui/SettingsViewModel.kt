@@ -16,7 +16,6 @@ import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.tracker.sensor.galaxywatch.ECGSensor
-import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
@@ -45,7 +44,6 @@ class SettingsViewModel(
     private val repository: WatchSensorRepository,
     private val samsungHealthSensorInitializer: SamsungHealthSensorInitializer,
     private val applicationContext: Context,
-    private val autoSyncManager: AutoSyncManager,
     private val ecgSensor: ECGSensor,
     campaignSensorConfigRepository: CampaignSensorConfigRepository
 ) : ViewModel() {

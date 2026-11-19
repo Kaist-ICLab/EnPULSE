@@ -14,9 +14,9 @@ import kotlinx.serialization.Serializable
  * every call site the concrete `@Serializable` Supabase row type is known, so one reified upsert
  * parameterized by table name serves every sensor.
  */
-class SupabaseUploadService(supabaseHelper: SupabaseHelper) {
+class SupabaseUploadService(private val supabaseHelper: SupabaseHelper) {
     @PublishedApi
-    internal val supabaseClient = supabaseHelper.supabaseClient
+    internal val supabaseClient get() = supabaseHelper.supabaseClient
 
     suspend inline fun <reified T : @Serializable Any> upsertBatch(
         tableName: String,
