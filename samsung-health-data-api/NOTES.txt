@@ -2,7 +2,12 @@
 Samsung Health Data API - AAR File Setup
 ================================================================================
 
-IMPORTANT: You need to manually add the Samsung Health Data API AAR file to this directory.
+This AAR is optional. Without it, the project builds the "open" flavor of the apps, and
+the tracker-samsung-data module is left out. Add it to build the "samsung" flavor.
+
+Samsung licenses the SDK for development and testing only. Do not commit the AAR, and do
+not distribute an app built with it without your own Samsung Health partnership. See
+"Samsung Health features" in the root README.
 
 Instructions:
 1. Download the Samsung Health Data API SDK from Samsung Developer Portal

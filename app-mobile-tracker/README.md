@@ -5,7 +5,7 @@ The EnPULSE phone app. It collects phone sensor data, receives data from the wat
 For build setup, follow the [root README](../README.md#build-from-source).
 
 ```bash
-./gradlew :app-mobile-tracker:installDebug
+./gradlew :app-mobile-tracker:installOpenDebug
 ```
 
 ## Features
@@ -26,7 +26,7 @@ For build setup, follow the [root README](../README.md#build-from-source).
 | Device | `AmbientLightSensor`, `BatterySensor`, `DeviceModeSensor` |
 | Connectivity | `BluetoothScanSensor`, `ConnectivitySensor`, `DataTrafficSensor`, `WifiScanSensor` |
 | Location | `LocationSensor` |
-| Samsung Health | `StepSensor`, `SleepSensor`, `ExerciseSensor` |
+| Samsung Health (`samsung` flavor only) | `StepSensor`, `SleepSensor`, `ExerciseSensor` |
 | Audio | `VADSensor` |
 | Study | `TimingSensor`, `MicroEmaSensor`, `SurveySensor` |
 

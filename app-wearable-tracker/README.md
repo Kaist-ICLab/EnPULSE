@@ -2,7 +2,7 @@
 
 The EnPULSE Galaxy Watch app. It collects biosignals, stores them in ObjectBox, and sends them to the phone app over the Wearable Data Layer. The phone uploads them to the backend.
 
-For build setup, follow the [root README](../README.md#build-from-source). The watch app needs the Samsung Health SDKs and `local.properties`, but not `google-services.json`.
+For build setup, follow the [root README](../README.md#build-from-source). The watch app needs `local.properties`, but not `google-services.json`. Its biosignal sensors need the Samsung Health Sensor SDK and the `samsung` flavor.
 
 ## Installation
 
@@ -10,10 +10,10 @@ A watch cannot open a downloaded APK, so install over wireless debugging. On the
 
 ```bash
 adb connect <watch-ip>:<port>
-./gradlew :app-wearable-tracker:installDebug
+./gradlew :app-wearable-tracker:installOpenDebug
 ```
 
-Install the phone app as well, signed with the same key as the watch app. Both apps use the application ID `kaist.iclab.trackerSystem`, and the Wearable Data Layer connects them only when the ID and signing key match.
+Use `installSamsungDebug` for the `samsung` flavor. Install the phone app as well, in the same flavor and signed with the same key as the watch app. Both apps use the application ID `kaist.iclab.trackerSystem` (or your `ENPULSE_APPLICATION_ID`), and the Wearable Data Layer connects them only when the ID and signing key match.
 
 ## Sensors
 
@@ -30,7 +30,7 @@ Install the phone app as well, signed with the same key as the watch app. Both a
 | `LocationSensor` | Location updates |
 | `ECGSensor` | On-demand ECG, started from a measurement screen |
 
-Availability depends on the watch model.
+The `open` flavor has only `IMUSensor`, `GestureSensor`, and `LocationSensor`. The others use the Samsung Health Sensor SDK and need the `samsung` flavor. Availability also depends on the watch model.
 
 The active campaign, set on the phone, decides which sensors run.
 

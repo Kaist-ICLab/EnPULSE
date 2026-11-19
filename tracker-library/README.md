@@ -2,7 +2,14 @@
 
 The core Android library of EnPULSE. It provides the sensors, the background service that runs them, the trigger engine, and the phone-watch sync used by both apps.
 
-The library is used as a Gradle module (`project(":tracker-library")`). It needs the Samsung Health SDKs described in the [root README](../README.md#3-add-the-samsung-health-sdks).
+The library is used as a Gradle module (`project(":tracker-library")`) and builds without the Samsung Health SDKs. The sensors that use them are in two optional modules, which keep the same package names:
+
+| Module | SDK | Contents |
+| --- | --- | --- |
+| `tracker-samsung-data` | Data SDK | `StepSensor`, `SleepSensor`, `ExerciseSensor`, `SamsungHealthDataInitializer`, and `SamsungHealthDataPermissionHandler` |
+| `tracker-samsung-sensor` | Sensor SDK | The Galaxy Watch sensors below, `SamsungHealthSensorInitializer`, and `StressDetectionAdapter` |
+
+Gradle includes each module only when its SDK is in place. See [Samsung Health SDKs](../README.md#3-optional-add-the-samsung-health-sdks) in the root README.
 
 ## Structure
 
@@ -11,8 +18,8 @@ Packages are under `src/main/java/kaist/iclab/tracker/`:
 | Package | Contents |
 | --- | --- |
 | `sensor` | `core` has the `Sensor` interface and `BaseSensor`. `phone`, `galaxywatch`, and `common` have the implementations. `controller` has `BackgroundController`, the foreground service that starts and stops sensors. |
-| `listener` | Alarm, broadcast, and Samsung Health connection helpers |
-| `permission` | `AndroidPermissionManager` and hardware availability checks |
+| `listener` | Alarm and broadcast helpers |
+| `permission` | `AndroidPermissionManager` and hardware availability checks. Samsung Health permissions go through a `HealthDataPermissionHandler`, which `tracker-samsung-data` provides. |
 | `storage` | Storage interfaces and Couchbase implementations for configuration and state |
 | `sync` | Data channel interfaces and the BLE implementation, built on the Wearable Data Layer |
 | `trigger` | Trigger engine that evaluates rules against sensor state and runs actions |
@@ -26,8 +33,8 @@ The **Device** column shows where each sensor runs:
 
 - **Phone:** any Android phone.
 - **Watch:** any Wear OS watch.
-- **Samsung Phone:** a Samsung phone with Samsung Health.
-- **Galaxy Watch:** a Wear OS Galaxy Watch, through the Samsung Health Sensor SDK. Availability depends on the model.
+- **Samsung Phone:** a Samsung phone with Samsung Health. These sensors are in `tracker-samsung-data`.
+- **Galaxy Watch:** a Wear OS Galaxy Watch, through the Samsung Health Sensor SDK. These sensors are in `tracker-samsung-sensor`. Availability depends on the model.
 
 | Sensor | Device | Description | Key fields |
 | --- | --- | --- | --- |

@@ -19,8 +19,8 @@ Campaigns decide which sensors run. A participant joins a campaign, and the app 
 ## Requirements
 
 - Android SDK with platform 37, and a JDK 17 or newer to run Gradle. Gradle downloads the JDK 17 toolchain used for compilation automatically.
-- A phone running Android 11 (API 30) or newer. Step, sleep, and exercise data also need a Samsung phone with Samsung Health.
-- A Galaxy Watch running Wear OS, if you want watch data. Available sensors depend on the watch model.
+- A phone running Android 11 (API 30) or newer. Step, sleep, and exercise data also need a Samsung phone with Samsung Health and a `samsung` build (see [Samsung Health features](#samsung-health-features)).
+- A Galaxy Watch running Wear OS, if you want watch data. Available sensors depend on the watch model. Biosignals such as heart rate also need a `samsung` build.
 - A running [EnPULSE-backend](https://github.com/Kaist-ICLab/EnPULSE-backend) server.
 
 ## Build from source
@@ -47,14 +47,16 @@ For the backend, choose one option:
 
 Do not leave the example placeholder values in place. The app treats them as a real server.
 
-### 3. Add the Samsung Health SDKs
+### 3. (Optional) Add the Samsung Health SDKs
 
-The build needs both SDKs, and they are not included in this repository.
+Skip this step to build the `open` flavor, which has every feature except the Samsung Health sensors. To build the `samsung` flavor with them, add the SDKs. They are not included in this repository.
 
 1. Download the [Sensor SDK](https://developer.samsung.com/health/sensor/overview.html) and the [Data SDK](https://developer.samsung.com/health/data/overview.html). This requires a Samsung account.
 2. Rename the `.aar` files and place them here:
    - `samsung-health-sensor-api/samsung-health-sensor-api.aar`
    - `samsung-health-data-api/samsung-health-data-api.aar`
+
+You can add only one of them. The Sensor SDK enables the watch sensors and the Data SDK enables the phone sensors.
 
 > [!IMPORTANT]
 > Without an approved Samsung partner license, enable Developer Mode on your test phone. In Samsung Health, open **Settings**, then **About Samsung Health**, and tap the version line 10 times. Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
@@ -69,30 +71,62 @@ The phone app does not build without `app-mobile-tracker/google-services.json`. 
   cp app-mobile-tracker/google-services.json.example app-mobile-tracker/google-services.json
   ```
 
-- Or download the real file from a [Firebase](https://console.firebase.google.com/) project, with an Android app registered as `kaist.iclab.trackerSystem`.
+- Or download the real file from a [Firebase](https://console.firebase.google.com/) project, with an Android app registered as `kaist.iclab.trackerSystem` (or your own `ENPULSE_APPLICATION_ID`).
 
 See [Sign-in](app-mobile-tracker/README.md#sign-in) to set up Google sign-in for your own project. Email and password sign-in works without it.
 
 ### 5. Build and install
 
+Each app has two flavors:
+
+| Flavor | Needs the SDKs | Samsung Health sensors |
+| --- | --- | --- |
+| `open` | No | None |
+| `samsung` | Yes (step 3) | Phone: step, sleep, exercise. Watch: accelerometer, PPG, heart rate, skin temperature, EDA, stress, on-demand ECG. |
+
+The `samsung` tasks exist only when the matching SDK is in place. The commands below use `Open`; replace it with `Samsung` for the other flavor.
+
 With the phone connected:
 
 ```bash
-./gradlew :app-mobile-tracker:installDebug
+./gradlew :app-mobile-tracker:installOpenDebug
 ```
 
 With the watch connected through wireless debugging:
 
 ```bash
 adb connect <watch-ip>:<port>
-./gradlew :app-wearable-tracker:installDebug
+./gradlew :app-wearable-tracker:installOpenDebug
 ```
 
-If both devices are connected, `installDebug` installs to all of them. Disconnect the one you are not targeting.
+If both devices are connected, the install task installs to all of them. Disconnect the one you are not targeting.
 
-To build APK files instead, use `assembleDebug` or `assembleRelease`. The files are written to:
+To build APK files instead, use `assembleOpenDebug` or `assembleOpenRelease`. The files are written to:
 
-- `app-mobile-tracker/build/outputs/apk/<buildType>/EnPULSE-Mobile.apk`
-- `app-wearable-tracker/build/outputs/apk/<buildType>/EnPULSE-Watch.apk`
+- `app-mobile-tracker/build/outputs/apk/<flavor>/<buildType>/EnPULSE-Mobile.apk`
+- `app-wearable-tracker/build/outputs/apk/<flavor>/<buildType>/EnPULSE-Watch.apk`
 
-The phone and watch apps share one application ID and must be signed with the same key, or they cannot exchange data.
+The `samsung` files are named `EnPULSE-Mobile-Samsung.apk` and `EnPULSE-Watch-Samsung.apk`.
+
+To build the `open` flavor while the SDKs are in place, add `-Penpulse.samsungHealth=false`.
+
+The phone and watch apps share one application ID and must be signed with the same key, or they cannot exchange data. Install the same flavor on both.
+
+## Samsung Health features
+
+Samsung licenses the Health SDKs for development and testing only. To distribute an app built with them, you need your own Samsung Health partnership ([Sensor SDK process](https://developer.samsung.com/health/sensor/process.html), [Data SDK process](https://developer.samsung.com/health/data/process.html)), which registers your app's package name and signing key. The prebuilt EnPULSE releases are the `open` flavor for this reason.
+
+To distribute a `samsung` build:
+
+1. Apply for the partnership for the SDKs you use, with your own package name and the SHA-256 of your release key.
+2. Set your package name in `local.properties`. Both apps use it.
+
+   ```properties
+   ENPULSE_APPLICATION_ID=org.example.yourstudy
+   ```
+
+   A Gradle property (`-PENPULSE_APPLICATION_ID=...`) or an environment variable of the same name also works. If you use a real `google-services.json`, register this package name in Firebase.
+3. Sign both apps with your own release key. The `release` build type uses the debug key by default.
+4. Build and distribute `assembleSamsungRelease` for both apps.
+
+Until the partnership is approved, test with Developer Mode on (see step 3).

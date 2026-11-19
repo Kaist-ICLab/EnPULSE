@@ -7,3 +7,7 @@ sdk.dir=/path/to/your/Android/sdk
 # Supabase backend credentials (used for data collection sync and authentication)
 SUPABASE_URL=https://your-supabase-instance.url/
 SUPABASE_ANON_KEY=your_supabase_anon_public_key
+
+# Package name of both apps (optional). Change it only for a samsung build distributed under your
+# own Samsung Health partnership; it must match the package name registered there.
+# ENPULSE_APPLICATION_ID=org.example.yourstudy
