@@ -1,7 +1,5 @@
 plugins {
     id("dev.iclab.android.basic.library")
-    /* Parceler (for Samsung Health Data SDK) */
-    id("kotlin-parcelize")
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.kotlinSerialization)
 }
@@ -43,11 +41,8 @@ dependencies {
     /* On-device model */
     implementation(libs.tensorflow.lite)
 
-    // Samsung Dependencies
-    api(project(":samsung-health-data-api"))
-    // The Samsung Health data SDK uses Gson at runtime but does not declare it.
-    implementation(libs.gson)
-    api(project(":samsung-health-sensor-api"))
+    // The Samsung Health SDK sensors live in tracker-samsung-data and tracker-samsung-sensor,
+    // so this library builds without the Samsung AARs.
 
     // Testing
     testImplementation(libs.junit)

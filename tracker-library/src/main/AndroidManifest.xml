@@ -41,19 +41,8 @@
         android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
         tools:ignore="BackgroundLocationPolicy" />
 
-    <!-- Body Sensor -->
-    <uses-permission android:name="android.permission.BODY_SENSORS" />
-    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
-    <uses-permission
-        android:name="android.permission.health.READ_SKIN_TEMPERATURE"
-        tools:ignore="HealthConnectPolicy" />
-    <uses-permission
-        android:name="android.permission.health.READ_HEART_RATE"
-        tools:ignore="HealthConnectPolicy" />
-    <uses-permission
-        android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
-        tools:ignore="HealthConnectPolicy" />
-    <uses-permission android:name="com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA" />
+    <!-- Body sensor permissions are declared by tracker-samsung-sensor, the only module that
+         reads body sensors. -->
 
     <!-- Activity Recognition -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
@@ -70,11 +59,6 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
 
-
-    <queries>
-        <!-- Required for Android 11+ package visibility to interact with Samsung Health SDK -->
-        <package android:name="com.sec.android.app.shealth" />
-    </queries>
 
     <application>
         <service

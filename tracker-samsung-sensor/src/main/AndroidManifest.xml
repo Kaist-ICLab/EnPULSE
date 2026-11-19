@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Body Sensor: read by the Samsung Health Sensor SDK sensors -->
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND" />
+    <uses-permission
+        android:name="android.permission.health.READ_SKIN_TEMPERATURE"
+        tools:ignore="HealthConnectPolicy" />
+    <uses-permission
+        android:name="android.permission.health.READ_HEART_RATE"
+        tools:ignore="HealthConnectPolicy" />
+    <uses-permission
+        android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND"
+        tools:ignore="HealthConnectPolicy" />
+    <uses-permission android:name="com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA" />
+
+</manifest>
