@@ -3,7 +3,6 @@ package kaist.iclab.tracker.permission
 import android.Manifest
 import android.os.Build
 import androidx.annotation.StringRes
-import com.samsung.android.sdk.health.data.request.DataTypes
 import kaist.iclab.tracker.R
 
 /**
@@ -77,17 +76,17 @@ data class Permission(
             ),
             Permission(
                 name = "Read Steps (Samsung Health)",
-                ids = arrayOf(DataTypes.STEPS.name),
+                ids = arrayOf(HealthDataPermissions.STEPS),
                 instructionResId = R.string.instruction_samsung_health
             ),
             Permission(
                 name = "Read Sleep (Samsung Health)",
-                ids = arrayOf(DataTypes.SLEEP.name),
+                ids = arrayOf(HealthDataPermissions.SLEEP),
                 instructionResId = R.string.instruction_samsung_health
             ),
             Permission(
                 name = "Read Exercise (Samsung Health)",
-                ids = arrayOf(DataTypes.EXERCISE.name),
+                ids = arrayOf(HealthDataPermissions.EXERCISE),
                 instructionResId = R.string.instruction_samsung_health
             )
         ).toTypedArray()

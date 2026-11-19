@@ -11,12 +11,8 @@ import android.content.pm.PackageManager
 import android.health.connect.HealthPermissions
 import android.net.Uri
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,14 +23,6 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.samsung.android.sdk.health.data.HealthDataService
-import com.samsung.android.sdk.health.data.error.AuthorizationException
-import com.samsung.android.sdk.health.data.error.InvalidRequestException
-import com.samsung.android.sdk.health.data.error.PlatformInternalException
-import com.samsung.android.sdk.health.data.error.ResolvablePlatformException
-import com.samsung.android.sdk.health.data.permission.AccessType
-import com.samsung.android.sdk.health.data.request.DataTypes
-import kaist.iclab.tracker.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,12 +33,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 
+/**
+ * @param healthDataPermissionHandler checks and requests [HealthDataPermissions]. Without one,
+ *   those permissions are reported as [PermissionState.UNSUPPORTED].
+ */
 class AndroidPermissionManager(
     private val context: Context,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val healthDataPermissionHandler: HealthDataPermissionHandler? = null
 ) : PermissionManager {
     companion object {
-        private val TAG = AndroidPermissionManager::class.simpleName
         private const val PREFS_NAME = "permission_tracking"
         private const val KEY_PREFIX_REQUESTED = "permission_requested_"
         private const val KEY_PREFIX_HEALTH_STATE = "health_permission_state_"
@@ -78,11 +70,11 @@ class AndroidPermissionManager(
         )
     }
 
-    val healthDataPermission = mapOf(
-        DataTypes.STEPS.name to DataTypes.STEPS,
-        DataTypes.SLEEP.name to DataTypes.SLEEP,
-        DataTypes.EXERCISE.name to DataTypes.EXERCISE
-    )
+    private val healthDataPermissionIds = HealthDataPermissions.ALL
+
+    /** Whether this build can check and request [HealthDataPermissions]. */
+    val supportsHealthDataPermissions: Boolean
+        get() = healthDataPermissionHandler != null
 
     override fun registerPermission(newPermissions: Array<String>) {
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
@@ -90,7 +82,7 @@ class AndroidPermissionManager(
         }
 
         // If Samsung Health permissions were registered, trigger notifyChange to check their actual state
-        val hasHealthPermissions = newPermissions.any { it in healthDataPermission.keys }
+        val hasHealthPermissions = newPermissions.any { it in healthDataPermissionIds }
         if (hasHealthPermissions && activityWeakRef?.get() != null) {
             notifyChange()
         }
@@ -157,63 +149,35 @@ class AndroidPermissionManager(
     private fun notifyChange() {
         val permissions = permissionStateFlow.value.keys
         permissionStateFlow.value = permissions
-            .filter { it !in healthDataPermission.keys }.associateWith { getPermissionState(it) }
+            .filter { it !in healthDataPermissionIds }.associateWith { getPermissionState(it) }
 
         // Query Samsung Health permissions only on Samsung devices if they have been registered
-        val hasRegisteredHealthPermissions = permissions.any { it in healthDataPermission.keys }
+        val hasRegisteredHealthPermissions = permissions.any { it in healthDataPermissionIds }
         if (hasRegisteredHealthPermissions) {
-            if (HardwareAvailabilityChecker.isSamsungDevice()) {
-                querySamsungHealthPermissions()
+            val handler = healthDataPermissionHandler
+            if (handler != null && HardwareAvailabilityChecker.isSamsungDevice()) {
+                handler.queryGranted(
+                    healthDataPermissionIds,
+                    onResult = ::setHealthDataPermissionState,
+                    onUnsupported = ::setSamsungHealthPermissionsUnsupported
+                )
             } else {
                 setSamsungHealthPermissionsUnsupported()
             }
         }
     }
 
-    private fun querySamsungHealthPermissions() {
-        val store = try {
-            HealthDataService.getStore(context)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get HealthDataService store during query", e)
-            setSamsungHealthPermissionsUnsupported()
-            return
-        }
-
-        val healthDataPermissionSet = healthDataPermission.values.map {
-            com.samsung.android.sdk.health.data.permission.Permission.of(it, AccessType.READ)
-        }.toSet()
-
-        store.getGrantedPermissionsAsync(healthDataPermissionSet).setCallback(
-            Looper.getMainLooper(),
-            { res: Set<com.samsung.android.sdk.health.data.permission.Permission>
-                ->
-                setHealthDataPermissionState(healthDataPermissionSet, res)
-            },
-            { error: Throwable ->
-                if (error is AuthorizationException) {
-                    Log.w(TAG, "Samsung Health SDK Authorization Error (2003): Could not get policy. App not registered as partner. Awaiting Developer Mode.")
-                    // DO NOT set as unsupported here, so the user can still trigger the Toast and request it once dev mode is on.
-                } else {
-                    Log.e(TAG, "Error in getGrantedPermissionsAsync for Samsung Health", error)
-                }
-                
-                // In case of a serious platform error, mark as unsupported
-                if (error is PlatformInternalException) {
-                    setSamsungHealthPermissionsUnsupported()
-                }
-            }
-        )
-    }
-
     private fun setSamsungHealthPermissionsUnsupported() {
         val healthPermissionStates =
-            healthDataPermission.keys.associateWith { PermissionState.UNSUPPORTED }
+            healthDataPermissionIds.associateWith { PermissionState.UNSUPPORTED }
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
             putAll(healthPermissionStates)
         }
+        // Without a handler this build can never support them, so there is nothing to cache.
+        if (healthDataPermissionHandler == null) return
         // Cache the unsupported state
         permissionTrackingPrefs.edit {
-            healthDataPermission.keys.forEach { name ->
+            healthDataPermissionIds.forEach { name ->
                 putString("$KEY_PREFIX_HEALTH_STATE$name", PermissionState.UNSUPPORTED.name)
             }
         }
@@ -242,9 +206,9 @@ class AndroidPermissionManager(
 
     private fun getPermissionState(permission: String): PermissionState {
         // For Samsung Health permissions, check if device is Samsung
-        if (permission in healthDataPermission.keys) {
-            // If not Samsung device, mark as UNSUPPORTED
-            if (!HardwareAvailabilityChecker.isSamsungDevice()) {
+        if (permission in healthDataPermissionIds) {
+            // If this build can't handle them or the device isn't Samsung, mark as UNSUPPORTED
+            if (healthDataPermissionHandler == null || !HardwareAvailabilityChecker.isSamsungDevice()) {
                 return PermissionState.UNSUPPORTED
             }
             
@@ -267,15 +231,7 @@ class AndroidPermissionManager(
         }
     }
 
-    private fun setHealthDataPermissionState(
-        requestedPermission: Set<com.samsung.android.sdk.health.data.permission.Permission>,
-        grantedPermission: Set<com.samsung.android.sdk.health.data.permission.Permission>
-    ) {
-        val permissionMap = requestedPermission.associate { p ->
-            val state = if (p in grantedPermission) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
-            p.dataType.name to state
-        }
-
+    private fun setHealthDataPermissionState(permissionMap: Map<String, PermissionState>) {
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
             putAll(permissionMap)
         }
@@ -461,10 +417,10 @@ class AndroidPermissionManager(
             }
             callback()
         } else {
-            val normalPermission = permissions.filter { it !in healthDataPermission.keys }
-            val healthPermission = permissions.filter { it in healthDataPermission.keys }
+            val normalPermission = permissions.filter { it !in healthDataPermissionIds }
+            val healthPermission = permissions.filter { it in healthDataPermissionIds }
             requestNormalPermissions(normalPermission.toTypedArray())
-            requestHealthDataPermission(healthPermission.toTypedArray())
+            requestHealthDataPermission(healthPermission.toSet())
         }
     }
 
@@ -476,79 +432,11 @@ class AndroidPermissionManager(
         permissionLauncher?.launch(permissions)
     }
 
-    private fun requestHealthDataPermission(permissions: Array<String>) {
+    private fun requestHealthDataPermission(permissions: Set<String>) {
         if (permissions.isEmpty()) return
-        
-        val store = try {
-            HealthDataService.getStore(context)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to get HealthDataService store", e)
-            return
-        }
-
+        val handler = healthDataPermissionHandler ?: return
         val activity = getActivity() ?: return
-
-        val possiblePermission = permissions
-            .mapNotNull { id ->
-                healthDataPermission[id]?.let {
-                    com.samsung.android.sdk.health.data.permission.Permission.of(it, AccessType.READ)
-                }
-            }
-            .toSet()
-
-        if (possiblePermission.isEmpty()) {
-            return
-        }
-
-        store.getGrantedPermissionsAsync(possiblePermission).setCallback(
-            Looper.getMainLooper(),
-            { res: Set<com.samsung.android.sdk.health.data.permission.Permission> ->
-                if (res.containsAll(possiblePermission)) {
-                    setHealthDataPermissionState(possiblePermission, res)
-                } else {
-                    store.requestPermissionsAsync(possiblePermission, activity).setCallback(
-                        Looper.getMainLooper(),
-                        { res2: Set<com.samsung.android.sdk.health.data.permission.Permission> ->
-                            setHealthDataPermissionState(possiblePermission, res2)
-                        },
-                        { error: Throwable ->
-                            handleHealthDataError(error, activity)
-                        }
-                    )
-                }
-            },
-            { error: Throwable ->
-                handleHealthDataError(error, activity)
-            }
-        )
-    }
-
-    private fun handleHealthDataError(error: Throwable, activity: ComponentActivity) {
-        when (error) {
-            is ResolvablePlatformException -> {
-                if (error.hasResolution) {
-                    try {
-                        error.resolve(activity)
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to resolve health platform exception", e)
-                    }
-                }
-            }
-
-            is AuthorizationException -> {
-                Log.w(TAG, "AuthorizationException: Samsung Health Data Developer mode might be needed")
-                Handler(Looper.getMainLooper()).post {
-                    val activity = getActivity()
-                    val message = activity?.getString(R.string.msg_samsung_health_dev_mode_needed)
-                        ?: context.getString(R.string.msg_samsung_health_dev_mode_needed)
-                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                }
-            }
-            
-            is InvalidRequestException -> Log.e(TAG, "InvalidRequestException: ${error.message}")
-            is PlatformInternalException -> Log.e(TAG, "PlatformInternalException: ${error.message}")
-            else -> Log.e(TAG, "Unknown health data error: ${error.message}", error)
-        }
+        handler.request(activity, permissions, ::setHealthDataPermissionState)
     }
 
     private fun requestPackageUsageStat() {
@@ -603,16 +491,9 @@ class AndroidPermissionManager(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }
-            in healthDataPermission.keys -> {
-                // For Samsung Health permissions, try to open Samsung Health
-                try {
-                    context.packageManager.getLaunchIntentForPackage("com.sec.android.app.shealth")?.apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    } ?: createAppDetailsIntent()
-                } catch (_: Exception) {
-                    createAppDetailsIntent()
-                }
-            }
+            // For Samsung Health permissions, try to open Samsung Health
+            in healthDataPermissionIds ->
+                healthDataPermissionHandler?.settingsIntent() ?: createAppDetailsIntent()
             else -> createAppDetailsIntent()
         }
 

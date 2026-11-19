@@ -37,6 +37,7 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kaist.iclab.mobiletracker.viewmodels.settings.SettingsViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
+import kaist.iclab.tracker.permission.HealthDataPermissions
 import kaist.iclab.tracker.permission.Permission
 import kaist.iclab.tracker.permission.PermissionState
 import kaist.iclab.tracker.permission.getPermissionState
@@ -55,7 +56,11 @@ fun PermissionSettingsScreen(
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
-    val permissions = Permission.supportedPermissions.toList()
+    // Builds without the Samsung Health SDK can never grant its permissions, so hide those rows.
+    val permissions = Permission.supportedPermissions.filter { permission ->
+        permissionManager.supportsHealthDataPermissions ||
+            permission.ids.none { it in HealthDataPermissions.ALL }
+    }
     val allPermissionIds = permissions.flatMap { it.ids.toList() }
     val permissionStateMap = permissionManager.getPermissionFlow(allPermissionIds.toTypedArray())
         .collectAsState().value

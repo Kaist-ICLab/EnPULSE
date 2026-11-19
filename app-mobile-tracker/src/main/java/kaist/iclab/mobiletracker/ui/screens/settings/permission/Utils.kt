@@ -14,8 +14,8 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.samsung.android.sdk.health.data.request.DataTypes
 import kaist.iclab.mobiletracker.R
+import kaist.iclab.tracker.permission.HealthDataPermissions
 import kaist.iclab.tracker.permission.PermissionState
 
 /**
@@ -100,19 +100,19 @@ private val permissionConfigs = buildList {
     // Samsung Health Steps
     add(
         PermissionConfig(
-            permissionId = DataTypes.STEPS.name,
+            permissionId = HealthDataPermissions.STEPS,
             icon = Icons.AutoMirrored.Filled.DirectionsWalk
         )
     )
     add(
         PermissionConfig(
-            permissionId = DataTypes.SLEEP.name,
+            permissionId = HealthDataPermissions.SLEEP,
             icon = Icons.Filled.Bedtime
         )
     )
     add(
         PermissionConfig(
-            permissionId = DataTypes.EXERCISE.name,
+            permissionId = HealthDataPermissions.EXERCISE,
             icon = Icons.Filled.FitnessCenter
         )
     )
@@ -155,9 +155,9 @@ fun getPermissionDescription(context: Context, permissionId: String): String {
         Manifest.permission.ACTIVITY_RECOGNITION -> R.string.permission_desc_activity_recognition
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_desc_usage_stats
         Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> R.string.permission_desc_ignore_battery_optimization
-        DataTypes.STEPS.name -> R.string.permission_desc_steps
-        DataTypes.SLEEP.name -> R.string.permission_desc_sleep
-        DataTypes.EXERCISE.name -> R.string.permission_desc_exercise
+        HealthDataPermissions.STEPS -> R.string.permission_desc_steps
+        HealthDataPermissions.SLEEP -> R.string.permission_desc_sleep
+        HealthDataPermissions.EXERCISE -> R.string.permission_desc_exercise
         else -> null
     }
 
@@ -180,9 +180,9 @@ fun getPermissionName(context: Context, permissionId: String): String {
         Manifest.permission.ACTIVITY_RECOGNITION -> R.string.permission_name_activity_recognition
         Manifest.permission.PACKAGE_USAGE_STATS -> R.string.permission_name_usage_stats
         Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> R.string.permission_name_ignore_battery_optimization
-        DataTypes.STEPS.name -> R.string.permission_name_steps
-        DataTypes.SLEEP.name -> R.string.permission_name_sleep
-        DataTypes.EXERCISE.name -> R.string.permission_name_exercise
+        HealthDataPermissions.STEPS -> R.string.permission_name_steps
+        HealthDataPermissions.SLEEP -> R.string.permission_name_sleep
+        HealthDataPermissions.EXERCISE -> R.string.permission_name_exercise
         else -> null
     }
 

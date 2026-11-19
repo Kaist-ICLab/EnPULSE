@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import com.samsung.android.sdk.health.data.request.DataTypes
 
 /**
  * Utility class for checking hardware availability for permissions that require specific hardware.
@@ -30,9 +29,9 @@ object HardwareAvailabilityChecker {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION -> isLocationHardwareAvailable(context)
 
-            DataTypes.STEPS.name,
-            DataTypes.SLEEP.name,
-            DataTypes.EXERCISE.name -> isSamsungDevice() // Samsung Health requires Samsung device
+            HealthDataPermissions.STEPS,
+            HealthDataPermissions.SLEEP,
+            HealthDataPermissions.EXERCISE -> isSamsungDevice() // Samsung Health requires Samsung device
             else -> true // Default to true for permissions that don't require hardware checks
         }
     }
