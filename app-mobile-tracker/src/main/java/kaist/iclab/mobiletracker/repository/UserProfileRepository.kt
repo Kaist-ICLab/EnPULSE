@@ -34,11 +34,6 @@ interface UserProfileRepository {
     suspend fun syncFullStudyConfig(): Result<ProfileData?>
 
     /**
-     * Leave the current campaign by clearing the profile's campaign ID.
-     */
-    suspend fun leaveCampaign(): Result<Unit>
-
-    /**
      * Record on the server that the user has replaced their initial password, and update the
      * cached profile to match.
      */

@@ -170,17 +170,6 @@ class UserProfileRepositoryImpl(
         return profileResult
     }
 
-    override suspend fun leaveCampaign(): Result<Unit> {
-        // Leaving succeeds server-side, but the local re-sync that clears the old triggers is
-        // refused while collecting, which would leave the old campaign's triggers running.
-        if (backgroundController.controllerStateFlow.value.flag == ControllerState.FLAG.RUNNING) {
-            return Result.Error(AppError.CollectionRunning("Cannot leave a campaign while data collection is running"))
-        }
-        val uuid = getCurrentUuid()
-            ?: return Result.Error(AppError.Unknown("User not logged in"))
-        return profileService.leaveCampaign(uuid)
-    }
-
     override suspend fun markPasswordReset(): Result<Unit> {
         val uuid = getCurrentUuid()
             ?: return Result.Error(AppError.Unknown("User not logged in"))

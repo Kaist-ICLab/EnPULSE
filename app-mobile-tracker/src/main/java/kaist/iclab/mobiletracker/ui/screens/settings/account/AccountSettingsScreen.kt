@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Assignment
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -47,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.navigation.Screen
-import kaist.iclab.mobiletracker.ui.components.campaign.CampaignDialog
 import kaist.iclab.mobiletracker.ui.components.logout.LogoutDialog
 import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
@@ -73,23 +71,15 @@ fun AccountSettingsScreen(
     val context = LocalContext.current
     val userState by authViewModel.userState.collectAsState()
 
-    // Campaign state from ViewModel
-    val campaigns by accountSettingsViewModel.campaigns.collectAsState()
-    val isLoadingCampaigns by accountSettingsViewModel.isLoadingCampaigns.collectAsState()
-    val campaignError by accountSettingsViewModel.campaignError.collectAsState()
-    val selectedCampaignId by accountSettingsViewModel.selectedCampaignId.collectAsState()
     val selectedCampaignName by accountSettingsViewModel.selectedCampaignName.collectAsState()
 
     // Data collection running state from ViewModel
     val isDataCollectionRunning by accountSettingsViewModel.isDataCollectionRunning.collectAsState()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var showCampaignDialog by remember { mutableStateOf(false) }
     var showReloadDialog by remember { mutableStateOf(false) }
-    var showLeaveDialog by remember { mutableStateOf(false) }
 
     val isReloadingConfig by accountSettingsViewModel.isReloadingConfig.collectAsState()
-    val isLeavingCampaign by accountSettingsViewModel.isLeavingCampaign.collectAsState()
 
     // Collect one-shot UI events (toasts) from the ViewModel
     LaunchedEffect(Unit) {
@@ -101,14 +91,6 @@ fun AccountSettingsScreen(
         }
     }
 
-    // Fetch campaigns when dialog is shown (refresh in case new campaigns were added)
-    // Note: Initial data (campaigns + user campaign) is already loaded in ViewModel init
-    LaunchedEffect(showCampaignDialog) {
-        if (showCampaignDialog) {
-            accountSettingsViewModel.fetchCampaigns()
-        }
-    }
-
     // Logout confirmation dialog
     if (showLogoutDialog) {
         LogoutDialog(
@@ -116,23 +98,6 @@ fun AccountSettingsScreen(
             onConfirm = {
                 authViewModel.logout()
                 showLogoutDialog = false
-            }
-        )
-    }
-
-    // Campaign selection dialog
-    if (showCampaignDialog) {
-        CampaignDialog(
-            campaigns = campaigns,
-            selectedCampaignId = selectedCampaignId,
-            isLoading = isLoadingCampaigns,
-            error = campaignError,
-            onDismiss = { showCampaignDialog = false },
-            onSelect = { campaignId ->
-                accountSettingsViewModel.selectCampaign(campaignId)
-            },
-            onJoinCampaign = { campaignId, password ->
-                accountSettingsViewModel.joinCampaign(campaignId, password)
             }
         )
     }
@@ -163,36 +128,6 @@ fun AccountSettingsScreen(
             ),
             onDismiss = {
                 if (!isReloadingConfig) showReloadDialog = false
-            }
-        )
-    }
-
-    // Leave Campaign confirmation dialog
-    if (showLeaveDialog) {
-        PopupDialog(
-            title = stringResource(R.string.leave_campaign_dialog_title),
-            content = {
-                Text(
-                    text = stringResource(R.string.leave_campaign_dialog_message),
-                    fontSize = 14.sp,
-                    color = Color(0xFF6B7280),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
-                )
-            },
-            primaryButton = DialogButtonConfig(
-                text = stringResource(R.string.logout_confirm),
-                onClick = {
-                    accountSettingsViewModel.leaveCampaign()
-                    showLeaveDialog = false
-                },
-            ),
-            secondaryButton = DialogButtonConfig(
-                text = stringResource(R.string.logout_close),
-                onClick = { showLeaveDialog = false },
-                isPrimary = false
-            ),
-            onDismiss = {
-                if (!isLeavingCampaign) showLeaveDialog = false
             }
         )
     }
@@ -294,19 +229,14 @@ fun AccountSettingsScreen(
                     colors = CardDefaults.cardColors(containerColor = AppColors.White),
                     shape = SettingsStyles.CARD_SHAPE
                 ) {
+                    // Read-only: participants can't switch or leave their campaign in the app.
                     CampaignMenuItem(
                         title = stringResource(R.string.menu_campaign),
                         description = selectedCampaignName
                             ?: stringResource(R.string.campaign_no_campaign_joined),
                         hasSelectedExperiment = selectedCampaignName != null,
-                        isEnabled = !isDataCollectionRunning,
-                        onClick = {
-                            if (isDataCollectionRunning) {
-                                AppToast.show(context, R.string.turn_off_data_collection_first)
-                            } else {
-                                showCampaignDialog = true
-                            }
-                        }
+                        isEnabled = true,
+                        onClick = null
                     )
 
                     // Reload Config Menu Item
@@ -327,26 +257,6 @@ fun AccountSettingsScreen(
                                     AppToast.show(context, R.string.turn_off_data_collection_first)
                                 } else {
                                     showReloadDialog = true
-                                }
-                            }
-                        )
-
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            thickness = 0.5.dp,
-                            color = AppColors.BorderLight
-                        )
-                        CampaignMenuItem(
-                            title = stringResource(R.string.menu_leave_campaign),
-                            description = stringResource(R.string.menu_leave_campaign_desc),
-                            icon = Icons.AutoMirrored.Filled.Logout,
-                            hasSelectedExperiment = false,
-                            isEnabled = !isDataCollectionRunning && !isLeavingCampaign,
-                            onClick = {
-                                if (isDataCollectionRunning) {
-                                    AppToast.show(context, R.string.turn_off_data_collection_first)
-                                } else {
-                                    showLeaveDialog = true
                                 }
                             }
                         )
@@ -388,7 +298,7 @@ private fun CampaignMenuItem(
     description: String,
     hasSelectedExperiment: Boolean,
     isEnabled: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.AutoMirrored.Filled.Assignment,
 ) {
@@ -396,7 +306,7 @@ private fun CampaignMenuItem(
         modifier = modifier
             .fillMaxWidth()
             .alpha(if (isEnabled) 1f else 0.6f)
-            .clickable { onClick() }
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(
                 horizontal = SettingsStyles.MENU_ITEM_HORIZONTAL_PADDING,
                 vertical = 4.dp
@@ -431,7 +341,7 @@ private fun CampaignMenuItem(
                 )
             )
         }
-        if (isEnabled) {
+        if (isEnabled && onClick != null) {
             Icon(
                 imageVector = Icons.Filled.ChevronRight,
                 contentDescription = null,

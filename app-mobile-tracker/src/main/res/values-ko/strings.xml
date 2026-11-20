@@ -68,7 +68,6 @@
     <string name="menu_language">언어</string>
 
     <!-- Campaign Dialog -->
-    <string name="campaign_dialog_title">실험 그룹</string>
     <string name="campaign_dialog_select">선택</string>
     <string name="campaign_dialog_cancel">취소</string>
     <string name="campaign_password_title">비밀번호 입력</string>
@@ -191,12 +190,6 @@
     <string name="server_unreachable_continue_offline">오프라인으로 계속</string>
     <string name="toast_success_saved">설정을 성공적으로 불러왔습니다.</string>
 
-    <string name="menu_leave_campaign">캠페인 나가기</string>
-    <string name="menu_leave_campaign_desc">현재 캠페인에서 나갑니다</string>
-    <string name="leave_campaign_dialog_title">캠페인 나가기</string>
-    <string name="leave_campaign_dialog_message">정말 나가시겠습니까? 캠페인 설정이 삭제되고 데이터 수집이 중지됩니다. 언제든지 다시 참여할 수 있습니다.</string>
-    <string name="toast_campaign_left">캠페인에서 나갔습니다</string>
-    <string name="toast_campaign_left_sync_failed">캠페인에서 나갔지만 이 휴대폰을 업데이트하지 못했습니다. \"설정 새로고침 및 동기화\"를 눌러 주세요.</string>
     <string name="toast_config_download_failed">캠페인을 다운로드하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.</string>
 
     <!-- Sensor Descriptions -->
@@ -332,8 +325,6 @@
 
 
     <!-- Toast Messages -->
-    <string name="toast_experiment_group_selected">실험 그룹이 성공적으로 선택되었습니다</string>
-    <string name="toast_experiment_group_selected_partial_error">실험 그룹은 선택되었으나, 설문 동기화에 실패했습니다</string>
     <string name="toast_data_deleted">데이터가 성공적으로 삭제되었습니다</string>
     <string name="toast_sensor_data_deleted">센서 데이터가 성공적으로 삭제되었습니다</string>
     <string name="toast_sensor_data_uploaded">데이터가 성공적으로 업로드되었습니다</string>

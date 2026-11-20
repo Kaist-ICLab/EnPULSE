@@ -69,7 +69,6 @@
     <string name="menu_language">Language</string>
 
     <!-- Campaign Dialog -->
-    <string name="campaign_dialog_title">Experiment Group</string>
     <string name="campaign_dialog_select">Select</string>
     <string name="campaign_dialog_cancel">Cancel</string>
     <string name="campaign_password_title">Enter Password</string>
@@ -193,12 +192,6 @@
     <string name="server_unreachable_continue_offline">Continue offline</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
-    <string name="menu_leave_campaign">Leave Campaign</string>
-    <string name="menu_leave_campaign_desc">Leave your current campaign</string>
-    <string name="leave_campaign_dialog_title">Leave Campaign</string>
-    <string name="leave_campaign_dialog_message">Are you sure you want to leave? Your campaign configuration will be removed and data collection will stop. You can join a campaign again anytime.</string>
-    <string name="toast_campaign_left">You have left the campaign</string>
-    <string name="toast_campaign_left_sync_failed">You left the campaign, but this phone couldn\'t update. Tap Reload &amp; Sync Config.</string>
     <string name="toast_config_download_failed">Couldn\'t download the campaign. Check the connection and try again.</string>
 
     <!-- Sensor Descriptions -->
@@ -312,8 +305,6 @@
 
 
     <!-- Toast Messages -->
-    <string name="toast_experiment_group_selected">Experiment group selected successfully</string>
-    <string name="toast_experiment_group_selected_partial_error">Experiment group selected, but surveys failed to sync</string>
     <string name="toast_data_deleted">Data deleted successfully</string>
     <string name="toast_sensor_data_deleted">Sensor data deleted successfully</string>
     <string name="toast_sensor_data_uploaded">Data uploaded successfully</string>
