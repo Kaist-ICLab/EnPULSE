@@ -1,25 +1,14 @@
 package kaist.iclab.mobiletracker.auth
 
-import android.app.Activity
 import android.content.Context
 import android.util.Log
-import androidx.credentials.Credential
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.exception.AuthErrorCode
 import io.github.jan.supabase.auth.exception.AuthRestException
 import io.github.jan.supabase.exceptions.HttpRequestException
-import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.R
@@ -45,17 +34,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Supabase-based authentication implementation using Google Sign-In.
- * Uses CredentialManager to get Google ID token and authenticates with Supabase Auth.
- *
- * Also implements [EmailPasswordAuthentication] as a fallback for networks where Google's
- * identity endpoints are unreachable but the project's own Supabase instance is not: the
- * Google path needs CredentialManager to talk to Google, whereas [loginWithEmail] only ever
- * talks to the configured backend.
+ * Supabase Auth implementation that signs users in with an email and password.
  */
 class SupabaseAuth(
     context: Context,
-    private val clientId: String,
     private val supabaseHelper: SupabaseHelper,
     private val syncTimestampService: SyncTimestampService
 ) : Authentication, EmailPasswordAuthentication {
@@ -67,7 +49,6 @@ class SupabaseAuth(
     private val supabaseClient get() = supabaseHelper.supabaseClient
     // Application context: this object outlives the Activity it is created with.
     private val appContext = context.applicationContext
-    private val credentialManager = CredentialManager.create(context)
     private val authScope = ProcessLifecycleOwner.get().lifecycleScope
 
     private val _userStateFlow = MutableStateFlow(
@@ -175,45 +156,8 @@ class SupabaseAuth(
         return SupabaseSessionHelper.getUuid(supabaseClient)
     }
 
-    override suspend fun login(activity: Activity) {
-        val request = buildGoogleIdTokenCredentialRequest()
-        try {
-            val result = credentialManager.getCredential(
-                request = request,
-                context = activity
-            )
-            handleCredential(result.credential)
-        } catch (e: GetCredentialException) {
-            Log.e(TAG, "Login failed: ${e.message}", e)
-
-            // Handle specific error cases
-            // Check for reauth error in both errorMessage and exception message
-            val errorMessage = when (e) {
-                is GetCredentialCancellationException if (
-                        e.errorMessage?.contains("reauth", ignoreCase = true) == true ||
-                                e.message?.contains("reauth", ignoreCase = true) == true ||
-                                e.message?.contains("[16]", ignoreCase = false) == true
-                        ) -> {
-                    "Login failed. Please try again"
-                }
-
-                is GetCredentialCancellationException -> {
-                    "Login was cancelled. Please try again."
-                }
-
-                else -> {
-                    "Login failed: ${e.message}"
-                }
-            }
-
-            _userStateFlow.value = createErrorState(errorMessage)
-        }
-    }
-
     /**
-     * Sign in against the configured Supabase instance with an email and password, with no
-     * Google round trip anywhere in the path. Intended for networks that can reach the
-     * backend but not Google's identity endpoints.
+     * Sign in against the configured Supabase instance with an email and password.
      *
      * Requires email/password to be enabled on the Supabase project and the account to
      * already exist; this deliberately does not sign new users up.
@@ -306,15 +250,6 @@ class SupabaseAuth(
             attemptLogoutStep("clear the local session") { supabaseClient.auth.clearSession() }
         }
 
-        // Clear credential state from all credential providers
-        attemptLogoutStep("clear stored credentials") {
-            SupabaseLoadingInterceptor.withLoading {
-                credentialManager.clearCredentialState(
-                    androidx.credentials.ClearCredentialStateRequest()
-                )
-            }
-        }
-
         // Clear cached UUID
         syncTimestampService.clearUserUuid()
 
@@ -335,16 +270,6 @@ class SupabaseAuth(
             Log.w(TAG, "Logout could not $step: ${e.message}", e)
             false
         }
-    }
-
-    /**
-     * Build the Google ID token credential request
-     */
-    private fun buildGoogleIdTokenCredentialRequest(): GetCredentialRequest {
-        val googleIdOption = GetSignInWithGoogleOption.Builder(clientId).build()
-        return GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
     }
 
     /**
@@ -377,48 +302,13 @@ class SupabaseAuth(
     }
 
     /**
-     * Handle the credential from CredentialManager and authenticate with Supabase
-     */
-    private suspend fun handleCredential(credential: Credential) {
-        if (credential !is CustomCredential ||
-            credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-        ) {
-            Log.e(TAG, "Unexpected credential type: ${credential::class.simpleName}")
-            _userStateFlow.value = createErrorState("Unexpected credential type")
-            return
-        }
-
-        try {
-            val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
-            authenticateWithSupabase(googleCredential.idToken)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error processing Google credential: ${e.message}", e)
-            _userStateFlow.value =
-                createErrorState("Failed to process Google credential: ${e.message}")
-        }
-    }
-
-    /**
-     * Authenticate with Supabase using Google ID token
-     */
-    private suspend fun authenticateWithSupabase(googleIdToken: String) {
-        signInAndPublish("Supabase authentication failed") {
-            supabaseClient.auth.signInWith(IDToken) {
-                idToken = googleIdToken
-                provider = Google
-            }
-        }
-    }
-
-    /**
      * Run [signIn] behind the loading overlay, then publish the resulting session: cache the
-     * UUID for background operations and push the new [UserState]. Shared by every sign-in
-     * path so they all persist and report a session identically; [errorLabel] prefixes the
+     * UUID for background operations and push the new [UserState]. [errorLabel] prefixes the
      * log line, and [userMessage] turns a failure into the text shown to the user.
      */
     private suspend fun signInAndPublish(
         errorLabel: String,
-        userMessage: (Exception) -> String = { "$errorLabel: ${it.message}" },
+        userMessage: (Exception) -> String,
         signIn: suspend () -> Unit
     ) {
         SupabaseLoadingInterceptor.withLoading {

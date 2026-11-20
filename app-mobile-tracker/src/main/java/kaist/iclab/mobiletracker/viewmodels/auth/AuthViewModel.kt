@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.viewmodels.auth
 
-import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -30,7 +29,7 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel for authentication and user profile management.
  *
- * Handles Google Sign-In authentication flow, token management, and user profile
+ * Handles email/password sign-in, token management, and user profile
  * synchronization with Supabase. Automatically:
  * - Requests token after successful login
  * - Saves token to repository for persistence
@@ -70,7 +69,8 @@ class AuthViewModel(
     /**
      * Whether the user must replace their initial password before using the app: the profile
      * says they haven't yet (`reset_password` is false) and they signed in with a password.
-     * Google sign-ins have no password to change, so they are never sent there.
+     * A session from another provider (e.g. one restored from an older app version) has no
+     * password to change, so it is never sent there.
      */
     val needsPasswordReset: StateFlow<Boolean> =
         combine(userState, userProfile) { state, profile -> requiresPasswordReset(state, profile) }
@@ -99,7 +99,7 @@ class AuthViewModel(
         }
     private var lastSavedToken: String? = null
 
-    // Firebase/Supabase refreshes the session token roughly hourly, which re-emits userState
+    // Supabase refreshes the session token roughly hourly, which re-emits userState
     // with a new, different token — not just a fresh login. Without this, every refresh re-ran
     // the full campaign sync below, and if data collection was already running that surfaced a
     // "Data collection is still running" toast to staff once an hour.
@@ -240,27 +240,6 @@ class AuthViewModel(
         _serverUnreachable.value = null
     }
 
-    fun login(activity: Activity) {
-        viewModelScope.launch {
-            try {
-                authentication.login(activity)
-            } catch (e: Exception) {
-                Log.e(TAG, "Login error: ${e.message}", e)
-                _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_login_failed))
-            }
-        }
-    }
-
-    /**
-     * Whether the active [Authentication] can sign in with an email and password, which
-     * decides if the login screen offers that fallback at all.
-     */
-    val supportsEmailLogin: Boolean = authentication is EmailPasswordAuthentication
-
-    /**
-     * Sign in with email and password instead of Google. Useful where Google's identity
-     * endpoints are unreachable but the configured backend is not.
-     */
     fun loginWithEmail(email: String, password: String) {
         val emailAuth = authentication as? EmailPasswordAuthentication
         if (emailAuth == null) {

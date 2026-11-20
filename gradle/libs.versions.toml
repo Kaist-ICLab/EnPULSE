@@ -26,12 +26,8 @@ wearInput = "1.2.0"
 wearToolingPreview = "1.0.0"
 composeMaterial = "1.11.4"
 composeMaterialIconsExtended = "1.7.8"
-firebase-bom = "34.16.0"
 navigationCompose = "2.9.8"
-google-services-auth = "4.5.0"
 
-androidx-credentials = "1.6.0"
-googleid = "1.2.0"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
@@ -89,14 +85,6 @@ wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview",
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
 
-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
-
-# Google Authentication
-firebase-auth = { module = "com.google.firebase:firebase-auth" }
-androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
-androidx-credentials-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleid" }
-
 android-gms-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 android-gms-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearables" }
 
@@ -127,12 +115,6 @@ androidx = [
     "androidx-appcompat",
     "androidx-lifecycle-runtime-ktx",
 ]
-auth = [
-    "firebase-auth",
-    "androidx-credentials",
-    "androidx-credentials-auth",
-    "googleid",
-]
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -140,6 +122,5 @@ jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "k
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-googleServices = { id = "com.google.gms.google-services", version.ref = "google-services-auth" }
 objectbox = { id = "io.objectbox", version.ref = "objectbox" }
 kapt = { id = "com.android.legacy-kapt", version.ref = "agp" }

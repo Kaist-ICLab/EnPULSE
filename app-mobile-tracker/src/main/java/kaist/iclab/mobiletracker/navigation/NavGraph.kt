@@ -182,18 +182,12 @@ fun NavGraph(
     ) {
         composable(route = Screen.Login.route) {
             LoginScreen(
-                onSignInWithGoogle = {
-                    if (activity != null) {
-                        authViewModel.login(activity)
-                    }
-                },
                 onNavigateToLanguage = {
                     navController.navigate(Screen.Language.route)
                 },
                 onNavigateToServerConnection = {
                     navController.navigate(Screen.ServerConnection.route)
                 },
-                showEmailLogin = authViewModel.supportsEmailLogin,
                 onSignInWithEmail = { email, password ->
                     authViewModel.loginWithEmail(email, password)
                 },

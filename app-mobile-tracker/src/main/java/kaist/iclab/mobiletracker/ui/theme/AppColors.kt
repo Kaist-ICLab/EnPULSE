@@ -31,12 +31,6 @@ object AppColors {
     val BorderLight = Color(0xFFE0E0E0) // Light gray border
     val BorderDark = Color(0xFFB0B0B0) // Darker gray border
 
-    // Google Sign-In button colors
-    val GoogleBlue = Color(0xFF4285F4)
-    val GoogleRed = Color(0xFFEA4335)
-    val GoogleYellow = Color(0xFFFBBC04)
-    val GoogleGreen = Color(0xFF34A853)
-
     // Permission status colors
     val ErrorColor = Color(0xFFDC2626) // Red color for error/denied states
 

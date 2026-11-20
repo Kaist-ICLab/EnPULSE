@@ -11,7 +11,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
@@ -22,7 +21,6 @@ import kaist.iclab.mobiletracker.viewmodels.auth.AuthViewModel
 import kaist.iclab.tracker.permission.AndroidPermissionManager
 import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
-import org.koin.core.parameter.parametersOf
 
 class MainActivity : ComponentActivity() {
     private val permissionManager by inject<AndroidPermissionManager>()
@@ -53,10 +51,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun AppContent() {
-        val serverClientId = remember { getString(R.string.default_web_client_id) }
-        val authViewModel: AuthViewModel = koinViewModel(
-            parameters = { parametersOf(this@MainActivity, serverClientId) }
-        )
+        val authViewModel: AuthViewModel = koinViewModel()
 
         val userState by authViewModel.userState.collectAsState()
         val userProfile by authViewModel.userProfile.collectAsState()

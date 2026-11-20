@@ -16,7 +16,7 @@ Packages are under `src/main/java/kaist/iclab/tracker/`:
 | `storage` | Storage interfaces and Couchbase implementations for configuration and state |
 | `sync` | Data channel interfaces and the BLE implementation, built on the Wearable Data Layer |
 | `trigger` | Trigger engine that evaluates rules against sensor state and runs actions |
-| `auth` | `Authentication` interfaces and `GoogleAuth` |
+| `auth` | `Authentication` and `EmailPasswordAuthentication` interfaces |
 
 The library does not store sensor data itself. Each sensor emits entities to its listeners, and the app decides where to store them. Both EnPULSE apps use ObjectBox.
 

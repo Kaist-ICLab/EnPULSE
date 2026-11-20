@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.ui.screens.login
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
@@ -48,17 +46,13 @@ import kaist.iclab.mobiletracker.ui.theme.AppColors
 import kaist.iclab.mobiletracker.utils.AppToast
 
 /**
- * @param showEmailLogin whether the email/password form is offered. When it is, it is the
- *   default sign-in method and the Google button follows below it.
  * @param errorMessage the latest sign-in error, shown under the email form.
  */
 @Composable
 fun LoginScreen(
-    onSignInWithGoogle: () -> Unit,
     onNavigateToLanguage: () -> Unit,
     onNavigateToServerConnection: () -> Unit,
-    showEmailLogin: Boolean = false,
-    onSignInWithEmail: (String, String) -> Unit = { _, _ -> },
+    onSignInWithEmail: (String, String) -> Unit,
     errorMessage: String? = null
 ) {
     val context = LocalContext.current
@@ -67,28 +61,23 @@ fun LoginScreen(
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    // Hides an error once the user edits the form, or one left over from before this screen
-    // (or from a Google attempt), since the error line belongs to the email form.
+    // Hides an error once the user edits the form, or one left over from before this screen.
     var errorHidden by remember { mutableStateOf(true) }
     val focusManager = LocalFocusManager.current
 
-    // Both sign-in paths talk to the configured backend, so neither is worth attempting
-    // before a server is set. Sends the user to the server screen instead.
-    fun ifConfigured(action: () -> Unit) {
-        if (!configManager.isConfigured()) {
-            AppToast.show(context, R.string.login_not_configured_error)
-            onNavigateToServerConnection()
-        } else {
-            action()
-        }
-    }
-
     // Closes the keyboard first: it would otherwise cover both the toast and the error line.
+    // Sign-in talks to the configured backend, so without a server set it sends the user to
+    // the server screen instead.
     fun submitEmail() {
         if (email.isBlank() || password.isEmpty()) return
         focusManager.clearFocus()
         errorHidden = false
-        ifConfigured { onSignInWithEmail(email, password) }
+        if (!configManager.isConfigured()) {
+            AppToast.show(context, R.string.login_not_configured_error)
+            onNavigateToServerConnection()
+        } else {
+            onSignInWithEmail(email, password)
+        }
     }
 
     Box(
@@ -160,103 +149,63 @@ fun LoginScreen(
                 )
             }
             Spacer(modifier = Modifier.height(Styles.CONTENT_SPACING))
-            // Email is the default sign-in method; Google follows below it. Backends without
-            // email support only get the Google button.
-            if (showEmailLogin) {
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        errorHidden = true
-                    },
-                    label = { Text(stringResource(R.string.login_email_label)) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                        errorHidden = true
-                    },
-                    label = { Text(stringResource(R.string.login_password_label)) },
-                    singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(onDone = { submitEmail() }),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                if (errorMessage != null && !errorHidden) {
-                    Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
-                    Text(
-                        text = errorMessage,
-                        color = AppColors.ErrorColor,
-                        fontSize = Styles.FORM_LABEL_FONT_SIZE,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
-                Button(
-                    onClick = { submitEmail() },
-                    enabled = email.isNotBlank() && password.isNotEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(Styles.BUTTON_HEIGHT),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.PrimaryColor,
-                        contentColor = Color.White
-                    ),
-                    shape = Styles.BUTTON_SHAPE
-                ) {
-                    Text(
-                        text = stringResource(R.string.login_email_submit),
-                        fontSize = Styles.BUTTON_TEXT_FONT_SIZE
-                    )
-                }
-                Spacer(modifier = Modifier.height(Styles.FORM_SECTION_SPACING))
-            }
-            Button(
-                onClick = {
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    email = it
                     errorHidden = true
-                    ifConfigured { onSignInWithGoogle() }
                 },
+                label = { Text(stringResource(R.string.login_email_label)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    errorHidden = true
+                },
+                label = { Text(stringResource(R.string.login_password_label)) },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = { submitEmail() }),
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (errorMessage != null && !errorHidden) {
+                Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
+                Text(
+                    text = errorMessage,
+                    color = AppColors.ErrorColor,
+                    fontSize = Styles.FORM_LABEL_FONT_SIZE,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(modifier = Modifier.height(Styles.FORM_FIELD_SPACING))
+            Button(
+                onClick = { submitEmail() },
+                enabled = email.isNotBlank() && password.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(Styles.BUTTON_HEIGHT),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color.Black
+                    containerColor = AppColors.PrimaryColor,
+                    contentColor = Color.White
                 ),
-                border = BorderStroke(Styles.BUTTON_BORDER_WIDTH, AppColors.BorderLight),
                 shape = Styles.BUTTON_SHAPE
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Google "G" logo
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_google_logo),
-                        contentDescription = "Google Logo",
-                        modifier = Modifier.size(Styles.BUTTON_ICON_SIZE),
-                        tint = Color.Unspecified
-                    )
-                    Spacer(modifier = Modifier.width(Styles.BUTTON_ICON_TITLE_SPACING))
-                    Text(
-                        text = stringResource(R.string.sign_in_with_google),
-                        fontSize = Styles.BUTTON_TEXT_FONT_SIZE,
-                        color = Color.Black
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.login_email_submit),
+                    fontSize = Styles.BUTTON_TEXT_FONT_SIZE
+                )
             }
         }
     }

@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">EnPULSE</string>
-    <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
-
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_data">Data</string>
@@ -31,7 +29,6 @@
     <string name="version_label">Version</string>
     <string name="about_description">A mobile tracking application for research data collection</string>
     <string name="sign_out">Sign Out</string>
-    <string name="sign_in_with_google">Sign in with Google</string>
     <string name="login_email_label">Email</string>
     <string name="login_password_label">Password</string>
     <string name="login_email_submit">Sign in</string>
