@@ -7,6 +7,7 @@ package kaist.iclab.mobiletracker.navigation
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Onboarding : Screen("onboarding")
+    object ChangePassword : Screen("change_password")
 
     // Main tabs
     object Home : Screen("home")

@@ -1,7 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">EnPULSE</string>
-    <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
-
     <!-- Navigation -->
     <string name="nav_home">홈</string>
     <string name="nav_data">데이터</string>
@@ -30,13 +28,24 @@
     <string name="version_label">버전</string>
     <string name="about_description">연구 데이터 수집을 위한 모바일 추적 애플리케이션</string>
     <string name="sign_out">로그아웃</string>
-    <string name="sign_in_with_google">Google로 로그인</string>
-    <string name="sign_in_with_email">이메일로 로그인</string>
     <string name="login_email_label">이메일</string>
     <string name="login_password_label">비밀번호</string>
     <string name="login_email_submit">로그인</string>
-    <string name="login_use_google_instead">Google로 로그인하기</string>
     <string name="login_not_configured_error">서버 연결을 먼저 구성해 주세요.</string>
+    <string name="change_password_title">새 비밀번호 설정</string>
+    <string name="change_password_description">계정이 초기 비밀번호로 생성되었습니다. 계속하려면 새 비밀번호를 설정해 주세요.</string>
+    <string name="change_password_new_label">새 비밀번호</string>
+    <string name="change_password_confirm_label">새 비밀번호 확인</string>
+    <string name="change_password_submit">비밀번호 변경</string>
+    <string name="change_password_mismatch">비밀번호가 일치하지 않습니다.</string>
+    <string name="change_password_error_weak">비밀번호가 너무 약합니다: %1$s</string>
+    <string name="change_password_error_same">현재 비밀번호와 다른 비밀번호를 입력해 주세요.</string>
+    <string name="change_password_error_reauth">비밀번호를 변경하려면 로그아웃 후 다시 로그인해 주세요.</string>
+    <string name="change_password_error_rate_limit">시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요.</string>
+    <string name="change_password_error_with_detail">비밀번호 변경에 실패했습니다: %1$s</string>
+    <string name="change_password_error_network">서버에 연결할 수 없습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="change_password_error_generic">비밀번호 변경에 실패했습니다. 다시 시도해 주세요.</string>
+    <string name="toast_password_flag_failed">비밀번호는 변경되었지만 서버에 기록하지 못했습니다. 다시 시도해 주세요.</string>
 
     <!-- Enable Tracker -->
     <string name="enable_tracker_title">데이터 수집 시작</string>
@@ -59,7 +68,6 @@
     <string name="menu_language">언어</string>
 
     <!-- Campaign Dialog -->
-    <string name="campaign_dialog_title">실험 그룹</string>
     <string name="campaign_dialog_select">선택</string>
     <string name="campaign_dialog_cancel">취소</string>
     <string name="campaign_password_title">비밀번호 입력</string>
@@ -182,12 +190,6 @@
     <string name="server_unreachable_continue_offline">오프라인으로 계속</string>
     <string name="toast_success_saved">설정을 성공적으로 불러왔습니다.</string>
 
-    <string name="menu_leave_campaign">캠페인 나가기</string>
-    <string name="menu_leave_campaign_desc">현재 캠페인에서 나갑니다</string>
-    <string name="leave_campaign_dialog_title">캠페인 나가기</string>
-    <string name="leave_campaign_dialog_message">정말 나가시겠습니까? 캠페인 설정이 삭제되고 데이터 수집이 중지됩니다. 언제든지 다시 참여할 수 있습니다.</string>
-    <string name="toast_campaign_left">캠페인에서 나갔습니다</string>
-    <string name="toast_campaign_left_sync_failed">캠페인에서 나갔지만 이 휴대폰을 업데이트하지 못했습니다. \"설정 새로고침 및 동기화\"를 눌러 주세요.</string>
     <string name="toast_config_download_failed">캠페인을 다운로드하지 못했습니다. 연결을 확인하고 다시 시도해 주세요.</string>
 
     <!-- Sensor Descriptions -->
@@ -323,8 +325,6 @@
 
 
     <!-- Toast Messages -->
-    <string name="toast_experiment_group_selected">실험 그룹이 성공적으로 선택되었습니다</string>
-    <string name="toast_experiment_group_selected_partial_error">실험 그룹은 선택되었으나, 설문 동기화에 실패했습니다</string>
     <string name="toast_data_deleted">데이터가 성공적으로 삭제되었습니다</string>
     <string name="toast_sensor_data_deleted">센서 데이터가 성공적으로 삭제되었습니다</string>
     <string name="toast_sensor_data_uploaded">데이터가 성공적으로 업로드되었습니다</string>

@@ -38,6 +38,15 @@
 
     <!-- Phone sensors -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!-- The call log and message log sensors are not registered in this app: Play Protect and
+         Samsung Knox block a downloaded APK that requests SMS or call log access. Drop the
+         library's declarations; remove these two entries to use those sensors again. -->
+    <uses-permission
+        android:name="android.permission.READ_CALL_LOG"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_SMS"
+        tools:node="remove" />
 
     <!-- Audio -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -188,9 +197,6 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <meta-data
-                android:name="com.google.android.gms.auth.api.signin.client_id"
-                android:value="@string/default_web_client_id" />
         </activity>
 
         <activity
@@ -216,6 +222,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <!-- The user interaction and notification sensors are not registered in this app: Play
+             Protect blocks a downloaded APK that declares an accessibility or notification
+             listener service. Remove these two entries to use those sensors again. -->
+        <service
+            android:name="kaist.iclab.tracker.listener.AccessibilityListener$AccessibilityServiceAdaptor"
+            tools:node="remove" />
+        <service
+            android:name="kaist.iclab.tracker.listener.NotificationListener$NotificationListenerServiceAdaptor"
+            tools:node="remove" />
     </application>
 
 </manifest>

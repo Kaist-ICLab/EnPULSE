@@ -22,6 +22,7 @@ import androidx.navigation.compose.composable
 import kaist.iclab.mobiletracker.ui.components.ServerUnreachableDialog
 import kaist.iclab.mobiletracker.ui.screens.data.DataScreen
 import kaist.iclab.mobiletracker.ui.screens.home.HomeScreen
+import kaist.iclab.mobiletracker.ui.screens.login.ChangePasswordScreen
 import kaist.iclab.mobiletracker.ui.screens.login.LoginScreen
 import kaist.iclab.mobiletracker.ui.screens.onboarding.OnboardingScreen
 import kaist.iclab.mobiletracker.ui.screens.sensor.SensorDetailScreen
@@ -54,6 +55,7 @@ fun NavGraph(
     val userState by authViewModel.userState.collectAsState()
     val userProfile by authViewModel.userProfile.collectAsState()
     val serverUnreachable by authViewModel.serverUnreachable.collectAsState()
+    val needsPasswordReset by authViewModel.needsPasswordReset.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -102,28 +104,32 @@ fun NavGraph(
     }
 
     // Navigate based on authentication state and profile
-    LaunchedEffect(userState.isLoggedIn, userProfile) {
+    LaunchedEffect(userState.isLoggedIn, userProfile, needsPasswordReset) {
         val currentRoute = navController.currentDestination?.route
 
         if (userState.isLoggedIn) {
             // Wait for profile to be loaded before deciding navigation
             val profile = userProfile ?: return@LaunchedEffect
 
+            // An initial password has to be replaced before anything else, wherever the user is.
+            if (needsPasswordReset) {
+                if (currentRoute != Screen.ChangePassword.route) {
+                    navController.navigate(Screen.ChangePassword.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+                return@LaunchedEffect
+            }
+
             // Check if user needs onboarding (show when HAS NO campaign)
             val needsOnboarding = profile.campaignId == null
 
             when (currentRoute) {
-                // User is on Login screen and needs onboarding
-                Screen.Login.route -> {
-                    if (needsOnboarding) {
-                        navController.navigate(Screen.Onboarding.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
-                    } else {
-                        // User is on Login screen and doesn't need onboarding
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
+                // Just signed in, or just replaced the initial password
+                Screen.Login.route, Screen.ChangePassword.route -> {
+                    val target = if (needsOnboarding) Screen.Onboarding else Screen.Home
+                    navController.navigate(target.route) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
                 // User completed onboarding (on Onboarding screen and now doesn't need it)
@@ -176,22 +182,29 @@ fun NavGraph(
     ) {
         composable(route = Screen.Login.route) {
             LoginScreen(
-                onSignInWithGoogle = {
-                    if (activity != null) {
-                        authViewModel.login(activity)
-                    }
-                },
                 onNavigateToLanguage = {
                     navController.navigate(Screen.Language.route)
                 },
                 onNavigateToServerConnection = {
                     navController.navigate(Screen.ServerConnection.route)
                 },
-                showEmailLogin = authViewModel.supportsEmailLogin,
                 onSignInWithEmail = { email, password ->
                     authViewModel.loginWithEmail(email, password)
                 },
                 errorMessage = userState.message
+            )
+        }
+
+        composable(route = Screen.ChangePassword.route) {
+            BackHandler {
+                activity?.finish()
+            }
+            val passwordChangeError by authViewModel.passwordChangeError.collectAsState()
+            ChangePasswordScreen(
+                onChangePassword = authViewModel::changePassword,
+                onLogout = authViewModel::logout,
+                errorMessage = passwordChangeError,
+                onClearError = authViewModel::clearPasswordChangeError
             )
         }
 

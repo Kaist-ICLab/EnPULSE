@@ -10,8 +10,6 @@ import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.CampaignSensorRepository
 import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
-import kaist.iclab.mobiletracker.repository.onFailure
-import kaist.iclab.mobiletracker.repository.onSuccess
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -44,23 +42,13 @@ class AccountSettingsViewModel(
     val activeSensors: StateFlow<List<CampaignTableData>> =
         campaignSensorRepository.activeSensorsFlow
 
-    private val _isLoadingCampaigns = MutableStateFlow(false)
-    val isLoadingCampaigns: StateFlow<Boolean> = _isLoadingCampaigns.asStateFlow()
-
     private val _isSyncingSurveys = MutableStateFlow(false)
     val isSyncingSurveys: StateFlow<Boolean> = _isSyncingSurveys.asStateFlow()
 
     private val _isReloadingConfig = MutableStateFlow(false)
     val isReloadingConfig: StateFlow<Boolean> = _isReloadingConfig.asStateFlow()
 
-    private val _isLeavingCampaign = MutableStateFlow(false)
-    val isLeavingCampaign: StateFlow<Boolean> = _isLeavingCampaign.asStateFlow()
-
-    private val _campaignError = MutableStateFlow<String?>(null)
-    val campaignError: StateFlow<String?> = _campaignError.asStateFlow()
-
     private val _selectedCampaignId = MutableStateFlow<String?>(null)
-    val selectedCampaignId: StateFlow<String?> = _selectedCampaignId.asStateFlow()
 
     val isDataCollectionRunning: StateFlow<Boolean> = backgroundController.controllerStateFlow
         .map { it.flag == ControllerState.FLAG.RUNNING }
@@ -84,103 +72,12 @@ class AccountSettingsViewModel(
     )
 
     init {
-        fetchCampaigns()
+        // Loads campaign names so the current campaign can be shown by name.
+        viewModelScope.launch { campaignRepository.fetchCampaigns() }
 
         viewModelScope.launch {
             userProfileRepository.profileFlow.collect { profile ->
                 _selectedCampaignId.value = profile?.campaignId?.toString()
-            }
-        }
-    }
-
-    fun fetchCampaigns() {
-        // Always refetch: the list is a process-wide cache, so returning early when it was
-        // non-empty hid campaigns created on the dashboard until the app restarted.
-        if (_isLoadingCampaigns.value) return
-
-        viewModelScope.launch {
-            _isLoadingCampaigns.value = true
-            _campaignError.value = null
-
-            campaignRepository.fetchCampaigns()
-                .onSuccess { _isLoadingCampaigns.value = false }
-                .onFailure {
-                    // Keys, not raw messages: a Supabase exception message carries the request URL
-                    // and headers, which is unreadable and should not be shown to users.
-                    val errorKey = when (it) {
-                        is AppError.CollectionRunning -> "turn_off_data_collection_first"
-                        is AppError.Network, is AppError.Timeout -> "error_server_unreachable"
-                        else -> "error_generic"
-                    }
-                    _campaignError.value = errorKey
-                    _isLoadingCampaigns.value = false
-                }
-        }
-    }
-
-    fun selectCampaign(campaignId: String) {
-        // Doesn't set _selectedCampaignId here: it's driven by profileFlow (see init), which
-        // syncFullStudyConfig below only republishes on success. Setting it eagerly showed the
-        // newly picked campaign as selected even when the sync that was supposed to load its
-        // sensors/surveys failed, leaving a half-updated cache behind a UI that looked fine.
-        viewModelScope.launch { saveCampaignToProfile(campaignId) }
-    }
-
-    private suspend fun saveCampaignToProfile(campaignId: String) {
-        campaignId.toIntOrNull() ?: return
-
-        // Membership is already registered server-side by the join-campaign
-        // edge function; just sync profile, sensors, and surveys.
-        val syncResult = userProfileRepository.syncFullStudyConfig()
-
-        if (syncResult.isSuccess) {
-            _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_experiment_group_selected))
-        } else {
-            val exception = (syncResult as? Result.Error)?.exception
-            if (exception is AppError.CollectionRunning) {
-                _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.turn_off_data_collection_first))
-            } else if (exception is AppError.Network) {
-                _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_config_download_failed))
-            } else {
-                _uiEvent.emit(AccountSettingsUiEvent.ShowToast(R.string.toast_experiment_group_selected_partial_error))
-            }
-        }
-    }
-
-    suspend fun joinCampaign(campaignId: String, password: String): Result<Boolean> {
-        return campaignRepository.joinCampaign(campaignId, password)
-    }
-
-    fun leaveCampaign() {
-        if (_isLeavingCampaign.value) return
-
-        viewModelScope.launch {
-            _isLeavingCampaign.value = true
-            try {
-                when (val leaveResult = userProfileRepository.leaveCampaign()) {
-                    is Result.Success -> {
-                        // Clear cached sensors/surveys/triggers and refresh the profile so the
-                        // UI reflects that no campaign is joined.
-                        val syncResult = userProfileRepository.syncFullStudyConfig()
-                        _uiEvent.emit(
-                            AccountSettingsUiEvent.ShowToast(
-                                if (syncResult.isSuccess) R.string.toast_campaign_left
-                                else R.string.toast_campaign_left_sync_failed
-                            )
-                        )
-                    }
-
-                    is Result.Error -> {
-                        _uiEvent.emit(
-                            AccountSettingsUiEvent.ShowToast(
-                                if (leaveResult.exception is AppError.CollectionRunning) R.string.turn_off_data_collection_first
-                                else R.string.error_generic
-                            )
-                        )
-                    }
-                }
-            } finally {
-                _isLeavingCampaign.value = false
             }
         }
     }

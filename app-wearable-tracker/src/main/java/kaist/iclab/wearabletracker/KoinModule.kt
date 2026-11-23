@@ -281,7 +281,6 @@ val koinModule = module {
             controllerStateStorage = get(named("watchControllerStateStorage")),
             sensors = get(qualifier("sensors")),
             serviceNotification = get<BackgroundController.ServiceNotification>(),
-            allowPartialSensing = true
         )
     }
 

@@ -26,16 +26,11 @@ object Styles {
     // Sign in button
     val BUTTON_HEIGHT = 56.dp
     val BUTTON_CORNER_RADIUS = 8.dp
-    val BUTTON_BORDER_WIDTH = 1.dp
     val BUTTON_TEXT_FONT_SIZE = 16.sp
-    val BUTTON_ICON_SIZE = 20.dp
-    val BUTTON_ICON_TITLE_SPACING = 12.dp
-    val BUTTON_ICON_INTERNAL_SPACING = 1.dp
     val BUTTON_SHAPE = RoundedCornerShape(BUTTON_CORNER_RADIUS)
 
-    // Email/password fallback form
+    // Email/password form
     val FORM_FIELD_SPACING = 12.dp
-    val FORM_SECTION_SPACING = 16.dp
     val FORM_LABEL_FONT_SIZE = 14.sp
 }
 

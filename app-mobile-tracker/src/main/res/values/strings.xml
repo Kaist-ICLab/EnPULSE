@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">EnPULSE</string>
-    <string name="default_web_client_id">879863435160-qn3fc5fmlvtr9itp1rep4c05ou3rdjdj.apps.googleusercontent.com</string>
-
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_data">Data</string>
@@ -31,13 +29,24 @@
     <string name="version_label">Version</string>
     <string name="about_description">A mobile tracking application for research data collection</string>
     <string name="sign_out">Sign Out</string>
-    <string name="sign_in_with_google">Sign in with Google</string>
-    <string name="sign_in_with_email">Sign in with email</string>
     <string name="login_email_label">Email</string>
     <string name="login_password_label">Password</string>
     <string name="login_email_submit">Sign in</string>
-    <string name="login_use_google_instead">Use Google instead</string>
     <string name="login_not_configured_error">Please configure the server connection first.</string>
+    <string name="change_password_title">Set a new password</string>
+    <string name="change_password_description">Your account was set up with an initial password. Choose your own password to continue.</string>
+    <string name="change_password_new_label">New password</string>
+    <string name="change_password_confirm_label">Confirm new password</string>
+    <string name="change_password_submit">Change password</string>
+    <string name="change_password_mismatch">The passwords don\'t match.</string>
+    <string name="change_password_error_weak">This password is too weak: %1$s</string>
+    <string name="change_password_error_same">Choose a password different from the current one.</string>
+    <string name="change_password_error_reauth">Please log out and sign in again before changing the password.</string>
+    <string name="change_password_error_rate_limit">Too many attempts. Wait a moment and try again.</string>
+    <string name="change_password_error_with_detail">Password change failed: %1$s</string>
+    <string name="change_password_error_network">Can\'t reach the server. Check the connection and try again.</string>
+    <string name="change_password_error_generic">Password change failed. Please try again.</string>
+    <string name="toast_password_flag_failed">Your password was changed, but the server could not record it. Please try again.</string>
 
     <!-- Enable Tracker -->
     <string name="enable_tracker_title">Start Data Collection</string>
@@ -60,7 +69,6 @@
     <string name="menu_language">Language</string>
 
     <!-- Campaign Dialog -->
-    <string name="campaign_dialog_title">Experiment Group</string>
     <string name="campaign_dialog_select">Select</string>
     <string name="campaign_dialog_cancel">Cancel</string>
     <string name="campaign_password_title">Enter Password</string>
@@ -184,12 +192,6 @@
     <string name="server_unreachable_continue_offline">Continue offline</string>
     <string name="toast_success_saved">Successfully loaded active config.</string>
 
-    <string name="menu_leave_campaign">Leave Campaign</string>
-    <string name="menu_leave_campaign_desc">Leave your current campaign</string>
-    <string name="leave_campaign_dialog_title">Leave Campaign</string>
-    <string name="leave_campaign_dialog_message">Are you sure you want to leave? Your campaign configuration will be removed and data collection will stop. You can join a campaign again anytime.</string>
-    <string name="toast_campaign_left">You have left the campaign</string>
-    <string name="toast_campaign_left_sync_failed">You left the campaign, but this phone couldn\'t update. Tap Reload &amp; Sync Config.</string>
     <string name="toast_config_download_failed">Couldn\'t download the campaign. Check the connection and try again.</string>
 
     <!-- Sensor Descriptions -->
@@ -303,8 +305,6 @@
 
 
     <!-- Toast Messages -->
-    <string name="toast_experiment_group_selected">Experiment group selected successfully</string>
-    <string name="toast_experiment_group_selected_partial_error">Experiment group selected, but surveys failed to sync</string>
     <string name="toast_data_deleted">Data deleted successfully</string>
     <string name="toast_sensor_data_deleted">Sensor data deleted successfully</string>
     <string name="toast_sensor_data_uploaded">Data uploaded successfully</string>

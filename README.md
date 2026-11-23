@@ -59,21 +59,7 @@ The build needs both SDKs, and they are not included in this repository.
 > [!IMPORTANT]
 > Without an approved Samsung partner license, enable Developer Mode on your test phone. In Samsung Health, open **Settings**, then **About Samsung Health**, and tap the version line 10 times. Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
 
-### 4. Add `google-services.json`
-
-The phone app does not build without `app-mobile-tracker/google-services.json`. Use one of these:
-
-- Copy the template. This is enough to build the app:
-
-  ```bash
-  cp app-mobile-tracker/google-services.json.example app-mobile-tracker/google-services.json
-  ```
-
-- Or download the real file from a [Firebase](https://console.firebase.google.com/) project, with an Android app registered as `kaist.iclab.trackerSystem`.
-
-See [Sign-in](app-mobile-tracker/README.md#sign-in) to set up Google sign-in for your own project. Email and password sign-in works without it.
-
-### 5. Build and install
+### 4. Build and install
 
 With the phone connected:
 

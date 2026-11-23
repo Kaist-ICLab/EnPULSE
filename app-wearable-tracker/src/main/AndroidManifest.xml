@@ -3,6 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Only the phone-side call log and message log sensors need these; the watch never does. -->
+    <uses-permission
+        android:name="android.permission.READ_CALL_LOG"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.READ_SMS"
+        tools:node="remove" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
@@ -81,6 +88,14 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault" />
 
+        <!-- Phone-only library sensors (user interaction, notification) that the watch never
+             uses. Drop their services so the watch APK doesn't declare them. -->
+        <service
+            android:name="kaist.iclab.tracker.listener.AccessibilityListener$AccessibilityServiceAdaptor"
+            tools:node="remove" />
+        <service
+            android:name="kaist.iclab.tracker.listener.NotificationListener$NotificationListenerServiceAdaptor"
+            tools:node="remove" />
     </application>
 
 </manifest>

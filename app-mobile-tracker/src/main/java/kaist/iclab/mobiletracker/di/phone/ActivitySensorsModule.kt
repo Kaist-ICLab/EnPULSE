@@ -12,6 +12,7 @@ import kaist.iclab.tracker.sensor.phone.ExerciseSensor
 import kaist.iclab.tracker.sensor.phone.MediaSensor
 import kaist.iclab.tracker.sensor.phone.SleepSensor
 import kaist.iclab.tracker.sensor.phone.StepSensor
+// import kaist.iclab.tracker.sensor.phone.UserInteractionSensor
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import java.util.concurrent.TimeUnit
@@ -144,6 +145,20 @@ val activitySensorsModule = module {
             samsungHealthDataInitializer = get()
         )
     }
+
+    // User Interaction Sensor: commented out because Play Protect blocks a downloaded APK that
+    // declares an accessibility service. To use it again, uncomment this and its entry in
+    // ControllerModule, and remove the matching `tools:node="remove"` entry from AndroidManifest.xml.
+    // single {
+    //     UserInteractionSensor(
+    //         permissionManager = get<AndroidPermissionManager>(),
+    //         configStorage = SimpleStateStorage(UserInteractionSensor.Config()),
+    //         stateStorage = CouchbaseSensorStateStorage(
+    //             couchbase = get(),
+    //             collectionName = UserInteractionSensor::class.simpleName ?: ""
+    //         )
+    //     )
+    // }
 
     // Media Sensor
     single {

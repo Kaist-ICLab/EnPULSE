@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.viewmodels.auth
 
-import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -17,6 +16,9 @@ import kaist.iclab.tracker.auth.Authentication
 import kaist.iclab.tracker.auth.EmailPasswordAuthentication
 import kaist.iclab.tracker.auth.UserState
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +29,7 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel for authentication and user profile management.
  *
- * Handles Google Sign-In authentication flow, token management, and user profile
+ * Handles email/password sign-in, token management, and user profile
  * synchronization with Supabase. Automatically:
  * - Requests token after successful login
  * - Saves token to repository for persistence
@@ -64,6 +66,32 @@ class AuthViewModel(
     val userProfile: StateFlow<ProfileData?> =
         userProfileRepository.profileFlow
 
+    /**
+     * Whether the user must replace their initial password before using the app: the profile
+     * says they haven't yet (`reset_password` is false) and they signed in with a password.
+     * A session from another provider (e.g. one restored from an older app version) has no
+     * password to change, so it is never sent there.
+     */
+    val needsPasswordReset: StateFlow<Boolean> =
+        combine(userState, userProfile) { state, profile -> requiresPasswordReset(state, profile) }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.Eagerly,
+                requiresPasswordReset(userState.value, userProfile.value)
+            )
+
+    private fun requiresPasswordReset(state: UserState, profile: ProfileData?): Boolean =
+        state.isLoggedIn && profile?.resetPassword == false &&
+            (authentication as? EmailPasswordAuthentication)?.isPasswordSession == true
+
+    // The latest change-password error, shown on that screen. Null when there is none.
+    private val _passwordChangeError = MutableStateFlow<String?>(null)
+    val passwordChangeError: StateFlow<String?> = _passwordChangeError.asStateFlow()
+
+    // Set once the new password is saved but the profile flag isn't yet, so a retry only redoes
+    // the flag: setting the same password again would be rejected as unchanged.
+    private var passwordChangedAwaitingFlag = false
+
     private var previousLoginState: Boolean
         get() = savedStateHandle[KEY_PREVIOUS_LOGIN_STATE] ?: false
         set(value) {
@@ -71,7 +99,7 @@ class AuthViewModel(
         }
     private var lastSavedToken: String? = null
 
-    // Firebase/Supabase refreshes the session token roughly hourly, which re-emits userState
+    // Supabase refreshes the session token roughly hourly, which re-emits userState
     // with a new, different token — not just a fresh login. Without this, every refresh re-ran
     // the full campaign sync below, and if data collection was already running that surfaced a
     // "Data collection is still running" toast to staff once an hour.
@@ -107,13 +135,13 @@ class AuthViewModel(
                 }
 
                 // When user successfully logs in, automatically get token
-                if (state.isLoggedIn && !previousLoginState && currentToken == null) {
+                if (!previousLoginState && currentToken == null) {
                     previousLoginState = true
                     authentication.getToken()
                 }
 
                 // When token becomes available, save it to repository and load profile
-                if (state.isLoggedIn && currentToken != null && currentToken != lastSavedToken) {
+                if (currentToken != null && currentToken != lastSavedToken) {
                     authRepository.saveToken(currentToken)
                     lastSavedToken = currentToken
 
@@ -212,27 +240,6 @@ class AuthViewModel(
         _serverUnreachable.value = null
     }
 
-    fun login(activity: Activity) {
-        viewModelScope.launch {
-            try {
-                authentication.login(activity)
-            } catch (e: Exception) {
-                Log.e(TAG, "Login error: ${e.message}", e)
-                _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_login_failed))
-            }
-        }
-    }
-
-    /**
-     * Whether the active [Authentication] can sign in with an email and password, which
-     * decides if the login screen offers that fallback at all.
-     */
-    val supportsEmailLogin: Boolean = authentication is EmailPasswordAuthentication
-
-    /**
-     * Sign in with email and password instead of Google. Useful where Google's identity
-     * endpoints are unreachable but the configured backend is not.
-     */
     fun loginWithEmail(email: String, password: String) {
         val emailAuth = authentication as? EmailPasswordAuthentication
         if (emailAuth == null) {
@@ -251,7 +258,38 @@ class AuthViewModel(
         }
     }
 
+    /**
+     * Replace the initial password, then record that on the profile, which takes the user off
+     * the change-password screen. Failures land in [passwordChangeError] or as a toast.
+     */
+    fun changePassword(newPassword: String) {
+        val emailAuth = authentication as? EmailPasswordAuthentication ?: return
+        _passwordChangeError.value = null
+        viewModelScope.launch {
+            if (!passwordChangedAwaitingFlag) {
+                val error = emailAuth.changePassword(newPassword)
+                if (error != null) {
+                    _passwordChangeError.value = error
+                    return@launch
+                }
+                passwordChangedAwaitingFlag = true
+            }
+            userProfileRepository.markPasswordReset().onFailure { e ->
+                Log.e(TAG, "Password changed but the profile flag was not saved: ${e.message}", e)
+                _uiEvent.emit(AuthUiEvent.ShowError(R.string.toast_password_flag_failed))
+                return@launch
+            }
+            passwordChangedAwaitingFlag = false
+        }
+    }
+
+    fun clearPasswordChangeError() {
+        _passwordChangeError.value = null
+    }
+
     fun logout() {
+        passwordChangedAwaitingFlag = false
+        _passwordChangeError.value = null
         viewModelScope.launch {
             authentication.logout()
             authRepository.clearToken()

@@ -3,7 +3,6 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinCompose)
-    alias(libs.plugins.googleServices)
 
     id("com.google.devtools.ksp")
     alias(libs.plugins.kotlinSerialization)
@@ -147,11 +146,6 @@ dependencies {
     implementation(libs.storage.kt)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.core)
-
-    /* Google Authentication (for Supabase Auth) */
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.auth)
-    implementation(libs.googleid)
 
     /* Security - Encrypted SharedPreferences */
     implementation(libs.androidx.security.crypto)

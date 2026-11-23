@@ -107,24 +107,18 @@ class ProfileService(
     }
 
     /**
-     * Leave the current campaign by clearing the profile's campaign ID.
-     *
-     * Uses an explicit UPDATE that sets campaign_id to null rather than an
-     * upsert: an upsert serializes the whole [ProfileData], and since
-     * campaignId == null equals its default it gets dropped from the JSON body,
-     * leaving the column unchanged. It is also an INSERT-on-conflict, so it
-     * would require an INSERT RLS policy. A targeted UPDATE sends an explicit
-     * `{"campaign_id": null}` and only needs an UPDATE policy.
+     * Record that the user has replaced their initial password, so the app stops sending them
+     * to the change-password screen. A targeted UPDATE rather than an upsert.
      *
      * @param uuid The user UUID
      * @return Result containing Unit on success or error
      */
-    suspend fun leaveCampaign(uuid: String): Result<Unit> {
+    suspend fun markPasswordReset(uuid: String): Result<Unit> {
         return SupabaseLoadingInterceptor.withLoading {
-            ErrorClassifier.runClassified(TAG, "leaveCampaign($uuid)") {
+            ErrorClassifier.runClassified(TAG, "markPasswordReset($uuid)") {
                 supabaseClient.from(tableName).update(
                     {
-                        set("campaign_id", null as Int?)
+                        set("reset_password", true)
                     }
                 ) {
                     filter {
@@ -135,5 +129,4 @@ class ProfileService(
             }
         }
     }
-
 }

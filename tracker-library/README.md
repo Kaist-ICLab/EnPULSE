@@ -11,12 +11,12 @@ Packages are under `src/main/java/kaist/iclab/tracker/`:
 | Package | Contents |
 | --- | --- |
 | `sensor` | `core` has the `Sensor` interface and `BaseSensor`. `phone`, `galaxywatch`, and `common` have the implementations. `controller` has `BackgroundController`, the foreground service that starts and stops sensors. |
-| `listener` | Alarm, broadcast, and Samsung Health connection helpers |
+| `listener` | Alarm, broadcast, accessibility, notification-listener, and Samsung Health connection helpers |
 | `permission` | `AndroidPermissionManager` and hardware availability checks |
 | `storage` | Storage interfaces and Couchbase implementations for configuration and state |
 | `sync` | Data channel interfaces and the BLE implementation, built on the Wearable Data Layer |
 | `trigger` | Trigger engine that evaluates rules against sensor state and runs actions |
-| `auth` | `Authentication` interfaces and `GoogleAuth` |
+| `auth` | `Authentication` and `EmailPasswordAuthentication` interfaces |
 
 The library does not store sensor data itself. Each sensor emits entities to its listeners, and the app decides where to store them. Both EnPULSE apps use ObjectBox.
 
@@ -38,18 +38,22 @@ The **Device** column shows where each sensor runs:
 | `AudioSensor` | Phone / Watch | Raw microphone audio at 16 kHz. Input to `VADSensor` and `GestureSensor`. | `samples`, `sampleRateHz` |
 | `BatterySensor` | Phone / Watch | Battery level, charging status, plug type, and temperature. | `level`, `status`, `temperature`, `connectedType` |
 | `BluetoothScanSensor` | Phone | Paired and nearby Bluetooth Classic and LE devices. | `name`, `address`, `rssi`, `isLE` |
+| `CallLogSensor` | Phone | Recent call history, polled at an interval. Phone numbers are hashed. | `number`, `duration`, `type` |
 | `ConnectivitySensor` | Phone | Network type, connection state, and internet availability. | `networkType`, `isConnected`, `hasInternet`, `transportTypes` |
 | `DataTrafficSensor` | Phone | Total and mobile byte counters. | `totalRx`, `totalTx`, `mobileRx`, `mobileTx` |
 | `DeviceModeSensor` | Phone | Do Not Disturb, airplane mode, and power-save changes. | `eventType`, `value` |
 | `ExerciseSensor` | Samsung Phone | Exercise sessions from the Samsung Health Data SDK. | `duration`, `exerciseType`, `calories`, `distance`, `meanHeartRate` |
 | `LocationSensor` | Phone / Galaxy Watch | Fused location updates. | `latitude`, `longitude`, `altitude`, `speed`, `accuracy` |
 | `MediaSensor` | Phone | Media file changes in internal and external storage. | `operation`, `mediaType`, `storageType`, `uri`, `mimeType` |
+| `MessageLogSensor` | Phone | SMS and MMS log entries, polled at an interval. Phone numbers are hashed. | `number`, `messageType`, `contactType` |
 | `MicroEmaSensor` | Phone | Receives micro-EMA responses from the watch over BLE and reports them as `SurveySensor.Entity`. | `response`, `triggerTime`, `deviceType` |
+| `NotificationSensor` | Phone | Posted and removed notifications, from `NotificationListenerService`. | `packageName`, `eventType`, `title`, `text`, `category` |
 | `ScreenSensor` | Phone | Screen on, screen off, and user-present events. | `type` |
 | `SleepSensor` | Samsung Phone | Sleep sessions with stages from the Samsung Health Data SDK. | `duration`, `sleepScore`, `stages` |
 | `StepSensor` | Samsung Phone | Step counts from the Samsung Health Data SDK. | `duration`, `steps` |
 | `SurveySensor` | Phone | Scheduled phone surveys, notifications, and responses. | `triggerTime`, `surveyStartTime`, `response`, `deviceType` |
 | `TimingSensor` | Phone | Fires named schedule events (ESM or fixed time), used as trigger conditions. | `value`, `timestamp` |
+| `UserInteractionSensor` | Phone | UI interaction events from `AccessibilityService`, with noisy event types filtered out. | `packageName`, `className`, `eventType`, `text` |
 | `VADSensor` | Phone | Voice activity detection with YAMNet, on audio from `AudioSensor`. | `isSpeech`, `speechProbability`, `inferenceTimeMs` |
 | `WifiScanSensor` | Phone | Wi-Fi scan results. | `ssid`, `bssid`, `frequency`, `level` |
 | `AccelerometerSensor` | Galaxy Watch | Continuous 3-axis acceleration. | `x`, `y`, `z` |

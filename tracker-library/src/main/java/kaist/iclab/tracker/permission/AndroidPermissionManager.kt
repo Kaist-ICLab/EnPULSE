@@ -1,9 +1,12 @@
 package kaist.iclab.tracker.permission
 
 import android.Manifest
+import android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.AppOpsManager
+import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -15,7 +18,9 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
+import android.text.TextUtils
 import android.util.Log
+import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -35,6 +40,8 @@ import com.samsung.android.sdk.health.data.error.ResolvablePlatformException
 import com.samsung.android.sdk.health.data.permission.AccessType
 import com.samsung.android.sdk.health.data.request.DataTypes
 import kaist.iclab.tracker.R
+import kaist.iclab.tracker.listener.AccessibilityListener
+import kaist.iclab.tracker.listener.NotificationListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,6 +75,11 @@ class AndroidPermissionManager(
 
     val specialPermissions = buildMap {
         put(Manifest.permission.PACKAGE_USAGE_STATS, ::requestPackageUsageStat)
+        put(
+            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
+            ::requestBindNotificationListenerService
+        )
+        put(Manifest.permission.BIND_ACCESSIBILITY_SERVICE, ::requestBindAccessibilityService)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) put(
             Manifest.permission.SCHEDULE_EXACT_ALARM,
             ::requestScheduleExactAlarm
@@ -261,6 +273,8 @@ class AndroidPermissionManager(
 
         return when (permission) {
             Manifest.permission.PACKAGE_USAGE_STATS -> getPackageUsageStatsPermissionState()
+            Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> getBindAccessibilityServicePermissionState()
+            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> getBindNotificationListenerServicePermissionState()
             Manifest.permission.SCHEDULE_EXACT_ALARM -> getScheduleExactAlarmPermissionState()
             Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -> getIgnoreBatteryOptimizationsPermissionState()
             else -> getRuntimePermissionState(permission)
@@ -379,6 +393,37 @@ class AndroidPermissionManager(
                 context.packageName
             )
         return if (mode == AppOpsManager.MODE_ALLOWED) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+    }
+
+    private fun getBindAccessibilityServicePermissionState(): PermissionState {
+        val accessibilityManager =
+            context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val enabledServices = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return PermissionState.NOT_REQUESTED
+
+        val enabledServicesList = TextUtils.split(enabledServices, ":")
+        val fullServiceName =
+            "${context.packageName}/${AccessibilityListener::class.java.canonicalName}$${AccessibilityListener.AccessibilityServiceAdaptor::class.simpleName}"
+
+        val isServiceRunning = accessibilityManager.getEnabledAccessibilityServiceList(
+            FEEDBACK_ALL_MASK
+        ).any { it.id == fullServiceName }
+
+        return if (enabledServicesList.contains(fullServiceName) && isServiceRunning) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
+    }
+
+    private fun getBindNotificationListenerServicePermissionState(): PermissionState {
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        return if (notificationManager.isNotificationListenerAccessGranted(
+                ComponentName(
+                    context,
+                    NotificationListener.NotificationListenerServiceAdaptor::class.java
+                )
+            )
+        ) PermissionState.GRANTED else PermissionState.NOT_REQUESTED
     }
 
     private fun getScheduleExactAlarmPermissionState(): PermissionState {
@@ -556,6 +601,16 @@ class AndroidPermissionManager(
         getActivity()?.startActivity(createUsageAccessSettingsIntent())
     }
 
+    private fun requestBindAccessibilityService() {
+        if (getPermissionState(Manifest.permission.BIND_ACCESSIBILITY_SERVICE) == PermissionState.GRANTED) return
+        getActivity()?.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
+    private fun requestBindNotificationListenerService() {
+        if (getPermissionState(Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE) == PermissionState.GRANTED) return
+        getActivity()?.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+    }
+
     private fun requestScheduleExactAlarm() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         if (getPermissionState(Manifest.permission.SCHEDULE_EXACT_ALARM) == PermissionState.GRANTED) return
@@ -600,6 +655,16 @@ class AndroidPermissionManager(
         val intent = when (permissionId) {
             Manifest.permission.PACKAGE_USAGE_STATS -> {
                 createUsageAccessSettingsIntent().apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            }
+            Manifest.permission.BIND_ACCESSIBILITY_SERVICE -> {
+                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            }
+            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE -> {
+                Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
             }
