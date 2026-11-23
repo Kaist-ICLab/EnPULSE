@@ -33,6 +33,14 @@
     <string name="login_password_label">Password</string>
     <string name="login_email_submit">Sign in</string>
     <string name="login_not_configured_error">Please configure the server connection first.</string>
+    <string name="login_error_missing_fields">Enter both an email and a password.</string>
+    <string name="login_error_invalid_credentials">Incorrect email or password.</string>
+    <string name="login_error_email_not_confirmed">This account\'s email address is not confirmed yet.</string>
+    <string name="login_error_email_disabled">Email sign-in is not enabled on this server.</string>
+    <string name="login_error_rate_limit">Too many attempts. Wait a moment and try again.</string>
+    <string name="login_error_with_detail">Sign-in failed: %1$s</string>
+    <string name="login_error_network">Can\'t reach the server. Check the connection and try again.</string>
+    <string name="login_error_generic">Sign-in failed. Please try again.</string>
     <string name="change_password_title">Set a new password</string>
     <string name="change_password_description">Your account was set up with an initial password. Choose your own password to continue.</string>
     <string name="change_password_new_label">New password</string>
