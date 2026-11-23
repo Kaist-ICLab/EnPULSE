@@ -19,7 +19,7 @@ Campaigns decide which sensors run. A participant joins a campaign, and the app 
 ## Requirements
 
 - Android SDK with platform 37, and a JDK 17 or newer to run Gradle. Gradle downloads the JDK 17 toolchain used for compilation automatically.
-- A phone running Android 11 (API 30) or newer. Step, sleep, and exercise data also need a Samsung phone with Samsung Health.
+- A phone running Android 11 (API 30) or newer. Step, sleep, and exercise data also need Samsung Health installed, on any phone brand. See [Samsung Health on the phone](#samsung-health-on-the-phone).
 - A Galaxy Watch running Wear OS, if you want watch data. Available sensors depend on the watch model.
 - A running [EnPULSE-backend](https://github.com/Kaist-ICLab/EnPULSE-backend) server.
 
@@ -57,7 +57,7 @@ The build needs both SDKs, and they are not included in this repository.
    - `samsung-health-data-api/samsung-health-data-api.aar`
 
 > [!IMPORTANT]
-> Without an approved Samsung partner license, enable Developer Mode on your test phone. In Samsung Health, open **Settings**, then **About Samsung Health**, and tap the version line 10 times. Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
+> Without an approved Samsung partner license, enable Developer Mode in Samsung Health on every phone that collects step, sleep, or exercise data. In Samsung Health, open **Settings**, then **About Samsung Health**, and tap the version line 10 times. Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
 
 ### 4. Build and install
 
@@ -82,3 +82,14 @@ To build APK files instead, use `assembleDebug` or `assembleRelease`. The files 
 - `app-wearable-tracker/build/outputs/apk/<buildType>/EnPULSE-Watch.apk`
 
 The phone and watch apps share one application ID and must be signed with the same key, or they cannot exchange data.
+
+## Samsung Health on the phone
+
+Step, sleep, and exercise data come from the Samsung Health app through the Samsung Health Data SDK. This works on any Android phone, not only Samsung phones.
+
+1. Install [Samsung Health](https://play.google.com/store/apps/details?id=com.sec.android.app.shealth) from the Play Store. Samsung phones usually have it already. Version 6.30.2 or newer is required.
+2. Open Samsung Health once and finish its setup.
+3. Enable Developer Mode in Samsung Health, as described in [step 3](#3-add-the-samsung-health-sdks).
+4. In EnPULSE, open **Settings**, then **Permissions**, and grant **Physical Activity (Steps)**, **Physical Activity (Sleep)**, and **Physical Activity (Exercise)**. Samsung Health then asks you to allow access.
+
+If Samsung Health is missing or too old, these permissions show **Install or update Samsung Health**. Tapping one opens Samsung Health in the Play Store.
