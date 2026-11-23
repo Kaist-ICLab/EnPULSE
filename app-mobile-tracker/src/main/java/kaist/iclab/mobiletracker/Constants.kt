@@ -137,6 +137,10 @@ object Constants {
         const val CHANNEL_ID_SURVEY = "survey_channel"
         const val CHANNEL_ID_SURVEY_TRIGGER = "survey_trigger_channel"
         const val CHANNEL_NAME_SURVEY_TRIGGER = "Survey Triggers"
+
+        // Notifications posted by a trigger's notification action. One shared channel.
+        const val CHANNEL_ID_GENERIC_TRIGGER = "generic_trigger_channel"
+        const val CHANNEL_NAME_GENERIC_TRIGGER = "Trigger Notifications"
     }
 
     /**

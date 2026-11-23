@@ -142,8 +142,7 @@ object WebAppNotificationBuilder {
                 title = title,
                 text = body,
                 pendingIntent = pendingIntent,
-                notificationId = Constants.Notification.ID_SURVEY_BASE + uniqueHash,
-                channelId = url ?: "" // TODO: Designate proper channelId
+                notificationId = Constants.Notification.ID_SURVEY_BASE + uniqueHash
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to post notification", e)
