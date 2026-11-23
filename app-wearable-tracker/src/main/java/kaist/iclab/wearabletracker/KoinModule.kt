@@ -28,6 +28,7 @@ import kaist.iclab.wearabletracker.data.AutoSyncManager
 import kaist.iclab.wearabletracker.data.CampaignSensorConfigRepository
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
 import kaist.iclab.wearabletracker.data.SyncAckListener
+import kaist.iclab.wearabletracker.data.SyncAckSignal
 import kaist.iclab.wearabletracker.db.entity.MyObjectBox
 import kaist.iclab.wearabletracker.db.obx.MicroEmaResponseStore
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
@@ -296,11 +297,14 @@ val koinModule = module {
         MicroEmaPreferencesHelper(context = androidContext())
     }
 
+    single { SyncAckSignal() }
+
     single {
         PhoneCommunicationManager(
             androidContext = androidContext(),
             stores = get(named("sensorDataStorages")),
             syncPreferencesHelper = get(),
+            ackSignal = get(),
             coroutineScope = get()
         )
     }
@@ -322,6 +326,7 @@ val koinModule = module {
             stores = get(named("sensorDataStorages")),
             syncPreferencesHelper = get(),
             boxStore = get(),
+            ackSignal = get(),
             coroutineScope = get()
         )
     }

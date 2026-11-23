@@ -8,6 +8,7 @@ import com.google.android.gms.wearable.Wearable
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.wearabletracker.Constants
 import kaist.iclab.wearabletracker.R
+import kaist.iclab.wearabletracker.db.entity.CsvSerializable
 import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.helpers.NotificationHelper
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
@@ -15,6 +16,7 @@ import kaist.iclab.wearabletracker.repository.ErrorClassifier
 import kaist.iclab.wearabletracker.repository.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +32,7 @@ class PhoneCommunicationManager(
     private val androidContext: Context,
     private val stores: Map<String, WatchSensorStore<*>>,
     private val syncPreferencesHelper: SyncPreferencesHelper,
+    private val ackSignal: SyncAckSignal,
     private val coroutineScope: kotlinx.coroutines.CoroutineScope
 ) {
     private val TAG = javaClass.simpleName
@@ -65,13 +68,23 @@ class PhoneCommunicationManager(
                 val result = ErrorClassifier.runClassified(TAG, "send data to phone") {
                     val now = System.currentTimeMillis()
 
-                    // Per-sensor cursor to send from: the ACK-confirmed watermark, unless a
-                    // previous attempt already sent data past it that's still within its ACK
-                    // timeout - in which case skip past that in-flight range instead of blindly
-                    // retransmitting data the phone may already have but hasn't ACKed yet. This
-                    // is what keeps a slow/backlogged ACK from turning every subsequent
-                    // AutoSyncManager tick into a full resend of the same backlog.
-                    val effectiveStartBySensor = stores.keys.associateWith { sensorId ->
+                    // Sensors still backing off after a FAIL ACK or an ACK timeout sit this
+                    // round out (see SyncPreferencesHelper.recordSensorFailure).
+                    val sensorsToSync = stores.filter { (sensorId, _) ->
+                        val notBefore = syncPreferencesHelper.getSensorRetryNotBefore(sensorId)
+                        if (notBefore != null && now < notBefore) {
+                            Log.i(TAG, "[$sensorId] backing off, ${(notBefore - now) / 1000}s left")
+                            false
+                        } else {
+                            true
+                        }
+                    }
+
+                    // Per-sensor cursor to send from: the ACK-confirmed watermark, unless an
+                    // earlier attempt already sent data past it that's still within its ACK
+                    // timeout - in which case skip past that in-flight range instead of
+                    // retransmitting data the phone may already have but hasn't ACKed yet.
+                    val effectiveStartBySensor = sensorsToSync.keys.associateWith { sensorId ->
                         val confirmed = syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L
                         val pending = syncPreferencesHelper.getSensorPending(sensorId)
                         if (pending != null &&
@@ -83,7 +96,7 @@ class PhoneCommunicationManager(
                         }
                     }
 
-                    val totalRecordsToSync = stores.entries.sumOf { (sensorId, store) ->
+                    val totalRecordsToSync = sensorsToSync.entries.sumOf { (sensorId, store) ->
                         store.getCountSince(effectiveStartBySensor.getValue(sensorId))
                     }
                     if (totalRecordsToSync == 0) {
@@ -94,59 +107,17 @@ class PhoneCommunicationManager(
                     var dataSent = false
                     var totalRecordsSentSoFar = 0
 
-                    stores.forEach { (sensorId, store) ->
-                        val effectiveStart = effectiveStartBySensor.getValue(sensorId)
-                        var currentSensorLastTimestamp = effectiveStart
-
-                        while (coroutineContext.isActive) {
-                            val data = store.getDataSince(
-                                currentSensorLastTimestamp,
-                                Constants.DB.SYNC_BATCH_LIMIT
-                            )
-
-                            if (data.isEmpty()) break
-
-                            dataSent = true
-                            totalRecordsSentSoFar += data.size
+                    sensorsToSync.forEach { (sensorId, store) ->
+                        val sent = sendSensorWindowed(
+                            sensorId,
+                            store,
+                            effectiveStartBySensor.getValue(sensorId)
+                        ) { rows ->
+                            totalRecordsSentSoFar += rows
                             _syncProgress.value =
-                                totalRecordsSentSoFar.toFloat() / totalRecordsToSync
-
-                            val chunkStartTs = currentSensorLastTimestamp
-                            val chunkMaxTimestamp = data.maxOf { it.timestamp }
-                            currentSensorLastTimestamp = chunkMaxTimestamp
-
-                            val csvBuilder = StringBuilder()
-                            csvBuilder.append("SENSOR:$sensorId\n")
-                            csvBuilder.append("CHUNK_START_TS:$chunkStartTs\n")
-                            csvBuilder.append("CHUNK_END_TS:$chunkMaxTimestamp\n")
-                            csvBuilder.append("---DATA---\n")
-                            csvBuilder.append("$sensorId\n")
-                            csvBuilder.append(data.first().csvHeader() + "\n")
-                            data.forEach { entity -> csvBuilder.append(entity.toCsvRow() + "\n") }
-                            csvBuilder.append("\n")
-
-                            try {
-                                bleChannel.send(
-                                    Constants.BLE.KEY_SENSOR_DATA,
-                                    csvBuilder.toString(),
-                                    isUrgent = true
-                                )
-                            } catch (e: Exception) {
-                                Log.e(TAG, "[$sensorId] Error sending chunk: ${e.message}", e)
-                                throw e
-                            }
+                                (totalRecordsSentSoFar.toFloat() / totalRecordsToSync).coerceAtMost(1f)
                         }
-
-                        // Mark whatever we actually transmitted this round as in-flight so the
-                        // next sync attempt - which may fire before the phone ACKs this - skips
-                        // past it instead of resending it from scratch.
-                        if (currentSensorLastTimestamp > effectiveStart) {
-                            syncPreferencesHelper.setSensorPending(
-                                sensorId,
-                                currentSensorLastTimestamp,
-                                now
-                            )
-                        }
+                        if (sent) dataSent = true
                     }
 
                     dataSent
@@ -181,5 +152,107 @@ class PhoneCommunicationManager(
                 syncMutex.unlock()
             }
         }
+    }
+
+    /**
+     * Sends one sensor's unsynced data as a sliding window: at most
+     * [Constants.AutoSync.MAX_CHUNKS_IN_FLIGHT] chunks handed to the Data Layer and not yet
+     * ACKed, topping the window up as ACKs advance the watermark. Gives up on this sensor - with
+     * exponential backoff - after [Constants.AutoSync.PENDING_ACK_TIMEOUT_MS] without ACK
+     * progress; a FAIL ACK stops it too (SyncAckListener has already backed it off).
+     *
+     * @return whether any chunk was sent.
+     */
+    private suspend fun sendSensorWindowed(
+        sensorId: String,
+        store: WatchSensorStore<*>,
+        startTimestamp: Long,
+        onRowsSent: (Int) -> Unit
+    ): Boolean {
+        val sensorStartedAt = System.currentTimeMillis()
+        var nextFrom = startTimestamp
+        val inFlightChunkEnds = ArrayDeque<Long>()
+        var lastProgressAt = sensorStartedAt
+        var sentAny = false
+
+        while (currentCoroutineContext().isActive) {
+            // Read the version before checking state, so an ACK landing in between wakes the
+            // wait below instead of being missed.
+            val seenVersion = ackSignal.version
+
+            val confirmed = syncPreferencesHelper.getSensorWatermark(sensorId) ?: 0L
+            var progressed = false
+            while (inFlightChunkEnds.isNotEmpty() && inFlightChunkEnds.first() <= confirmed) {
+                inFlightChunkEnds.removeFirst()
+                progressed = true
+            }
+            if (progressed) lastProgressAt = System.currentTimeMillis()
+
+            if (ackSignal.failedSince(sensorId, sensorStartedAt)) {
+                Log.w(TAG, "[$sensorId] phone returned FAIL, stopping this sensor")
+                break
+            }
+
+            while (inFlightChunkEnds.size < Constants.AutoSync.MAX_CHUNKS_IN_FLIGHT) {
+                val data = store.getDataSince(nextFrom, Constants.DB.SYNC_BATCH_LIMIT)
+                if (data.isEmpty()) break
+
+                val chunkEnd = data.maxOf { it.timestamp }
+                try {
+                    bleChannel.send(
+                        Constants.BLE.KEY_SENSOR_DATA,
+                        buildChunk(sensorId, nextFrom, chunkEnd, data),
+                        isUrgent = true
+                    )
+                } catch (e: Exception) {
+                    Log.e(TAG, "[$sensorId] Error sending chunk: ${e.message}", e)
+                    throw e
+                }
+                if (inFlightChunkEnds.isEmpty()) lastProgressAt = System.currentTimeMillis()
+                inFlightChunkEnds.addLast(chunkEnd)
+                nextFrom = chunkEnd
+                sentAny = true
+                syncPreferencesHelper.setSensorPending(sensorId, chunkEnd, System.currentTimeMillis())
+                onRowsSent(data.size)
+            }
+
+            if (inFlightChunkEnds.isEmpty()) break // everything sent has been ACKed
+
+            val waitMs = Constants.AutoSync.PENDING_ACK_TIMEOUT_MS -
+                    (System.currentTimeMillis() - lastProgressAt)
+            if (waitMs <= 0) {
+                val now = System.currentTimeMillis()
+                syncPreferencesHelper.clearSensorPending(sensorId)
+                val notBefore = syncPreferencesHelper.recordSensorFailure(sensorId, now)
+                Log.w(
+                    TAG,
+                    "[$sensorId] no ACK progress for " +
+                            "${Constants.AutoSync.PENDING_ACK_TIMEOUT_MS / 1000}s with " +
+                            "${inFlightChunkEnds.size} chunk(s) in flight, " +
+                            "retrying in ${(notBefore - now) / 1000}s"
+                )
+                break
+            }
+            ackSignal.awaitChange(seenVersion, waitMs)
+        }
+        return sentAny
+    }
+
+    private fun buildChunk(
+        sensorId: String,
+        chunkStartTs: Long,
+        chunkEndTs: Long,
+        data: List<CsvSerializable>
+    ): String {
+        val csvBuilder = StringBuilder()
+        csvBuilder.append("SENSOR:$sensorId\n")
+        csvBuilder.append("CHUNK_START_TS:$chunkStartTs\n")
+        csvBuilder.append("CHUNK_END_TS:$chunkEndTs\n")
+        csvBuilder.append("---DATA---\n")
+        csvBuilder.append("$sensorId\n")
+        csvBuilder.append(data.first().csvHeader() + "\n")
+        data.forEach { entity -> csvBuilder.append(entity.toCsvRow() + "\n") }
+        csvBuilder.append("\n")
+        return csvBuilder.toString()
     }
 }
