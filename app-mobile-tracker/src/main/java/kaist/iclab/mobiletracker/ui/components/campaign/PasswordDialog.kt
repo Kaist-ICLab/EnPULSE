@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +34,7 @@ import kaist.iclab.mobiletracker.repository.Result
 import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.ui.theme.appTextFieldColors
 import kaist.iclab.mobiletracker.ui.theme.Dimens
 import kaist.iclab.mobiletracker.utils.AppToast
 import kotlinx.coroutines.launch
@@ -115,13 +115,7 @@ fun PasswordDialog(
                     ),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(Dimens.CornerRadiusMedium),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AppColors.PrimaryColor,
-                        unfocusedBorderColor = AppColors.TextSecondary.copy(alpha = 0.5f),
-                        errorBorderColor = AppColors.ErrorColor,
-                        focusedLabelColor = AppColors.PrimaryColor,
-                        unfocusedLabelColor = AppColors.TextSecondary
-                    )
+                    colors = appTextFieldColors()
                 )
             }
         },

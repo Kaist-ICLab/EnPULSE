@@ -145,7 +145,11 @@ fun AboutSettingsScreen(
                 )
 
                 TextButton(onClick = { uriHandler.openUri(LAB_WEBSITE_URL) }) {
-                    Text(text = stringResource(R.string.about_visit_website))
+                    Text(
+                        text = stringResource(R.string.about_visit_website),
+                        color = AppColors.PrimaryColor,
+                        fontSize = Styles.DESCRIPTION_FONT_SIZE
+                    )
                 }
             }
         }
