@@ -77,16 +77,12 @@ data class HomeUiState(
  *
  * @param homeRepository Repository for home screen data operations
  * @param backgroundController Controller managing sensor background collection
-// * @param syncTimestampService Service for tracking sync timestamps
  * @param userProfileRepository Repository for user profile data
  */
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val backgroundController: BackgroundController,
-//    private val syncTimestampService: SyncTimestampService,
     private val userProfileRepository: UserProfileRepository,
-//    private val campaignSensorRepository: CampaignSensorRepository,
-//    private val surveyRepository: SurveyRepository,
 ) : ViewModel() {
     // Note: Full study configuration sync (profile, sensors, surveys) is handled by AuthViewModel
     // at startup/login and by AccountSettingsViewModel for manual reloads.
