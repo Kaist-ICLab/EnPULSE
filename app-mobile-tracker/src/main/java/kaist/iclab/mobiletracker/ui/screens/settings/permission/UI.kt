@@ -68,9 +68,7 @@ private fun PermissionRow(
         PermissionState.RATIONALE_REQUIRED -> AppColors.ErrorColor
     }
 
-    // Card is clickable so that unsupported permissions can trigger their respective toast messages (e.g., Samsung Health Dev Mode)
-    val isSupported = permissionState != PermissionState.UNSUPPORTED
-
+    // Unsupported rows stay clickable so the screen can explain why nothing happens.
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier

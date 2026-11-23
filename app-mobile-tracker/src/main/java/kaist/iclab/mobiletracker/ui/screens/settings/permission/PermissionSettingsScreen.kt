@@ -144,7 +144,10 @@ fun PermissionSettingsScreen(
                             permission = permission,
                             permissionState = permissionAggregatedState,
                             onRequest = {
-                                if (isCollecting) {
+                                if (permissionAggregatedState == PermissionState.UNSUPPORTED) {
+                                    // Nothing to grant on this device, so no instructions or request.
+                                    AppToast.show(context, R.string.permission_unsupported_toast)
+                                } else if (isCollecting) {
                                     // Show toast if trying to change permission while collecting
                                     AppToast.show(context, R.string.turn_off_data_collection_first)
                                 } else {
