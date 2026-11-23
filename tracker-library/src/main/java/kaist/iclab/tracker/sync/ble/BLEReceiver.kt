@@ -115,10 +115,15 @@ internal class BLEReceiver : DataChannelReceiver() {
         private fun onAssetSuccessListener(
             callbacks: List<(String, JsonElement) -> Unit>,
             key: String,
+            isGzipped: Boolean,
             assetFd: DataClient.GetFdForAssetResponse
         ) {
             assetFd.inputStream.use { inputStream ->
-                val jsonString = String(inputStream.readBytes())
+                val bytes = inputStream.readBytes()
+                val jsonString = String(
+                    if (isGzipped) BLEPayload.gunzip(bytes) else bytes,
+                    Charsets.UTF_8
+                )
 
                 // Try to parse as JSON, if it fails, wrap it as a JSON string
                 val jsonElement = try {
@@ -160,13 +165,20 @@ internal class BLEReceiver : DataChannelReceiver() {
                     return@forEach
                 }
 
-                val asset = DataMapItem.fromDataItem(dataEvent.dataItem).dataMap.getAsset("data")
+                val asset = dataMapItem.dataMap.getAsset("data")
+                val isGzipped =
+                    dataMapItem.dataMap.getString(BLEPayload.ENCODING_KEY) == BLEPayload.ENCODING_GZIP
                 // Captured now: the event buffer is released before the async callback runs.
                 val itemUri = dataEvent.dataItem.uri
                 if (asset != null) {
                     Wearable.getDataClient(this).getFdForAsset(asset)
                         .addOnSuccessListener {
-                            onAssetSuccessListener(callbacks, key, it)
+                            try {
+                                onAssetSuccessListener(callbacks, key, isGzipped, it)
+                            } catch (e: java.io.IOException) {
+                                Log.e(TAG, "Failed to decode payload for key '$key': ${e.message}")
+                                return@addOnSuccessListener
+                            }
                             if (key in deleteAfterDeliveryKeys) {
                                 Wearable.getDataClient(this).deleteDataItems(itemUri)
                                     .addOnFailureListener { e ->

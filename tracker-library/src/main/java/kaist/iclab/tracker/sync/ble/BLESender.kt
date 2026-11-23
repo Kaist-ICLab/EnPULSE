@@ -28,12 +28,15 @@ internal class BLESender(
         // Append timestamp and key to make each message unique
         // This ensures that multiple messages with the same key are treated as separate data items
         val uniquePath = "$basePath/$key/${System.currentTimeMillis()}-${System.nanoTime()}"
-        val asset = Asset.createFromBytes(value.toByteArray())
-
+        val raw = value.toByteArray(Charsets.UTF_8)
+        // Small payloads (commands, states) don't benefit from gzip's ~20-byte overhead.
+        val compress = raw.size >= BLEPayload.COMPRESSION_THRESHOLD_BYTES
+        val asset = Asset.createFromBytes(if (compress) BLEPayload.gzip(raw) else raw)
 
         val request = PutDataMapRequest.create(uniquePath).apply {
             dataMap.putString("key", key)
             dataMap.putAsset("data", asset)
+            if (compress) dataMap.putString(BLEPayload.ENCODING_KEY, BLEPayload.ENCODING_GZIP)
         }
             .asPutDataRequest()
 
