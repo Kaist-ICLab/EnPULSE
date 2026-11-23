@@ -96,6 +96,37 @@ class AndroidPermissionManager(
         DataTypes.EXERCISE.name to DataTypes.EXERCISE
     )
 
+    /**
+     * Whether this app declares what [permission] needs, so it can ever be granted. An app can
+     * strip a library permission or service from its manifest (`tools:node="remove"`); its
+     * permission is then undeclared and should not be offered to the user.
+     */
+    fun isDeclared(permission: String): Boolean = when (permission) {
+        in healthDataPermission.keys -> true
+        Manifest.permission.BIND_ACCESSIBILITY_SERVICE ->
+            isServiceDeclared(AccessibilityListener.AccessibilityServiceAdaptor::class.java)
+        Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE ->
+            isServiceDeclared(NotificationListener.NotificationListenerServiceAdaptor::class.java)
+        else -> permission in declaredPermissions
+    }
+
+    private val declaredPermissions: Set<String> by lazy {
+        try {
+            context.packageManager
+                .getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
+                .requestedPermissions?.toSet() ?: emptySet()
+        } catch (_: PackageManager.NameNotFoundException) {
+            emptySet()
+        }
+    }
+
+    private fun isServiceDeclared(service: Class<*>): Boolean = try {
+        context.packageManager.getServiceInfo(ComponentName(context, service), 0)
+        true
+    } catch (_: PackageManager.NameNotFoundException) {
+        false
+    }
+
     override fun registerPermission(newPermissions: Array<String>) {
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
             putAll(newPermissions.associateWith { p -> getPermissionState(p) })

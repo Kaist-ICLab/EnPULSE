@@ -55,7 +55,11 @@ fun PermissionSettingsScreen(
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
-    val permissions = Permission.supportedPermissions.toList()
+    // Rows for permissions this app doesn't declare (e.g. a service removed from its manifest)
+    // could never be granted, so they are not shown.
+    val permissions = remember(permissionManager) {
+        Permission.supportedPermissions.filter { p -> p.ids.all(permissionManager::isDeclared) }
+    }
     val allPermissionIds = permissions.flatMap { it.ids.toList() }
     val permissionStateMap = permissionManager.getPermissionFlow(allPermissionIds.toTypedArray())
         .collectAsState().value
