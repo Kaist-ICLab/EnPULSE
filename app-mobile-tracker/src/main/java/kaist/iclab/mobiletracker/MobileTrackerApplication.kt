@@ -27,7 +27,7 @@ import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.controller.OffBodyDetector
 import kaist.iclab.tracker.sensor.phone.SurveySensor
 import kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter
-import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.TriggerEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
