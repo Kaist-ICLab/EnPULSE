@@ -3,7 +3,6 @@ package kaist.iclab.mobiletracker.di
 import kaist.iclab.mobiletracker.helpers.DataExportHelper
 import kaist.iclab.mobiletracker.repository.CampaignRepository
 import kaist.iclab.mobiletracker.repository.DataRepository
-import kaist.iclab.mobiletracker.repository.SurveyRepository
 import kaist.iclab.mobiletracker.repository.UserProfileRepository
 import kaist.iclab.mobiletracker.viewmodels.data.DataViewModel
 import kaist.iclab.mobiletracker.viewmodels.data.SensorDetailViewModel
@@ -26,10 +25,7 @@ val viewModelModule = module {
         HomeViewModel(
             homeRepository = get(),
             backgroundController = get(),
-//            syncTimestampService = get(),
-            userProfileRepository = get(),
-//            campaignSensorRepository = get(),
-//            surveyRepository = get()
+            userProfileRepository = get()
         )
     }
 
@@ -77,9 +73,7 @@ val viewModelModule = module {
     viewModel {
         OnboardingViewModel(
             campaignRepository = get<CampaignRepository>(),
-            userProfileRepository = get<UserProfileRepository>(),
-//            surveyRepository = get<SurveyRepository>(),
-//            campaignSensorRepository = get()
+            userProfileRepository = get<UserProfileRepository>()
         )
     }
 }

@@ -43,6 +43,7 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.config.SupabaseConfigManager
 import kaist.iclab.mobiletracker.helpers.ImageAsset
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.ui.theme.appTextFieldColors
 import kaist.iclab.mobiletracker.utils.AppToast
 
 /**
@@ -157,6 +158,7 @@ fun LoginScreen(
                 },
                 label = { Text(stringResource(R.string.login_email_label)) },
                 singleLine = true,
+                colors = appTextFieldColors(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
@@ -172,6 +174,7 @@ fun LoginScreen(
                 },
                 label = { Text(stringResource(R.string.login_password_label)) },
                 singleLine = true,
+                colors = appTextFieldColors(),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,

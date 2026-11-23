@@ -16,11 +16,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,9 +31,10 @@ import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.helpers.ImageAsset
 import kaist.iclab.mobiletracker.ui.theme.AppColors
 
+private const val LAB_WEBSITE_URL = "https://ic.kaist.ac.kr/"
+
 /**
- * About settings screen
- * Displays app information
+ * About screen: app name, description, version and the lab credit with a link to its website.
  */
 @Composable
 fun AboutSettingsScreen(
@@ -39,6 +42,7 @@ fun AboutSettingsScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
 
     // Get app version
     val appVersion = remember {
@@ -125,6 +129,26 @@ fun AboutSettingsScreen(
                     InfoRow(
                         label = stringResource(R.string.version_label),
                         value = appVersion
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(Styles.INFO_TOP_PADDING))
+
+                Text(
+                    text = stringResource(R.string.about_developed_by),
+                    fontSize = Styles.DESCRIPTION_FONT_SIZE,
+                    color = AppColors.TextSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth(Styles.DESCRIPTION_WIDTH_RATIO)
+                        .padding(horizontal = Styles.DESCRIPTION_HORIZONTAL_PADDING)
+                )
+
+                TextButton(onClick = { uriHandler.openUri(LAB_WEBSITE_URL) }) {
+                    Text(
+                        text = stringResource(R.string.about_visit_website),
+                        color = AppColors.PrimaryColor,
+                        fontSize = Styles.DESCRIPTION_FONT_SIZE
                     )
                 }
             }

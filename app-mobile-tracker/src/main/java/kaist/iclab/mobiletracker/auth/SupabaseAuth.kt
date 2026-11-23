@@ -2,6 +2,7 @@ package kaist.iclab.mobiletracker.auth
 
 import android.content.Context
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import io.github.jan.supabase.auth.auth
@@ -168,7 +169,7 @@ class SupabaseAuth(
 
         val trimmedEmail = email.trim()
         if (trimmedEmail.isEmpty() || password.isEmpty()) {
-            _userStateFlow.value = createErrorState("Enter both an email and a password.")
+            _userStateFlow.value = createErrorState(string(R.string.login_error_missing_fields))
             return
         }
 
@@ -182,15 +183,15 @@ class SupabaseAuth(
 
     private fun emailLoginErrorMessage(e: Exception): String = when {
         e is AuthRestException -> when (e.errorCode) {
-            AuthErrorCode.InvalidCredentials -> "Incorrect email or password."
-            AuthErrorCode.EmailNotConfirmed -> "This account's email address is not confirmed yet."
-            AuthErrorCode.EmailProviderDisabled -> "Email sign-in is not enabled on this server."
-            AuthErrorCode.OverRequestRateLimit -> "Too many attempts. Wait a moment and try again."
-            else -> "Sign-in failed: ${e.errorDescription}"
+            AuthErrorCode.InvalidCredentials -> string(R.string.login_error_invalid_credentials)
+            AuthErrorCode.EmailNotConfirmed -> string(R.string.login_error_email_not_confirmed)
+            AuthErrorCode.EmailProviderDisabled -> string(R.string.login_error_email_disabled)
+            AuthErrorCode.OverRequestRateLimit -> string(R.string.login_error_rate_limit)
+            // The server's description is not translated.
+            else -> string(R.string.login_error_with_detail, e.errorDescription)
         }
-        e is HttpRequestException || e is TimeoutCancellationException ->
-            "Can't reach the server. Check the connection and try again."
-        else -> "Sign-in failed. Please try again."
+        e is HttpRequestException || e is TimeoutCancellationException -> string(R.string.login_error_network)
+        else -> string(R.string.login_error_generic)
     }
 
     override val isPasswordSession: Boolean
@@ -214,31 +215,24 @@ class SupabaseAuth(
         }
     }
 
-    private fun changePasswordErrorMessage(e: Exception): String {
-        // Resolved per call, so a language switched while the app is running is respected.
-        val localized = LanguageHelper(appContext).applyLanguage(appContext)
-        return when (e) {
-            is AuthRestException -> when (e.errorCode) {
-                AuthErrorCode.WeakPassword ->
-                    localized.getString(R.string.change_password_error_weak, e.errorDescription)
-
-                AuthErrorCode.SamePassword ->
-                    localized.getString(R.string.change_password_error_same)
-
-                AuthErrorCode.ReauthenticationNeeded ->
-                    localized.getString(R.string.change_password_error_reauth)
-
-                AuthErrorCode.OverRequestRateLimit ->
-                    localized.getString(R.string.change_password_error_rate_limit)
-
-                else ->
-                    localized.getString(R.string.change_password_error_with_detail, e.errorDescription)
-            }
-
-            is HttpRequestException, is TimeoutCancellationException -> localized.getString(R.string.change_password_error_network)
-            else -> localized.getString(R.string.change_password_error_generic)
+    private fun changePasswordErrorMessage(e: Exception): String = when (e) {
+        is AuthRestException -> when (e.errorCode) {
+            AuthErrorCode.WeakPassword -> string(R.string.change_password_error_weak, e.errorDescription)
+            AuthErrorCode.SamePassword -> string(R.string.change_password_error_same)
+            AuthErrorCode.ReauthenticationNeeded -> string(R.string.change_password_error_reauth)
+            AuthErrorCode.OverRequestRateLimit -> string(R.string.change_password_error_rate_limit)
+            else -> string(R.string.change_password_error_with_detail, e.errorDescription)
         }
+        is HttpRequestException, is TimeoutCancellationException -> string(R.string.change_password_error_network)
+        else -> string(R.string.change_password_error_generic)
     }
+
+    /**
+     * A string in the app's chosen language. Resolved per call, so a language switched while
+     * the app is running is respected.
+     */
+    private fun string(@StringRes id: Int, vararg args: Any): String =
+        LanguageHelper(appContext).applyLanguage(appContext).getString(id, *args)
 
     override suspend fun logout() {
         // signOut() keeps the session when the server can't be reached, so remove it locally.
@@ -277,7 +271,7 @@ class SupabaseAuth(
      */
     private fun createUserStateFromSession(session: io.github.jan.supabase.auth.user.UserSession): UserState {
         val sessionInfo = SupabaseSessionHelper.getSessionInfo(session)
-            ?: return createErrorState("Session has no user")
+            ?: return createErrorState(string(R.string.login_error_generic))
 
         return UserState(
             isLoggedIn = true,

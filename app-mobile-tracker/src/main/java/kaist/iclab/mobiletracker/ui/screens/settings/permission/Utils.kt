@@ -133,6 +133,7 @@ fun getPermissionStatusText(context: Context, permissionState: PermissionState):
     return when (permissionState) {
         PermissionState.PERMANENTLY_DENIED -> context.getString(R.string.permission_status_denied)
         PermissionState.UNSUPPORTED -> context.getString(R.string.permission_status_unsupported)
+        PermissionState.APP_NOT_INSTALLED -> context.getString(R.string.permission_status_app_not_installed)
         PermissionState.NOT_REQUESTED -> context.getString(R.string.permission_status_waiting)
         PermissionState.GRANTED -> context.getString(R.string.permission_status_granted)
         PermissionState.RATIONALE_REQUIRED -> context.getString(R.string.permission_status_not_fully_granted)

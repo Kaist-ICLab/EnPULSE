@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import kaist.iclab.mobiletracker.R
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.ui.theme.appTextFieldColors
 
 /**
  * Shown after a password sign-in while the profile's `reset_password` is still false: the
@@ -107,6 +108,7 @@ fun ChangePasswordScreen(
             },
             label = { Text(stringResource(R.string.change_password_new_label)) },
             singleLine = true,
+            colors = appTextFieldColors(),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
@@ -123,6 +125,7 @@ fun ChangePasswordScreen(
             },
             label = { Text(stringResource(R.string.change_password_confirm_label)) },
             singleLine = true,
+            colors = appTextFieldColors(),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
