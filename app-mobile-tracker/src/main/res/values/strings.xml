@@ -142,6 +142,7 @@
     <string name="permission_status_denied">Denied</string>
     <string name="permission_status_waiting">Not Requested</string>
     <string name="permission_status_unsupported">Device not supported</string>
+    <string name="permission_status_app_not_installed">Install or update Samsung Health</string>
     <string name="permission_unsupported_toast">This device doesn\'t support this permission.</string>
     <string name="permission_status_not_fully_granted">Not fully granted</string>
 

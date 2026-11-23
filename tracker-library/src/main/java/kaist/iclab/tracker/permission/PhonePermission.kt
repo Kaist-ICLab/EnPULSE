@@ -149,7 +149,7 @@ data class Permission(
 /**
  * Gets the aggregated permission state for a Permission object with multiple IDs.
  * Returns GRANTED only if all IDs are GRANTED.
- * Otherwise, returns the "worst" state (PERMANENTLY_DENIED > RATIONALE_REQUIRED > NOT_REQUESTED > UNSUPPORTED)
+ * Otherwise, returns the "worst" state (UNSUPPORTED > APP_NOT_INSTALLED > PERMANENTLY_DENIED > RATIONALE_REQUIRED > NOT_REQUESTED)
  *
  * @param permissionStateMap A map of permission IDs to their current PermissionState
  * @return The aggregated PermissionState for this Permission
@@ -167,6 +167,10 @@ fun Permission.getPermissionState(permissionStateMap: Map<String, PermissionStat
     // If any is UNSUPPORTED, return UNSUPPORTED
     if (states.any { it == PermissionState.UNSUPPORTED }) {
         return PermissionState.UNSUPPORTED
+    }
+
+    if (states.any { it == PermissionState.APP_NOT_INSTALLED }) {
+        return PermissionState.APP_NOT_INSTALLED
     }
 
     // If any is PERMANENTLY_DENIED, return PERMANENTLY_DENIED

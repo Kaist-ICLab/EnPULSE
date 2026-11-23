@@ -152,7 +152,11 @@ fun PermissionSettingsScreen(
                                     AppToast.show(context, R.string.turn_off_data_collection_first)
                                 } else {
                                     // Allow permission request if not collecting
-                                    if (permission.instructionResId != null && permissionAggregatedState != PermissionState.GRANTED) {
+                                    // The instructions are for the grant screen; a missing app goes to the Play Store first.
+                                    if (permission.instructionResId != null &&
+                                        permissionAggregatedState != PermissionState.GRANTED &&
+                                        permissionAggregatedState != PermissionState.APP_NOT_INSTALLED
+                                    ) {
                                         pendingPermissionForInstruction = permission
                                     } else {
                                         handlePermissionRequest(

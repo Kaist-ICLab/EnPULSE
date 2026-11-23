@@ -63,6 +63,7 @@ private fun PermissionRow(
     val statusColor = when (permissionState) {
         PermissionState.PERMANENTLY_DENIED -> AppColors.ErrorColor
         PermissionState.UNSUPPORTED -> AppColors.ErrorColor
+        PermissionState.APP_NOT_INSTALLED -> AppColors.ErrorColor
         PermissionState.NOT_REQUESTED -> AppColors.TextPrimary
         PermissionState.GRANTED -> AppColors.PrimaryColor
         PermissionState.RATIONALE_REQUIRED -> AppColors.ErrorColor

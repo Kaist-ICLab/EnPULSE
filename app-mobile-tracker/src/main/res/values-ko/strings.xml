@@ -141,6 +141,7 @@
     <string name="permission_status_denied">거부됨</string>
     <string name="permission_status_waiting">요청 안됨</string>
     <string name="permission_status_unsupported">기기에서 지원하지 않음</string>
+    <string name="permission_status_app_not_installed">삼성 헬스 설치 또는 업데이트 필요</string>
     <string name="permission_unsupported_toast">이 기기에서는 이 권한을 지원하지 않습니다.</string>
     <string name="permission_status_not_fully_granted">완전히 허용되지 않음</string>
 
