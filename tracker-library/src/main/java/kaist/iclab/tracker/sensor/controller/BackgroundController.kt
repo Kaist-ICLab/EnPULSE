@@ -37,6 +37,19 @@ class BackgroundController(
 ) : Controller {
     companion object {
         private val TAG = BackgroundController::class.simpleName
+
+        /**
+         * Drops only the health service type, and only when it can't be used: Android 14+ allows
+         * it only with a health permission granted. Every other type is kept.
+         *
+         * @param healthType the health type constant, or null below Android 14 where it doesn't
+         *   exist (so nothing is dropped).
+         */
+        internal fun dropUnusableHealthType(
+            types: Collection<Int>,
+            healthType: Int?,
+            canUseHealthType: Boolean
+        ): List<Int> = types.filter { healthType == null || it != healthType || canUseHealthType }
     }
 
     data class ServiceNotification(
@@ -470,7 +483,11 @@ class BackgroundController(
             }.flatMap { it.foregroundServiceTypes.toList() }
                 .toSet()
                 .filter { it in allowedServiceTypes } // Only keep types declared in manifest
-                .filter { ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) && (it != ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)) || canUseHealthServiceType() }
+                .let { types ->
+                    val healthType =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH else null
+                    dropUnusableHealthType(types, healthType, canUseHealthServiceType())
+                }
 
             // Combine allowed types with default
             return calculatedTypes.fold(defaultServiceType) { acc, type -> acc or type }
