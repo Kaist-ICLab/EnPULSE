@@ -27,6 +27,8 @@
     <string name="no_email">이메일 없음</string>
     <string name="version_label">버전</string>
     <string name="about_description">연구 데이터 수집을 위한 모바일 추적 애플리케이션</string>
+    <string name="about_developed_by">KAIST 인터랙티브 컴퓨팅 연구실 개발</string>
+    <string name="about_visit_website">연구실 웹사이트 방문</string>
     <string name="sign_out">로그아웃</string>
     <string name="login_email_label">이메일</string>
     <string name="login_password_label">비밀번호</string>

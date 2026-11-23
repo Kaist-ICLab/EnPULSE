@@ -28,6 +28,8 @@
     <string name="no_email">No email</string>
     <string name="version_label">Version</string>
     <string name="about_description">A mobile tracking application for research data collection</string>
+    <string name="about_developed_by">Developed by KAIST Interactive Computing Laboratory</string>
+    <string name="about_visit_website">Visit lab website</string>
     <string name="sign_out">Sign Out</string>
     <string name="login_email_label">Email</string>
     <string name="login_password_label">Password</string>
