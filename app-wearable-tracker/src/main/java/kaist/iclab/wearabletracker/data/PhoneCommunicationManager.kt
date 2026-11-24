@@ -171,6 +171,10 @@ class PhoneCommunicationManager(
     ): Boolean {
         val sensorStartedAt = System.currentTimeMillis()
         var nextFrom = startTimestamp
+        // Send only the rows that exist now; rows saved during this sync wait for the next one.
+        // The watch saves new rows every few seconds, so without this cut-off a collecting
+        // sensor almost always has fresh rows when an ACK lands, and its turn never ends.
+        val sendUpTo = store.getLatestTimestamp() ?: startTimestamp
         val inFlightChunkEnds = ArrayDeque<Long>()
         var lastProgressAt = sensorStartedAt
         var sentAny = false
@@ -193,7 +197,9 @@ class PhoneCommunicationManager(
                 break
             }
 
-            while (inFlightChunkEnds.size < Constants.AutoSync.MAX_CHUNKS_IN_FLIGHT) {
+            while (inFlightChunkEnds.size < Constants.AutoSync.MAX_CHUNKS_IN_FLIGHT &&
+                nextFrom < sendUpTo
+            ) {
                 val data = store.getDataSince(nextFrom, Constants.DB.SYNC_BATCH_LIMIT)
                 if (data.isEmpty()) break
 
