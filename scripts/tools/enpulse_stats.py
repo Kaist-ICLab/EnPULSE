@@ -13,9 +13,9 @@ Android keeps per-app statistics itself, so these are read from the device:
 
 Workflow for each run:
   1. Unplug the device (batterystats stops counting while charging).
-  2. Reset:   python scripts/enpulse_stats.py reset   --serial <serial>
+  2. Reset:   python scripts/tools/enpulse_stats.py reset   --serial <serial>
   3. Start the benchmark app and EnPULSE, run the scenario.
-  4. Collect: python scripts/enpulse_stats.py collect --serial <serial> --out <dir>
+  4. Collect: python scripts/tools/enpulse_stats.py collect --serial <serial> --out <dir>
 
 pull_benchmark.py and fleet_manager.py call reset() and collect() for you.
 Raw dumps are always saved, so anything the parser misses can be read later.

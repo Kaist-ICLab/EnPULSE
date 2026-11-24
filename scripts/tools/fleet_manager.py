@@ -6,11 +6,11 @@ Manages multiple Android phones and watches simultaneously via ADB over WiFi.
 Supports batch status monitoring, data pulling, APK installation, and report generation.
 
 Usage:
-  python scripts/fleet_manager.py setup
-  python scripts/fleet_manager.py status
-  python scripts/fleet_manager.py reset     # start of run, after unplugging
-  python scripts/fleet_manager.py pull
-  python scripts/fleet_manager.py install
+  python scripts/tools/fleet_manager.py setup
+  python scripts/tools/fleet_manager.py status
+  python scripts/tools/fleet_manager.py reset     # start of run, after unplugging
+  python scripts/tools/fleet_manager.py pull
+  python scripts/tools/fleet_manager.py install
 """
 
 import os
@@ -646,7 +646,7 @@ def cmd_install():
         print("❌ No devices in fleet.")
         return
 
-    proj_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    proj_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     ALL_APPS = [
         {"id": "app-mobile-benchmark", "type": "Benchmark", "device": "Phone", "pkg": "kaist.iclab.benchmark", "task": ":app-mobile-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-mobile-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Mobile-Benchmark.apk")},
         {"id": "app-wearable-benchmark", "type": "Benchmark", "device": "Watch", "pkg": "kaist.iclab.benchmark", "task": ":app-wearable-benchmark:assembleDebug", "path": os.path.join(proj_dir, "app-wearable-benchmark", "build", "outputs", "apk", "debug", "EnPULSE-Watch-Benchmark.apk")},

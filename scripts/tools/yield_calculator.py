@@ -6,8 +6,8 @@ Calculates End-to-End Data Yield Ratio (Completeness %), Continuity Gaps,
 and Synchronization Latency for CHI benchmark scenarios by querying the Supabase backend.
 
 Usage:
-    python scripts/yield_calculator.py --url https://<project>.supabase.co --key <key> --campaign Benchmark-Bio --duration 3600
-    python scripts/yield_calculator.py --demo
+    python scripts/tools/yield_calculator.py --url https://<project>.supabase.co --key <key> --campaign Benchmark-Bio --duration 3600
+    python scripts/tools/yield_calculator.py --demo
 """
 
 import argparse

@@ -48,7 +48,7 @@ Build and install via ADB to your watch:
 Or deploy across multiple watches automatically using Fleet Manager:
 
 ```bash
-python3 scripts/fleet_manager.py install
+python3 scripts/tools/fleet_manager.py install
 ```
 
 ### 2. Running a Test
@@ -82,7 +82,7 @@ Local copies are stored on the watch in the app's external files directory:
 To extract data from all connected devices in parallel, use **Fleet Manager**:
 
 ```bash
-python3 scripts/fleet_manager.py pull
+python3 scripts/tools/fleet_manager.py pull
 ```
 
 Alternatively, pull data manually via ADB:

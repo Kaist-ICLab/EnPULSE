@@ -7,12 +7,12 @@ Pulls benchmark CSVs and EnPULSE's own energy, CPU, memory and storage
 
 Usage:
     # Start of run, after unplugging: clear batterystats and procstats
-    python scripts/pull_benchmark.py --phone <serial> --watch <serial> --reset
+    python scripts/tools/pull_benchmark.py --phone <serial> --watch <serial> --reset
 
     # End of run
-    python scripts/pull_benchmark.py --phone <serial> --watch <serial> --scenario C_BioTracking
-    python scripts/pull_benchmark.py --phone <serial> --scenario B_PhoneOnly
-    python scripts/pull_benchmark.py --watch <serial> --scenario E2_Accelerometer
+    python scripts/tools/pull_benchmark.py --phone <serial> --watch <serial> --scenario C_BioTracking
+    python scripts/tools/pull_benchmark.py --phone <serial> --scenario B_PhoneOnly
+    python scripts/tools/pull_benchmark.py --watch <serial> --scenario E2_Accelerometer
 """
 
 import argparse

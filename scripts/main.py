@@ -46,7 +46,7 @@ def select_adb_device():
 
 def run_script(script_name, args=[]):
     """Helper to run a sub-script using the current python interpreter."""
-    script_path = os.path.join(os.path.dirname(__file__), script_name)
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools", script_name)
     if not os.path.exists(script_path):
         print(f"❌ Script not found: {script_path}")
         return False
@@ -128,7 +128,7 @@ def interactive_menu():
                 run_script("yield_calculator.py", ["--url", url, "--key", key, "--campaign", campaign, "--duration", duration])
     elif choice == "5":
         run_script("fleet_manager.py", ["--help"])
-        print("\n💡 Run 'python scripts/fleet_manager.py setup' to pair devices.")
+        print("\n💡 Run 'python scripts/tools/fleet_manager.py setup' to pair devices.")
     elif choice == "6" or not choice:
         print("Goodbye!")
         sys.exit(0)
