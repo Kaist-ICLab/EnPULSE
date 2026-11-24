@@ -39,14 +39,15 @@ KNOWN_SENSORS = {
 def query_supabase_count(url: str, key: str, table_name: str, campaign_id: str, start_time: str, end_time: str) -> int:
     """Query Supabase PostgREST endpoint for row count using standard urllib."""
     endpoint = f"{url.rstrip('/')}/rest/v1/{table_name}"
-    params = {
-        "select": "count",
-        "campaign_id": f"eq.{campaign_id}",
-    }
+    # A list, not a dict: start and end both filter created_at, and a dict key would keep only one.
+    params = [
+        ("select", "count"),
+        ("campaign_id", f"eq.{campaign_id}"),
+    ]
     if start_time:
-        params["created_at"] = f"gte.{start_time}"
+        params.append(("created_at", f"gte.{start_time}"))
     if end_time:
-        params["created_at"] = f"lte.{end_time}"
+        params.append(("created_at", f"lte.{end_time}"))
 
     query_str = urllib.parse.urlencode(params)
     full_url = f"{endpoint}?{query_str}"

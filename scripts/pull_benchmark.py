@@ -21,8 +21,9 @@ from pathlib import Path
 
 
 BENCHMARK_PATH_ON_DEVICE = "/sdcard/Download/EnPULSE/"
-PHONE_PACKAGE = "kaist.iclab.mobiletracker"
-WATCH_PACKAGE = "kaist.iclab.wearabletracker"
+# The phone and watch apps share one application ID.
+PHONE_PACKAGE = "kaist.iclab.trackerSystem"
+WATCH_PACKAGE = "kaist.iclab.trackerSystem"
 
 
 def run_adb(serial: str, *args: str) -> str:

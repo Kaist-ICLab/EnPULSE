@@ -135,11 +135,11 @@ def generate_graph(folder_path):
     ax2.grid(True, linestyle='--', alpha=0.5)
     
     # Try plotting CPU temperature on secondary y-axis if we have it
-    if 'cpu_temperature' in df.columns:
-        valid_temps = df[df['cpu_temperature'] > 0]['cpu_temperature']
+    if 'cpu_temperature_c' in df.columns:
+        valid_temps = df[df['cpu_temperature_c'] > 0]['cpu_temperature_c']
         if not valid_temps.empty:
             ax2_twin = ax2.twinx()
-            ax2_twin.plot(df['elapsed_min'], df['cpu_temperature'], color='orange', linestyle='-', linewidth=1.2, label='CPU Temp (°C)')
+            ax2_twin.plot(df['elapsed_min'], df['cpu_temperature_c'], color='orange', linestyle='-', linewidth=1.2, label='CPU Temp (°C)')
             ax2_twin.set_ylabel('CPU Temperature (°C)', color='orange')
             ax2_twin.tick_params(axis='y', labelcolor='orange')
             
