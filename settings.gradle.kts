@@ -35,3 +35,7 @@ include(":samsung-health-sensor-api")
 include(":tracker-library")
 include(":app-wearable-tracker")
 include(":app-mobile-tracker")
+
+// Benchmark apps (internal testing)
+include(":app-mobile-benchmark")
+include(":app-wearable-benchmark")
