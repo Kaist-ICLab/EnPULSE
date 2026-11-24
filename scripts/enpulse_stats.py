@@ -9,6 +9,7 @@ Android keeps per-app statistics itself, so these are read from the device:
                                                wake-up alarms, network bytes, GPS time)
   2. Memory           dumpsys procstats      (PSS / USS / RSS min, average and max)
   3. Storage          run-as ... du          (app data size and ObjectBox size)
+  4. Memory over time EnPULSE's MemoryLogger  (CSV every 60 s, pradipta/testing builds only)
 
 Workflow for each run:
   1. Unplug the device (batterystats stops counting while charging).
@@ -21,6 +22,8 @@ Raw dumps are always saved, so anything the parser misses can be read later.
 """
 
 import argparse
+import csv
+import glob
 import json
 import os
 import re
@@ -30,6 +33,7 @@ from datetime import datetime
 
 PACKAGE = "kaist.iclab.trackerSystem"  # Phone and watch apps share this ID.
 OBJECTBOX_DIR = "files/objectbox"  # MyObjectBox default location inside the app data dir.
+MEMORY_LOG_DIR = "/sdcard/Android/data/%s/files/EnPULSE-Memory" % PACKAGE  # MemoryLogger output
 PROCSTATS_HOURS = 24  # Procstats aggregation window; runs longer than this need a larger value.
 
 GPS_SENSOR_ID = "-10000"  # BatteryStats.Uid.Sensor.GPS
@@ -52,14 +56,17 @@ def adb(serial, *args, timeout=120):
 
 def reset(serial):
     """
-    Clears batterystats and procstats so the end-of-run dump covers this run only.
-    Returns a list of (step, ok, message).
+    Clears batterystats, procstats and old MemoryLogger files, so the end-of-run
+    collection covers this run only. Returns a list of (step, ok, message).
     """
     results = []
     ok, out, err = adb(serial, "shell", "dumpsys", "batterystats", "--reset")
     results.append(("batterystats", ok and "reset" in out.lower(), (out or err).strip()))
     ok, out, err = adb(serial, "shell", "dumpsys", "procstats", "--clear")
     results.append(("procstats", ok and "clear" in out.lower(), (out or err).strip()))
+    # A running EnPULSE recreates its current file, with a header, on the next sample.
+    ok, out, err = adb(serial, "shell", "rm -f %s/*.csv" % MEMORY_LOG_DIR)
+    results.append(("memory logs", ok, (out or err).strip() or "cleared"))
     return results
 
 
@@ -221,6 +228,35 @@ def get_storage(serial, package=PACKAGE):
     return storage, "\n".join(raw)
 
 
+def summarize_memory_logs(log_dir):
+    """Average and peak of EnPULSE's own memory across the MemoryLogger CSVs in log_dir."""
+    pss, native, java = [], [], []
+    files = sorted(glob.glob(os.path.join(log_dir, "*.csv")))
+    for path in files:
+        with open(path, newline="") as f:
+            for row in csv.DictReader(f):
+                for column, values in (("total_pss_mb", pss), ("native_heap_mb", native), ("java_heap_mb", java)):
+                    value = _num(row.get(column))
+                    if value is not None:
+                        values.append(value)
+    if not pss:
+        return None
+
+    def avg(values):
+        return round(sum(values) / len(values), 1) if values else None
+
+    return {
+        "files": len(files),
+        "samples": len(pss),
+        "pss_avg_mb": avg(pss),
+        "pss_max_mb": max(pss),
+        "native_heap_avg_mb": avg(native),
+        "native_heap_max_mb": max(native) if native else None,
+        "java_heap_avg_mb": avg(java),
+        "java_heap_max_mb": max(java) if java else None,
+    }
+
+
 def collect(serial, out_dir, package=PACKAGE, procstats_hours=PROCSTATS_HOURS):
     """
     Dumps batterystats, procstats and storage for EnPULSE into out_dir,
@@ -266,6 +302,12 @@ def collect(serial, out_dir, package=PACKAGE, procstats_hours=PROCSTATS_HOURS):
     save("storage.txt", raw)
     summary["storage"] = storage
 
+    # 4. Memory over time (MemoryLogger CSVs)
+    memory_dir = os.path.join(out_dir, "memory_log")
+    os.makedirs(memory_dir, exist_ok=True)
+    adb(serial, "pull", MEMORY_LOG_DIR + "/.", memory_dir, timeout=300)
+    summary["memory_log"] = summarize_memory_logs(memory_dir)
+
     save("enpulse_stats.json", json.dumps(summary, indent=2))
     return summary
 
@@ -277,6 +319,7 @@ def format_summary(summary):
     b = summary.get("batterystats") or {}
     p = summary.get("procstats") or {}
     s = summary.get("storage") or {}
+    m = summary.get("memory_log") or {}
 
     def fmt(value, unit=""):
         return "N/A" if value is None else "%s%s" % (value, unit)
@@ -288,6 +331,9 @@ def format_summary(summary):
         % (fmt(b.get("cpu_total_s")), fmt(wl_s), fmt(b.get("partial_wakelock_count")), fmt(b.get("wakeup_alarms"))),
         "  Memory:  PSS avg %s / max %s   (%s samples)"
         % (fmt(p.get("pss_avg_mb"), " MB"), fmt(p.get("pss_max_mb"), " MB"), fmt(p.get("samples"))),
+        "  Memory log: PSS avg %s / max %s, native heap max %s   (%s samples)"
+        % (fmt(m.get("pss_avg_mb"), " MB"), fmt(m.get("pss_max_mb"), " MB"),
+           fmt(m.get("native_heap_max_mb"), " MB"), fmt(m.get("samples"))),
         "  Storage: data %s, ObjectBox %s   [%s]"
         % (fmt(s.get("data_mb"), " MB"), fmt(s.get("objectbox_mb"), " MB"), s.get("method") or "unavailable"),
     ])

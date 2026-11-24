@@ -4,6 +4,7 @@ import android.app.Application
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import androidx.core.app.NotificationManagerCompat
+import kaist.iclab.tracker.benchmark.MemoryLogger
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
@@ -33,6 +34,9 @@ import org.koin.core.qualifier.named
 class WearableApplication : Application(), KoinComponent, BackgroundControllerDependenciesProvider {
     override fun onCreate() {
         super.onCreate()
+
+        // Benchmarking (pradipta/testing only): log EnPULSE's own memory over each run.
+        MemoryLogger.start(this)
 
         startKoin {
             androidContext(this@WearableApplication)

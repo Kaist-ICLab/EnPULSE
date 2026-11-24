@@ -210,6 +210,9 @@ ENPULSE_COLUMNS = [
     ("batterystats", "bt_rx_bytes"), ("batterystats", "bt_tx_bytes"),
     ("procstats", "pss_avg_mb"), ("procstats", "pss_max_mb"), ("procstats", "rss_avg_mb"),
     ("procstats", "rss_max_mb"), ("procstats", "samples"),
+    ("memory_log", "pss_avg_mb"), ("memory_log", "pss_max_mb"),
+    ("memory_log", "native_heap_avg_mb"), ("memory_log", "native_heap_max_mb"),
+    ("memory_log", "java_heap_avg_mb"), ("memory_log", "java_heap_max_mb"), ("memory_log", "samples"),
     ("storage", "data_mb"), ("storage", "objectbox_mb"), ("storage", "method"),
 ]
 

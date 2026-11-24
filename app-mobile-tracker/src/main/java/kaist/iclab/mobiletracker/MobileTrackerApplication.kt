@@ -20,6 +20,7 @@ import kaist.iclab.mobiletracker.repository.TriggerRepository
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.mobiletracker.utils.NotificationHelper
+import kaist.iclab.tracker.benchmark.MemoryLogger
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
@@ -51,6 +52,9 @@ class MobileTrackerApplication : Application(), KoinComponent,
 
     override fun onCreate() {
         super.onCreate()
+
+        // Benchmarking (pradipta/testing only): log EnPULSE's own memory over each run.
+        MemoryLogger.start(this)
 
         // Initialize Koin Dependency Injection
         startKoin {
