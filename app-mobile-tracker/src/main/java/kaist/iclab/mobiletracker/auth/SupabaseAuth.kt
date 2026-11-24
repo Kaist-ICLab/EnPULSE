@@ -135,6 +135,20 @@ class SupabaseAuth(
         }
     }
 
+    /**
+     * Waits for auth-kt to leave [SessionStatus.Initializing]. On a cold start with an expired
+     * stored token, [publishStoredSession] already reports the user as logged in, but the client
+     * has no session until the refresh lands: requests made in that window go out with the anon
+     * key and fail as auth errors. Offline, the status moves to RefreshFailure, so callers proceed
+     * and see the real network error. Bounded like [observeSessionStatus] so a status stuck at
+     * Initializing can't hang the caller.
+     */
+    override suspend fun awaitSessionReady() {
+        withTimeoutOrNull(Constants.Network.AUTH_AWAIT_INITIALIZATION_TIMEOUT_MS.milliseconds) {
+            supabaseClient.auth.awaitInitialization()
+        } ?: Log.w(TAG, "Timed out waiting for the Supabase session to become ready")
+    }
+
     override suspend fun getToken() {
         SupabaseLoadingInterceptor.withLoading {
             try {

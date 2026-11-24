@@ -168,6 +168,9 @@ class AuthViewModel(
             return
         }
 
+        // On a cold start, userState can show the stored session before its expired token is
+        // refreshed; calling now would go out unauthenticated and fail as a non-network error.
+        authentication.awaitSessionReady()
         userProfileRepository.createProfileIfNotExists(user.email, null)
             .onFailure { e ->
                 // The config load right after this hits the same outage and shows the dialog.
@@ -196,6 +199,8 @@ class AuthViewModel(
      * Suspending function to load user profile.
      */
     private suspend fun loadUserProfileSuspend() {
+        // See saveProfileIfNotExists: don't sync with a session that is still being refreshed.
+        authentication.awaitSessionReady()
         // Checked before syncing: a failed sync can still publish a freshly fetched profile, which
         // must not be mistaken for a cached one.
         val hadCachedProfile = userProfileRepository.profileFlow.value != null
