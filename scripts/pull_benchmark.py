@@ -2,10 +2,14 @@
 """
 pull_benchmark.py — Post-test extraction script for EnPULSE benchmarking.
 
-Pulls benchmark CSVs, battery stats, and memory info from phone and/or watch,
-then generates a summary report.
+Pulls benchmark CSVs and EnPULSE's own energy, CPU, memory and storage
+(see enpulse_stats.py) from phone and/or watch, then generates a summary report.
 
 Usage:
+    # Start of run, after unplugging: clear batterystats and procstats
+    python scripts/pull_benchmark.py --phone <serial> --watch <serial> --reset
+
+    # End of run
     python scripts/pull_benchmark.py --phone <serial> --watch <serial> --scenario C_BioTracking
     python scripts/pull_benchmark.py --phone <serial> --scenario B_PhoneOnly
     python scripts/pull_benchmark.py --watch <serial> --scenario E2_Accelerometer
@@ -18,6 +22,8 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
+
+import enpulse_stats
 
 
 BENCHMARK_PATH_ON_DEVICE = "/sdcard/Download/EnPULSE/"
@@ -62,13 +68,6 @@ def get_meminfo(serial: str, package: str) -> str:
     return run_adb(serial, "shell", "dumpsys", "meminfo", package)
 
 
-def pull_batterystats(serial: str, output_file: str):
-    """Pull battery stats checkin data."""
-    output = run_adb(serial, "shell", "dumpsys", "batterystats", "--checkin")
-    with open(output_file, "w") as f:
-        f.write(output)
-
-
 def pull_bugreport(serial: str, output_file: str):
     """Pull a bugreport zip."""
     cmd = ["adb"]
@@ -100,7 +99,7 @@ def analyze_benchmark_csv(csv_path: str) -> dict:
 
     drain_rate = (start_battery - end_battery) / duration_hrs if duration_hrs > 0 else 0
 
-    cpu_values = [float(r["cpu_usage_pct"]) for r in rows if float(r["cpu_usage_pct"]) >= 0]
+    # Memory of the benchmark app itself, not EnPULSE (see enpulse_stats for EnPULSE's).
     mem_values = [float(r["app_memory_mb"]) for r in rows if float(r["app_memory_mb"]) >= 0]
 
     return {
@@ -108,8 +107,7 @@ def analyze_benchmark_csv(csv_path: str) -> dict:
         "end_battery": end_battery,
         "duration_hrs": round(duration_hrs, 2),
         "drain_rate_pct_per_hr": round(drain_rate, 2),
-        "avg_cpu_pct": round(sum(cpu_values) / len(cpu_values), 1) if cpu_values else -1,
-        "avg_memory_mb": round(sum(mem_values) / len(mem_values), 1) if mem_values else -1,
+        "avg_benchmark_memory_mb": round(sum(mem_values) / len(mem_values), 1) if mem_values else -1,
         "data_points": len(rows),
     }
 
@@ -132,11 +130,12 @@ def extract_device(serial: str, device_name: str, scenario: str, output_dir: str
     csv_dir = os.path.join(device_dir, "csvs")
     pull_dir(serial, BENCHMARK_PATH_ON_DEVICE, csv_dir)
 
-    # 3. Battery stats
-    print(f"  Pulling battery stats...")
-    pull_batterystats(serial, os.path.join(device_dir, "batterystats.txt"))
+    # 3. EnPULSE energy, CPU, memory and storage
+    print(f"  Pulling EnPULSE stats (batterystats, procstats, storage)...")
+    stats = enpulse_stats.collect(serial, os.path.join(device_dir, "enpulse_stats"), package)
+    print(enpulse_stats.format_summary(stats))
 
-    # 4. Memory info
+    # 4. Memory snapshot at pull time (procstats above covers the whole run)
     print(f"  Pulling memory info...")
     meminfo = get_meminfo(serial, package)
     with open(os.path.join(device_dir, "meminfo.txt"), "w") as f:
@@ -153,7 +152,7 @@ def extract_device(serial: str, device_name: str, scenario: str, output_dir: str
         print(f"  Analyzing: {csv_file.name}")
         analyses[csv_file.name] = analyze_benchmark_csv(str(csv_file))
 
-    return analyses
+    return analyses, stats
 
 
 def print_summary(scenario: str, results: dict):
@@ -161,7 +160,7 @@ def print_summary(scenario: str, results: dict):
     print(f"\n{'=' * 70}")
     print(f"  BENCHMARK SUMMARY: {scenario}")
     print(f"{'=' * 70}")
-    print(f"{'Device':<10} {'File':<40} {'Start%':>6} {'End%':>5} {'Hrs':>5} {'%/hr':>6} {'CPU%':>5} {'RAM MB':>7}")
+    print(f"{'Device':<10} {'File':<40} {'Start%':>6} {'End%':>5} {'Hrs':>5} {'%/hr':>6} {'Bench MB':>8}")
     print("-" * 70)
 
     for device_name, analyses in results.items():
@@ -175,8 +174,7 @@ def print_summary(scenario: str, results: dict):
                 f"{data['end_battery']:>4}% "
                 f"{data['duration_hrs']:>5} "
                 f"{data['drain_rate_pct_per_hr']:>5.1f} "
-                f"{data['avg_cpu_pct']:>5.1f} "
-                f"{data['avg_memory_mb']:>6.1f}"
+                f"{data['avg_benchmark_memory_mb']:>8.1f}"
             )
 
 
@@ -187,7 +185,7 @@ def write_summary_csv(scenario: str, results: dict, output_dir: str):
         writer = csv.writer(f)
         writer.writerow([
             "scenario", "device", "csv_file", "start_battery_pct", "end_battery_pct",
-            "duration_hrs", "drain_rate_pct_per_hr", "avg_cpu_pct", "avg_memory_mb", "data_points"
+            "duration_hrs", "drain_rate_pct_per_hr", "avg_benchmark_memory_mb", "data_points"
         ])
         for device_name, analyses in results.items():
             for filename, data in analyses.items():
@@ -197,21 +195,65 @@ def write_summary_csv(scenario: str, results: dict, output_dir: str):
                     scenario, device_name, filename,
                     data["start_battery"], data["end_battery"],
                     data["duration_hrs"], data["drain_rate_pct_per_hr"],
-                    data["avg_cpu_pct"], data["avg_memory_mb"], data["data_points"],
+                    data["avg_benchmark_memory_mb"], data["data_points"],
                 ])
     print(f"\n  Summary CSV saved to: {csv_path}")
+
+
+ENPULSE_COLUMNS = [
+    ("batterystats", "estimated_mah"), ("batterystats", "cpu_total_s"),
+    ("batterystats", "cpu_user_ms"), ("batterystats", "cpu_system_ms"),
+    ("batterystats", "partial_wakelock_ms"), ("batterystats", "partial_wakelock_count"),
+    ("batterystats", "wakeup_alarms"), ("batterystats", "gps_ms"),
+    ("batterystats", "wifi_rx_bytes"), ("batterystats", "wifi_tx_bytes"),
+    ("batterystats", "mobile_rx_bytes"), ("batterystats", "mobile_tx_bytes"),
+    ("batterystats", "bt_rx_bytes"), ("batterystats", "bt_tx_bytes"),
+    ("procstats", "pss_avg_mb"), ("procstats", "pss_max_mb"), ("procstats", "rss_avg_mb"),
+    ("procstats", "rss_max_mb"), ("procstats", "samples"),
+    ("storage", "data_mb"), ("storage", "objectbox_mb"), ("storage", "method"),
+]
+
+
+def write_enpulse_csv(scenario: str, stats_by_device: dict, output_dir: str):
+    """One row per device with EnPULSE's own energy, CPU, memory and storage."""
+    csv_path = os.path.join(output_dir, "enpulse_summary.csv")
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["scenario", "device"] + [f"{group}_{key}" for group, key in ENPULSE_COLUMNS])
+        for device_name, stats in stats_by_device.items():
+            row = [scenario, device_name]
+            for group, key in ENPULSE_COLUMNS:
+                value = (stats.get(group) or {}).get(key)
+                row.append("" if value is None else value)
+            writer.writerow(row)
+    print(f"  EnPULSE summary CSV saved to: {csv_path}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="EnPULSE Benchmark Data Extractor")
     parser.add_argument("--phone", help="Phone ADB serial (e.g., 192.168.1.5:5555)")
     parser.add_argument("--watch", help="Watch ADB serial")
-    parser.add_argument("--scenario", required=True, help="Scenario name (e.g., C_BioTracking)")
+    parser.add_argument("--scenario", help="Scenario name (e.g., C_BioTracking); required unless --reset")
+    parser.add_argument("--reset", action="store_true",
+                        help="Start of run: clear batterystats and procstats, then exit. Unplug first.")
     parser.add_argument("--output", default="results", help="Output directory (default: results/)")
     args = parser.parse_args()
 
     if not args.phone and not args.watch:
         parser.error("At least one of --phone or --watch must be specified")
+
+    if args.reset:
+        for label, serial in (("phone", args.phone), ("watch", args.watch)):
+            if not serial:
+                continue
+            print(f"Resetting stats on {label} ({serial})...")
+            for step, ok, msg in enpulse_stats.reset(serial):
+                print(f"  {'✅' if ok else '⚠'} {step}: {msg or 'no output'}")
+        print("\nDone. Keep the devices unplugged and start the run now.")
+        return
+
+    if not args.scenario:
+        parser.error("--scenario is required unless --reset is given")
 
     output_dir = os.path.join(args.output, args.scenario)
     os.makedirs(output_dir, exist_ok=True)
@@ -222,19 +264,21 @@ def main():
     print(f"Time:     {datetime.now().isoformat()}")
 
     results = {}
+    stats = {}
 
     if args.phone:
-        results["phone"] = extract_device(
+        results["phone"], stats["phone"] = extract_device(
             args.phone, "phone", args.scenario, output_dir, PHONE_PACKAGE
         )
 
     if args.watch:
-        results["watch"] = extract_device(
+        results["watch"], stats["watch"] = extract_device(
             args.watch, "watch", args.scenario, output_dir, WATCH_PACKAGE
         )
 
     print_summary(args.scenario, results)
     write_summary_csv(args.scenario, results, output_dir)
+    write_enpulse_csv(args.scenario, stats, output_dir)
 
     print(f"\n✅ Done! All data saved to: {output_dir}/")
 

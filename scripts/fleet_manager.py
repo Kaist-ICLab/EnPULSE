@@ -8,6 +8,7 @@ Supports batch status monitoring, data pulling, APK installation, and report gen
 Usage:
   python scripts/fleet_manager.py setup
   python scripts/fleet_manager.py status
+  python scripts/fleet_manager.py reset     # start of run, after unplugging
   python scripts/fleet_manager.py pull
   python scripts/fleet_manager.py install
 """
@@ -20,6 +21,8 @@ import subprocess
 import concurrent.futures
 import re
 from datetime import datetime
+
+import enpulse_stats
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "fleet_config.json")
 PACKAGE_NAME = "kaist.iclab.mobiletracker"
@@ -245,8 +248,16 @@ def pull_device_data(device: dict) -> tuple:
             elif err:
                 errors.append(err.strip())
                 
+    # EnPULSE's own energy, CPU, memory and storage since the last reset
+    stats_dir = os.path.join(local_path, "enpulse_stats", datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    stats = enpulse_stats.collect(address, stats_dir)
+    if not stats.get("error"):
+        pulled_any = True
+    else:
+        errors.append(stats["error"])
+
     if pulled_any:
-        return name, True, local_path
+        return name, True, local_path + "\n" + enpulse_stats.format_summary(stats)
     
     if not errors:
         return name, False, "No benchmark data found on device"
@@ -586,6 +597,44 @@ def cmd_pull():
         else:
             print(f"  ❌ {name}: Failed - {msg}")
 
+def reset_device_stats(device: dict) -> tuple:
+    """Clears batterystats and procstats on one device. Returns (name, ok, message)."""
+    run_adb(["connect", device["address"]], timeout=5)
+    results = enpulse_stats.reset(device["address"])
+    ok = all(step_ok for _, step_ok, _ in results)
+    message = ", ".join(f"{step} {'cleared' if step_ok else 'FAILED: ' + (msg or 'no output')}"
+                        for step, step_ok, msg in results)
+    return device["name"], ok, message
+
+def cmd_reset():
+    """
+    Start of a run: clears batterystats and procstats on the selected devices, so the
+    EnPULSE stats collected by 'pull' cover this run only. Unplug the devices first;
+    batterystats does not count time spent charging.
+    """
+    config = load_config()
+    devices = config.get("devices", [])
+    if not devices:
+        print("❌ No devices in fleet.")
+        return
+
+    target_devices = select_target_devices(devices)
+    if not target_devices:
+        print("❌ No devices selected.")
+        return
+
+    print("\n⚠️  Make sure the selected devices are unplugged before resetting.")
+    print(f"🔄 Resetting EnPULSE stats on {len(target_devices)} device(s)...")
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(target_devices)) as executor:
+        futures = {executor.submit(reset_device_stats, d): d for d in target_devices}
+        for future in concurrent.futures.as_completed(futures):
+            results.append(future.result())
+
+    results.sort(key=lambda x: x[0])
+    for name, ok, msg in results:
+        print(f"  {'✅' if ok else '⚠️'} {name}: {msg}")
+
 def cmd_install():
     """
     Interactive wizard to build APKs via Gradle and deploy them in parallel to connected devices.
@@ -757,12 +806,13 @@ def interactive_menu():
         print("1. Setup      (Pair and connect new wireless devices)")
         print("2. Rediscover (Auto-update ports after device restart) ← NEW")
         print("3. Status     (Check battery and benchmark status)")
-        print("4. Pull       (Extract latest benchmark data)")
-        print("5. Install    (Build & Deploy APKs to all devices)")
-        print("6. Exit")
+        print("4. Reset      (Clear EnPULSE stats at the start of a run)")
+        print("5. Pull       (Extract benchmark data and EnPULSE stats)")
+        print("6. Install    (Build & Deploy APKs to all devices)")
+        print("7. Exit")
         print("=" * 60)
         
-        choice = input("Select an option (1-6): ").strip()
+        choice = input("Select an option (1-7): ").strip()
         if choice == "1":
             cmd_setup()
         elif choice == "2":
@@ -770,10 +820,12 @@ def interactive_menu():
         elif choice == "3":
             cmd_status()
         elif choice == "4":
-            cmd_pull()
+            cmd_reset()
         elif choice == "5":
+            cmd_pull()
+        elif choice == "6":
             cmd_install()
-        elif choice == "6" or choice.lower() == 'q':
+        elif choice == "7" or choice.lower() == 'q':
             print("Exiting Fleet Manager.")
             break
         else:
@@ -797,7 +849,8 @@ def main():
     subparsers.add_parser("setup",      help="Pair and connect to new wireless devices")
     subparsers.add_parser("rediscover", help="Auto-update ADB ports after device restart via mDNS / port scan")
     subparsers.add_parser("status",     help="Check battery and benchmark status of all devices")
-    subparsers.add_parser("pull",       help="Pull all benchmark data from all devices")
+    subparsers.add_parser("reset",      help="Clear EnPULSE stats at the start of a run (unplug first)")
+    subparsers.add_parser("pull",       help="Pull benchmark data and EnPULSE stats from all devices")
     subparsers.add_parser("install",    help="Build and install benchmark APKs to all devices")
     
     args = parser.parse_args()
@@ -808,6 +861,8 @@ def main():
         cmd_rediscover()
     elif args.command == "status":
         cmd_status()
+    elif args.command == "reset":
+        cmd_reset()
     elif args.command == "pull":
         cmd_pull()
     elif args.command == "install":
