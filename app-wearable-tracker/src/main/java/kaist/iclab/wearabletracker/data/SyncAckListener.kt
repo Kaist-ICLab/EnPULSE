@@ -9,6 +9,8 @@ import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.wearabletracker.repository.ErrorClassifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
@@ -30,6 +32,7 @@ class SyncAckListener(
     private val coroutineScope: CoroutineScope
 ) {
     private val TAG = javaClass.simpleName
+    private val ackMutex = Mutex()
 
     fun startListening() {
         bleChannel.addOnReceivedListener(setOf(Constants.BLE.KEY_SYNC_ACK)) { _, jsonElement ->
@@ -48,37 +51,41 @@ class SyncAckListener(
      * ever moves forward.
      */
     private fun handleAck(ackData: String) {
+        // One at a time: advanceSensorWatermarkIfNewer reads then writes, so two ACKs handled
+        // in parallel on Dispatchers.IO could let the older one overwrite the newer watermark.
         coroutineScope.launch {
-            ErrorClassifier.runClassified(TAG, "handle sync ACK") {
-                val parts = ackData.split(":")
-                if (parts.size < 2) {
-                    throw IllegalArgumentException("Invalid ACK format: $ackData")
-                }
+            ackMutex.withLock {
+                ErrorClassifier.runClassified(TAG, "handle sync ACK") {
+                    val parts = ackData.split(":")
+                    if (parts.size < 2) {
+                        throw IllegalArgumentException("Invalid ACK format: $ackData")
+                    }
 
-                val sensorId = parts[0]
-                val status = parts[1]
-                val endTimestamp = if (parts.size >= 3) parts[2].toLongOrNull() else null
+                    val sensorId = parts[0]
+                    val status = parts[1]
+                    val endTimestamp = if (parts.size >= 3) parts[2].toLongOrNull() else null
 
-                if (status != "OK") {
-                    // Nothing to confirm. Drop the in-flight marker and back this sensor off
-                    // exponentially, so a lasting cause (unknown sensor, phone storage full) is
-                    // retried at 1, 2, 4 ... 60 min instead of on every sync.
-                    syncPreferencesHelper.clearSensorPending(sensorId)
-                    val now = System.currentTimeMillis()
-                    val notBefore = syncPreferencesHelper.recordSensorFailure(sensorId, now)
-                    Log.e(
-                        TAG,
-                        "Received non-OK ACK for $sensorId: $status, " +
-                                "retrying in ${(notBefore - now) / 1000}s"
-                    )
-                    ackSignal.onAckHandled(sensorId, ok = false, now = now)
-                    return@runClassified
-                }
+                    if (status != "OK") {
+                        // Nothing to confirm. Drop the in-flight marker and back this sensor off
+                        // exponentially, so a lasting cause (unknown sensor, phone storage full) is
+                        // retried at 1, 2, 4 ... 60 min instead of on every sync.
+                        syncPreferencesHelper.clearSensorPending(sensorId)
+                        val now = System.currentTimeMillis()
+                        val notBefore = syncPreferencesHelper.recordSensorFailure(sensorId, now)
+                        Log.e(
+                            TAG,
+                            "Received non-OK ACK for $sensorId: $status, " +
+                                    "retrying in ${(notBefore - now) / 1000}s"
+                        )
+                        ackSignal.onAckHandled(sensorId, ok = false, now = now)
+                        return@runClassified
+                    }
 
-                try {
-                    handleOkAck(sensorId, endTimestamp)
-                } finally {
-                    ackSignal.onAckHandled(sensorId, ok = true)
+                    try {
+                        handleOkAck(sensorId, endTimestamp)
+                    } finally {
+                        ackSignal.onAckHandled(sensorId, ok = true)
+                    }
                 }
             }
         }
