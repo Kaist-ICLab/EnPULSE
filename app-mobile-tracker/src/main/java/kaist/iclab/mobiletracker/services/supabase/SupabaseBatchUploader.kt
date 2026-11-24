@@ -1,11 +1,13 @@
 package kaist.iclab.mobiletracker.services.supabase
 
 import io.github.jan.supabase.postgrest.from
+import kaist.iclab.mobiletracker.Constants
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Single generic replacement for the 23 per-sensor `*SensorService` classes.
@@ -13,8 +15,13 @@ import kotlinx.serialization.Serializable
  * Those wrappers only existed because Kotlin's `reified` type parameters can't be virtual — but at
  * every call site the concrete `@Serializable` Supabase row type is known, so one reified upsert
  * parameterized by table name serves every sensor.
+ *
+ * Writes deliberately bypass [kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor]: they run
+ * in the background from [kaist.iclab.mobiletracker.services.upload.DataUploadService], which reports
+ * its own progress, so they must never raise the blocking global loading overlay. They keep the
+ * same per-request timeout as every other Supabase call.
  */
-class SupabaseUploadService(private val supabaseHelper: SupabaseHelper) {
+class SupabaseBatchUploader(private val supabaseHelper: SupabaseHelper) {
     @PublishedApi
     internal val supabaseClient get() = supabaseHelper.supabaseClient
 
@@ -24,7 +31,7 @@ class SupabaseUploadService(private val supabaseHelper: SupabaseHelper) {
         dataList: List<T>
     ): Result<Unit> {
         if (dataList.isEmpty()) return Result.Success(Unit)
-        return SupabaseLoadingInterceptor.withLoading {
+        return withTimeout(Constants.Network.SUPABASE_REQUEST_TIMEOUT_MS.milliseconds) {
             ErrorClassifier.runClassified(
                 sensorName,
                 "upsert ${dataList.size} $sensorName entries"
@@ -42,7 +49,7 @@ class SupabaseUploadService(private val supabaseHelper: SupabaseHelper) {
         dataList: List<T>
     ): Result<Unit> {
         if (dataList.isEmpty()) return Result.Success(Unit)
-        return SupabaseLoadingInterceptor.withLoading {
+        return withTimeout(Constants.Network.SUPABASE_REQUEST_TIMEOUT_MS.milliseconds) {
             ErrorClassifier.runClassified(
                 sensorName,
                 "insert ${dataList.size} $sensorName entries"

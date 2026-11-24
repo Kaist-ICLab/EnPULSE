@@ -11,7 +11,7 @@ import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.phone.TimingSensor
 import kaist.iclab.tracker.storage.core.StateStorage
-import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.TriggerEngine
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

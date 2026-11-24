@@ -17,11 +17,10 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 import androidx.core.content.edit
 import kaist.iclab.tracker.trigger.engine.TriggerActionHandler
-import kaist.iclab.tracker.trigger.engine.TriggerEngine
 import kotlin.collections.iterator
 
 /**
- * Default implementation of [kaist.iclab.tracker.trigger.engine.TriggerEngine].
+ * Default implementation of [TriggerEngine].
  *
  * Observes detection state changes from [DetectionStateTracker], evaluates
  * all loaded trigger condition trees using [ConditionEvaluator], applies

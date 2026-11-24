@@ -278,9 +278,10 @@ object NotificationHelper {
         title: String,
         text: String,
         pendingIntent: PendingIntent,
-        notificationId: Int
+        notificationId: Int,
+        webAppId: String
     ) {
-        val channelId = Constants.Notification.CHANNEL_ID_GENERIC_TRIGGER
+        val channelId = Constants.Notification.CHANNEL_ID_GENERIC_TRIGGER + webAppId
         ensureNotificationChannel(
             context,
             channelId,

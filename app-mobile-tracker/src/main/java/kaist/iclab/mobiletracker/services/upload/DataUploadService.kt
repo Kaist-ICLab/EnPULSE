@@ -20,7 +20,6 @@ import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
 import kaist.iclab.mobiletracker.ui.utils.getSensorTitleResId
 import kaist.iclab.mobiletracker.utils.NotificationHelper
 import kaist.iclab.mobiletracker.utils.SensorTypeHelper
-import kaist.iclab.mobiletracker.utils.SupabaseLoadingInterceptor
 import kaist.iclab.tracker.sensor.core.Sensor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -87,11 +86,11 @@ data class UploadSummary(
  * active sensor + survey + MicroEMA responses) are routed through here.
  *
  * Running the upload as a foreground service — instead of in-process on the caller, as before —
- * means neither trigger has to block the UI or fight over [SupabaseLoadingInterceptor]'s global
- * loading overlay: this service owns suppressing that overlay for its entire run, and instead
- * surfaces progress via [uploadState] / [completionEvents] (consumed by the UI for an in-app,
- * non-blocking progress bar) and an ongoing notification with a real progress bar. A single
- * result notification (success/failure counts) is shown when the run finishes.
+ * means neither trigger has to block the UI. Its batch writes
+ * ([kaist.iclab.mobiletracker.services.supabase.SupabaseBatchUploader]) never raise the global loading
+ * overlay; instead the service surfaces progress via [uploadState] / [completionEvents] (consumed by
+ * the UI for an in-app, non-blocking progress bar) and an ongoing notification with a real progress
+ * bar. A single result notification (success/failure counts) is shown when the run finishes.
  */
 class DataUploadService : LifecycleService(), KoinComponent {
     companion object {
@@ -282,7 +281,6 @@ class DataUploadService : LifecycleService(), KoinComponent {
         val requestedSensorIds = intent?.getStringArrayListExtra(EXTRA_SENSOR_IDS)
         val tally = UploadTally()
         uploadJob = lifecycleScope.launch(Dispatchers.IO) {
-            SupabaseLoadingInterceptor.suppressGlobalLoading = true
             try {
                 if (requestedSensorIds != null) {
                     runSelectedUpload(requestedSensorIds, tally)
@@ -301,7 +299,6 @@ class DataUploadService : LifecycleService(), KoinComponent {
                 // error path left the progress indicator spinning and the Upload button disabled
                 // for good. NonCancellable because emit() throws immediately on a cancelled job.
                 withContext(NonCancellable) { finishAndNotify(tally.toSummary()) }
-                SupabaseLoadingInterceptor.suppressGlobalLoading = false
                 _uploadState.value = DataUploadState.Idle
                 notifyCompletion()
                 stopForeground(STOP_FOREGROUND_REMOVE)
@@ -349,7 +346,6 @@ class DataUploadService : LifecycleService(), KoinComponent {
         // Cancelling rather than waiting for the run to notice: the deadline here is a few seconds,
         // far less than a batch can take. The run's finally still reports what it managed to send.
         uploadJob?.cancel(CancellationException("dataSync foreground service timed out"))
-        SupabaseLoadingInterceptor.suppressGlobalLoading = false
         _uploadState.value = DataUploadState.Idle
         notifyCompletion()
         stopForeground(STOP_FOREGROUND_REMOVE)

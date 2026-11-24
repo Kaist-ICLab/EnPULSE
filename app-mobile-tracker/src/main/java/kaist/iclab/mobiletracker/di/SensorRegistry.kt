@@ -39,7 +39,7 @@ import kaist.iclab.mobiletracker.db.obx.SensorStores
 import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.handlers.GenericSensorDataHandler
 import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandler
-import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
+import kaist.iclab.mobiletracker.services.supabase.SupabaseBatchUploader
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandler
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerImpl
 import kaist.iclab.tracker.sensor.common.ActivityRecognitionSensor
@@ -93,7 +93,7 @@ class SensorDescriptor<T>(
         hasRemoteEventId = insertOnlyColumns == null
     )
 
-    fun toUploadHandler(supabase: SupabaseUploadService): SensorUploadHandler =
+    fun toUploadHandler(supabase: SupabaseBatchUploader): SensorUploadHandler =
         SensorUploadHandlerImpl(
             sensorId = sensorId,
             store = store,

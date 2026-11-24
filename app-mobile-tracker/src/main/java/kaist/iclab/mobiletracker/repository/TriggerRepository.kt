@@ -28,7 +28,7 @@ interface TriggerRepository {
 
     /**
      * Parse the currently cached triggers into runtime [ParsedCampaignTrigger]s, ready to load
-     * into a [kaist.iclab.tracker.trigger.engine.TriggerEngine]. Entries that fail to parse
+     * into a [kaist.iclab.tracker.trigger.TriggerEngine]. Entries that fail to parse
      * (malformed condition/action JSON) are skipped and logged, not thrown.
      */
     fun getParsedTriggers(): List<ParsedCampaignTrigger>

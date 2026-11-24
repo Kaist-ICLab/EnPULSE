@@ -11,7 +11,7 @@ import kaist.iclab.mobiletracker.repository.handlers.SensorDataHandlerRegistry
 import kaist.iclab.mobiletracker.repository.handlers.WebAppLogDataHandler
 import kaist.iclab.mobiletracker.services.SyncTimestampService
 
-import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
+import kaist.iclab.mobiletracker.services.supabase.SupabaseBatchUploader
 import kaist.iclab.mobiletracker.services.upload.SensorDataUploader
 import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import org.koin.android.ext.koin.androidContext
@@ -50,10 +50,10 @@ val uploadModule = module {
     }
 
 
-    single { SupabaseUploadService(supabaseHelper = get()) }
+    single { SupabaseBatchUploader(supabaseHelper = get()) }
 
     single<SensorUploadHandlerRegistry> {
-        val supabase = get<SupabaseUploadService>()
+        val supabase = get<SupabaseBatchUploader>()
         SensorUploadHandlerRegistry(get<List<SensorDescriptor<*>>>().map {
             it.toUploadHandler(
                 supabase

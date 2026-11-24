@@ -3,6 +3,7 @@ package kaist.iclab.wearabletracker.helpers
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import kaist.iclab.wearabletracker.Constants
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -101,6 +102,49 @@ class SyncPreferencesHelper(context: Context) {
             clearSensorPending(sensorId)
         }
     }
+
+    /**
+     * Earliest time [sensorId] may be sent again after a FAIL ACK or ACK timeout, or null if it
+     * is not backing off. See [recordSensorFailure].
+     */
+    fun getSensorRetryNotBefore(sensorId: String): Long? {
+        val timestamp = sharedPreferences.getLong(sensorRetryNotBeforeKey(sensorId), -1L)
+        return if (timestamp == -1L) null else timestamp
+    }
+
+    fun getSensorFailureStreak(sensorId: String): Int =
+        sharedPreferences.getInt(sensorFailureStreakKey(sensorId), 0)
+
+    /**
+     * Count one more consecutive failure for [sensorId] and push its next retry out
+     * exponentially: base * 2^(streak-1), capped at [Constants.AutoSync.RETRY_BACKOFF_MAX_MS].
+     * Returns the new retry-not-before time.
+     */
+    fun recordSensorFailure(sensorId: String, now: Long): Long {
+        val streak = getSensorFailureStreak(sensorId) + 1
+        val shift = (streak - 1).coerceAtMost(30)
+        val delay = (Constants.AutoSync.RETRY_BACKOFF_BASE_MS shl shift)
+            .coerceAtMost(Constants.AutoSync.RETRY_BACKOFF_MAX_MS)
+        val notBefore = now + delay
+        sharedPreferences.edit {
+            putInt(sensorFailureStreakKey(sensorId), streak)
+            putLong(sensorRetryNotBeforeKey(sensorId), notBefore)
+        }
+        return notBefore
+    }
+
+    /** Clear [sensorId]'s backoff once an ACK has advanced its watermark again. */
+    fun resetSensorFailures(sensorId: String) {
+        if (!sharedPreferences.contains(sensorFailureStreakKey(sensorId))) return
+        sharedPreferences.edit {
+            remove(sensorFailureStreakKey(sensorId))
+            remove(sensorRetryNotBeforeKey(sensorId))
+        }
+    }
+
+    private fun sensorFailureStreakKey(sensorId: String) = "$KEY_SENSOR_FAILURE_STREAK_PREFIX$sensorId"
+    private fun sensorRetryNotBeforeKey(sensorId: String) =
+        "$KEY_SENSOR_RETRY_NOT_BEFORE_PREFIX$sensorId"
 
     private fun sensorPendingUpToKey(sensorId: String) = "$KEY_SENSOR_PENDING_UPTO_PREFIX$sensorId"
     private fun sensorPendingSentAtKey(sensorId: String) =
@@ -221,6 +265,8 @@ class SyncPreferencesHelper(context: Context) {
         private const val KEY_SENSOR_WATERMARK_PREFIX = "sensor_watermark_"
         private const val KEY_SENSOR_PENDING_UPTO_PREFIX = "sensor_pending_upto_"
         private const val KEY_SENSOR_PENDING_SENT_AT_PREFIX = "sensor_pending_sent_at_"
+        private const val KEY_SENSOR_FAILURE_STREAK_PREFIX = "sensor_failure_streak_"
+        private const val KEY_SENSOR_RETRY_NOT_BEFORE_PREFIX = "sensor_retry_not_before_"
         private const val KEY_LAST_SYNC_ATTEMPT_AT = "last_sync_attempt_at"
 
         private const val KEY_AUTO_SYNC_ENABLED = "auto_sync_enabled"

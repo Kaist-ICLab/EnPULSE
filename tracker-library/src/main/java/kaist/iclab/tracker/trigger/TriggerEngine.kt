@@ -1,5 +1,6 @@
-package kaist.iclab.tracker.trigger.engine
+package kaist.iclab.tracker.trigger
 
+import kaist.iclab.tracker.trigger.engine.TriggerActionHandler
 import kaist.iclab.tracker.trigger.model.ParsedCampaignTrigger
 import kaist.iclab.tracker.trigger.model.TriggerEvaluationEvent
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.SharedFlow
  * The engine observes sensor detection state changes (via [DetectionStateTracker])
  * and evaluates condition trees defined in [ParsedCampaignTrigger] configurations.
  * When conditions are met and throttle checks pass, it delegates action execution
- * to a registered [TriggerActionHandler].
+ * to a registered [kaist.iclab.tracker.trigger.engine.TriggerActionHandler].
  *
  * ## Lifecycle
  * 1. [setActionHandler] — Register the app-specific action handler.

@@ -26,6 +26,7 @@ class SyncAckListener(
     private val stores: Map<String, WatchSensorStore<*>>,
     private val syncPreferencesHelper: SyncPreferencesHelper,
     private val boxStore: BoxStore,
+    private val ackSignal: SyncAckSignal,
     private val coroutineScope: CoroutineScope
 ) {
     private val TAG = javaClass.simpleName
@@ -59,43 +60,67 @@ class SyncAckListener(
                 val endTimestamp = if (parts.size >= 3) parts[2].toLongOrNull() else null
 
                 if (status != "OK") {
-                    Log.e(TAG, "Received non-OK ACK for $sensorId: $status")
-                    // Nothing to confirm, but the phone has definitively told us this attempt
-                    // failed - drop the in-flight marker so the next sync attempt retries right
-                    // away instead of waiting out PENDING_ACK_TIMEOUT_MS.
+                    // Nothing to confirm. Drop the in-flight marker and back this sensor off
+                    // exponentially, so a lasting cause (unknown sensor, phone storage full) is
+                    // retried at 1, 2, 4 ... 60 min instead of on every sync.
                     syncPreferencesHelper.clearSensorPending(sensorId)
-                    return@runClassified
-                }
-
-                if (endTimestamp == null) {
-                    Log.w(
+                    val now = System.currentTimeMillis()
+                    val notBefore = syncPreferencesHelper.recordSensorFailure(sensorId, now)
+                    Log.e(
                         TAG,
-                        "Received OK ACK with no timestamp for $sensorId, nothing to confirm"
+                        "Received non-OK ACK for $sensorId: $status, " +
+                                "retrying in ${(notBefore - now) / 1000}s"
                     )
+                    ackSignal.onAckHandled(sensorId, ok = false, now = now)
                     return@runClassified
                 }
 
-                val store = stores[sensorId]
-                if (store == null) {
-                    Log.w(TAG, "Received ACK for unknown sensorId: $sensorId")
-                    return@runClassified
+                try {
+                    handleOkAck(sensorId, endTimestamp)
+                } finally {
+                    ackSignal.onAckHandled(sensorId, ok = true)
                 }
-
-                if (syncPreferencesHelper.advanceSensorWatermarkIfNewer(sensorId, endTimestamp)) {
-                    store.deleteDataBefore(endTimestamp)
-                } else {
-                    Log.d(TAG, "Stale/duplicate ACK for $sensorId at $endTimestamp, ignoring")
-                }
-
-                // Whether or not the watermark itself advanced (a stale/duplicate ACK's
-                // endTimestamp is by definition <= the current watermark), this ACK confirms the
-                // phone has processed up through endTimestamp - clear the in-flight marker if
-                // it's now covered so PhoneCommunicationManager stops skipping past it.
-                syncPreferencesHelper.clearSensorPendingIfCovered(sensorId, endTimestamp)
-
-                pruneIfStorageFull()
             }
         }
+    }
+
+    private fun handleOkAck(sensorId: String, endTimestamp: Long?) {
+        if (endTimestamp == null) {
+            Log.w(TAG, "Received OK ACK with no timestamp for $sensorId, nothing to confirm")
+            return
+        }
+
+        val store = stores[sensorId]
+        if (store == null) {
+            Log.w(TAG, "Received ACK for unknown sensorId: $sensorId")
+            return
+        }
+
+        if (syncPreferencesHelper.advanceSensorWatermarkIfNewer(sensorId, endTimestamp)) {
+            store.deleteDataBefore(endTimestamp)
+            syncPreferencesHelper.resetSensorFailures(sensorId)
+            // Progress: if chunks past this ACK are still in flight, restart their timeout so a
+            // backlog that is being ACKed steadily is never treated as lost.
+            syncPreferencesHelper.getSensorPending(sensorId)?.let { pending ->
+                if (pending.upToTimestamp > endTimestamp) {
+                    syncPreferencesHelper.setSensorPending(
+                        sensorId,
+                        pending.upToTimestamp,
+                        System.currentTimeMillis()
+                    )
+                }
+            }
+        } else {
+            Log.d(TAG, "Stale/duplicate ACK for $sensorId at $endTimestamp, ignoring")
+        }
+
+        // Whether or not the watermark itself advanced (a stale/duplicate ACK's
+        // endTimestamp is by definition <= the current watermark), this ACK confirms the
+        // phone has processed up through endTimestamp - clear the in-flight marker if
+        // it's now covered so PhoneCommunicationManager stops skipping past it.
+        syncPreferencesHelper.clearSensorPendingIfCovered(sensorId, endTimestamp)
+
+        pruneIfStorageFull()
     }
 
     /**

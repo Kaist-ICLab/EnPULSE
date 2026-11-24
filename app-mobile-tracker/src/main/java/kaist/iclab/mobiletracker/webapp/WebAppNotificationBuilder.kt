@@ -142,7 +142,8 @@ object WebAppNotificationBuilder {
                 title = title,
                 text = body,
                 pendingIntent = pendingIntent,
-                notificationId = Constants.Notification.ID_SURVEY_BASE + uniqueHash
+                notificationId = Constants.Notification.ID_SURVEY_BASE + uniqueHash,
+                webAppId = trustedWebApp?.id ?: ""
             )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to post notification", e)

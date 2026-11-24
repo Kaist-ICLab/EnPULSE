@@ -114,10 +114,20 @@ object Constants {
         const val WAKELOCK_TIMEOUT_MS = 5 * 60 * 1000L // 5 minutes
         const val MIN_SYNC_INTERVAL_MS = 60 * 1000L // Minimum 1 minute between syncs
 
-        // How long a sent-but-unacked chunk stays "in flight" before a sync attempt is allowed
-        // to treat it as lost and resend it. Must comfortably exceed a normal BLE round trip
-        // (send + phone-side parse/store + ACK) so a merely-slow ACK isn't mistaken for a lost one.
-        const val PENDING_ACK_TIMEOUT_MS = 45 * 1000L
+        // How long a sensor may go without ACK progress before its in-flight chunks are treated
+        // as lost. Measured from the last ACK that advanced the watermark (or the last send), not
+        // from the start of the sync, so a large backlog that keeps getting ACKed never expires.
+        // Must comfortably exceed a normal BLE round trip (send + phone-side parse/store + ACK).
+        const val PENDING_ACK_TIMEOUT_MS = 60 * 1000L
+
+        // Max chunks per sensor handed to the Data Layer but not yet ACKed. putDataItem returns
+        // once the item is stored locally, so without a cap one sync queues the whole backlog.
+        const val MAX_CHUNKS_IN_FLIGHT = 4
+
+        // Per-sensor exponential backoff after a FAIL ACK or an ACK timeout: base * 2^(n-1),
+        // capped. Reset by the next ACK that advances the sensor's watermark.
+        const val RETRY_BACKOFF_BASE_MS = 60 * 1000L
+        const val RETRY_BACKOFF_MAX_MS = 4 * 60 * 1000L
     }
 }
 

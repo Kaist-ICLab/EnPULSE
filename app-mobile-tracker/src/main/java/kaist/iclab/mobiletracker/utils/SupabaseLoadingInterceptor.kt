@@ -19,8 +19,6 @@ object SupabaseLoadingInterceptor {
      */
     var onLoadingStateChanged: ((Boolean) -> Unit)? = null
 
-    var suppressGlobalLoading: Boolean = false
-
     /**
      * Increment active operations counter and notify listener
      * Call this at the start of a Supabase operation
@@ -28,7 +26,7 @@ object SupabaseLoadingInterceptor {
     suspend fun startOperation() {
         mutex.withLock {
             activeOperations++
-            if (activeOperations == 1 && !suppressGlobalLoading) {
+            if (activeOperations == 1) {
                 // First operation started - show loading
                 onLoadingStateChanged?.invoke(true)
             }
@@ -43,7 +41,7 @@ object SupabaseLoadingInterceptor {
         mutex.withLock {
             if (activeOperations > 0) {
                 activeOperations--
-                if (activeOperations == 0 && !suppressGlobalLoading) {
+                if (activeOperations == 0) {
                     // All operations completed - hide loading
                     onLoadingStateChanged?.invoke(false)
                 }

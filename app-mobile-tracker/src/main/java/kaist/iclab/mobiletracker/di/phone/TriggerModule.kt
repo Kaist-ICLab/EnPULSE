@@ -14,7 +14,7 @@ import kaist.iclab.tracker.storage.couchbase.CouchbaseTimingScheduleStorage
 import kaist.iclab.tracker.sync.ble.BLEDataChannel
 import kaist.iclab.tracker.trigger.DefaultTriggerEngine
 import kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter
-import kaist.iclab.tracker.trigger.engine.TriggerEngine
+import kaist.iclab.tracker.trigger.TriggerEngine
 import kaist.iclab.tracker.trigger.state.DetectionStateTracker
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
