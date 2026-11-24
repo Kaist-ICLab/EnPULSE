@@ -57,7 +57,7 @@ The build needs both SDKs, and they are not included in this repository.
    - `samsung-health-data-api/samsung-health-data-api.aar`
 
 > [!IMPORTANT]
-> Without an approved Samsung partner license, enable Developer Mode in Samsung Health on every phone that collects step, sleep, or exercise data. In Samsung Health, open **Settings**, then **About Samsung Health**, and tap the version line 10 times. Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
+> Without an approved Samsung partner license, every phone that collects step, sleep, or exercise data needs Developer Mode turned on in Samsung Health. See [Samsung Health on the phone](#samsung-health-on-the-phone). Otherwise, permission requests fail with `AuthorizationException (Error 2003: Could not get policy)`.
 
 ### 4. Build and install
 
@@ -89,7 +89,10 @@ Step, sleep, and exercise data come from the Samsung Health app through the Sams
 
 1. Install [Samsung Health](https://play.google.com/store/apps/details?id=com.sec.android.app.shealth) from the Play Store. Samsung phones usually have it already. Version 6.30.2 or newer is required.
 2. Open Samsung Health once and finish its setup.
-3. Enable Developer Mode in Samsung Health, as described in [step 3](#3-add-the-samsung-health-sdks).
+3. Turn on Developer Mode, which is needed without a Samsung partner license (For development purposes):
+   1. In Samsung Health, open the **⋮** menu, then **Settings**, then **About Samsung Health**.
+   2. Tap the version line quickly 10 times or more, until **Developer mode (Samsung Health Data SDK)** appears.
+   3. Open it, agree to the notice, and turn on **Developer Mode for Data Read**.
 4. In EnPULSE, open **Settings**, then **Permissions**, and grant **Physical Activity (Steps)**, **Physical Activity (Sleep)**, and **Physical Activity (Exercise)**. Samsung Health then asks you to allow access.
 
 If Samsung Health is missing or too old, these permissions show **Install or update Samsung Health**. Tapping one opens Samsung Health in the Play Store.
