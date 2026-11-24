@@ -40,6 +40,10 @@ class WatchSensorStore<T>(
         return batch.filter { it.timestamp < lastTimestamp } + lastGroup
     }
 
+    /** Timestamp of the newest row, or null when the store is empty. */
+    fun getLatestTimestamp(): Long? =
+        box.query().orderDesc(timestampProperty).build().use { it.findFirst()?.timestamp }
+
     fun deleteDataBefore(timestamp: Long) =
         box.query(timestampProperty.lessOrEqual(timestamp)).build().use { it.remove() }
 
