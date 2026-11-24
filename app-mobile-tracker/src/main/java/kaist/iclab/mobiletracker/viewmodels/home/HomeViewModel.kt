@@ -10,14 +10,17 @@ import kaist.iclab.mobiletracker.repository.WatchConnectionStatus
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transform
 import java.util.Calendar
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -77,17 +80,17 @@ data class HomeUiState(
  *
  * @param homeRepository Repository for home screen data operations
  * @param backgroundController Controller managing sensor background collection
-// * @param syncTimestampService Service for tracking sync timestamps
  * @param userProfileRepository Repository for user profile data
  */
 class HomeViewModel(
     private val homeRepository: HomeRepository,
     private val backgroundController: BackgroundController,
-//    private val syncTimestampService: SyncTimestampService,
     private val userProfileRepository: UserProfileRepository,
-//    private val campaignSensorRepository: CampaignSensorRepository,
-//    private val surveyRepository: SurveyRepository,
 ) : ViewModel() {
+    private companion object {
+        val COUNT_REFRESH_INTERVAL = 1000.milliseconds
+    }
+
     // Note: Full study configuration sync (profile, sensors, surveys) is handled by AuthViewModel
     // at startup/login and by AccountSettingsViewModel for manual reloads.
     // HomeViewModel purely observes the resulting states.
@@ -106,7 +109,7 @@ class HomeViewModel(
     private val startOfDayFlow = flow {
         while (true) {
             emit(getStartOfDay())
-            kotlinx.coroutines.delay(60000.milliseconds) // Refresh every minute
+            delay(60000.milliseconds) // Refresh every minute
         }
     }.distinctUntilChanged()
 
@@ -119,7 +122,12 @@ class HomeViewModel(
     ) { state, profile, startOfDay, watchInfo ->
         DataSnapshot(state, profile, startOfDay, watchInfo)
     }.flatMapLatest { (state, profile, startOfDay, watchInfo) ->
-        homeRepository.getDailySensorCounts(startOfDay).map { counts ->
+        // Counts change with every row a sensor saves, several times a second while collecting.
+        // Take the latest at most once a second so the screen isn't redrawn on each row.
+        homeRepository.getDailySensorCounts(startOfDay)
+            .conflate()
+            .transform { emit(it); delay(COUNT_REFRESH_INTERVAL) }
+            .map { counts ->
             HomeUiState(
                 isTrackingActive = state.flag == ControllerState.FLAG.RUNNING,
                 watchStatus = watchInfo.status,

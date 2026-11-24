@@ -54,6 +54,7 @@ import kaist.iclab.mobiletracker.ui.components.popup.DialogButtonConfig
 import kaist.iclab.mobiletracker.ui.components.popup.PopupDialog
 import kaist.iclab.mobiletracker.ui.screens.settings.Styles
 import kaist.iclab.mobiletracker.ui.theme.AppColors
+import kaist.iclab.mobiletracker.ui.theme.appTextFieldColors
 import kaist.iclab.mobiletracker.utils.AppToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -249,13 +250,7 @@ fun ServerConnectionScreen(
                                 .padding(bottom = 8.dp),
                             singleLine = true,
                             shape = RoundedCornerShape(kaist.iclab.mobiletracker.ui.theme.Dimens.CornerRadiusMedium),
-                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = AppColors.PrimaryColor,
-                                unfocusedBorderColor = AppColors.TextSecondary.copy(alpha = 0.5f),
-                                errorBorderColor = AppColors.ErrorColor,
-                                focusedLabelColor = AppColors.PrimaryColor,
-                                unfocusedLabelColor = AppColors.TextSecondary
-                            )
+                            colors = appTextFieldColors()
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

@@ -3,15 +3,13 @@ package kaist.iclab.tracker.permission
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.Build
-import com.samsung.android.sdk.health.data.request.DataTypes
 
 /**
  * Utility class for checking hardware availability for permissions that require specific hardware.
  *
  * This class provides methods to check if the device has the necessary hardware components
- * (camera, microphone, body sensors, location) or device manufacturer requirements
- * (Samsung for Samsung Health) before requesting permissions.
+ * (camera, microphone, body sensors, location) before requesting permissions, and whether
+ * Samsung Health is installed.
  */
 object HardwareAvailabilityChecker {
 
@@ -30,21 +28,22 @@ object HardwareAvailabilityChecker {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION -> isLocationHardwareAvailable(context)
 
-            DataTypes.STEPS.name,
-            DataTypes.SLEEP.name,
-            DataTypes.EXERCISE.name -> isSamsungDevice() // Samsung Health requires Samsung device
             else -> true // Default to true for permissions that don't require hardware checks
         }
     }
 
+    /** Package of the Samsung Health app, which the Samsung Health Data SDK reads from. */
+    const val SAMSUNG_HEALTH_PACKAGE = "com.sec.android.app.shealth"
+
     /**
-     * Checks if the device is a Samsung device.
-     * Samsung Health DataTypes (like STEPS) are only supported on Samsung devices.
-     *
-     * @return true if the device is a Samsung device, false otherwise
+     * Whether Samsung Health is installed. The Data SDK works on any Android 10+ phone with
+     * Samsung Health installed, not only Samsung phones; a too-old version is reported by the SDK.
      */
-    fun isSamsungDevice(): Boolean {
-        return Build.MANUFACTURER.equals("samsung", ignoreCase = true)
+    fun isSamsungHealthInstalled(context: Context): Boolean = try {
+        context.packageManager.getPackageInfo(SAMSUNG_HEALTH_PACKAGE, 0)
+        true
+    } catch (_: PackageManager.NameNotFoundException) {
+        false
     }
 
     /**

@@ -269,7 +269,7 @@ fun DataScreen(
                                     }
                                 }
                             } else {
-                                items(filteredSensors) { sensor ->
+                                items(filteredSensors, key = { it.sensorId }) { sensor ->
                                     SensorListItem(
                                         sensor = sensor,
                                         onClick = {

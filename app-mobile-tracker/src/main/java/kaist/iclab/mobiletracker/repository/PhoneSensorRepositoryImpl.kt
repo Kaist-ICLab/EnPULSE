@@ -1,7 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
 import kaist.iclab.mobiletracker.db.obx.PhoneSensorStore
-import kaist.iclab.mobiletracker.di.AppCoroutineScope
 import kaist.iclab.mobiletracker.helpers.SupabaseHelper
 import kaist.iclab.mobiletracker.utils.SupabaseSessionHelper
 import kaist.iclab.tracker.sensor.core.SensorEntity
@@ -12,8 +11,7 @@ import kaist.iclab.tracker.sensor.core.SensorEntity
  */
 class PhoneSensorRepositoryImpl(
     private val sensorDataStorages: Map<String, PhoneSensorStore<*>>,
-    private val supabaseHelper: SupabaseHelper,
-    @Suppress("unused") private val appScope: AppCoroutineScope
+    private val supabaseHelper: SupabaseHelper
 ) : PhoneSensorRepository {
     companion object {
         private const val TAG = "PhoneSensorRepository"

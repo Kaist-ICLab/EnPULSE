@@ -33,9 +33,7 @@ data class OnboardingUiState(
  */
 class OnboardingViewModel(
     private val campaignRepository: CampaignRepository,
-    private val userProfileRepository: UserProfileRepository,
-//    private val surveyRepository: SurveyRepository,
-//    private val campaignSensorRepository: CampaignSensorRepository
+    private val userProfileRepository: UserProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OnboardingUiState())

@@ -27,11 +27,21 @@
     <string name="no_email">이메일 없음</string>
     <string name="version_label">버전</string>
     <string name="about_description">연구 데이터 수집을 위한 모바일 추적 애플리케이션</string>
+    <string name="about_developed_by">KAIST 인터랙티브 컴퓨팅 연구실 개발</string>
+    <string name="about_visit_website">연구실 웹사이트 방문</string>
     <string name="sign_out">로그아웃</string>
     <string name="login_email_label">이메일</string>
     <string name="login_password_label">비밀번호</string>
     <string name="login_email_submit">로그인</string>
     <string name="login_not_configured_error">서버 연결을 먼저 구성해 주세요.</string>
+    <string name="login_error_missing_fields">이메일과 비밀번호를 모두 입력해 주세요.</string>
+    <string name="login_error_invalid_credentials">이메일 또는 비밀번호가 올바르지 않습니다.</string>
+    <string name="login_error_email_not_confirmed">이 계정의 이메일 주소가 아직 인증되지 않았습니다.</string>
+    <string name="login_error_email_disabled">이 서버에서는 이메일 로그인을 사용할 수 없습니다.</string>
+    <string name="login_error_rate_limit">시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요.</string>
+    <string name="login_error_with_detail">로그인에 실패했습니다: %1$s</string>
+    <string name="login_error_network">서버에 연결할 수 없습니다. 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="login_error_generic">로그인에 실패했습니다. 다시 시도해 주세요.</string>
     <string name="change_password_title">새 비밀번호 설정</string>
     <string name="change_password_description">계정이 초기 비밀번호로 생성되었습니다. 계속하려면 새 비밀번호를 설정해 주세요.</string>
     <string name="change_password_new_label">새 비밀번호</string>
@@ -131,6 +141,8 @@
     <string name="permission_status_denied">거부됨</string>
     <string name="permission_status_waiting">요청 안됨</string>
     <string name="permission_status_unsupported">기기에서 지원하지 않음</string>
+    <string name="permission_status_app_not_installed">삼성 헬스 설치 또는 업데이트 필요</string>
+    <string name="permission_unsupported_toast">이 기기에서는 이 권한을 지원하지 않습니다.</string>
     <string name="permission_status_not_fully_granted">완전히 허용되지 않음</string>
 
     <!-- Placeholder Screens -->

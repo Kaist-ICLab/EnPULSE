@@ -25,7 +25,8 @@ object PermissionHelper {
         return when (permissionState) {
             PermissionState.GRANTED, PermissionState.UNSUPPORTED -> PermissionCheckResult.Granted
             PermissionState.PERMANENTLY_DENIED -> PermissionCheckResult.PermanentlyDenied
-            PermissionState.NOT_REQUESTED, PermissionState.RATIONALE_REQUIRED -> {
+            PermissionState.NOT_REQUESTED, PermissionState.RATIONALE_REQUIRED,
+            PermissionState.APP_NOT_INSTALLED -> {
                 permissionManager.request(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
                 PermissionCheckResult.Requested
             }

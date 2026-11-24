@@ -55,7 +55,11 @@ fun PermissionSettingsScreen(
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
-    val permissions = Permission.supportedPermissions.toList()
+    // Rows for permissions this app doesn't declare (e.g. a service removed from its manifest)
+    // could never be granted, so they are not shown.
+    val permissions = remember(permissionManager) {
+        Permission.supportedPermissions.filter { p -> p.ids.all(permissionManager::isDeclared) }
+    }
     val allPermissionIds = permissions.flatMap { it.ids.toList() }
     val permissionStateMap = permissionManager.getPermissionFlow(allPermissionIds.toTypedArray())
         .collectAsState().value
@@ -140,12 +144,19 @@ fun PermissionSettingsScreen(
                             permission = permission,
                             permissionState = permissionAggregatedState,
                             onRequest = {
-                                if (isCollecting) {
+                                if (permissionAggregatedState == PermissionState.UNSUPPORTED) {
+                                    // Nothing to grant on this device, so no instructions or request.
+                                    AppToast.show(context, R.string.permission_unsupported_toast)
+                                } else if (isCollecting) {
                                     // Show toast if trying to change permission while collecting
                                     AppToast.show(context, R.string.turn_off_data_collection_first)
                                 } else {
                                     // Allow permission request if not collecting
-                                    if (permission.instructionResId != null && permissionAggregatedState != PermissionState.GRANTED) {
+                                    // The instructions are for the grant screen; a missing app goes to the Play Store first.
+                                    if (permission.instructionResId != null &&
+                                        permissionAggregatedState != PermissionState.GRANTED &&
+                                        permissionAggregatedState != PermissionState.APP_NOT_INSTALLED
+                                    ) {
                                         pendingPermissionForInstruction = permission
                                     } else {
                                         handlePermissionRequest(

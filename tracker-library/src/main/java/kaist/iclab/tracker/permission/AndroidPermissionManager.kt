@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.AppOpsManager
 import android.app.NotificationManager
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -96,6 +97,37 @@ class AndroidPermissionManager(
         DataTypes.EXERCISE.name to DataTypes.EXERCISE
     )
 
+    /**
+     * Whether this app declares what [permission] needs, so it can ever be granted. An app can
+     * strip a library permission or service from its manifest (`tools:node="remove"`); its
+     * permission is then undeclared and should not be offered to the user.
+     */
+    fun isDeclared(permission: String): Boolean = when (permission) {
+        in healthDataPermission.keys -> true
+        Manifest.permission.BIND_ACCESSIBILITY_SERVICE ->
+            isServiceDeclared(AccessibilityListener.AccessibilityServiceAdaptor::class.java)
+        Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE ->
+            isServiceDeclared(NotificationListener.NotificationListenerServiceAdaptor::class.java)
+        else -> permission in declaredPermissions
+    }
+
+    private val declaredPermissions: Set<String> by lazy {
+        try {
+            context.packageManager
+                .getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
+                .requestedPermissions?.toSet() ?: emptySet()
+        } catch (_: PackageManager.NameNotFoundException) {
+            emptySet()
+        }
+    }
+
+    private fun isServiceDeclared(service: Class<*>): Boolean = try {
+        context.packageManager.getServiceInfo(ComponentName(context, service), 0)
+        true
+    } catch (_: PackageManager.NameNotFoundException) {
+        false
+    }
+
     override fun registerPermission(newPermissions: Array<String>) {
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
             putAll(newPermissions.associateWith { p -> getPermissionState(p) })
@@ -171,13 +203,13 @@ class AndroidPermissionManager(
         permissionStateFlow.value = permissions
             .filter { it !in healthDataPermission.keys }.associateWith { getPermissionState(it) }
 
-        // Query Samsung Health permissions only on Samsung devices if they have been registered
+        // Query Samsung Health permissions if they have been registered and the app is there
         val hasRegisteredHealthPermissions = permissions.any { it in healthDataPermission.keys }
         if (hasRegisteredHealthPermissions) {
-            if (HardwareAvailabilityChecker.isSamsungDevice()) {
+            if (HardwareAvailabilityChecker.isSamsungHealthInstalled(context)) {
                 querySamsungHealthPermissions()
             } else {
-                setSamsungHealthPermissionsUnsupported()
+                setSamsungHealthPermissionsState(PermissionState.APP_NOT_INSTALLED)
             }
         }
     }
@@ -187,7 +219,7 @@ class AndroidPermissionManager(
             HealthDataService.getStore(context)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get HealthDataService store during query", e)
-            setSamsungHealthPermissionsUnsupported()
+            setSamsungHealthPermissionsState(PermissionState.UNSUPPORTED)
             return
         }
 
@@ -209,24 +241,25 @@ class AndroidPermissionManager(
                     Log.e(TAG, "Error in getGrantedPermissionsAsync for Samsung Health", error)
                 }
                 
-                // In case of a serious platform error, mark as unsupported
-                if (error is PlatformInternalException) {
-                    setSamsungHealthPermissionsUnsupported()
+                when (error) {
+                    // Samsung Health is too old or not set up; tapping the row resolves it.
+                    is ResolvablePlatformException ->
+                        setSamsungHealthPermissionsState(PermissionState.APP_NOT_INSTALLED)
+                    // In case of a serious platform error, mark as unsupported
+                    is PlatformInternalException ->
+                        setSamsungHealthPermissionsState(PermissionState.UNSUPPORTED)
                 }
             }
         )
     }
 
-    private fun setSamsungHealthPermissionsUnsupported() {
-        val healthPermissionStates =
-            healthDataPermission.keys.associateWith { PermissionState.UNSUPPORTED }
+    private fun setSamsungHealthPermissionsState(state: PermissionState) {
         permissionStateFlow.value = permissionStateFlow.value.toMutableMap().apply {
-            putAll(healthPermissionStates)
+            putAll(healthDataPermission.keys.associateWith { state })
         }
-        // Cache the unsupported state
         permissionTrackingPrefs.edit {
             healthDataPermission.keys.forEach { name ->
-                putString("$KEY_PREFIX_HEALTH_STATE$name", PermissionState.UNSUPPORTED.name)
+                putString("$KEY_PREFIX_HEALTH_STATE$name", state.name)
             }
         }
     }
@@ -253,20 +286,21 @@ class AndroidPermissionManager(
     }
 
     private fun getPermissionState(permission: String): PermissionState {
-        // For Samsung Health permissions, check if device is Samsung
+        // Samsung Health permissions need the Samsung Health app, on any phone maker
         if (permission in healthDataPermission.keys) {
-            // If not Samsung device, mark as UNSUPPORTED
-            if (!HardwareAvailabilityChecker.isSamsungDevice()) {
-                return PermissionState.UNSUPPORTED
+            if (!HardwareAvailabilityChecker.isSamsungHealthInstalled(context)) {
+                return PermissionState.APP_NOT_INSTALLED
             }
-            
-            // Read cached state if available to avoid flicker while querying SDK
+
+            // Read cached state if available to avoid flicker while querying SDK. A cached
+            // APP_NOT_INSTALLED is stale now that the app is installed.
             val cachedState = permissionTrackingPrefs.getString("$KEY_PREFIX_HEALTH_STATE$permission", null)
-            if (cachedState != null) {
-                return try { PermissionState.valueOf(cachedState) } catch (_: Exception) { PermissionState.NOT_REQUESTED }
+                ?.let { runCatching { PermissionState.valueOf(it) }.getOrNull() }
+            if (cachedState != null && cachedState != PermissionState.APP_NOT_INSTALLED) {
+                return cachedState
             }
-            
-            // For Samsung devices, return NOT_REQUESTED initially if no cache
+
+            // Return NOT_REQUESTED initially if no cache
             // The actual state will be updated asynchronously by notifyChange() which queries the Samsung Health SDK
             return PermissionState.NOT_REQUESTED
         }
@@ -523,7 +557,12 @@ class AndroidPermissionManager(
 
     private fun requestHealthDataPermission(permissions: Array<String>) {
         if (permissions.isEmpty()) return
-        
+
+        if (!HardwareAvailabilityChecker.isSamsungHealthInstalled(context)) {
+            openSamsungHealthInStore()
+            return
+        }
+
         val store = try {
             HealthDataService.getStore(context)
         } catch (e: Exception) {
@@ -566,6 +605,23 @@ class AndroidPermissionManager(
                 handleHealthDataError(error, activity)
             }
         )
+    }
+
+    /** Opens Samsung Health in the Play Store, or its web page when there's no store app. */
+    private fun openSamsungHealthInStore() {
+        val pkg = HardwareAvailabilityChecker.SAMSUNG_HEALTH_PACKAGE
+        val store = Intent(Intent.ACTION_VIEW, "market://details?id=$pkg".toUri())
+        val web = Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$pkg".toUri())
+        val launcher: Context = getActivity() ?: context
+        for (intent in listOf(store, web)) {
+            if (launcher !is ComponentActivity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                launcher.startActivity(intent)
+                return
+            } catch (_: ActivityNotFoundException) {
+            }
+        }
+        Log.w(TAG, "No app can open the Play Store page for Samsung Health")
     }
 
     private fun handleHealthDataError(error: Throwable, activity: ComponentActivity) {
@@ -671,7 +727,7 @@ class AndroidPermissionManager(
             in healthDataPermission.keys -> {
                 // For Samsung Health permissions, try to open Samsung Health
                 try {
-                    context.packageManager.getLaunchIntentForPackage("com.sec.android.app.shealth")?.apply {
+                    context.packageManager.getLaunchIntentForPackage(HardwareAvailabilityChecker.SAMSUNG_HEALTH_PACKAGE)?.apply {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     } ?: createAppDetailsIntent()
                 } catch (_: Exception) {

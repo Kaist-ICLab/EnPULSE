@@ -105,7 +105,7 @@ fun CampaignSettingsScreen(
                     )
                 } else {
                     LazyColumn {
-                        items(activeSensors) { sensor ->
+                        items(activeSensors, key = { it.id ?: it.name }) { sensor ->
                             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                                 Text(
                                     text = sensor.displayName,
