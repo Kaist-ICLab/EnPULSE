@@ -37,7 +37,7 @@ object ErrorClassifier {
         val msg = "$prefix${e.message ?: "Unknown error"}"
 
         return when (e) {
-            // Timeout (from withTimeout in SupabaseLoadingInterceptor)
+            // Timeout (from withTimeout in SupabaseLoadingInterceptor or SupabaseBatchWriter)
             is TimeoutCancellationException ->
                 AppError.Timeout(msg, e)
 

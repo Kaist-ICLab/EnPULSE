@@ -9,7 +9,7 @@ import kaist.iclab.mobiletracker.db.obx.SupabaseJson
 import kaist.iclab.mobiletracker.repository.AppError
 import kaist.iclab.mobiletracker.repository.ErrorClassifier
 import kaist.iclab.mobiletracker.repository.Result
-import kaist.iclab.mobiletracker.services.supabase.SupabaseUploadService
+import kaist.iclab.mobiletracker.services.supabase.SupabaseBatchUploader
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -29,7 +29,7 @@ class SensorUploadHandlerImpl<T>(
     private val serializer: KSerializer<T>,
     private val tableName: String,
     private val sensorName: String,
-    private val supabase: SupabaseUploadService,
+    private val supabase: SupabaseBatchUploader,
     override val isCampaignGated: Boolean = true,
     private val supabaseColumns: Set<String>? = null,
     private val insertOnly: Boolean = false
