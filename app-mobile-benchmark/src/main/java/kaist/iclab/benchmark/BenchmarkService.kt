@@ -64,9 +64,6 @@ class BenchmarkService : Service() {
         var latestBatteryChargeUah: Long = -1L
             private set
 
-        var maxCpuTemperature: Float = -1f
-            private set
-
         var maxNativeHeapBytes: Long = -1L
             private set
 
@@ -118,9 +115,6 @@ class BenchmarkService : Service() {
                 }
                 latestBatteryChargeUah = snapshot.batteryChargeUah
 
-                if (snapshot.cpuTemperature > maxCpuTemperature) {
-                    maxCpuTemperature = snapshot.cpuTemperature
-                }
                 if (snapshot.nativeHeapBytes > maxNativeHeapBytes) {
                     maxNativeHeapBytes = snapshot.nativeHeapBytes
                 }
@@ -214,7 +208,6 @@ class BenchmarkService : Service() {
                 latestBatteryLevel = -1
                 initialBatteryChargeUah = -1L
                 latestBatteryChargeUah = -1L
-                maxCpuTemperature = -1f
                 maxNativeHeapBytes = -1L
                 maxAppMemoryMb = -1f
                 isRunning = true
@@ -270,14 +263,6 @@ class BenchmarkService : Service() {
                 appendLine("Final Charge:    ${latestBatteryChargeUah} uAh")
                 appendLine("Charge Dropped:  ${droppedCharge} uAh")
                 appendLine("Drain Rate:      ${String.format("%.2f", drainRate)} %/hr")
-                appendLine(
-                    "Max CPU Temp:    ${
-                        if (maxCpuTemperature >= 0) String.format(
-                            "%.1f",
-                            maxCpuTemperature
-                        ) + " C" else "N/A"
-                    }"
-                )
                 appendLine("Max App Memory:  ${String.format("%.1f", maxAppMemoryMb)} MB")
                 appendLine(
                     "Max Native Heap: ${

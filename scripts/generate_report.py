@@ -89,8 +89,8 @@ def generate_graph(folder_path):
     if scenario_name.startswith("phone-") or scenario_name.startswith("watch-"):
         scenario_name = scenario_name.split("_", 1)[1] if "_" in scenario_name else scenario_name
     
-    # Create the plot (3 subplots: Battery, CPU, Memory)
-    fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 10), sharex=True)
+    # Create the plot (2 subplots: Battery, Memory)
+    fig, (ax1, ax3) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
     
     # --- Plot 1: Battery Level & Charge ---
     ax1.plot(df['elapsed_min'], df['battery_level_pct'], color='red', linewidth=2, label='Battery Level (%)')
@@ -127,33 +127,8 @@ def generate_graph(folder_path):
     ax1.annotate(f'{end_bat}%', xy=(df['elapsed_min'].iloc[-1], end_bat), xytext=(-30, -15), 
                  textcoords='offset points', color='red', weight='bold')
     
-    # --- Plot 2: CPU Usage & Temperature ---
-    ax2.plot(df['elapsed_min'], df['cpu_usage_pct'], color='blue', linewidth=1.5, alpha=0.8, label='CPU Usage (%)')
-    ax2.fill_between(df['elapsed_min'], df['cpu_usage_pct'], color='blue', alpha=0.1)
-    ax2.set_ylabel('CPU Usage (%)', color='blue')
-    ax2.tick_params(axis='y', labelcolor='blue')
-    ax2.grid(True, linestyle='--', alpha=0.5)
-    
-    # Try plotting CPU temperature on secondary y-axis if we have it
-    if 'cpu_temperature_c' in df.columns:
-        valid_temps = df[df['cpu_temperature_c'] > 0]['cpu_temperature_c']
-        if not valid_temps.empty:
-            ax2_twin = ax2.twinx()
-            ax2_twin.plot(df['elapsed_min'], df['cpu_temperature_c'], color='orange', linestyle='-', linewidth=1.2, label='CPU Temp (°C)')
-            ax2_twin.set_ylabel('CPU Temperature (°C)', color='orange')
-            ax2_twin.tick_params(axis='y', labelcolor='orange')
-            
-            # Combine legends
-            lines, labels = ax2.get_legend_handles_labels()
-            lines2, labels2 = ax2_twin.get_legend_handles_labels()
-            ax2.legend(lines + lines2, labels + labels2, loc='upper right')
-        else:
-            ax2.legend(loc='upper right')
-    else:
-        ax2.legend(loc='upper right')
-        
-    # --- Plot 3: Memory Allocation ---
-    ax3.plot(df['elapsed_min'], df['app_memory_mb'], color='green', linewidth=1.8, label='App Memory (PSS MB)')
+    # --- Plot 2: Benchmark app memory (EnPULSE's own memory is in enpulse_stats) ---
+    ax3.plot(df['elapsed_min'], df['app_memory_mb'], color='green', linewidth=1.8, label='Benchmark App Memory (PSS MB)')
     
     if 'native_heap_bytes' in df.columns:
         df['native_heap_mb'] = df['native_heap_bytes'] / (1024.0 * 1024.0)

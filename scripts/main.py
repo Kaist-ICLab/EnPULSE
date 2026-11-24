@@ -69,7 +69,7 @@ def interactive_menu():
     print("=" * 75)
     print("1. [Report] Pull CSV & Generate Graphs (generate_report.py)")
     print("   -> Pulls the latest CSV from the phone and generates PDF/PNG charts")
-    print("      of Battery level, CPU usage, CPU temp, and Java vs. Native Memory.")
+    print("      of battery level and charge, and the benchmark app's memory.")
     print("")
     print("2. [Yield]  Calculate Database Reliability Yield (yield_calculator.py)")
     print("   -> Queries the Supabase backend to calculate what percentage of")

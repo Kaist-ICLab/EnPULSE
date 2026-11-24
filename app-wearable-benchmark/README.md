@@ -28,16 +28,12 @@ For every sampling interval, a new row is appended to `metrics.csv` containing:
 2. **Battery Level**: 0-100% capacity.
 3. **Battery Voltage**: Raw voltage in millivolts (mV).
 4. **Battery Temperature**: Internal temperature in °C.
-5. **Battery Current**: Instantaneous current in milliamperes (mA).
-6. **Battery Status**: Operating status (e.g., `charging`, `discharging`, `full`).
-7. **Battery Charge**: Remaining charge in microampere-hours (µAh).
-8. **Battery Energy**: Remaining energy in nanowatt-hours (nWh).
-9. **Thermal Status**: System thermal status.
-10. **CPU Usage**: System-wide CPU usage percentage.
-11. **CPU Temperature**: Thermal temperature in °C.
-12. **App Memory (PSS)**: Total RAM footprint of the benchmark process in MB.
-13. **Available System RAM**: Total free RAM left on the device in MB.
-14. **Native Heap**: Native heap allocation in bytes.
+5. **Battery Status**: Operating status (e.g., `charging`, `discharging`, `full`).
+6. **Battery Charge**: Remaining charge in microampere-hours (µAh).
+7. **Battery Energy**: Remaining energy in nanowatt-hours (nWh).
+8. **App Memory (PSS)**: Total RAM footprint of the benchmark process in MB.
+9. **Available System RAM**: Total free RAM left on the device in MB.
+10. **Native Heap**: Native heap allocation in bytes.
 
 ## Usage Guide
 

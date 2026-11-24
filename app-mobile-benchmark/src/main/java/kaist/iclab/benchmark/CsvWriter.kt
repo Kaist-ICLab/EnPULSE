@@ -21,9 +21,9 @@ class CsvWriter(private val context: Context) {
 
         private const val CSV_HEADER =
             "timestamp_iso,timestamp_ms,battery_level_pct,battery_voltage_mv," +
-                    "battery_temp_c,battery_current_ma,battery_status," +
-                    "battery_charge_uah,battery_energy_nwh,thermal_status," +
-                    "cpu_usage_pct,cpu_temperature_c,app_memory_mb,available_ram_mb,native_heap_bytes\n"
+                    "battery_temp_c,battery_status," +
+                    "battery_charge_uah,battery_energy_nwh," +
+                    "app_memory_mb,available_ram_mb,native_heap_bytes\n"
 
         private val ISO_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US)
         private val FILE_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
@@ -88,13 +88,9 @@ class CsvWriter(private val context: Context) {
                 append(snapshot.batteryLevel).append(',')
                 append(snapshot.batteryVoltage).append(',')
                 append(String.format(Locale.US, "%.1f", snapshot.batteryTemperature)).append(',')
-                append(snapshot.batteryCurrent).append(',')
                 append(snapshot.batteryStatus).append(',')
                 append(snapshot.batteryChargeUah).append(',')
                 append(snapshot.batteryEnergyNwh).append(',')
-                append(snapshot.thermalStatus).append(',')
-                append(String.format(Locale.US, "%.1f", snapshot.cpuUsagePercent)).append(',')
-                append(String.format(Locale.US, "%.1f", snapshot.cpuTemperature)).append(',')
                 append(String.format(Locale.US, "%.1f", snapshot.appMemoryMb)).append(',')
                 append(String.format(Locale.US, "%.1f", snapshot.availableRamMb)).append(',')
                 append(snapshot.nativeHeapBytes)
