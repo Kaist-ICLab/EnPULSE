@@ -23,11 +23,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Scaffold
+import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.VignettePosition
 import androidx.wear.tooling.preview.devices.WearDevices
@@ -35,6 +38,7 @@ import kaist.iclab.tracker.permission.AndroidPermissionManager
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.tracker.sensor.core.SensorState
 import kaist.iclab.wearabletracker.R
+import kaist.iclab.wearabletracker.benchmark.BenchmarkSettingsActivity
 import kaist.iclab.wearabletracker.data.DeviceInfo
 import kaist.iclab.wearabletracker.ecg.EcgMeasurementActivity
 import kaist.iclab.wearabletracker.helpers.PermissionCheckResult
@@ -353,6 +357,31 @@ fun SettingsScreenContent(
                         upload = onUpload,
                         flush = onFlush
                     )
+
+                    // pradipta/testing only. Sized and styled like Force Upload and Delete All
+                    // in DataActionsRow above.
+                    val context = LocalContext.current
+                    Button(
+                        onClick = {
+                            context.startActivity(
+                                Intent(context, BenchmarkSettingsActivity::class.java)
+                            )
+                        },
+                        colors = ButtonDefaults.secondaryButtonColors(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                start = AppSpacing.sensorChipHorizontal * 2,
+                                end = AppSpacing.sensorChipHorizontal * 2,
+                                top = 4.dp
+                            )
+                            .height(AppSizes.buttonMedium)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.benchmark_title),
+                            color = MaterialTheme.colors.onBackground
+                        )
+                    }
                 }
             }
         }

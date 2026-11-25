@@ -407,5 +407,35 @@
         <item quantity="one">%1$d일 전</item>
         <item quantity="other">%1$d일 전</item>
     </plurals>
-</resources>
 
+    <!-- Benchmark (pradipta/testing only) -->
+    <string name="menu_benchmark">벤치마크</string>
+    <string name="benchmark_description">배터리와 EnPULSE 자체 메모리 사용량을 기록합니다. 각 실행은 %1$s에 저장됩니다. 변경 사항은 다음 실행부터 적용됩니다.</string>
+    <string name="benchmark_mode_title">모드</string>
+    <string name="benchmark_mode_follow">데이터 수집에 맞춰 실행</string>
+    <string name="benchmark_mode_follow_desc">데이터 수집을 시작하거나 중지하면 기록도 함께 시작하고 중지합니다.</string>
+    <string name="benchmark_mode_independent">독립 실행</string>
+    <string name="benchmark_mode_independent_desc">데이터 수집 여부와 관계없이 여기에서 직접 시작하고 중지합니다.</string>
+    <string name="benchmark_wake_lock_title">웨이크락 유지</string>
+    <string name="benchmark_wake_lock_desc">벤치마크 앱처럼 CPU를 깨어 있게 하여 정해진 시간에 샘플을 기록합니다. 이 전력 소모는 EnPULSE의 사용량으로 집계됩니다.</string>
+    <string name="benchmark_scenario_label">시나리오 이름</string>
+    <string name="benchmark_scenario_help">폴더 이름에 사용됩니다. 영문, 숫자, -, _만 사용할 수 있으며 그 외 문자는 _로 바뀝니다.</string>
+    <string name="benchmark_interval_label">샘플링 간격 (초)</string>
+    <string name="benchmark_interval_help">%1$d~%2$d초. 웨이크락이 없으면 CPU가 절전 상태일 때 샘플 기록이 멈춥니다.</string>
+    <string name="benchmark_duration_label">실행 시간 (분)</string>
+    <string name="benchmark_duration_help">시간이 다 되면 데이터 수집을 중지합니다. 0 = 제한 없음.</string>
+    <string name="benchmark_duration_help_independent">시간이 다 되면 기록을 중지합니다. 0 = 제한 없음.</string>
+    <string name="benchmark_save">저장</string>
+    <string name="benchmark_saved">벤치마크 설정이 저장되었습니다</string>
+    <string name="benchmark_start">저장 후 시작</string>
+    <string name="benchmark_stop">기록 중지</string>
+    <string name="benchmark_status">상태</string>
+    <string name="benchmark_status_recording">기록 중: %1$s</string>
+    <string name="benchmark_status_started">시작: %1$s</string>
+    <string name="benchmark_status_stops_at">%1$s에 수집 중지</string>
+    <string name="benchmark_status_recording_stops_at">%1$s에 기록 중지</string>
+    <string name="benchmark_status_no_limit">시간 제한 없음</string>
+    <string name="benchmark_status_off_at_start">데이터 수집 중입니다. 다음 수집부터 기록이 시작됩니다.</string>
+    <string name="benchmark_status_idle">기록 중이 아닙니다. 데이터 수집을 시작하면 기록이 시작됩니다.</string>
+    <string name="benchmark_status_idle_independent">기록 중이 아닙니다. 저장 후 시작을 눌러 시작하세요.</string>
+</resources>

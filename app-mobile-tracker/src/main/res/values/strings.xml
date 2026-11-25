@@ -407,4 +407,35 @@
         <item quantity="one">%1$d day ago</item>
         <item quantity="other">%1$d days ago</item>
     </plurals>
+
+    <!-- Benchmark (pradipta/testing only) -->
+    <string name="menu_benchmark">Benchmark</string>
+    <string name="benchmark_description">Records battery and EnPULSE\'s own memory. Each run is saved to %1$s. Changes apply to the next run.</string>
+    <string name="benchmark_mode_title">Mode</string>
+    <string name="benchmark_mode_follow">Follow data collection</string>
+    <string name="benchmark_mode_follow_desc">Starts and stops with data collection.</string>
+    <string name="benchmark_mode_independent">Independent</string>
+    <string name="benchmark_mode_independent_desc">Start and stop it here, whether or not data collection is running.</string>
+    <string name="benchmark_wake_lock_title">Hold wake lock</string>
+    <string name="benchmark_wake_lock_desc">Keeps the CPU awake so samples are on time, like the benchmark apps. Its cost is counted as EnPULSE\'s.</string>
+    <string name="benchmark_scenario_label">Scenario name</string>
+    <string name="benchmark_scenario_help">Used in the folder name. Letters, digits, - and _; anything else becomes _.</string>
+    <string name="benchmark_interval_label">Sampling interval (seconds)</string>
+    <string name="benchmark_interval_help">%1$d to %2$d. Without the wake lock, samples pause while the CPU sleeps.</string>
+    <string name="benchmark_duration_label">Duration (minutes)</string>
+    <string name="benchmark_duration_help">Stops data collection when it runs out. 0 = no limit.</string>
+    <string name="benchmark_duration_help_independent">Stops recording when it runs out. 0 = no limit.</string>
+    <string name="benchmark_save">Save</string>
+    <string name="benchmark_saved">Benchmark settings saved</string>
+    <string name="benchmark_start">Save and start</string>
+    <string name="benchmark_stop">Stop recording</string>
+    <string name="benchmark_status">Status</string>
+    <string name="benchmark_status_recording">Recording: %1$s</string>
+    <string name="benchmark_status_started">Started %1$s</string>
+    <string name="benchmark_status_stops_at">Collection stops at %1$s</string>
+    <string name="benchmark_status_recording_stops_at">Recording stops at %1$s</string>
+    <string name="benchmark_status_no_limit">No duration limit</string>
+    <string name="benchmark_status_off_at_start">Data collection is running. Recording starts with the next collection run.</string>
+    <string name="benchmark_status_idle">Not recording. A run starts when data collection starts.</string>
+    <string name="benchmark_status_idle_independent">Not recording. Tap Save and start to begin.</string>
 </resources>

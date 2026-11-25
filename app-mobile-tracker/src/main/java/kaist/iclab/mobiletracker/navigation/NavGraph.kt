@@ -28,6 +28,7 @@ import kaist.iclab.mobiletracker.ui.screens.onboarding.OnboardingScreen
 import kaist.iclab.mobiletracker.ui.screens.sensor.SensorDetailScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.SettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.about.AboutSettingsScreen
+import kaist.iclab.mobiletracker.ui.screens.settings.benchmark.BenchmarkSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.account.AccountSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.account.CampaignSettings.CampaignSettingsScreen
 import kaist.iclab.mobiletracker.ui.screens.settings.language.LanguageScreen
@@ -289,6 +290,10 @@ fun NavGraph(
 
         composable(route = Screen.About.route) {
             AboutSettingsScreen(navController = navController)
+        }
+
+        composable(route = Screen.Benchmark.route) {
+            BenchmarkSettingsScreen(navController = navController)
         }
 
         composable(

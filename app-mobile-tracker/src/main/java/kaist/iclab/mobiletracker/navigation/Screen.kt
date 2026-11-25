@@ -25,6 +25,7 @@ sealed class Screen(val route: String) {
     object ServerSync : Screen("server_sync")
     object ServerConnection : Screen("server_connection")
     object About : Screen("about")
+    object Benchmark : Screen("benchmark") // pradipta/testing only
 
     // Data screen sub-screens
     object SensorDetail : Screen("sensor_detail/{sensorId}") {

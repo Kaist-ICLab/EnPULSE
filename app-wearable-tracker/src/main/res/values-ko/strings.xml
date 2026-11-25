@@ -109,4 +109,31 @@
 
     <!-- Off-body detection (watch not worn) -->
     <string name="paused_not_worn">일시정지 — 미착용</string>
+
+    <!-- Benchmark (pradipta/testing only) -->
+    <string name="benchmark_title">벤치마크</string>
+    <string name="benchmark_status_recording">기록 중: %1$s</string>
+    <string name="benchmark_status_stops_at">%1$s에 중지</string>
+    <string name="benchmark_no_limit">제한 없음</string>
+    <string name="benchmark_status_off_at_start">다음 수집부터 기록</string>
+    <string name="benchmark_status_idle">수집 시작 시 기록</string>
+    <string name="benchmark_status_idle_independent">시작을 눌러 기록</string>
+    <string name="benchmark_mode">모드</string>
+    <string name="benchmark_mode_follow">수집과 함께</string>
+    <string name="benchmark_mode_independent">독립 실행</string>
+    <string name="benchmark_start">시작</string>
+    <string name="benchmark_stop">중지</string>
+    <string name="benchmark_wake_lock">웨이크락</string>
+    <string name="benchmark_wake_lock_on">CPU 깨어 있음</string>
+    <string name="benchmark_off">끔</string>
+    <string name="benchmark_scenario">시나리오</string>
+    <string name="benchmark_scenario_input">시나리오 이름</string>
+    <string name="benchmark_interval">간격</string>
+    <string name="benchmark_interval_value">%1$d초</string>
+    <string name="benchmark_interval_input">간격 (초)</string>
+    <string name="benchmark_duration">실행 시간</string>
+    <string name="benchmark_duration_value">%1$d분</string>
+    <string name="benchmark_duration_input">실행 시간 (분, 0 = 없음)</string>
+    <string name="benchmark_duration_note">실행 시간이 끝나면 데이터 수집이 중지됩니다.</string>
+    <string name="benchmark_duration_note_independent">실행 시간이 끝나면 기록이 중지됩니다.</string>
 </resources>

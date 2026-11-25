@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -168,6 +169,12 @@ fun SettingsScreen(
                             icon = Icons.Filled.PhoneAndroid,
                             onClick = { navController.navigate(Screen.PhoneSensor.route) },
                             iconTint = AppColors.IconPhone
+                        )
+                        AppMenuItem(
+                            title = stringResource(R.string.menu_benchmark), // pradipta/testing only
+                            icon = Icons.Filled.Speed,
+                            onClick = { navController.navigate(Screen.Benchmark.route) },
+                            iconTint = AppColors.IconWebApp
                         )
                         AppMenuItem(
                             title = stringResource(R.string.menu_about),

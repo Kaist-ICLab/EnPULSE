@@ -88,6 +88,13 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.DeviceDefault" />
 
+        <!-- pradipta/testing only -->
+        <activity
+            android:name=".benchmark.BenchmarkSettingsActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.DeviceDefault" />
+
         <!-- Phone-only library sensors (user interaction, notification) that the watch never
              uses. Drop their services so the watch APK doesn't declare them. -->
         <service

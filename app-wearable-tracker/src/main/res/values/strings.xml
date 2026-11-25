@@ -108,4 +108,31 @@
 
     <!-- Off-body detection (watch not worn) -->
     <string name="paused_not_worn">Paused — not worn</string>
+
+    <!-- Benchmark (pradipta/testing only) -->
+    <string name="benchmark_title">Benchmark</string>
+    <string name="benchmark_status_recording">Recording %1$s</string>
+    <string name="benchmark_status_stops_at">Stops at %1$s</string>
+    <string name="benchmark_no_limit">No limit</string>
+    <string name="benchmark_status_off_at_start">Starts with next collection</string>
+    <string name="benchmark_status_idle">Starts with collection</string>
+    <string name="benchmark_status_idle_independent">Tap Start to record</string>
+    <string name="benchmark_mode">Mode</string>
+    <string name="benchmark_mode_follow">With collection</string>
+    <string name="benchmark_mode_independent">Independent</string>
+    <string name="benchmark_start">Start</string>
+    <string name="benchmark_stop">Stop</string>
+    <string name="benchmark_wake_lock">Wake lock</string>
+    <string name="benchmark_wake_lock_on">CPU kept awake</string>
+    <string name="benchmark_off">Off</string>
+    <string name="benchmark_scenario">Scenario</string>
+    <string name="benchmark_scenario_input">Scenario name</string>
+    <string name="benchmark_interval">Interval</string>
+    <string name="benchmark_interval_value">%1$d s</string>
+    <string name="benchmark_interval_input">Interval (seconds)</string>
+    <string name="benchmark_duration">Duration</string>
+    <string name="benchmark_duration_value">%1$d min</string>
+    <string name="benchmark_duration_input">Duration (min, 0 = none)</string>
+    <string name="benchmark_duration_note">Duration stops data collection when it runs out.</string>
+    <string name="benchmark_duration_note_independent">Duration stops recording when it runs out.</string>
 </resources>
