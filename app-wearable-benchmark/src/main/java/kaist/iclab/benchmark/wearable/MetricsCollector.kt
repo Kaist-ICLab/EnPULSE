@@ -1,6 +1,5 @@
 package kaist.iclab.benchmark.wearable
 
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -16,9 +15,6 @@ import android.os.BatteryManager
  * @property batteryStatus String representation of battery status (e.g., "charging", "discharging", "full", "not_charging", "unknown").
  * @property batteryChargeUah Remaining battery capacity in microampere-hours (µAh).
  * @property batteryEnergyNwh Remaining battery energy in nanowatt-hours (nWh).
- * @property appMemoryMb Amount of memory (PSS) currently used by this application process in megabytes (MB).
- * @property availableRamMb Amount of free system RAM available in megabytes (MB).
- * @property nativeHeapBytes Amount of native heap memory allocated by this process in bytes.
  */
 data class MetricsSnapshot(
     val timestampMs: Long,
@@ -28,20 +24,17 @@ data class MetricsSnapshot(
     val batteryStatus: String,
     val batteryChargeUah: Long,
     val batteryEnergyNwh: Long,
-    val appMemoryMb: Float,
-    val availableRamMb: Float,
-    val nativeHeapBytes: Long,
 )
 
 /**
- * Collects device resource metrics using only standard Android APIs.
+ * Collects device battery metrics using only standard Android APIs.
  * No external dependencies required.
  */
 class MetricsCollector(private val context: Context) {
 
     /**
      * Collects all available device resource metrics using standard Android APIs.
-     * This function reads battery state and memory usage.
+     * This function reads battery state.
      * 
      * @return A [MetricsSnapshot] object containing the collected metrics.
      */
@@ -72,19 +65,6 @@ class MetricsCollector(private val context: Context) {
         val energyNwh =
             batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER)
 
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val memInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memInfo)
-        val availableRamMb = memInfo.availMem / (1024f * 1024f)
-
-        val pids = intArrayOf(android.os.Process.myPid())
-        val procMemInfo = activityManager.getProcessMemoryInfo(pids)
-        val appMemoryMb = if (procMemInfo.isNotEmpty()) {
-            procMemInfo[0].totalPss / 1024f // PSS is in KB
-        } else 0f
-
-        val nativeHeapBytes = android.os.Debug.getNativeHeapAllocatedSize()
-
         return MetricsSnapshot(
             timestampMs = System.currentTimeMillis(),
             batteryLevel = batteryPct,
@@ -93,9 +73,6 @@ class MetricsCollector(private val context: Context) {
             batteryStatus = statusStr,
             batteryChargeUah = chargeUah,
             batteryEnergyNwh = energyNwh,
-            appMemoryMb = appMemoryMb,
-            availableRamMb = availableRamMb,
-            nativeHeapBytes = nativeHeapBytes,
         )
     }
 }

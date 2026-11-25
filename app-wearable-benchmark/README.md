@@ -1,7 +1,7 @@
 # EnPULSE Watch Benchmark (`app-wearable-benchmark`)
 
 A standalone, lightweight Wear OS module designed specifically for benchmarking watch resource
-consumption (battery, CPU, and memory) during the EnPULSE system evaluation.
+battery consumption during the EnPULSE system evaluation.
 
 ## Why a standalone app?
 
@@ -31,9 +31,6 @@ For every sampling interval, a new row is appended to `metrics.csv` containing:
 5. **Battery Status**: Operating status (e.g., `charging`, `discharging`, `full`).
 6. **Battery Charge**: Remaining charge in microampere-hours (µAh).
 7. **Battery Energy**: Remaining energy in nanowatt-hours (nWh).
-8. **App Memory (PSS)**: Total RAM footprint of the benchmark process in MB.
-9. **Available System RAM**: Total free RAM left on the device in MB.
-10. **Native Heap**: Native heap allocation in bytes.
 
 ## Usage Guide
 

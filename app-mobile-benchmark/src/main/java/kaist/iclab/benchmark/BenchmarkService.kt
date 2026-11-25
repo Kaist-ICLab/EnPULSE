@@ -64,11 +64,6 @@ class BenchmarkService : Service() {
         var latestBatteryChargeUah: Long = -1L
             private set
 
-        var maxNativeHeapBytes: Long = -1L
-            private set
-
-        var maxAppMemoryMb: Float = -1f
-            private set
     }
 
     private lateinit var metricsCollector: MetricsCollector
@@ -115,12 +110,6 @@ class BenchmarkService : Service() {
                 }
                 latestBatteryChargeUah = snapshot.batteryChargeUah
 
-                if (snapshot.nativeHeapBytes > maxNativeHeapBytes) {
-                    maxNativeHeapBytes = snapshot.nativeHeapBytes
-                }
-                if (snapshot.appMemoryMb > maxAppMemoryMb) {
-                    maxAppMemoryMb = snapshot.appMemoryMb
-                }
 
                 updateNotification(snapshot, elapsedMs)
             } catch (e: Exception) {
@@ -208,8 +197,6 @@ class BenchmarkService : Service() {
                 latestBatteryLevel = -1
                 initialBatteryChargeUah = -1L
                 latestBatteryChargeUah = -1L
-                maxNativeHeapBytes = -1L
-                maxAppMemoryMb = -1f
                 isRunning = true
 
                 // Take an initial measurement immediately, then schedule recurring
@@ -263,15 +250,6 @@ class BenchmarkService : Service() {
                 appendLine("Final Charge:    ${latestBatteryChargeUah} uAh")
                 appendLine("Charge Dropped:  ${droppedCharge} uAh")
                 appendLine("Drain Rate:      ${String.format("%.2f", drainRate)} %/hr")
-                appendLine("Max App Memory:  ${String.format("%.1f", maxAppMemoryMb)} MB")
-                appendLine(
-                    "Max Native Heap: ${
-                        String.format(
-                            "%.1f",
-                            maxNativeHeapBytes / (1024f * 1024f)
-                        )
-                    } MB"
-                )
                 appendLine("Interval:        ${intervalMs / 1000} seconds")
             }
             csvWriter.writeSummary(summaryText)

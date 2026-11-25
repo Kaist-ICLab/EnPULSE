@@ -20,15 +20,13 @@ class CsvWriter(private val context: Context) {
         private const val CSV_HEADER =
             "timestamp_iso,timestamp_ms,battery_level_pct,battery_voltage_mv," +
                     "battery_temp_c,battery_status," +
-                    "battery_charge_uah,battery_energy_nwh," +
-                    "app_memory_mb,available_ram_mb,native_heap_bytes\n"
+                    "battery_charge_uah,battery_energy_nwh\n"
 
         private val ISO_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US)
         private val FILE_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US)
     }
 
     private var outputStream: OutputStream? = null
-    private var folderPath: String? = null
     private var folder: File? = null
     private val lock = Any()
 
@@ -54,7 +52,6 @@ class CsvWriter(private val context: Context) {
                 dir.mkdirs()
             }
             folder = dir
-            folderPath = dir.absolutePath
 
             val csvFile = File(dir, "metrics.csv")
             outputStream = FileOutputStream(csvFile, true)
@@ -83,10 +80,7 @@ class CsvWriter(private val context: Context) {
                 append(String.format(Locale.US, "%.1f", snapshot.batteryTemperature)).append(',')
                 append(snapshot.batteryStatus).append(',')
                 append(snapshot.batteryChargeUah).append(',')
-                append(snapshot.batteryEnergyNwh).append(',')
-                append(String.format(Locale.US, "%.1f", snapshot.appMemoryMb)).append(',')
-                append(String.format(Locale.US, "%.1f", snapshot.availableRamMb)).append(',')
-                append(snapshot.nativeHeapBytes)
+                append(snapshot.batteryEnergyNwh)
                 append('\n')
             }
 
@@ -109,11 +103,6 @@ class CsvWriter(private val context: Context) {
             }
         }
     }
-
-    /**
-     * Returns the current folder path, or null if no file is open.
-     */
-    fun getFolderPath(): String? = synchronized(lock) { folderPath }
 
     /**
      * Closes the CSV file.

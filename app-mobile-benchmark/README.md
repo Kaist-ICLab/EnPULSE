@@ -1,7 +1,7 @@
 # EnPULSE Mobile Benchmark (`app-mobile-benchmark`)
 
 A standalone, lightweight Android module designed specifically for benchmarking device resource
-consumption (battery and memory) during the EnPULSE system evaluation.
+battery consumption during the EnPULSE system evaluation.
 
 ## Why a standalone app?
 
@@ -15,10 +15,10 @@ bottlenecks. It uses standard Android APIs with zero external third-party depend
   partial `WakeLock`. You can lock the screen, disconnect ADB, and walk away.
 * **Crash Resilience**: Writes data incrementally to a CSV file. If the device's battery completely
   dies during an extreme stress test, the CSV up to the point of shutdown is perfectly preserved.
-* **Detailed Metrics**: Captures high-resolution power and hardware statistics (voltage, charge uAh, energy nWh, PSS RAM, native heap).
+* **Detailed Metrics**: Captures high-resolution power and hardware statistics (voltage, charge uAh, energy nWh).
 * **Pause & Resume Support**: Pause and resume tests without splitting log files.
 * **Auto-Stop Timer**: Configurable duration auto-stop with sound notification alerts.
-* **Auto-Summary**: Automatically calculates drain rates, peak memory/temperature, and total duration when stopped.
+* **Auto-Summary**: Automatically calculates drain rates and total duration when stopped.
 
 ## What is Recorded
 
@@ -26,7 +26,6 @@ For every sampling interval, a new row is appended to `metrics.csv` containing:
 
 1. **Timestamp (ISO-8601 & epoch ms)**: `timestamp_iso`, `timestamp_ms`.
 2. **Battery Metrics**: Level (`%`), Voltage (`mV`), Temperature (`°C`), Operating Status (`charging`, `discharging`, etc.), Remaining Charge (`µAh`), Remaining Energy (`nWh`).
-3. **Memory Footprint**: Process memory PSS (`MB`), System Available RAM (`MB`), Native Heap allocated (`Bytes`).
 
 ## Usage Guide
 

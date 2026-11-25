@@ -116,7 +116,7 @@ class BenchmarkActivity : AppCompatActivity() {
         })
         layout.addView(TextView(this).apply {
             text =
-                "How often battery, CPU, and RAM metrics are sampled. Recommended: 60s for standard tests, 15–30s for fast micro-benchmarks."
+                "How often battery metrics are sampled. Recommended: 60s for standard tests, 15–30s for fast micro-benchmarks."
             textSize = 11.5f
             setTextColor(0xFF666666.toInt())
             setPadding(
