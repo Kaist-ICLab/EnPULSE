@@ -9,12 +9,13 @@ Android keeps per-app statistics itself, so these are read from the device:
                                                wake-up alarms, network bytes, GPS time)
   2. Memory           dumpsys procstats      (PSS / USS / RSS min, average and max)
   3. Storage          run-as ... du          (app data size and ObjectBox size)
-  4. Memory over time EnPULSE's MemoryLogger  (CSV every 60 s, pradipta/testing builds only)
+  4. Benchmark runs   EnPULSE's built-in recorder (battery and EnPULSE memory while
+                                               collection runs; pradipta/testing builds only)
 
 Workflow for each run:
   1. Unplug the device (batterystats stops counting while charging).
   2. Reset:   python scripts/tools/enpulse_stats.py reset   --serial <serial>
-  3. Start the benchmark app and EnPULSE, run the scenario.
+  3. Start collection in EnPULSE (set the scenario under Settings > Benchmark), run it.
   4. Collect: python scripts/tools/enpulse_stats.py collect --serial <serial> --out <dir>
 
 pull_benchmark.py and fleet_manager.py call reset() and collect() for you.
@@ -33,10 +34,16 @@ from datetime import datetime
 
 PACKAGE = "kaist.iclab.trackerSystem"  # Phone and watch apps share this ID.
 OBJECTBOX_DIR = "files/objectbox"  # MyObjectBox default location inside the app data dir.
-MEMORY_LOG_DIR = "/sdcard/Android/data/%s/files/EnPULSE-Memory" % PACKAGE  # MemoryLogger output
+# BenchmarkRecorder runs. The phone writes to Downloads, next to the phone benchmark app's runs;
+# the watch keeps them in the app's own folder.
+PHONE_BENCHMARK_DIR = "/sdcard/Download/EnPULSE"
+WATCH_BENCHMARK_DIR = "/sdcard/Android/data/%s/files/EnPULSE-Benchmark" % PACKAGE
+BENCHMARK_DIRS = [PHONE_BENCHMARK_DIR, WATCH_BENCHMARK_DIR]
 PROCSTATS_HOURS = 24  # Procstats aggregation window; runs longer than this need a larger value.
 
 GPS_SENSOR_ID = "-10000"  # BatteryStats.Uid.Sensor.GPS
+# BenchmarkRecorder's own wake lock: counted apart, so partial_wakelock_ms stays EnPULSE's own.
+RECORDER_WAKE_LOCK = "EnPULSE:BenchmarkRecorder"
 
 
 def adb(serial, *args, timeout=120):
@@ -56,17 +63,15 @@ def adb(serial, *args, timeout=120):
 
 def reset(serial):
     """
-    Clears batterystats, procstats and old MemoryLogger files, so the end-of-run
-    collection covers this run only. Returns a list of (step, ok, message).
+    Clears batterystats and procstats, so the end-of-run collection covers this run
+    only. Benchmark runs are kept: each is its own folder. Returns a list of
+    (step, ok, message).
     """
     results = []
     ok, out, err = adb(serial, "shell", "dumpsys", "batterystats", "--reset")
     results.append(("batterystats", ok and "reset" in out.lower(), (out or err).strip()))
     ok, out, err = adb(serial, "shell", "dumpsys", "procstats", "--clear")
     results.append(("procstats", ok and "clear" in out.lower(), (out or err).strip()))
-    # A running EnPULSE recreates its current file, with a header, on the next sample.
-    ok, out, err = adb(serial, "shell", "rm -f %s/*.csv" % MEMORY_LOG_DIR)
-    results.append(("memory logs", ok, (out or err).strip() or "cleared"))
     return results
 
 
@@ -100,6 +105,7 @@ def parse_batterystats_checkin(text, uid):
         "cpu_system_ms": None,
         "partial_wakelock_ms": 0,
         "partial_wakelock_count": 0,
+        "recorder_wakelock_ms": 0,
         "wakeup_alarms": 0,
         "gps_ms": 0,
         "mobile_rx_bytes": None,
@@ -128,6 +134,9 @@ def parse_batterystats_checkin(text, uid):
             # wl,<name>,<full_ms>,f,<count>,<partial_ms>,p,<count>,...
             if "p" in data[1:]:
                 i = data.index("p", 1)
+                if data[0] == RECORDER_WAKE_LOCK:
+                    stats["recorder_wakelock_ms"] += _num(data[i - 1]) or 0
+                    continue
                 stats["partial_wakelock_ms"] += _num(data[i - 1]) or 0
                 if i + 1 < len(data):
                     stats["partial_wakelock_count"] += int(_num(data[i + 1]) or 0)
@@ -228,32 +237,94 @@ def get_storage(serial, package=PACKAGE):
     return storage, "\n".join(raw)
 
 
-def summarize_memory_logs(log_dir):
-    """Average and peak of EnPULSE's own memory across the MemoryLogger CSVs in log_dir."""
-    pss, native, java = [], [], []
-    files = sorted(glob.glob(os.path.join(log_dir, "*.csv")))
-    for path in files:
-        with open(path, newline="") as f:
-            for row in csv.DictReader(f):
-                for column, values in (("total_pss_mb", pss), ("native_heap_mb", native), ("java_heap_mb", java)):
-                    value = _num(row.get(column))
-                    if value is not None:
-                        values.append(value)
-    if not pss:
+def summarize_benchmark_run(runs_dir):
+    """
+    Battery and EnPULSE memory for the newest BenchmarkRecorder run in runs_dir
+    (one folder per run, each with metrics.csv and, once finished, summary.txt).
+    Benchmark-app runs pulled from the same Downloads folder are skipped: only
+    EnPULSE's recorder writes the collection_state column.
+    """
+    runs = []
+    for csv_path in glob.glob(os.path.join(runs_dir, "*", "metrics.csv")):
+        with open(csv_path, newline="") as f:
+            reader = csv.DictReader(f)
+            if "collection_state" not in (reader.fieldnames or []):
+                continue
+            rows = list(reader)
+        if rows and _num(rows[0].get("timestamp_ms")) is not None:
+            runs.append((_num(rows[0]["timestamp_ms"]), csv_path, rows))
+    if not runs:
         return None
+    _, csv_path, rows = max(runs, key=lambda run: run[0])
+    folder = os.path.dirname(csv_path)
+
+    def column(name, scale=1.0):
+        return [v / scale for v in (_num(row.get(name)) for row in rows) if v is not None]
 
     def avg(values):
         return round(sum(values) / len(values), 1) if values else None
 
+    def peak(values):
+        return round(max(values), 1) if values else None
+
+    times = column("timestamp_ms")
+    hours = (times[-1] - times[0]) / 3600000.0 if len(times) > 1 else 0.0
+    level = [int(v) for v in column("battery_level_pct")]
+    charge = [int(v) for v in column("battery_charge_uah")]
+    pss = column("total_pss_mb")
+    native = column("native_heap_allocated_bytes", 1024 * 1024)
+    java = column("java_heap_used_bytes", 1024 * 1024)
+    charge_dropped = charge[0] - charge[-1] if len(charge) > 1 else None
+
+    def counter_total(name):
+        """A process counter restarts from 0 in a new process; count that value as the step."""
+        values = [_num(row.get(name)) for row in rows]
+        if all(v is None for v in values):
+            return None
+        return sum(0 if a is None or b is None else (b - a if b >= a else b)
+                   for a, b in zip(values, values[1:]))
+
+    def total(name):
+        values = column(name)
+        return sum(values) if values else None
+
+    cpu_ms = counter_total("cpu_time_ms")
+    span_ms = (times[-1] - times[0]) if len(times) > 1 else 0
+    started = {row.get("process_started_ms") for row in rows if row.get("process_started_ms")}
+    pending = [int(v) for v in column("pending_rows")]
+    threads = [int(v) for v in column("threads")]
+    fds = [int(v) for v in column("open_fds")]
+    net_rx, net_tx, saved = total("net_rx_bytes"), total("net_tx_bytes"), total("rows_saved")
+
     return {
-        "files": len(files),
-        "samples": len(pss),
+        "run": os.path.basename(folder),
+        "runs_on_device": len(runs),
+        "finished": os.path.exists(os.path.join(folder, "summary.txt")),
+        "samples": len(rows),
+        "duration_hrs": round(hours, 2),
+        "longest_gap_s": round(max(b - a for a, b in zip(times, times[1:])) / 1000) if len(times) > 1 else None,
+        "battery_start_pct": level[0] if level else None,
+        "battery_end_pct": level[-1] if level else None,
+        "charge_dropped_uah": charge_dropped,
+        "avg_current_ma": round(charge_dropped / hours / 1000.0, 2) if charge_dropped is not None and hours > 0 else None,
+        "charging_seen": any(row.get("battery_status") == "charging" for row in rows),
         "pss_avg_mb": avg(pss),
-        "pss_max_mb": max(pss),
+        "pss_max_mb": peak(pss),
         "native_heap_avg_mb": avg(native),
-        "native_heap_max_mb": max(native) if native else None,
+        "native_heap_max_mb": peak(native),
         "java_heap_avg_mb": avg(java),
-        "java_heap_max_mb": max(java) if java else None,
+        "java_heap_max_mb": peak(java),
+        # Columns below exist only in runs from builds with the extra metrics; None otherwise.
+        "cpu_total_s": round(cpu_ms / 1000.0, 1) if cpu_ms is not None else None,
+        "cpu_avg_pct": round(cpu_ms * 100.0 / span_ms, 2) if cpu_ms is not None and span_ms > 0 else None,
+        "net_rx_kb": round(net_rx / 1024.0, 1) if net_rx is not None else None,
+        "net_tx_kb": round(net_tx / 1024.0, 1) if net_tx is not None else None,
+        "rows_saved": int(saved) if saved is not None else None,
+        "pending_rows_end": pending[-1] if pending else None,
+        "pending_rows_max": max(pending) if pending else None,
+        "threads_max": max(threads) if threads else None,
+        "open_fds_max": max(fds) if fds else None,
+        "process_restarts": max(len(started) - 1, 0) if started else None,
     }
 
 
@@ -302,11 +373,12 @@ def collect(serial, out_dir, package=PACKAGE, procstats_hours=PROCSTATS_HOURS):
     save("storage.txt", raw)
     summary["storage"] = storage
 
-    # 4. Memory over time (MemoryLogger CSVs)
-    memory_dir = os.path.join(out_dir, "memory_log")
-    os.makedirs(memory_dir, exist_ok=True)
-    adb(serial, "pull", MEMORY_LOG_DIR + "/.", memory_dir, timeout=300)
-    summary["memory_log"] = summarize_memory_logs(memory_dir)
+    # 4. Benchmark runs (all of them are pulled; the newest is summarised)
+    runs_dir = os.path.join(out_dir, "benchmark_runs")
+    os.makedirs(runs_dir, exist_ok=True)
+    for remote in BENCHMARK_DIRS:
+        adb(serial, "pull", remote + "/.", runs_dir, timeout=300)
+    summary["benchmark_run"] = summarize_benchmark_run(runs_dir)
 
     save("enpulse_stats.json", json.dumps(summary, indent=2))
     return summary
@@ -319,21 +391,33 @@ def format_summary(summary):
     b = summary.get("batterystats") or {}
     p = summary.get("procstats") or {}
     s = summary.get("storage") or {}
-    m = summary.get("memory_log") or {}
+    m = summary.get("benchmark_run") or {}
 
     def fmt(value, unit=""):
         return "N/A" if value is None else "%s%s" % (value, unit)
 
     wl_s = round(b["partial_wakelock_ms"] / 1000.0, 1) if b.get("partial_wakelock_ms") is not None else None
+    rec_s = round(b["recorder_wakelock_ms"] / 1000.0, 1) if b.get("recorder_wakelock_ms") else None
     return "\n".join([
-        "  Energy:  %s mAh estimated" % fmt(b.get("estimated_mah")),
+        "  Energy:  %s mAh estimated%s" % (fmt(b.get("estimated_mah")),
+                                          "   (includes the recorder's wake lock: %s s)" % rec_s if rec_s else ""),
         "  CPU:     %s s   wake locks: %s s (%s)   wake-up alarms: %s"
         % (fmt(b.get("cpu_total_s")), fmt(wl_s), fmt(b.get("partial_wakelock_count")), fmt(b.get("wakeup_alarms"))),
         "  Memory:  PSS avg %s / max %s   (%s samples)"
         % (fmt(p.get("pss_avg_mb"), " MB"), fmt(p.get("pss_max_mb"), " MB"), fmt(p.get("samples"))),
-        "  Memory log: PSS avg %s / max %s, native heap max %s   (%s samples)"
+        "  Benchmark run: %s%s" % (m.get("run") or "none found", "" if m.get("finished", True) else "  (still recording)"),
+        "    %s h, battery %s -> %s, %s uAh used (%s avg)%s"
+        % (fmt(m.get("duration_hrs")), fmt(m.get("battery_start_pct"), "%"), fmt(m.get("battery_end_pct"), "%"),
+           fmt(m.get("charge_dropped_uah")), fmt(m.get("avg_current_ma"), " mA"),
+           "   ⚠ charged during run" if m.get("charging_seen") else ""),
+        "    PSS avg %s / max %s, native heap max %s, Java heap max %s   (%s samples)"
         % (fmt(m.get("pss_avg_mb"), " MB"), fmt(m.get("pss_max_mb"), " MB"),
-           fmt(m.get("native_heap_max_mb"), " MB"), fmt(m.get("samples"))),
+           fmt(m.get("native_heap_max_mb"), " MB"), fmt(m.get("java_heap_max_mb"), " MB"), fmt(m.get("samples"))),
+        "    CPU %s s (avg %s), network %s in / %s out, threads max %s, restarts %s"
+        % (fmt(m.get("cpu_total_s")), fmt(m.get("cpu_avg_pct"), "%"), fmt(m.get("net_rx_kb"), " KB"),
+           fmt(m.get("net_tx_kb"), " KB"), fmt(m.get("threads_max")), fmt(m.get("process_restarts"))),
+        "    rows saved %s, pending at end %s (max %s)"
+        % (fmt(m.get("rows_saved")), fmt(m.get("pending_rows_end")), fmt(m.get("pending_rows_max"))),
         "  Storage: data %s, ObjectBox %s   [%s]"
         % (fmt(s.get("data_mb"), " MB"), fmt(s.get("objectbox_mb"), " MB"), s.get("method") or "unavailable"),
     ])

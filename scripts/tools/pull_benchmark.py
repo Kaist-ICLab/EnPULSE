@@ -2,8 +2,9 @@
 """
 pull_benchmark.py — Post-test extraction script for EnPULSE benchmarking.
 
-Pulls benchmark CSVs and EnPULSE's own energy, CPU, memory and storage
-(see enpulse_stats.py) from phone and/or watch, then generates a summary report.
+Pulls benchmark CSVs (from the benchmark apps and from EnPULSE's built-in recorder)
+and EnPULSE's own energy, CPU, memory and storage (see enpulse_stats.py) from phone
+and/or watch, then generates a summary report.
 
 Usage:
     # Start of run, after unplugging: clear batterystats and procstats
@@ -88,6 +89,11 @@ def analyze_benchmark_csv(csv_path: str) -> dict:
     if not rows:
         return {"error": "Empty CSV"}
 
+    # The in-app recorder leaves a column blank when the device doesn't report it.
+    rows = [row for row in rows if (row.get("battery_level_pct") or "").strip()]
+    if not rows:
+        return {"error": "No battery readings"}
+
     first = rows[0]
     last = rows[-1]
 
@@ -99,20 +105,17 @@ def analyze_benchmark_csv(csv_path: str) -> dict:
 
     drain_rate = (start_battery - end_battery) / duration_hrs if duration_hrs > 0 else 0
 
-    # Memory of the benchmark app itself, not EnPULSE (see enpulse_stats for EnPULSE's).
-    mem_values = [float(r["app_memory_mb"]) for r in rows if float(r["app_memory_mb"]) >= 0]
 
     return {
         "start_battery": start_battery,
         "end_battery": end_battery,
         "duration_hrs": round(duration_hrs, 2),
         "drain_rate_pct_per_hr": round(drain_rate, 2),
-        "avg_benchmark_memory_mb": round(sum(mem_values) / len(mem_values), 1) if mem_values else -1,
         "data_points": len(rows),
     }
 
 
-def extract_device(serial: str, device_name: str, scenario: str, output_dir: str, package: str):
+def extract_device(serial: str, device_name: str, output_dir: str, package: str):
     """Extract all data from a single device."""
     device_dir = os.path.join(output_dir, device_name)
     os.makedirs(device_dir, exist_ok=True)
@@ -126,31 +129,33 @@ def extract_device(serial: str, device_name: str, scenario: str, output_dir: str
     print(f"  Current battery: {level}%")
 
     # 2. Pull benchmark CSVs
-    print(f"  Pulling benchmark CSVs...")
+    print("  Pulling benchmark CSVs...")
     csv_dir = os.path.join(device_dir, "csvs")
     pull_dir(serial, BENCHMARK_PATH_ON_DEVICE, csv_dir)
 
     # 3. EnPULSE energy, CPU, memory and storage
-    print(f"  Pulling EnPULSE stats (batterystats, procstats, storage)...")
+    print("  Pulling EnPULSE stats (batterystats, procstats, storage)...")
     stats = enpulse_stats.collect(serial, os.path.join(device_dir, "enpulse_stats"), package)
     print(enpulse_stats.format_summary(stats))
 
     # 4. Memory snapshot at pull time (procstats above covers the whole run)
-    print(f"  Pulling memory info...")
+    print("  Pulling memory info...")
     meminfo = get_meminfo(serial, package)
     with open(os.path.join(device_dir, "meminfo.txt"), "w") as f:
         f.write(meminfo)
 
     # 5. Bugreport (optional, can be slow)
-    print(f"  Pulling bugreport (this may take a minute)...")
+    print("  Pulling bugreport (this may take a minute)...")
     pull_bugreport(serial, os.path.join(device_dir, f"bugreport_{device_name}.zip"))
 
-    # 6. Analyze CSVs
-    csv_files = list(Path(csv_dir).rglob("*.csv"))
+    # 6. Analyze CSVs: benchmark app runs, then EnPULSE's built-in runs (pulled in step 3).
+    # Both write metrics.csv, so each is named by its run folder.
+    csv_files = list(Path(csv_dir).rglob("metrics.csv"))
+    csv_files += list(Path(device_dir, "enpulse_stats").rglob("benchmark_runs/*/metrics.csv"))
     analyses = {}
     for csv_file in csv_files:
-        print(f"  Analyzing: {csv_file.name}")
-        analyses[csv_file.name] = analyze_benchmark_csv(str(csv_file))
+        print(f"  Analyzing: {csv_file.parent.name}")
+        analyses[csv_file.parent.name] = analyze_benchmark_csv(str(csv_file))
 
     return analyses, stats
 
@@ -160,7 +165,7 @@ def print_summary(scenario: str, results: dict):
     print(f"\n{'=' * 70}")
     print(f"  BENCHMARK SUMMARY: {scenario}")
     print(f"{'=' * 70}")
-    print(f"{'Device':<10} {'File':<40} {'Start%':>6} {'End%':>5} {'Hrs':>5} {'%/hr':>6} {'Bench MB':>8}")
+    print(f"{'Device':<10} {'Run':<40} {'Start%':>6} {'End%':>5} {'Hrs':>5} {'%/hr':>6}")
     print("-" * 70)
 
     for device_name, analyses in results.items():
@@ -173,8 +178,7 @@ def print_summary(scenario: str, results: dict):
                 f"{data['start_battery']:>5}% "
                 f"{data['end_battery']:>4}% "
                 f"{data['duration_hrs']:>5} "
-                f"{data['drain_rate_pct_per_hr']:>5.1f} "
-                f"{data['avg_benchmark_memory_mb']:>8.1f}"
+                f"{data['drain_rate_pct_per_hr']:>5.1f}"
             )
 
 
@@ -185,7 +189,7 @@ def write_summary_csv(scenario: str, results: dict, output_dir: str):
         writer = csv.writer(f)
         writer.writerow([
             "scenario", "device", "csv_file", "start_battery_pct", "end_battery_pct",
-            "duration_hrs", "drain_rate_pct_per_hr", "avg_benchmark_memory_mb", "data_points"
+            "duration_hrs", "drain_rate_pct_per_hr", "data_points"
         ])
         for device_name, analyses in results.items():
             for filename, data in analyses.items():
@@ -195,7 +199,7 @@ def write_summary_csv(scenario: str, results: dict, output_dir: str):
                     scenario, device_name, filename,
                     data["start_battery"], data["end_battery"],
                     data["duration_hrs"], data["drain_rate_pct_per_hr"],
-                    data["avg_benchmark_memory_mb"], data["data_points"],
+                    data["data_points"],
                 ])
     print(f"\n  Summary CSV saved to: {csv_path}")
 
@@ -204,15 +208,24 @@ ENPULSE_COLUMNS = [
     ("batterystats", "estimated_mah"), ("batterystats", "cpu_total_s"),
     ("batterystats", "cpu_user_ms"), ("batterystats", "cpu_system_ms"),
     ("batterystats", "partial_wakelock_ms"), ("batterystats", "partial_wakelock_count"),
+    ("batterystats", "recorder_wakelock_ms"),
     ("batterystats", "wakeup_alarms"), ("batterystats", "gps_ms"),
     ("batterystats", "wifi_rx_bytes"), ("batterystats", "wifi_tx_bytes"),
     ("batterystats", "mobile_rx_bytes"), ("batterystats", "mobile_tx_bytes"),
     ("batterystats", "bt_rx_bytes"), ("batterystats", "bt_tx_bytes"),
     ("procstats", "pss_avg_mb"), ("procstats", "pss_max_mb"), ("procstats", "rss_avg_mb"),
     ("procstats", "rss_max_mb"), ("procstats", "samples"),
-    ("memory_log", "pss_avg_mb"), ("memory_log", "pss_max_mb"),
-    ("memory_log", "native_heap_avg_mb"), ("memory_log", "native_heap_max_mb"),
-    ("memory_log", "java_heap_avg_mb"), ("memory_log", "java_heap_max_mb"), ("memory_log", "samples"),
+    ("benchmark_run", "run"), ("benchmark_run", "duration_hrs"),
+    ("benchmark_run", "battery_start_pct"), ("benchmark_run", "battery_end_pct"),
+    ("benchmark_run", "charge_dropped_uah"), ("benchmark_run", "avg_current_ma"),
+    ("benchmark_run", "charging_seen"), ("benchmark_run", "longest_gap_s"),
+    ("benchmark_run", "pss_avg_mb"), ("benchmark_run", "pss_max_mb"),
+    ("benchmark_run", "native_heap_avg_mb"), ("benchmark_run", "native_heap_max_mb"),
+    ("benchmark_run", "java_heap_avg_mb"), ("benchmark_run", "java_heap_max_mb"), ("benchmark_run", "samples"),
+    ("benchmark_run", "cpu_total_s"), ("benchmark_run", "cpu_avg_pct"),
+    ("benchmark_run", "net_rx_kb"), ("benchmark_run", "net_tx_kb"),
+    ("benchmark_run", "rows_saved"), ("benchmark_run", "pending_rows_end"), ("benchmark_run", "pending_rows_max"),
+    ("benchmark_run", "threads_max"), ("benchmark_run", "open_fds_max"), ("benchmark_run", "process_restarts"),
     ("storage", "data_mb"), ("storage", "objectbox_mb"), ("storage", "method"),
 ]
 
@@ -261,7 +274,7 @@ def main():
     output_dir = os.path.join(args.output, args.scenario)
     os.makedirs(output_dir, exist_ok=True)
 
-    print(f"EnPULSE Benchmark Extractor")
+    print("EnPULSE Benchmark Extractor")
     print(f"Scenario: {args.scenario}")
     print(f"Output:   {output_dir}")
     print(f"Time:     {datetime.now().isoformat()}")
@@ -271,12 +284,12 @@ def main():
 
     if args.phone:
         results["phone"], stats["phone"] = extract_device(
-            args.phone, "phone", args.scenario, output_dir, PHONE_PACKAGE
+            args.phone, "phone", output_dir, PHONE_PACKAGE
         )
 
     if args.watch:
         results["watch"], stats["watch"] = extract_device(
-            args.watch, "watch", args.scenario, output_dir, WATCH_PACKAGE
+            args.watch, "watch", output_dir, WATCH_PACKAGE
         )
 
     print_summary(args.scenario, results)

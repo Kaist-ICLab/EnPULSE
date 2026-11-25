@@ -25,7 +25,6 @@ from datetime import datetime
 import enpulse_stats
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "fleet_config.json")
-PACKAGE_NAME = "kaist.iclab.mobiletracker"
 BENCHMARK_PACKAGE = "kaist.iclab.benchmark"
 
 # Port scan range for ADB wireless debugging fallback (Android uses 37000-44000 typically)
@@ -183,7 +182,12 @@ def check_device_status(device: dict) -> tuple:
     ls_watch_success, ls_watch_out, _ = run_adb(["-s", address, "shell", "ls", "-d", "/sdcard/Android/data/kaist.iclab.benchmark/files/Benchmarks/*", "/sdcard/Android/data/kaist.iclab.benchmark.wearable/files/Benchmarks/*"], timeout=5)
     watch_folders = [f for f in ls_watch_out.splitlines() if "No such file" not in f and f.strip() and ("watch-" in f or "Benchmark" in f)]
     
-    folder_count = (len(folders) if ls_success and folders else 0) + (len(watch_folders) if ls_watch_success and watch_folders else 0)
+    # EnPULSE's built-in recorder on the watch (pradipta/testing builds); phone runs are in
+    # Download/EnPULSE and already counted above
+    ls_app_success, ls_app_out, _ = run_adb(["-s", address, "shell", "ls", "-d", enpulse_stats.WATCH_BENCHMARK_DIR + "/*"], timeout=5)
+    app_folders = [f for f in ls_app_out.splitlines() if "No such file" not in f and ("phone-" in f or "watch-" in f)]
+
+    folder_count = (len(folders) if ls_success and folders else 0) + (len(watch_folders) if ls_watch_success and watch_folders else 0) + (len(app_folders) if ls_app_success else 0)
 
     return name, address, "Online", battery, status, str(folder_count)
 
@@ -472,7 +476,7 @@ def cmd_setup():
         if not pair_ip_port:
             continue
             
-        code = input(f"Enter 6-digit Wi-Fi pairing code: ").strip()
+        code = input("Enter 6-digit Wi-Fi pairing code: ").strip()
         
         print(f"⏳ Pairing with {pair_ip_port}...")
         success, out, err = run_adb(["pair", pair_ip_port, code])
@@ -483,7 +487,7 @@ def cmd_setup():
             print("Please try again.")
             continue
 
-        conn_addr = input(f"Enter IP address and port for Connection (shown on main Wireless Debugging screen, e.g. 192.168.1.50:39882): ").strip()
+        conn_addr = input("Enter IP address and port for Connection (shown on main Wireless Debugging screen, e.g. 192.168.1.50:39882): ").strip()
         print(f"⏳ Connecting to {conn_addr}...")
         c_success, c_out, c_err = run_adb(["connect", conn_addr])
         
@@ -677,7 +681,7 @@ def cmd_install():
     elif app_choice == "6":
         for i, a in enumerate(ALL_APPS):
             print(f"{i+1}. {a['id']}")
-        single_choice = input(f"Select app (1-4): ").strip()
+        single_choice = input("Select app (1-4): ").strip()
         try:
             selected_apps = [ALL_APPS[int(single_choice) - 1]]
         except (ValueError, IndexError):

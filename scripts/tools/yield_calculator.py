@@ -13,11 +13,8 @@ Usage:
 import argparse
 import csv
 import json
-import os
-import sys
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
 
 # Theoretical expected frequencies (Hz or interval in seconds)
 KNOWN_SENSORS = {
@@ -68,7 +65,7 @@ def query_supabase_count(url: str, key: str, table_name: str, campaign_id: str, 
                 return int(count_str) if count_str != "*" else 0
             body = json.loads(response.read().decode("utf-8"))
             return len(body)
-    except Exception as e:
+    except Exception:
         # Table might not exist or no data
         return -1
 
@@ -153,7 +150,7 @@ def main():
         return
 
     print("\n" + "=" * 60)
-    print(f"  EnPULSE Data Yield Calculator")
+    print("  EnPULSE Data Yield Calculator")
     print(f"  Campaign: {args.campaign}")
     print(f"  Duration: {args.duration / 3600:.2f} hours")
     print("=" * 60 + "\n")
