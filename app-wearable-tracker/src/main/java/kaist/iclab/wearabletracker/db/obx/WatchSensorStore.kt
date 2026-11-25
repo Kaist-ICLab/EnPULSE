@@ -19,11 +19,8 @@ class WatchSensorStore<T>(
     @Suppress("UNCHECKED_CAST")
     private val timestampProperty = metaClass.getField("timestamp").get(null) as Property<T>
 
-    /** @return the number of rows saved (one entity can become several rows). */
-    fun insertFromSensorEntities(entities: List<SensorEntity>): Int {
-        val rows = entities.flatMap { fromSensorEntity(it) }
-        box.put(rows)
-        return rows.size
+    fun insertFromSensorEntities(entities: List<SensorEntity>) {
+        box.put(entities.flatMap { fromSensorEntity(it) })
     }
 
     /**

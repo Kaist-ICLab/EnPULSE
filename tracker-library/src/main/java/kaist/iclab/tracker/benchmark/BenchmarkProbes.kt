@@ -4,7 +4,6 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.TrafficStats
 import android.os.Debug
 import android.os.PowerManager
 import android.os.Process
@@ -19,18 +18,12 @@ import java.io.File
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-/**
- * What only the app knows, handed to [BenchmarkRecorder.init]. Both methods run on the recorder's
- * own thread and may block briefly.
- */
+/** What only the app knows, handed to [BenchmarkRecorder.init]. */
 interface BenchmarkAppProbe {
     /**
-     * Rows waiting to leave the device: not yet uploaded (phone) or not yet acknowledged by the
-     * phone (watch). Called at every sample; null if unknown.
+     * "name" to "value" lines for summary.txt, such as the enabled sensors. Called at run start,
+     * on the recorder's own thread.
      */
-    fun pendingRows(): Int? = null
-
-    /** "name" to "value" lines for summary.txt, such as the enabled sensors. Called at run start. */
     fun runInfo(): List<Pair<String, String>> = emptyList()
 }
 
@@ -45,7 +38,7 @@ fun enabledSensorNames(sensors: List<Sensor<*, *>>): String =
  * Process and device readings for each sample, beyond battery and memory. Everything here reads
  * EnPULSE's own process or UID, which Android allows without root or adb.
  *
- * Keeps the previous CPU and network readings so each row can show the change since the last one.
+ * Keeps the previous CPU reading so each row can show the CPU use since the last one.
  */
 internal class SystemSampler(private val context: Context) {
     companion object {
@@ -54,11 +47,10 @@ internal class SystemSampler(private val context: Context) {
         val COLUMNS = listOf(
             "cpu_time_ms", "cpu_pct", "threads", "open_fds", "gc_count", "gc_time_ms",
             "app_data_kb", "process_started_ms", "standby_bucket", "screen_on", "device_idle",
-            "power_save", "network", "peer_connected", "net_rx_bytes", "net_tx_bytes",
+            "power_save", "network", "peer_connected",
         )
     }
 
-    private val uid = Process.myUid()
     private val powerManager = context.getSystemService(PowerManager::class.java)
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
     private val usageStats = context.getSystemService(UsageStatsManager::class.java)
@@ -70,15 +62,11 @@ internal class SystemSampler(private val context: Context) {
 
     private var prevWallMs: Long? = null
     private var prevCpuMs: Long? = null
-    private var prevRx: Long? = null
-    private var prevTx: Long? = null
 
     /** Forget the previous readings, so a new run's first row has no deltas. */
     fun reset() {
         prevWallMs = null
         prevCpuMs = null
-        prevRx = null
-        prevTx = null
     }
 
     /** Values in [COLUMNS] order; an empty string where a value can't be read. */
@@ -88,14 +76,8 @@ internal class SystemSampler(private val context: Context) {
             val wall = nowMs - (prevWallMs ?: nowMs)
             if (wall > 0) String.format(Locale.US, "%.2f", (cpuMs - prevCpu) * 100.0 / wall) else null
         }
-        val rx = TrafficStats.getUidRxBytes(uid).takeIf { it >= 0 }
-        val tx = TrafficStats.getUidTxBytes(uid).takeIf { it >= 0 }
-        val rxDelta = if (rx != null && prevRx != null) rx - prevRx!! else null
-        val txDelta = if (tx != null && prevTx != null) tx - prevTx!! else null
         prevWallMs = nowMs
         prevCpuMs = cpuMs
-        prevRx = rx
-        prevTx = tx
 
         return listOf(
             cpuMs.toString(),
@@ -112,8 +94,6 @@ internal class SystemSampler(private val context: Context) {
             powerManager.isPowerSaveMode.toString(),
             networkType(),
             peerConnected()?.toString().orEmpty(),
-            rxDelta?.toString().orEmpty(),
-            txDelta?.toString().orEmpty(),
         )
     }
 

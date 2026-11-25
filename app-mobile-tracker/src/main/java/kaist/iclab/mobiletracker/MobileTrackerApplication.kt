@@ -20,8 +20,6 @@ import kaist.iclab.mobiletracker.repository.TriggerRepository
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.mobiletracker.utils.NotificationHelper
-import kaist.iclab.mobiletracker.services.upload.SensorDataUploader
-import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
 import kaist.iclab.tracker.benchmark.BenchmarkAppProbe
 import kaist.iclab.tracker.benchmark.BenchmarkRecorder
 import kaist.iclab.tracker.benchmark.enabledSensorNames
@@ -35,7 +33,6 @@ import kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter
 import kaist.iclab.tracker.trigger.TriggerEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.component.KoinComponent
@@ -268,20 +265,8 @@ class MobileTrackerApplication : Application(), KoinComponent,
         }
     }
 
-    /**
-     * Pending rows: rows past each sensor's upload cursor, counted the way SensorDataUploader
-     * does, for the sensors it would upload. Run details: enabled sensors and auto-sync interval.
-     */
+    /** Run details: enabled sensors and auto-sync interval. */
     private fun phoneBenchmarkProbe() = object : BenchmarkAppProbe {
-        override fun pendingRows(): Int = runBlocking {
-            val koin = getKoin()
-            val uploader = koin.get<SensorDataUploader>()
-            val timestamps = koin.get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
-            koin.get<SensorUploadHandlerRegistry>().getAllHandlers()
-                .filter { uploader.isSensorActive(it.sensorId) }
-                .sumOf { it.pendingRecordCount(timestamps.getUploadCursor(it.sensorId)) }
-        }
-
         override fun runInfo(): List<Pair<String, String>> {
             val koin = getKoin()
             val autoSyncMs = koin.get<kaist.iclab.mobiletracker.services.SyncTimestampService>()

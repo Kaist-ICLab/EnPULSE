@@ -7,7 +7,6 @@ import androidx.core.app.NotificationManagerCompat
 import kaist.iclab.tracker.benchmark.BenchmarkAppProbe
 import kaist.iclab.tracker.benchmark.BenchmarkRecorder
 import kaist.iclab.tracker.benchmark.enabledSensorNames
-import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
 import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
@@ -130,15 +129,8 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         }
     }
 
-    /**
-     * Pending rows: rows still in the watch's database, which are deleted once the phone ACKs them.
-     * Run details: the sensors enabled at the start and the auto-sync interval.
-     */
+    /** Run details: the sensors enabled at the start and the auto-sync interval. */
     private fun watchBenchmarkProbe() = object : BenchmarkAppProbe {
-        override fun pendingRows(): Int =
-            get<Map<String, WatchSensorStore<*>>>(named("sensorDataStorages"))
-                .values.sumOf { it.getCount() }
-
         override fun runInfo(): List<Pair<String, String>> = listOf(
             "Enabled sensors" to enabledSensorNames(get<BackgroundController>().sensors),
             "Auto-sync" to get<SyncPreferencesHelper>().getAutoSyncInterval()

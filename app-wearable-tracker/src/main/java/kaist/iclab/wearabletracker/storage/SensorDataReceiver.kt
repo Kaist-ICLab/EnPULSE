@@ -1,6 +1,5 @@
 package kaist.iclab.wearabletracker.storage
 
-import kaist.iclab.tracker.benchmark.BenchmarkRecorder
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -203,8 +202,7 @@ class SensorDataReceiver(
                         "SensorDataReceiver",
                         "flush batch for $sensorId"
                     ) {
-                        val rows = sensorDataStorages[sensorId]?.insertFromSensorEntities(batchToInsert)
-                        BenchmarkRecorder.countRows(rows ?: 0) // pradipta/testing only
+                        sensorDataStorages[sensorId]?.insertFromSensorEntities(batchToInsert)
                         true // Success
                     }
 

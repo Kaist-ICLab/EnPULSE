@@ -284,17 +284,11 @@ def summarize_benchmark_run(runs_dir):
         return sum(0 if a is None or b is None else (b - a if b >= a else b)
                    for a, b in zip(values, values[1:]))
 
-    def total(name):
-        values = column(name)
-        return sum(values) if values else None
-
     cpu_ms = counter_total("cpu_time_ms")
     span_ms = (times[-1] - times[0]) if len(times) > 1 else 0
     started = {row.get("process_started_ms") for row in rows if row.get("process_started_ms")}
-    pending = [int(v) for v in column("pending_rows")]
     threads = [int(v) for v in column("threads")]
     fds = [int(v) for v in column("open_fds")]
-    net_rx, net_tx, saved = total("net_rx_bytes"), total("net_tx_bytes"), total("rows_saved")
 
     return {
         "run": os.path.basename(folder),
@@ -317,11 +311,6 @@ def summarize_benchmark_run(runs_dir):
         # Columns below exist only in runs from builds with the extra metrics; None otherwise.
         "cpu_total_s": round(cpu_ms / 1000.0, 1) if cpu_ms is not None else None,
         "cpu_avg_pct": round(cpu_ms * 100.0 / span_ms, 2) if cpu_ms is not None and span_ms > 0 else None,
-        "net_rx_kb": round(net_rx / 1024.0, 1) if net_rx is not None else None,
-        "net_tx_kb": round(net_tx / 1024.0, 1) if net_tx is not None else None,
-        "rows_saved": int(saved) if saved is not None else None,
-        "pending_rows_end": pending[-1] if pending else None,
-        "pending_rows_max": max(pending) if pending else None,
         "threads_max": max(threads) if threads else None,
         "open_fds_max": max(fds) if fds else None,
         "process_restarts": max(len(started) - 1, 0) if started else None,
@@ -413,11 +402,9 @@ def format_summary(summary):
         "    PSS avg %s / max %s, native heap max %s, Java heap max %s   (%s samples)"
         % (fmt(m.get("pss_avg_mb"), " MB"), fmt(m.get("pss_max_mb"), " MB"),
            fmt(m.get("native_heap_max_mb"), " MB"), fmt(m.get("java_heap_max_mb"), " MB"), fmt(m.get("samples"))),
-        "    CPU %s s (avg %s), network %s in / %s out, threads max %s, restarts %s"
-        % (fmt(m.get("cpu_total_s")), fmt(m.get("cpu_avg_pct"), "%"), fmt(m.get("net_rx_kb"), " KB"),
-           fmt(m.get("net_tx_kb"), " KB"), fmt(m.get("threads_max")), fmt(m.get("process_restarts"))),
-        "    rows saved %s, pending at end %s (max %s)"
-        % (fmt(m.get("rows_saved")), fmt(m.get("pending_rows_end")), fmt(m.get("pending_rows_max"))),
+        "    CPU %s s (avg %s), threads max %s, restarts %s"
+        % (fmt(m.get("cpu_total_s")), fmt(m.get("cpu_avg_pct"), "%"),
+           fmt(m.get("threads_max")), fmt(m.get("process_restarts"))),
         "  Storage: data %s, ObjectBox %s   [%s]"
         % (fmt(s.get("data_mb"), " MB"), fmt(s.get("objectbox_mb"), " MB"), s.get("method") or "unavailable"),
     ])

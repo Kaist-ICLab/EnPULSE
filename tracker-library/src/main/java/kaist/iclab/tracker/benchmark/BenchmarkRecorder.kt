@@ -37,7 +37,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Benchmark recorder built into EnPULSE (pradipta/testing only). It replaces the separate
@@ -54,10 +53,8 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * While a run is active, one row goes to `metrics.csv` every [Config.intervalSec] seconds, plus one
  * at every collection state change and one at the end; `summary.txt` is written when it ends. Each
- * row has battery, EnPULSE's memory, its CPU, threads, files, GC, storage, network and process
- * start time, the device's state (screen, Doze, power saver, network, phone or watch connected),
- * and the rows saved and still waiting to leave the device. Rows saved come from the apps calling
- * [countRows]; rows waiting from [BenchmarkAppProbe.pendingRows].
+ * row has battery, EnPULSE's memory, its CPU, threads, files, GC, storage and process start time,
+ * and the device's state (screen, Doze, power saver, network, phone or watch connected).
  *
  * Files go where the benchmark apps put theirs, one folder per run named
  * `<role>-<model>_<scenario>_<time>`:
@@ -99,7 +96,7 @@ object BenchmarkRecorder {
                 "battery_status,battery_charge_uah,collection_state," +
                 "total_pss_mb,java_heap_mb,native_heap_mb,code_mb,stack_mb,graphics_mb," +
                 "private_other_mb,system_mb,native_heap_allocated_bytes,java_heap_used_bytes," +
-                SystemSampler.COLUMNS.joinToString(",") + ",rows_saved,pending_rows\n"
+                SystemSampler.COLUMNS.joinToString(",") + "\n"
 
     // Debug.MemoryInfo summary keys, in the same order as the CSV columns after total_pss_mb.
     private val SUMMARY_KEYS = listOf(
@@ -167,9 +164,6 @@ object BenchmarkRecorder {
     private var appProbe: BenchmarkAppProbe = object : BenchmarkAppProbe {}
     private lateinit var systemSampler: SystemSampler
 
-    // Rows saved since the last sample; see countRows.
-    private val rowsSaved = AtomicLong()
-
     private var samplingJob: Job? = null
     private var recordingInThisProcess = false
     private var currentFlag: ControllerState.FLAG? = null
@@ -191,7 +185,7 @@ object BenchmarkRecorder {
      *
      * @param deviceRole "phone" or "watch"; starts the folder name.
      * @param saveToDownloads true: Download/EnPULSE/ via MediaStore; false: the app's own folder.
-     * @param appProbe pending rows and run details only the app knows.
+     * @param appProbe run details only the app knows.
      * @param onDurationReached stops data collection. Runs on the main thread.
      */
     fun init(
@@ -256,15 +250,6 @@ object BenchmarkRecorder {
             .putBoolean("wake_lock", clean.holdWakeLock)
             .apply()
         _config.value = clean
-    }
-
-    /**
-     * Call wherever sensor rows are saved to the local database. Counted only while a run is
-     * active; cheap and safe from any thread.
-     */
-    fun countRows(rows: Int) {
-        if (rows <= 0 || _activeRun.value == null) return
-        rowsSaved.addAndGet(rows.toLong())
     }
 
     /** Feed every controller state change here (RUNNING, PAUSED, READY, DISABLED). */
@@ -391,7 +376,6 @@ object BenchmarkRecorder {
         val now = System.currentTimeMillis()
         val time = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date(now))
         val name = "$deviceRole-${sanitize(Build.MODEL)}_${cfg.scenario}_$time"
-        rowsSaved.set(0)
         systemSampler.reset()
 
         val run = Run(
@@ -606,17 +590,7 @@ object BenchmarkRecorder {
     private fun appendSample(run: Run, state: String) {
         val now = System.currentTimeMillis()
         val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(Date(now))
-        val saved = rowsSaved.getAndSet(0)
-        val pending = try {
-            appProbe.pendingRows()
-        } catch (e: Exception) {
-            Log.w(TAG, "Could not read pending rows", e)
-            null
-        }
-        appendTo(
-            run.ref, HEADER,
-            sampleRow(now, iso, state) + ",$saved," + pending?.toString().orEmpty() + "\n"
-        )
+        appendTo(run.ref, HEADER, sampleRow(now, iso, state) + "\n")
     }
 
     /** One metrics.csv row up to and including the system columns, without a newline. */
@@ -752,8 +726,6 @@ object BenchmarkRecorder {
             }.sum()
         }
 
-        fun columnSum(name: String) = rows.mapNotNull { double(it, name) }.sum()
-
         // Share of the run during which a column had this value; a row's value holds until the next.
         fun share(name: String, value: String): String {
             var ms = 0L
@@ -837,8 +809,6 @@ object BenchmarkRecorder {
             }
             appendLine("App data:        ${firstLastMax("app_data_kb")} KB")
             appendLine("Restarts:        $restarts")
-            appendLine("Network:         ${f2(columnSum("net_rx_bytes") / 1024.0)} KB in, " +
-                    "${f2(columnSum("net_tx_bytes") / 1024.0)} KB out")
             appendLine()
             appendLine("Device (share of the run)")
             appendLine("Screen on:       ${share("screen_on", "true")}")
@@ -847,10 +817,6 @@ object BenchmarkRecorder {
             appendLine("Peer connected:  ${share("peer_connected", "true")}")
             appendLine("Networks:        ${networks.joinToString { "$it ${share("network", it)}" }}")
             appendLine("Standby buckets: ${buckets.joinToString()}")
-            appendLine()
-            appendLine("Data")
-            appendLine("Rows saved:      ${columnSum("rows_saved").toLong()}")
-            appendLine("Pending rows:    ${firstLastMax("pending_rows")}")
             if (runInfo.isNotEmpty()) {
                 appendLine()
                 appendLine("Run details")

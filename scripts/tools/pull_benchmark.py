@@ -223,8 +223,6 @@ ENPULSE_COLUMNS = [
     ("benchmark_run", "native_heap_avg_mb"), ("benchmark_run", "native_heap_max_mb"),
     ("benchmark_run", "java_heap_avg_mb"), ("benchmark_run", "java_heap_max_mb"), ("benchmark_run", "samples"),
     ("benchmark_run", "cpu_total_s"), ("benchmark_run", "cpu_avg_pct"),
-    ("benchmark_run", "net_rx_kb"), ("benchmark_run", "net_tx_kb"),
-    ("benchmark_run", "rows_saved"), ("benchmark_run", "pending_rows_end"), ("benchmark_run", "pending_rows_max"),
     ("benchmark_run", "threads_max"), ("benchmark_run", "open_fds_max"), ("benchmark_run", "process_restarts"),
     ("storage", "data_mb"), ("storage", "objectbox_mb"), ("storage", "method"),
 ]

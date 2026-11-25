@@ -1,6 +1,5 @@
 package kaist.iclab.mobiletracker.services
 
-import kaist.iclab.tracker.benchmark.BenchmarkRecorder
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -215,7 +214,6 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                 when (val result =
                     phoneSensorRepository.insertSensorDataBatch(sensorId, entities.toList())) {
                     is Result.Success -> {
-                        BenchmarkRecorder.countRows(entities.size) // pradipta/testing only
                         entities.clear()
                         timestampService.updateLastPhoneSensorData()
                     }
