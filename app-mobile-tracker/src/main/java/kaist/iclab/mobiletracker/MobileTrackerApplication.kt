@@ -273,13 +273,13 @@ class MobileTrackerApplication : Application(), KoinComponent,
      * does, for the sensors it would upload. Run details: enabled sensors and auto-sync interval.
      */
     private fun phoneBenchmarkProbe() = object : BenchmarkAppProbe {
-        override fun pendingRows(): Map<String, Int> = runBlocking {
+        override fun pendingRows(): Int = runBlocking {
             val koin = getKoin()
             val uploader = koin.get<SensorDataUploader>()
             val timestamps = koin.get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
             koin.get<SensorUploadHandlerRegistry>().getAllHandlers()
                 .filter { uploader.isSensorActive(it.sensorId) }
-                .associate { it.sensorId to it.pendingRecordCount(timestamps.getUploadCursor(it.sensorId)) }
+                .sumOf { it.pendingRecordCount(timestamps.getUploadCursor(it.sensorId)) }
         }
 
         override fun runInfo(): List<Pair<String, String>> {

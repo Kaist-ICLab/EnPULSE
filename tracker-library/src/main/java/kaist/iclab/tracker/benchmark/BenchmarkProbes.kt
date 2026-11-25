@@ -25,10 +25,10 @@ import java.util.concurrent.TimeUnit
  */
 interface BenchmarkAppProbe {
     /**
-     * Rows waiting to leave the device, per sensor id: not yet uploaded (phone) or not yet
-     * acknowledged by the phone (watch). Called at every sample.
+     * Rows waiting to leave the device: not yet uploaded (phone) or not yet acknowledged by the
+     * phone (watch). Called at every sample; null if unknown.
      */
-    fun pendingRows(): Map<String, Int> = emptyMap()
+    fun pendingRows(): Int? = null
 
     /** "name" to "value" lines for summary.txt, such as the enabled sensors. Called at run start. */
     fun runInfo(): List<Pair<String, String>> = emptyList()

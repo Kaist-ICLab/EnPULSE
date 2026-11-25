@@ -135,9 +135,9 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
      * Run details: the sensors enabled at the start and the auto-sync interval.
      */
     private fun watchBenchmarkProbe() = object : BenchmarkAppProbe {
-        override fun pendingRows(): Map<String, Int> =
+        override fun pendingRows(): Int =
             get<Map<String, WatchSensorStore<*>>>(named("sensorDataStorages"))
-                .mapValues { (_, store) -> store.getCount() }
+                .values.sumOf { it.getCount() }
 
         override fun runInfo(): List<Pair<String, String>> = listOf(
             "Enabled sensors" to enabledSensorNames(get<BackgroundController>().sensors),

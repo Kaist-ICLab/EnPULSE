@@ -204,7 +204,7 @@ class SensorDataReceiver(
                         "flush batch for $sensorId"
                     ) {
                         val rows = sensorDataStorages[sensorId]?.insertFromSensorEntities(batchToInsert)
-                        BenchmarkRecorder.countRows(sensorId, rows ?: 0) // pradipta/testing only
+                        BenchmarkRecorder.countRows(rows ?: 0) // pradipta/testing only
                         true // Success
                     }
 

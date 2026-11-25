@@ -36,7 +36,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
@@ -57,9 +56,8 @@ import java.util.concurrent.atomic.AtomicLong
  * at every collection state change and one at the end; `summary.txt` is written when it ends. Each
  * row has battery, EnPULSE's memory, its CPU, threads, files, GC, storage, network and process
  * start time, the device's state (screen, Doze, power saver, network, phone or watch connected),
- * and the rows saved and still waiting to leave the device. `yield.csv` breaks the last two down
- * per sensor. Rows saved come from the apps calling [countRows]; rows waiting from
- * [BenchmarkAppProbe.pendingRows].
+ * and the rows saved and still waiting to leave the device. Rows saved come from the apps calling
+ * [countRows]; rows waiting from [BenchmarkAppProbe.pendingRows].
  *
  * Files go where the benchmark apps put theirs, one folder per run named
  * `<role>-<model>_<scenario>_<time>`:
@@ -102,7 +100,6 @@ object BenchmarkRecorder {
                 "total_pss_mb,java_heap_mb,native_heap_mb,code_mb,stack_mb,graphics_mb," +
                 "private_other_mb,system_mb,native_heap_allocated_bytes,java_heap_used_bytes," +
                 SystemSampler.COLUMNS.joinToString(",") + ",rows_saved,pending_rows\n"
-    private const val YIELD_HEADER = "timestamp_iso,timestamp_ms,sensor,rows_saved,pending_rows\n"
 
     // Debug.MemoryInfo summary keys, in the same order as the CSV columns after total_pss_mb.
     private val SUMMARY_KEYS = listOf(
@@ -133,14 +130,12 @@ object BenchmarkRecorder {
     /**
      * @property name the run's folder name.
      * @property ref where metrics.csv is: a MediaStore content URI (Downloads) or a file path.
-     * @property yieldRef where yield.csv is, in the same form; null for runs from older builds.
      * @property endsAt wall-clock time the run ends, or null for no limit.
      * @property independent started by [startIndependent], not by collection.
      */
     data class Run(
         val name: String,
         val ref: String,
-        val yieldRef: String?,
         val scenario: String,
         val startedAt: Long,
         val endsAt: Long?,
@@ -172,8 +167,8 @@ object BenchmarkRecorder {
     private var appProbe: BenchmarkAppProbe = object : BenchmarkAppProbe {}
     private lateinit var systemSampler: SystemSampler
 
-    // Rows saved per sensor since the last sample; see countRows.
-    private val rowsSaved = ConcurrentHashMap<String, AtomicLong>()
+    // Rows saved since the last sample; see countRows.
+    private val rowsSaved = AtomicLong()
 
     private var samplingJob: Job? = null
     private var recordingInThisProcess = false
@@ -267,9 +262,9 @@ object BenchmarkRecorder {
      * Call wherever sensor rows are saved to the local database. Counted only while a run is
      * active; cheap and safe from any thread.
      */
-    fun countRows(sensorId: String, rows: Int) {
+    fun countRows(rows: Int) {
         if (rows <= 0 || _activeRun.value == null) return
-        rowsSaved.getOrPut(sensorId) { AtomicLong() }.addAndGet(rows.toLong())
+        rowsSaved.addAndGet(rows.toLong())
     }
 
     /** Feed every controller state change here (RUNNING, PAUSED, READY, DISABLED). */
@@ -396,13 +391,12 @@ object BenchmarkRecorder {
         val now = System.currentTimeMillis()
         val time = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date(now))
         val name = "$deviceRole-${sanitize(Build.MODEL)}_${cfg.scenario}_$time"
-        rowsSaved.clear()
+        rowsSaved.set(0)
         systemSampler.reset()
 
         val run = Run(
             name = name,
             ref = createRunFile(name, "metrics.csv", HEADER),
-            yieldRef = createRunFile(name, "yield.csv", YIELD_HEADER),
             scenario = cfg.scenario,
             startedAt = now,
             endsAt = if (cfg.durationMin > 0) now + cfg.durationMin * 60_000L else null,
@@ -413,7 +407,6 @@ object BenchmarkRecorder {
         prefs.edit()
             .putString("run_name", run.name)
             .putString("run_ref", run.ref)
-            .putString("run_yield_ref", run.yieldRef)
             .putString("run_info", runInfo(cfg).joinToString("\n") { (k, v) -> "$k\t$v" })
             .putString("run_scenario", run.scenario)
             .putLong("run_started_at", run.startedAt)
@@ -430,7 +423,7 @@ object BenchmarkRecorder {
 
     private fun clearRun() {
         prefs.edit()
-            .remove("run_name").remove("run_ref").remove("run_yield_ref").remove("run_info")
+            .remove("run_name").remove("run_ref").remove("run_info")
             .remove("run_scenario").remove("run_started_at")
             .remove("run_ends_at").remove("run_interval_ms").remove("run_wake_lock")
             .remove("run_independent").remove("run_duration_reached")
@@ -458,7 +451,6 @@ object BenchmarkRecorder {
         return Run(
             name = name,
             ref = ref,
-            yieldRef = prefs.getString("run_yield_ref", null),
             scenario = prefs.getString("run_scenario", null) ?: "default",
             startedAt = prefs.getLong("run_started_at", 0L),
             endsAt = prefs.getLong("run_ends_at", -1L).takeIf { it > 0 },
@@ -614,26 +606,17 @@ object BenchmarkRecorder {
     private fun appendSample(run: Run, state: String) {
         val now = System.currentTimeMillis()
         val iso = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(Date(now))
-        val saved = rowsSaved.mapValues { it.value.getAndSet(0) }.filterValues { it > 0 }
+        val saved = rowsSaved.getAndSet(0)
         val pending = try {
             appProbe.pendingRows()
         } catch (e: Exception) {
             Log.w(TAG, "Could not read pending rows", e)
             null
         }
-        val pendingTotal = pending?.values?.sum()?.toString().orEmpty()
         appendTo(
             run.ref, HEADER,
-            sampleRow(now, iso, state) + "," + saved.values.sum() + "," + pendingTotal + "\n"
+            sampleRow(now, iso, state) + ",$saved," + pending?.toString().orEmpty() + "\n"
         )
-        run.yieldRef?.let { ref ->
-            val sensors = (saved.keys + pending.orEmpty().keys).sorted()
-            if (sensors.isNotEmpty()) {
-                appendTo(ref, YIELD_HEADER, sensors.joinToString("") { sensor ->
-                    "$iso,$now,$sensor,${saved[sensor] ?: 0},${pending?.get(sensor)?.toString().orEmpty()}\n"
-                })
-            }
-        }
     }
 
     /** One metrics.csv row up to and including the system columns, without a newline. */
@@ -794,12 +777,6 @@ object BenchmarkRecorder {
         val networks = rows.map { col(it, "network") }.filter { it.isNotEmpty() }.distinct()
         val buckets = rows.map { col(it, "standby_bucket") }.filter { it.isNotEmpty() }.distinct()
 
-        // Per sensor, from yield.csv: rows saved over the run and rows still waiting at the end.
-        val yieldRows = readLines(run.yieldRef).drop(1).map { it.split(',') }.filter { it.size == 5 }
-        val savedBySensor = yieldRows.groupBy { it[2] }
-            .mapValues { (_, r) -> r.sumOf { it[3].toLongOrNull() ?: 0L } }
-        val pendingAtEnd = yieldRows.groupBy { it[2] }.mapValues { (_, r) -> r.last()[4] }
-
         val ended = if (prefs.getBoolean("run_duration_reached", false)) "duration reached" else endedBy
         val planned = run.endsAt?.let { "${(it - run.startedAt) / 60_000} min" } ?: "no limit"
         val mib = 1024.0 * 1024.0
@@ -874,12 +851,6 @@ object BenchmarkRecorder {
             appendLine("Data")
             appendLine("Rows saved:      ${columnSum("rows_saved").toLong()}")
             appendLine("Pending rows:    ${firstLastMax("pending_rows")}")
-            savedBySensor.keys.sorted().forEach { sensor ->
-                appendLine(
-                    "  " + sensor.padEnd(18) + "saved ${savedBySensor[sensor]}, " +
-                            "pending at end ${pendingAtEnd[sensor]?.ifEmpty { "n/a" }}"
-                )
-            }
             if (runInfo.isNotEmpty()) {
                 appendLine()
                 appendLine("Run details")

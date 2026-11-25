@@ -51,7 +51,7 @@ class WatchSensorRepositoryImpl(
                     ?: throw IllegalStateException("No store for sensor: $sensorId")
                 store.insertBatch(entities.onEach { it.uuid = uuid })
                 // pradipta/testing only: rows arriving from the watch
-                BenchmarkRecorder.countRows(sensorId, entities.size)
+                BenchmarkRecorder.countRows(entities.size)
             }
         }
     }

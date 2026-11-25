@@ -215,7 +215,7 @@ class PhoneSensorDataService : LifecycleService(), KoinComponent {
                 when (val result =
                     phoneSensorRepository.insertSensorDataBatch(sensorId, entities.toList())) {
                     is Result.Success -> {
-                        BenchmarkRecorder.countRows(sensorId, entities.size) // pradipta/testing only
+                        BenchmarkRecorder.countRows(entities.size) // pradipta/testing only
                         entities.clear()
                         timestampService.updateLastPhoneSensorData()
                     }
