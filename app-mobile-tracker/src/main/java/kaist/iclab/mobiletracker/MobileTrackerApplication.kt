@@ -20,7 +20,11 @@ import kaist.iclab.mobiletracker.repository.TriggerRepository
 import kaist.iclab.mobiletracker.services.PhoneSensorDataService
 import kaist.iclab.mobiletracker.services.SurveyResponseCapture
 import kaist.iclab.mobiletracker.utils.NotificationHelper
-import kaist.iclab.tracker.benchmark.MemoryLogger
+import kaist.iclab.mobiletracker.services.upload.SensorDataUploader
+import kaist.iclab.mobiletracker.services.upload.handlers.SensorUploadHandlerRegistry
+import kaist.iclab.tracker.benchmark.BenchmarkAppProbe
+import kaist.iclab.tracker.benchmark.BenchmarkRecorder
+import kaist.iclab.tracker.benchmark.enabledSensorNames
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
@@ -31,6 +35,7 @@ import kaist.iclab.tracker.trigger.adapter.TimingDetectionAdapter
 import kaist.iclab.tracker.trigger.TriggerEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.component.KoinComponent
@@ -52,9 +57,6 @@ class MobileTrackerApplication : Application(), KoinComponent,
 
     override fun onCreate() {
         super.onCreate()
-
-        // Benchmarking (pradipta/testing only): log EnPULSE's own memory over each run.
-        MemoryLogger.start(this)
 
         // Initialize Koin Dependency Injection
         startKoin {
@@ -99,6 +101,10 @@ class MobileTrackerApplication : Application(), KoinComponent,
         } catch (e: Exception) {
             Log.e("MobileTrackerApplication", "Error initializing SurveySensor: ${e.message}", e)
         }
+
+        // Benchmarking (pradipta/testing only): record battery and EnPULSE's own memory while
+        // collection runs. Must be set up before the state observer below feeds it.
+        initBenchmarkRecorder()
 
         // Observe controller state to manage PhoneSensorDataService and survey response capture
         // lifecycle. This is placed at the Application level so it persists across
@@ -215,6 +221,7 @@ class MobileTrackerApplication : Application(), KoinComponent,
         val surveyResponseCapture = getKoin().get<SurveyResponseCapture>()
         ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
             backgroundController.controllerStateFlow.collect { state ->
+                BenchmarkRecorder.onCollectionState(state.flag)
                 try {
                     when (state.flag) {
                         ControllerState.FLAG.RUNNING -> {
@@ -238,6 +245,51 @@ class MobileTrackerApplication : Application(), KoinComponent,
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * When the benchmark duration runs out, stop collection the same way the Settings "Stop"
+     * button does (SettingsViewModel.stopLogging), so auto-sync and the started timestamp
+     * don't keep running after it.
+     */
+    private fun initBenchmarkRecorder() {
+        BenchmarkRecorder.init(
+            this,
+            deviceRole = "phone",
+            saveToDownloads = true,
+            appProbe = phoneBenchmarkProbe()
+        ) {
+            val koin = getKoin()
+            koin.get<BackgroundController>().stop()
+            koin.get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
+                .clearDataCollectionStarted()
+            koin.get<kaist.iclab.mobiletracker.services.AutoSyncManager>().stop()
+        }
+    }
+
+    /**
+     * Pending rows: rows past each sensor's upload cursor, counted the way SensorDataUploader
+     * does, for the sensors it would upload. Run details: enabled sensors and auto-sync interval.
+     */
+    private fun phoneBenchmarkProbe() = object : BenchmarkAppProbe {
+        override fun pendingRows(): Map<String, Int> = runBlocking {
+            val koin = getKoin()
+            val uploader = koin.get<SensorDataUploader>()
+            val timestamps = koin.get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
+            koin.get<SensorUploadHandlerRegistry>().getAllHandlers()
+                .filter { uploader.isSensorActive(it.sensorId) }
+                .associate { it.sensorId to it.pendingRecordCount(timestamps.getUploadCursor(it.sensorId)) }
+        }
+
+        override fun runInfo(): List<Pair<String, String>> {
+            val koin = getKoin()
+            val autoSyncMs = koin.get<kaist.iclab.mobiletracker.services.SyncTimestampService>()
+                .getAutoSyncIntervalMs()
+            return listOf(
+                "Enabled sensors" to enabledSensorNames(koin.get<BackgroundController>().sensors),
+                "Auto-sync" to if (autoSyncMs > 0) "${autoSyncMs / 60_000} min" else "off",
+            )
         }
     }
 

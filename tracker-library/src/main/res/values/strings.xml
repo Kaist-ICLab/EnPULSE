@@ -77,4 +77,9 @@
     <string name="instruction_usage_stats">Please find the app in the Usage access settings and turn it ON.</string>
     <string name="instruction_battery_opt">To ensure continuous data collection, please select \'Unrestricted\' in the battery settings.</string>
     <string name="instruction_samsung_health">Please select \'Allow all\' in the Samsung Health permission screen.</string>
+
+    <!-- Benchmark (pradipta/testing only) -->
+    <string name="benchmark_notification_channel">Benchmark</string>
+    <string name="benchmark_notification_title">EnPULSE benchmark</string>
+    <string name="benchmark_notification_text">Recording %1$s</string>
 </resources>

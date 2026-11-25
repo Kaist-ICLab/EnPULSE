@@ -1,5 +1,6 @@
 package kaist.iclab.mobiletracker.repository
 
+import kaist.iclab.tracker.benchmark.BenchmarkRecorder
 import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Wearable
 import kaist.iclab.mobiletracker.Constants
@@ -49,6 +50,8 @@ class WatchSensorRepositoryImpl(
                 val store = storeById[sensorId] as? SensorStore<BaseEntity>
                     ?: throw IllegalStateException("No store for sensor: $sensorId")
                 store.insertBatch(entities.onEach { it.uuid = uuid })
+                // pradipta/testing only: rows arriving from the watch
+                BenchmarkRecorder.countRows(sensorId, entities.size)
             }
         }
     }

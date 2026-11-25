@@ -77,4 +77,9 @@
     <string name="instruction_usage_stats">사용 정보 접근 허용 설정에서 앱을 찾아 \'사용 추적 허용\'을 켜주세요.</string>
     <string name="instruction_battery_opt">원활한 데이터 수집을 위해 배터리 설정에서 \'제한 없음\'을 선택해 주세요.</string>
     <string name="instruction_samsung_health">삼성 헬스 권한 화면에서 \'모두 허용\'을 선택해 주세요.</string>
+
+    <!-- Benchmark (pradipta/testing only) -->
+    <string name="benchmark_notification_channel">벤치마크</string>
+    <string name="benchmark_notification_title">EnPULSE 벤치마크</string>
+    <string name="benchmark_notification_text">기록 중: %1$s</string>
 </resources>

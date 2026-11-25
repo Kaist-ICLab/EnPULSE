@@ -123,6 +123,16 @@
             </intent-filter>
         </service>
 
+        <!-- pradipta/testing only: keeps the process alive during an independent benchmark run -->
+        <service
+            android:name=".benchmark.BenchmarkService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Battery and memory benchmark for research testing." />
+        </service>
+
         <activity 
             android:name=".sensor.survey.activity.DefaultSurveyActivity"
             android:launchMode="singleTop" />

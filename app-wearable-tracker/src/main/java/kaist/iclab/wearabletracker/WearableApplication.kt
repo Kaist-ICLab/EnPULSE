@@ -4,7 +4,11 @@ import android.app.Application
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependencies
 import kaist.iclab.tracker.sensor.controller.BackgroundControllerDependenciesProvider
 import androidx.core.app.NotificationManagerCompat
-import kaist.iclab.tracker.benchmark.MemoryLogger
+import kaist.iclab.tracker.benchmark.BenchmarkAppProbe
+import kaist.iclab.tracker.benchmark.BenchmarkRecorder
+import kaist.iclab.tracker.benchmark.enabledSensorNames
+import kaist.iclab.wearabletracker.db.obx.WatchSensorStore
+import kaist.iclab.wearabletracker.helpers.SyncPreferencesHelper
 import kaist.iclab.tracker.sensor.controller.BackgroundController
 import kaist.iclab.tracker.sensor.controller.ControllerState
 import kaist.iclab.wearabletracker.data.PhoneCommunicationManager
@@ -34,9 +38,6 @@ import org.koin.core.qualifier.named
 class WearableApplication : Application(), KoinComponent, BackgroundControllerDependenciesProvider {
     override fun onCreate() {
         super.onCreate()
-
-        // Benchmarking (pradipta/testing only): log EnPULSE's own memory over each run.
-        MemoryLogger.start(this)
 
         startKoin {
             androidContext(this@WearableApplication)
@@ -72,6 +73,19 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         )
 
         markCollectionStoppedAfterRestart()
+
+        // Benchmarking (pradipta/testing only): record battery and EnPULSE's own memory while
+        // collection runs, and stop collection when the set duration runs out (the same call as
+        // the Stop button). Files stay in the app's own folder: MediaStore is not reliable on Wear OS.
+        BenchmarkRecorder.init(
+            this,
+            deviceRole = "watch",
+            saveToDownloads = false,
+            appProbe = watchBenchmarkProbe()
+        ) {
+            get<BackgroundController>().stop()
+        }
+
         observeCollectionForDataWriter()
     }
 
@@ -102,6 +116,7 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
         val dataWriter = get<SensorDataReceiver>()
         get<CoroutineScope>().launch {
             controllerState.stateFlow.collect { state ->
+                BenchmarkRecorder.onCollectionState(state.flag)
                 when (state.flag) {
                     ControllerState.FLAG.RUNNING -> {
                         dataWriter.startBackgroundCollection()
@@ -113,6 +128,22 @@ class WearableApplication : Application(), KoinComponent, BackgroundControllerDe
                 }
             }
         }
+    }
+
+    /**
+     * Pending rows: rows still in the watch's database, which are deleted once the phone ACKs them.
+     * Run details: the sensors enabled at the start and the auto-sync interval.
+     */
+    private fun watchBenchmarkProbe() = object : BenchmarkAppProbe {
+        override fun pendingRows(): Map<String, Int> =
+            get<Map<String, WatchSensorStore<*>>>(named("sensorDataStorages"))
+                .mapValues { (_, store) -> store.getCount() }
+
+        override fun runInfo(): List<Pair<String, String>> = listOf(
+            "Enabled sensors" to enabledSensorNames(get<BackgroundController>().sensors),
+            "Auto-sync" to get<SyncPreferencesHelper>().getAutoSyncInterval()
+                .let { if (it > 0) "${it / 60_000} min" else "off" },
+        )
     }
 
     override fun provideBackgroundControllerDependencies(): BackgroundControllerDependencies {
